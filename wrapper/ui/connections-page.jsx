@@ -1,4 +1,3 @@
-import {Skeleton} from './skeleton.tsx';
 import React, {useEffect,useState} from 'react';
 import { BrandIcon } from './brand-icon.jsx';
 import { Plus, ChevronRight, Plug, Calendar, Workflow, Terminal, PanelLeft } from './icons.jsx';
@@ -42,7 +41,7 @@ export function ConnectionsContent({api, features, integrations, audioConnection
     </div>
     <section aria-labelledby="installed-connections">
       <h2 id="installed-connections" className="section-heading">Eingerichtet</h2>
-      {!loaded&&!error&&!installed.length?<Skeleton label="Verbindungen werden geladen …" rows={3}/>:groups(installed,false)}
+      {!loaded&&!error&&!installed.length?<p className="connection-status" role="status">Verbindungen werden geladen …</p>:groups(installed,false)}
       {error&&<p className="connection-status" role="status">{error} <button className="connection-retry" onClick={onRetry}>Erneut laden</button></p>}
       {loaded&&!error&&!filteredInstalled.length&&<p className="connection-status">{installed.length?'Keine eingerichtete Verbindung passt zu deiner Auswahl.':integrations.mcpLoading?'Werkzeuge des Workers werden ermittelt …':'Noch keine Verbindung eingerichtet.'}</p>}
       {integrations.mcpError&&<p className="connection-status" role="status">{integrations.mcpError} Vorhandene Einträge bleiben sichtbar.</p>}

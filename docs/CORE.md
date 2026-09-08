@@ -1,7 +1,6 @@
 # Architektur und Betrieb
 
 Der integrierte Betriebsstand ist in [OPERATIONS.md](OPERATIONS.md) dokumentiert.
-Quellen und Lesewege beschreibt [CONTEXT.md](CONTEXT.md).
 
 ## Verantwortung
 

@@ -51,10 +51,3 @@ Arbeitsbereich und Worker gehören bei Nachrichtenanschlüssen in denselben Dial
 `ui/connections-page.jsx` rendert beide Listen aus dem zentralen Katalog. Generische Link-/Webhook-Verbindungen speichern Anbieterkennung und Kategorie; Umbenennen entfernt das Markenicon nicht. Eigene Dienste können im Verbindungsdialog zugeordnet werden. Unbekannte Werkzeuge liegen unter Automatisierung & Agenten. Kalender und technische Werkzeuge verwenden sachliche Symbole der gemeinsamen Iconbibliothek statt einer erfundenen Marke. A2A verwendet das lokal belegte Originalzeichen. Bekannte Worker-Werkzeuge haben verständliche Anzeigenamen; der technische Name bleibt als Titel erhalten.
 
 Lokal gespeicherte Verbindungen warten nicht auf MCP-Werkzeugabfragen. Der Server liefert den letzten bekannten Werkzeugstand je Worker und aktualisiert ihn im Hintergrund. Ein Fehler löscht diesen Stand nicht. Die Oberfläche hält Einträge während einer Aktualisierung sichtbar, bündelt gleichzeitige Abfragen und nutzt beim erneuten Öffnen einen kurzen Sitzungscache. Der erste Abruf besitzt einen Ladezustand; Fehler bieten erneutes Laden. Werkzeuge werden nur während laufender Ermittlung nachgeladen. Gespeichert/Empfang aktiv bleiben getrennte Zustände. Geheimnisse werden nicht im Browsercache gespeichert.
-
-## Ladeformen
-
-Fehlen beim ersten Abruf eingerichtete Einträge, zeigt dieser Listenbereich
-den gemeinsamen List-Skeleton. Der lokal verfügbare Dienstekatalog und
-bereits geladene Verbindungen bleiben bedienbar. Fehler ersetzen den
-Platzhalter und behalten „Erneut laden“.

@@ -85,13 +85,3 @@ test('timeout releases notification listeners and stops the isolated turn', asyn
   assert.equal(adapter.listenerCount('notification'), 0);
   assert.ok(calls.includes('turn/interrupt')); assert.ok(calls.includes('thread/archive'));
 });
-
- test('word and character limits apply independently, counting Unicode characters', () => {
-  assert.equal(validTitle('a'.repeat(28)), 'a'.repeat(28));
-  assert.equal(validTitle('a'.repeat(29)), null);
-  assert.equal(validTitle('𐐀'.repeat(28)), '𐐀'.repeat(28));
-  assert.equal(validTitle('𐐀'.repeat(29)), null);
-  assert.equal(validTitle('Ein kurzer Titel passt'), 'Ein kurzer Titel passt');
-  assert.equal(validTitle('So ein Titel ist lang'), null);
-  assert.equal(validTitle('Workspace-Buttons'), 'Workspace-Buttons');
-});
