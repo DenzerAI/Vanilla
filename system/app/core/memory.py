@@ -275,7 +275,7 @@ class Memory:
         reserved = sum(len(s["text"]) for s in current)
         result = self.knowledge.context(query, project, chat_id, limit - reserved)
         # Shared notes are deliberately opt-in and never expose other projects.
-        if options["shared_notes"] and project != "default":
+        if options["shared_notes"] and project != "default" and not self.config.layout:
             left = limit - reserved - result["characters"]
             if left > 300:
                 hits = self.knowledge.search(query, "default", limit=4)

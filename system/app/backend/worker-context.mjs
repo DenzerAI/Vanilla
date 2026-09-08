@@ -29,6 +29,7 @@ export async function workerInstructions({ root, workspace, cwd = workspace, pro
 Installation: ${root}
 AGENTS.md (${path.join(root,'AGENTS.md')}):\n${entry}
 Gemeinsame Identität (${identityFile}):\n${identityInstructions(identity)}
+Technische Regeln (${path.join(system.root,'AGENTS.md')}):\n${system.rules.content}
 Technischer Anschluss (${path.join(system.root,'WORKER.md')}):\n${system.worker.content}
 Workspace: ${project.name} (${projectRoot})
 Workspace-Regeln (${path.join(projectRoot,'AGENTS.md')}):\n${local}

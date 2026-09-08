@@ -2559,7 +2559,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         ) : (
           <div className={"page settings-page" + (settingsTab === "identity" ? " agent-settings-page" : "")}>
             <PageHeading title={settingsTab === "design" ? "Unser Design" : settingNav.find((s) => s[0] === settingsTab)?.[2]} onShowSidebar={!sidebar ? () => setSidebar(true) : undefined}/>
-            {['system','memory','storage','access'].includes(settingsTab) && boot.features.operations ? <SystemSettings key={settingsTab} api={api} section={settingsTab} chats={chats} onJobs={()=>setView('jobs')} onLibrary={()=>setView('library')} onConnections={()=>openSettings('connections')}/> : settingsTab === "general" ? (
+            {['system','memory','storage','access'].includes(settingsTab) && boot.features.operations ? <SystemSettings layoutVersion={boot.layoutVersion} key={settingsTab} api={api} section={settingsTab} chats={chats} onJobs={()=>setView('jobs')} onLibrary={()=>setView('library')} onConnections={()=>openSettings('connections')}/> : settingsTab === "general" ? (
               <>
                 <h3 className="section-heading">Schaltzentrale</h3>
                 <div className="settings-group">

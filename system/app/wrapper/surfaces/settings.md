@@ -46,7 +46,7 @@ der Browsersitzung erscheint der Dialog nicht erneut. Nach Speicherung bleibt di
 Auswahl über Neustarts erhalten.
 
 Name, Avatarschlüssel, Hintergrundfarbe und persönliche Arbeitswünsche liegen gemeinsam in
-`soul/IDENTITY.md`. Das Speichern vergleicht die geladene Dateiversion, schreibt
+`IDENTITY.md` an der Installationswurzel. Das Speichern vergleicht die geladene Dateiversion, schreibt
 atomar und erhält alle übrigen Identitätsregeln. Vorhandene persönliche Wünsche
 werden nicht durch den Standard ersetzt. Der gemeinsame Standard beschreibt
 kurze, warme, natürliche Kommunikation und vollständige, effiziente Arbeit.
@@ -171,3 +171,8 @@ Settings-Skeletons rendern SettingRow innerhalb der settings-group, damit Innenk
 
 
 Die gemeinsame Identität wird zentral aus IDENTITY.md im Installationsordner gelesen und dort gespeichert. Sie ist nicht Teil eines einzelnen Workspaces. Alle Worker erhalten dieselbe Quelle. Die Workspace-Freigabe für company/personal wird im bestehenden Workspace-Dialog gepflegt; es entsteht keine zusätzliche Kopie der Identität in den Worker-Einstellungen.
+
+In der benannten Workspace-Struktur führt der Workspace-Dialog die beiden
+Wissensfreigaben. Memory zeigt deren Zuständigkeit statt eines zweiten
+globalen Freigabeschalters. Neue Notizen liegen im knowledge/-Ordner des
+ausgewählten Workspaces.

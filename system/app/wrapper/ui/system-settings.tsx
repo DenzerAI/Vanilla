@@ -10,7 +10,7 @@ const names: Record<string,string> = {ok:'In Ordnung', error:'Prüfen', running:
 function Toggle({label, value, change}: any) { return <button type="button" role="switch" aria-label={label} aria-checked={value} className="apple-switch" onClick={()=>change(!value)}><span/></button>; }
 function Group({title, children}: any) { return <><h3 className="section-heading">{title}</h3><div className="settings-group">{children}</div></>; }
 
-export function SystemSettings({api, section, chats, onJobs, onLibrary, onConnections}: {api: Api, section: string, chats: any[], onJobs: ()=>void, onLibrary: ()=>void, onConnections: ()=>void}) {
+export function SystemSettings({api, layoutVersion=1, section, chats, onJobs, onLibrary, onConnections}: {api: Api, layoutVersion?: number, section: string, chats: any[], onJobs: ()=>void, onLibrary: ()=>void, onConnections: ()=>void}) {
   const [status,setStatus]=useState<any>(null), [draft,setDraft]=useState<any>(null), [error,setError]=useState(''), [message,setMessage]=useState(''), [busy,setBusy]=useState(false);
   const [snapshots,setSnapshots]=useState<any[]|null>(null), [restore,setRestore]=useState<any>(null), [access,setAccess]=useState(false), [password,setPassword]=useState('');
   const [target,setTarget]=useState(''), [backupPassword,setBackupPassword]=useState(''), [chatId,setChatId]=useState('');
@@ -61,10 +61,10 @@ export function SystemSettings({api, section, chats, onJobs, onLibrary, onConnec
     </>}
     {section==='memory'&&<>
       <Group title="Gemeinsames Gedächtnis">
-        {toggle('memory','capture','Abgeschlossene Gespräche übernehmen','Speichert öffentliche Gesprächsergebnisse mit Quellen im jeweiligen Projekt unter brain/daily. Erkannte Zugangsdaten werden entfernt.')}
+        {toggle('memory','capture','Abgeschlossene Gespräche übernehmen','Speichert öffentliche Gesprächsergebnisse mit Quellen im jeweiligen Workspace. Erkannte Zugangsdaten werden entfernt.')}
         {toggle('memory','dreaming','Dreaming','Verdichtet Quellen lokal, entfernt Wiederholungen und aktualisiert den verlinkten Memory-Index. Manuell bearbeitete Notizen bleiben erhalten.')}
         {time('memory','dream_time','Memory pflegen um')}
-        {toggle('memory','shared_notes','Gemeinsame Notizen in Workspaces einbeziehen','Gibt notes/shared aus Allgemein für die Kontextsuche anderer Workspaces frei.')}
+        {layoutVersion >= 2 ? <SettingRow title="Gemeinsames Wissen" description="Firmenwissen und persönliches Wissen werden im jeweiligen Workspace freigegeben."/> : toggle('memory','shared_notes','Gemeinsame Notizen in Workspaces einbeziehen','Gibt notes/shared aus Allgemein für die Kontextsuche anderer Workspaces frei.')}
         {toggle('memory','history','Änderungen versionieren','Lokale Git-Historie für Notizen; unabhängig vom GitHub-Repository des Programmcodes.')}
         {number('memory','context_characters','Kontextbudget in Zeichen',1000,16000,'Der Router wählt passende Textstellen und hält Herkunft und Version fest.')}
         <SettingRow title="Quellen" description={`${status.memory.sources} übernommene Beiträge · ${status.memory.pending} noch zu prüfen · lokale Verdichtung`}><button onClick={onLibrary}>Bibliothek öffnen</button></SettingRow>
