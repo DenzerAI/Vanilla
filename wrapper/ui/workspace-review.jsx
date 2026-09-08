@@ -1,4 +1,3 @@
-import {Skeleton} from './skeleton.tsx';
 import React, {useEffect, useState} from 'react';
 import {RefreshCw, GitBranch} from './icons.jsx';
 import {DiffView} from './chat-artifacts.jsx';
@@ -12,7 +11,7 @@ export function ReviewPanel({api, projectId, projectName}) {
   },[projectId,revision]);
   return <div className="workspace-review">
     <div className="review-toolbar"><GitBranch size={16}/><span>{result?.branch || projectName || 'Projekt'}</span><button className="icon-button" aria-label="Änderungen aktualisieren" disabled={loading} onClick={()=>setRevision(n=>n+1)}><RefreshCw size={16}/></button></div>
-    {loading ? <Skeleton variant="document" label="Änderungen werden geladen …"/> : error ? <p role="alert">{error}</p> : result && !('repository' in result) ? <><p>Die neue Git-Dateiliste wird nach dem nächsten Serverstart verfügbar.</p><DiffView diff={result.stdout || result.aggregatedOutput || result.stderr || ''}/></> : !result?.repository ? <p>In diesem Ordner ist kein Git-Repository vorhanden.</p> : <>
+    {loading ? <p role="status">Änderungen werden geladen …</p> : error ? <p role="alert">{error}</p> : result && !('repository' in result) ? <><p>Die neue Git-Dateiliste wird nach dem nächsten Serverstart verfügbar.</p><DiffView diff={result.stdout || result.aggregatedOutput || result.stderr || ''}/></> : !result?.repository ? <p>In diesem Ordner ist kein Git-Repository vorhanden.</p> : <>
       <p className="muted">{result.files.length ? `${result.files.length} geänderte Dateien` : 'Keine Änderungen im Projekt.'}</p>
       {result.files.map(file=><details className="review-file" key={file.path} open={result.files.length===1}>
         <summary><span className="review-status">{file.status === '??' ? 'Neu' : file.status.trim()}</span><span title={file.path}>{file.path}</span></summary>

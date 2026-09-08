@@ -15,5 +15,5 @@
 .voice-recording details p { white-space: pre-wrap; overflow-wrap: anywhere; line-height: var(--leading-normal); }
 .voice-recording summary { cursor: pointer; color: var(--muted); }
 .connection-brand { display: flex; align-items: center; gap: var(--space-12); margin-bottom: var(--space-24); }
-.brand-groq { background: var(--brand-asset-bg); }
+.brand-groq { background: white; }
 @media(max-width:600px) { .voice-wave { width: 64px; } .voice-strip { gap: var(--space-4); } .voice-issue { position: fixed; left: var(--space-16); right: var(--space-16); width: auto; bottom: 100px; } }

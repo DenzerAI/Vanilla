@@ -18,7 +18,7 @@ export async function workerInstructions({ root, workspace, cwd = workspace }) {
     readFile(path.join(workspace, "soul/IDENTITY.md"), "utf8"),
     readFile(path.join(workspace, "AGENTS.md"), "utf8"),
   ]);
-  return `Die folgenden Quellen wurden für diese Nachricht frisch geladen. Nur die unten vollständig enthaltenen Dateien gelten als geladen; Verweise auf weitere Dateien erfüllen deren Leseaufforderung nicht. Prüfe Zielordner und Herkunftspfade nach der Startprüfung in WORKER.md, auch nach Kontextverlust oder Projektwechsel; lies fehlende, für den Auftrag benötigte Quellen. Bei Änderungen ist die aktuelle Quelldatei maßgeblich.
+  return `Die folgenden Quellen wurden für diese Nachricht frisch geladen. Enthaltene Leseaufforderungen sind damit erfüllt; lies nur noch nicht enthaltene, für den Auftrag benötigte Quellen. Bei Änderungen ist die aktuelle Quelldatei maßgeblich.
 ${company}\n\nGemeinsames System: ${system.root}\nAGENTS.md:\n${system.rules.content}\nWORKER.md:\n${system.worker.content}
 Arbeitsbereich: ${workspace}\nAktueller Projekt-/Jobordner: ${cwd}
 Identität (${path.join(workspace, "soul/IDENTITY.md")}):\n${identityInstructions(identity)}

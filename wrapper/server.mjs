@@ -1,7 +1,6 @@
-import { searchConversations } from './search.mjs';
 import {localPath, localPort} from './isolation.mjs';
 import {sharedMemoryCodexConfig} from './shared-memory.mjs';
-import { serverFingerprint, createRestartGate } from "./updates.mjs";
+import { fingerprint, createRestartGate } from "./updates.mjs";
 import { coreEnabled, coreRequest, routedContext } from "./core-client.mjs";
 import { createMcpSnapshot } from './integration-snapshot.mjs';
 import {computerToolStatus} from "./ui/tool-content.mjs";
@@ -41,7 +40,11 @@ import { normalizeTool, mergeTools } from "./tool-events.mjs";
 import { runMode, PLAN_INSTRUCTIONS, planApprovalReply } from "./run-mode.mjs";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
-const sourceVersion = () => serverFingerprint(root);
+const sourceVersion = async () => JSON.stringify(await Promise.all([
+  fingerprint(here), fingerprint(path.join(root, "backend")), fingerprint(path.join(root, "system")),
+  fingerprint(path.join(root, "core")),
+  ...["appearance.mjs", "tool-content.mjs"].map(file => readFile(path.join(here,"ui",file),"utf8")),
+]));
 const startedSourceVersion = await sourceVersion();
 const instanceId = randomUUID();
 const voiceSessions = new Set();
@@ -607,10 +610,6 @@ route("POST", "/api/projects/save", async (b) => {
     settings: store.state.settings,
   };
 });
-route("GET", "/api/search", async (b, u) => searchConversations({
-  workspace, chats:store.state.chats, projects:store.state.projects, threadCache,
-  query:u.searchParams.get("q") || "",
-}));
 route("GET", "/api/chats", async () => ({
   chats: store.state.chats.filter(c=>!c.channelOnly),
   active: Object.fromEntries(active),
@@ -657,19 +656,6 @@ route("GET", "/api/thread", async (b, u) => {
     if (cached) return { thread: cached };
     throw e;
   }
-});
-route("POST", "/api/worker-session", async b => {
-  const id = b.id;
-  store.chat(id);
-  if (workers.entry(workers.owner(id)).adapter !== "acp") throw new Error("Dieser Worker verwendet keine ACP-Sitzungseinstellungen.");
-  if (active.has(id) || turnLocks.has(id) || restartGate.restarting) throw new Error("Bitte die laufende Arbeit abwarten.");
-  turnLocks.add(id);
-  try {
-    await ensure(id);
-    return await workers.call(b.configId !== undefined ? "session/set_config_option" : "session/set_mode", {
-      threadId: id, configId: b.configId, value: b.value, modeId: b.modeId,
-    });
-  } finally { turnLocks.delete(id); }
 });
 route("POST", "/api/turn", (b) => sendTurn(b.id, b));
 route("POST", "/api/stop", async (b) => {

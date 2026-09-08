@@ -1,4 +1,0 @@
-.composer-options:has(.worker-session-controls) { flex-wrap: wrap; }
-.worker-session-controls { display: inline-flex; flex-wrap: wrap; align-items: center; gap: var(--space-8); min-width: 0; max-width: 100%; }
-.worker-session-controls .mode-trigger { max-width: 100%; }
-.worker-session-controls .mode-trigger span { overflow: hidden; text-overflow: ellipsis; }

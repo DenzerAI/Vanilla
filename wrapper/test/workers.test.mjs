@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { EventEmitter, once } from "node:events";
 import { mkdtemp, rm, writeFile, mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
+import os from "node:os";
 import { Workers, findWorkerCommand } from "../workers.mjs";
 import { ACPWorker } from "../acp-worker.mjs";
 import { Storage } from "../storage.mjs";
@@ -14,7 +15,7 @@ import net from "node:net";
 import { fileURLToPath } from "node:url";
 
 async function fixture(t, {beforeCleanup} = {}) {
-  const dir = await mkdtemp(fileURLToPath(new URL("../.test-worker-contract-", import.meta.url)));
+  const dir = await mkdtemp(path.join(os.tmpdir(), "worker-contract-"));
   t.after(async () => { await beforeCleanup?.(); await rm(dir, { recursive: true, force: true }); });
   const store = new Storage(path.join(dir, "workspace"), path.join(dir, "data")); await store.init();
   return { dir, store };
@@ -121,12 +122,7 @@ readline.createInterface({input:process.stdin}).on('line', line => {
  if(m.method==='model/list')return reply({data:[{model:'fixture-model',displayName:'Fixture',isDefault:true}]});
  if(m.method==='account/read')return reply({});
  if(m.method==='mcpServerStatus/list')return reply({data:[]});
- if(m.method==='session/new') { reply({sessionId:'native-session',models:{currentModelId:'fixture-model',availableModels:[{modelId:'fixture-model',name:'Fixture'}]}});
-  send({method:'session/update',params:{sessionId:'native-session',update:{sessionUpdate:'available_commands_update',availableCommands:[{name:'inspect',description:'Inspect fixture',input:{hint:'query'}}]}}});
-  send({method:'session/update',params:{sessionId:'native-session',update:{sessionUpdate:'config_option_update',configOptions:[{id:'quality',name:'Quality',type:'select',currentValue:'low',options:[{value:'low',name:'Low'},{value:'high',name:'High'}]}]}}});
-  return;
- }
- if(m.method==='session/set_config_option')return reply({configOptions:[{id:'quality',name:'Quality',type:'select',currentValue:p.value,options:[{value:'low',name:'Low'},{value:'high',name:'High'}]}]});
+ if(m.method==='session/new')return reply({sessionId:'native-session',models:{currentModelId:'fixture-model',availableModels:[{modelId:'fixture-model',name:'Fixture'}]}});
  if(m.method==='session/load')return reply({models:{currentModelId:'fixture-model',availableModels:[{modelId:'fixture-model',name:'Fixture'}]}});
  if(m.method==='session/set_model')return reply({});
  if(m.method==='session/cancel' && pending){send({id:pending,result:{stopReason:'cancelled'}});pending=null;return;}
@@ -171,7 +167,6 @@ test("real stdio ACP lifecycle streams tools and answers, exports only the user 
 test("ACP rejects unsupported planning and foreign models before dispatch; cancellation is confirmed", async t => {
   const {adapter, store}=await acpFixture(t), {thread}=await adapter.call("thread/start",{cwd:store.root});
   await assert.rejects(adapter.call("turn/start", {threadId:thread.id,...input("Test"), sandboxPolicy:{type:"readOnly"}}), /Planmodus/);
-  delete adapter.threads.get(thread.id).workerSession.configOptions;
   await assert.rejects(adapter.call("turn/start", {threadId:thread.id,...input("Test"), model:"foreign"}), /Modell gehört nicht/);
   assert.equal((await adapter.call("thread/read",{threadId:thread.id})).thread.turns.length,0);
   const done=completion(adapter); await adapter.call("turn/start",{threadId:thread.id,...input("WAIT")});
@@ -200,9 +195,8 @@ test("actual HTTP server routes ACP chats and jobs, protects mutations and survi
   const base=`http://127.0.0.1:${port}/api`;
   async function start() {
     child=spawn(process.execPath,[fileURLToPath(new URL('../server.mjs',import.meta.url))],{env:{PATH:process.env.PATH,HOME:dir,UWE_PORT:String(port),UWE_WORKSPACE:path.join(dir,'runtime'),UWE_DATA_ROOT:path.join(dir,'runtime-data'),COMPANY_BASE:path.join(dir,'company'),UWE_CODEX_BINARY:binary,UWE_HERMES_BINARY:binary,FIXTURE_LOG:path.join(dir,'wire.ndjson')},stdio:['ignore','pipe','pipe']});
-    let diagnostics=''; child.stderr.on('data', data => { diagnostics += data; });
     exited=once(child,'exit');
-    await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('Testserver startet nicht')),8000);child.stdout.on('data',data=>{if(String(data).includes('Agent läuft')){clearTimeout(timer);resolve();}});child.once('exit',()=>{clearTimeout(timer);reject(new Error('Testserver beendet: '+diagnostics));});child.once('error',reject);});
+    await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('Testserver startet nicht')),8000);child.stdout.on('data',data=>{if(String(data).includes('Agent läuft')){clearTimeout(timer);resolve();}});child.once('exit',()=>{clearTimeout(timer);reject(new Error('Testserver beendet'));});child.once('error',reject);});
     token=(await (await fetch(base+'/bootstrap')).json()).token;
   }
   async function call(route,body) {
@@ -211,7 +205,6 @@ test("actual HTTP server routes ACP chats and jobs, protects mutations and survi
   }
   await start();
   assert.equal((await fetch(base+'/workers/preferences',{method:'POST',body:'{}'})).status,403);
-  assert.equal((await fetch(base+'/worker-session',{method:'POST',body:'{}'})).status,403);
   await call('/workers/connect',{id:'hermes'});
   await call('/workers/preferences',{defaultWorker:'auto',fallbackWorker:'hermes'});
   const autoBoot = await call('/bootstrap');
@@ -223,13 +216,6 @@ test("actual HTTP server routes ACP chats and jobs, protects mutations and survi
   await call('/workers/preferences',{defaultWorker:'hermes',fallbackWorker:'codex'});
   const created=await call('/chats',{mode:'default'});
   assert.equal(created.meta.workerId,'hermes');
-  const session = (await call('/thread?id='+created.thread.id)).thread.workerSession;
-  assert.equal(session.availableCommands[0].name, 'inspect');
-  assert.equal(session.configOptions[0].currentValue, 'low');
-  const configured = await call('/worker-session', {id:created.thread.id,configId:'quality',value:'high'});
-  assert.equal(configured.thread.workerSession.configOptions[0].currentValue, 'high');
-  const invalid = await fetch(base+'/worker-session',{method:'POST',headers:{'content-type':'application/json','x-uwe-token':token},body:JSON.stringify({id:created.thread.id,configId:'quality',value:'invented'})});
-  assert.notEqual(invalid.status,200);
   await call('/turn',{id:created.thread.id,text:'Fiktiver Test',mode:'default'});
   async function finished(id) {
     for(let i=0;i<100;i++) { const r=await call('/thread?id='+id); if(r.thread.turns.at(-1)?.status==='completed')return r; await new Promise(r=>setTimeout(r,20)); }
