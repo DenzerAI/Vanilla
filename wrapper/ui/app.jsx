@@ -377,7 +377,6 @@ function ChatTurn({ turn, running, waiting, visible, actionsDisabled, paneNumber
   const history = (turn.items || []).filter(item => !['userMessage', 'plan'].includes(item.type) && (item.type !== 'agentMessage' || isCommentary(item)));
   const messages = groups.filter(group => group.type === "message" && !(collapseCommentary && isCommentary(group.item)));
   const firstReply = messages.findIndex(group => group.item.type !== "userMessage");
-  const lastReply = messages.findLastIndex(group => group.item.type !== "userMessage");
   const header = <div className="turn-response-header">
     <div className="turn-author">
       <span className="agent-signature" aria-hidden="true"><Avatar avatar={actions.agentProfile?.avatar} color={actions.agentProfile?.avatarColor} /></span>
@@ -386,8 +385,6 @@ function ChatTurn({ turn, running, waiting, visible, actionsDisabled, paneNumber
         <RelativeMessageTime value={turn.startedAt ?? turn.completedAt} visible={visible}/>
       </span>
     </div>
-  </div>;
-  const progress = <div className="turn-response-progress">
     {(activity.length || collapseCommentary && history.length) ? <ActivityGroup items={activity} running={running} turn={turn} waiting={waiting} visible={visible}>
       {(collapseCommentary ? history : activity).map(item => <Item key={item.id} item={item} workerId={workerId} {...actions} running={running} />)}
     </ActivityGroup> : <TurnStatus turn={turn} running={running} waiting={waiting} visible={visible} />}
@@ -396,14 +393,14 @@ function ChatTurn({ turn, running, waiting, visible, actionsDisabled, paneNumber
   return <section className="chat-turn" id={`pane-${paneNumber}-turn-${turn.id}`} tabIndex={-1} aria-label="Nachricht und Antwort">
     {messages.map((group, index) => <React.Fragment key={group.id}>
       {index === firstReply && header}
-      <Item item={group.item} beforeActions={index === lastReply ? progress : null} workerId={workerId} {...actions} running={actionsDisabled} sentAt={turn.startedAt} completedAt={!running && group.item.id === finalMessage?.id ? turn.completedAt : null} />
+      <Item item={group.item} workerId={workerId} {...actions} running={actionsDisabled} sentAt={turn.startedAt} completedAt={!running && group.item.id === finalMessage?.id ? turn.completedAt : null} />
     </React.Fragment>)}
-    {firstReply === -1 && <>{header}{progress}</>}
+    {firstReply === -1 && header}
     <ChatArtifacts items={turn.items} workspace={actions.workspace} directory={actions.directory} onFile={actions.onFile} api={api} />
     {turn.error && <div className="inline-error">{icon(AlertCircle)}{turn.error.message}</div>}
   </section>;
 }
-function Item({ item, beforeActions, agentProfile, workerId, onFork, onEdit, onRetry, onDelete, onFile, running, sentAt, completedAt, workspace, directory }) {
+function Item({ item, agentProfile, workerId, onFork, onEdit, onRetry, onDelete, onFile, running, sentAt, completedAt, workspace, directory }) {
   const [copied, setCopied] = useState(false);
   async function copy(t) {
     await navigator.clipboard.writeText(t);
@@ -468,7 +465,6 @@ function Item({ item, beforeActions, agentProfile, workerId, onFork, onEdit, onR
       >
         {i.type === "plan" && <span className="eyebrow">Plan</span>}
         <Markdown text={i.text} onFile={onFile} workspace={workspace} directory={directory} />
-        {beforeActions}
         <div className="message-actions agent-actions">
           {i.type === "agentMessage" && i.phase !== "commentary" && <MessageSpeech text={i.text} disabled={running} api={api} Button={IconButton} />}
           <IconButton label="Antwort kopieren" onClick={() => copy(i.text)}>

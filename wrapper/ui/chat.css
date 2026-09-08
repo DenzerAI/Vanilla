@@ -334,21 +334,21 @@
 .message-actions { flex-wrap: wrap; }
 .message-speech-error { flex-basis: 100%; font-family: var(--font-sans); font-size: var(--text-caption); }
 
-/* Identity leads the response; progress follows its latest content. */
-.turn-response-header, .turn-response-progress { margin: var(--space-8) 0 var(--space-8); }
+/* One stable identity and disclosure above the response, from the first token. */
+.turn-response-header { margin: var(--space-8) 0 var(--space-8); }
 .turn-author { display: flex; align-items: center; gap: var(--space-8); margin-bottom: var(--space-4); color: var(--muted); font-size: var(--text-caption); }
 .turn-author .agent-signature { flex: 0 0 var(--control-turn-loader-slot); width: var(--control-turn-loader-slot); justify-content: center; margin: 0 calc(var(--space-24) - var(--control-turn-loader-slot)) 0 0; }
 .turn-author .agent-signature .avatar { flex-shrink: 0; width: var(--space-24); height: var(--space-24); }
 .turn-author-meta { display: flex; align-items: baseline; flex-wrap: wrap; gap: 0 var(--space-8); min-width: 0; }
 .turn-author-name { font-size: var(--text-small); font-weight: var(--weight-medium); overflow-wrap: anywhere; min-width: 0; }
 .turn-author time { font-variant-numeric: tabular-nums; white-space: nowrap; }
-.turn-response-progress .activity-group > summary > svg { width: var(--control-turn-loader-slot); flex-shrink: 0; }
-.turn-response-progress > .activity-group { flex: 1; min-width: 0; margin: 0; }
-.turn-response-progress > .turn-meta.turn-progress { margin: 0; min-height: 28px; align-items: center; }
-.turn-response-progress .activity-group > summary { flex-wrap: wrap; }
+.turn-response-header .activity-group > summary > svg { width: var(--control-turn-loader-slot); flex-shrink: 0; }
+.turn-response-header > .activity-group { flex: 1; min-width: 0; margin: 0; }
+.turn-response-header > .turn-meta.turn-progress { margin: 0; min-height: 28px; align-items: center; }
+.turn-response-header .activity-group > summary { flex-wrap: wrap; }
 .turn-activity-status { display: inline-flex; align-items: center; flex-wrap: wrap; gap: var(--space-4); min-width: 0; font-variant-numeric: tabular-nums; }
 .turn-activity-status .app-loader { flex-shrink: 0; }
-.turn-response-progress .activity-steps .commentary-message { margin: var(--space-12) 0; }
+.turn-response-header .activity-steps .commentary-message { margin: var(--space-12) 0; }
 .agent-message .markdown a { color: var(--blue); text-decoration: underline; text-underline-offset: var(--space-2); }
 
 /* Calm conversational typography: one family, compact paragraphs, regular weight. */
