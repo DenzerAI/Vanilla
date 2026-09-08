@@ -95,3 +95,5 @@ freigegebene Conversation. WhatsApp Business und Mail werden nicht als
 proaktive Versandziele angeboten. Empfang/Verbindungen starten nicht automatisch.
 Der Host muss wach und der Kern aktiv sein. Reale Geräte-/Anbieterzustellung
 wird separat von simulierten Funktionstests geprüft.
+
+Wochentage verwenden die bestehende row mit Umbruch, damit auf Handybreite alle sieben Tage erreichbar bleiben.

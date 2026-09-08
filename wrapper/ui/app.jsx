@@ -3371,7 +3371,7 @@ function JobForm({ job, initialTemplate, connections, workers, onSave, routines 
           />
         </Field>
       )}
-      {schedule==='weekly'&&<Field label="Wochentage"><div className="row">{['Mo','Di','Mi','Do','Fr','Sa','So'].map((label,day)=><label key={day} className="checkbox-label"><input type="checkbox" name="days" value={day} defaultChecked={(job?.schedule?.days||[0]).includes(day)}/>{label}</label>)}</div></Field>}
+      {schedule==='weekly'&&<Field label="Wochentage"><div className="row job-weekdays">{['Mo','Di','Mi','Do','Fr','Sa','So'].map((label,day)=><label key={day} className="checkbox-label"><input type="checkbox" name="days" value={day} defaultChecked={(job?.schedule?.days||[0]).includes(day)}/>{label}</label>)}</div></Field>}
       {schedule==='once'&&<Field label="Termin · Zeitzone dieses Geräts"><input type="datetime-local" name="at" required defaultValue={job?.schedule?.at ? new Date(new Date(job.schedule.at).getTime()-new Date(job.schedule.at).getTimezoneOffset()*60000).toISOString().slice(0,16) : ''}/></Field>}
       {routines&&<NotificationPreference api={api} Field={Field} job={job} form/>}
       <div className="row between">
