@@ -134,7 +134,9 @@ export const typography = [
 export const spacing = [2, 4, 8, 12, 16, 20, 24, 28, 32, 40, 48, 64];
 export const radii = { small: 4, control: 8, button: 6, panel: 12, large: 24, pill: 999 };
 export const amountSliderGeometry = { cell: 6, gap: 1, thumb: 24 };
-export const amountSliderMotion = { magnet: .08, baseSpeed: .3, extraSpeed: 3.2, tail: .6, hint: .15, ultraSpeed: 3.5, ultraTail: .35, ultraIntensity: .6, ultraFalloff: .7 };
+export const amountSliderMotion = { magnet: .08, minDensity: .2, minSpread: .3, baseSpeed: .3, extraSpeed: 3.2, tail: .6, hint: .15, ultraSpeed: 3.5, ultraTail: .35, ultraIntensity: .6, ultraFalloff: .7 };
+// Visual intensity only: native capabilities still determine the available stops.
+export const reasoningAnimationLevels = { low: .03, medium: .35, high: .6, xhigh: .82, max: 1, ultra: 1 };
 export const controls = { "slider-thumb-width": `${amountSliderGeometry.thumb}px`, "turn-loader-slot": "19.2px", "composer-fallback":"112px", "nav-text-inset":"38px", "nav-group-inset":"46px", height: "32px", target: "40px", touch: "44px", "heading-height": "52px", "app-heading-height": "84px", "row-height": "48px", "switch-width": "36px", "switch-height": "20px", "switch-thumb": "16px", "switch-travel": "16px" };
 export const typeMetrics = { "font-root-size": "16px", "tracking-title": "-0.65px", "tracking-heading": "-0.35px", "tracking-welcome": "-0.7px" };
 export const weights = { regular: 400, medium: 500, semibold: 600, bold: 700 };
@@ -356,7 +358,7 @@ export const colorRoles = {
   warning: "Hinweis",
   danger: "Fehler",
 };
-export const motion = { 'panel-light-duration': '48s', 'panel-light-easing': 'ease-in-out', 'feedback-duration': '160ms', 'progress-duration': '1000ms', 'skeleton-duration': '1600ms' };
+export const motion = { 'picker-duration': '280ms', 'picker-easing': 'cubic-bezier(.16, 1, .3, 1)', 'panel-light-duration': '48s', 'panel-light-easing': 'ease-in-out', 'feedback-duration': '160ms', 'progress-duration': '1000ms', 'skeleton-duration': '1600ms' };
 export function renderDesignCSS() {
   const shared = Object.fromEntries([
     ...Object.entries(typeMetrics),
