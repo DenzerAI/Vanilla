@@ -90,6 +90,22 @@ test('a resumed session does not advertise removed settings from its persisted s
   assert.equal(thread.workerSession.configOptions,undefined);
 });
 
+test('renaming a workspace reloads its native session without duplicating replay', async()=>{
+  const {worker,thread,rpc,update,calls}=fixture();
+  thread.cwd='/fixture/old';thread.turns=[{id:'old',items:[]}];
+  rpc.call=async(method,params)=>{
+    calls.push({method,params});
+    update({sessionUpdate:'agent_message_chunk',content:{type:'text',text:'old replay'}});
+    return {};
+  };
+  await worker.call('thread/resume',{threadId:'chat',cwd:'/fixture/new'});
+  assert.equal(calls[0].method,'session/load');
+  assert.equal(calls[0].params.cwd,'/fixture/new');
+  assert.equal(thread.cwd,'/fixture/new');
+  assert.equal(thread.turns.length,1);
+  assert.equal(thread.turns[0].items.length,0);
+});
+
 test('concurrent session creation assigns early commands to their own chat', async()=>{
   const {worker,rpc}=fixture();
   rpc.call=async(method,params)=>{

@@ -67,7 +67,9 @@ def routes(operations, queue):
             return await asyncio.to_thread(o.memory.save, a.path, a.text, a.version, a.projectId)
         if b.name == "memory_read":
             note = await asyncio.to_thread(o.knowledge.read, a.path)
-            if note["projectId"] != a.projectId:
+            projects = o.db.rows('SELECT data FROM projects WHERE id=?',(a.projectId,))
+            scopes = json.loads(projects[0]['data']).get('knowledge',[]) if projects and o.config.layout else []
+            if note["projectId"] not in [a.projectId,*['knowledge:'+scope for scope in scopes]]:
                 raise ValueError("Notiz gehört zu einem anderen Projekt.")
             return note
         raise ValueError("Unbekanntes Memory-Werkzeug.")

@@ -124,3 +124,32 @@ def test_layout_resolves_previous_configuration_and_rejects_wrong_roots(tmp_path
         Config(root=config.root,workspace='workspaces/Missing')
     with pytest.raises(ValueError,match='UWE_DATA_ROOT'):
         Config(root=config.root,data='data/other')
+
+
+def test_old_backup_converts_and_restores_without_replacing_application(tmp_path):
+    import shutil
+    from core.files import sha256
+    from core.backups import verify_restore
+    from core.restore import apply_pending
+    config = old_installation(tmp_path)
+    stage=config.data/'restores/fixture'
+    stage.mkdir(parents=True)
+    shutil.copytree(config.workspace,stage/'workspace')
+    shutil.copy2(config.data/'agent.sqlite3',stage/'database.sqlite3')
+    files={p.relative_to(stage).as_posix():sha256(p) for p in stage.rglob('*') if p.is_file()}
+    (stage/'manifest.json').write_text(json.dumps({'format':'agent-backup-v1','files':files}))
+    prepare_layout(config)
+    stage=config.data/'restores/fixture'
+    original=verify_restore(stage)
+    (config.root/'knowledge/company/Neu.md').write_text('Aktuelles gemeinsames Wissen')
+    (config.root/'system/application-marker').write_text('Programm bleibt erhalten')
+    (config.root/'workspaces/Website überarbeiten/input/Plan.md').write_text('Spätere Änderung')
+    (config.data/'restore-pending.json').write_text(json.dumps({'path':str(stage),'snapshot':'fixture'}))
+    apply_pending(config)
+    assert (config.root/'workspaces/Website überarbeiten/input/Plan.md').read_text() == 'Vorhandener Projektplan'
+    assert (config.root/'knowledge/company/Neu.md').read_text() == 'Aktuelles gemeinsames Wissen'
+    assert (config.root/'system/application-marker').read_text() == 'Programm bleibt erhalten'
+    assert verify_restore(stage)==original
+    db=Database(config.data/'agent.sqlite3')
+    assert db.get('control/state.json')['value']['chats'][0]['cwd'] == str(config.root/'workspaces/Website überarbeiten')
+    db.close()

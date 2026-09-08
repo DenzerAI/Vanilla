@@ -4,6 +4,7 @@ import json
 import os
 import shutil
 import sqlite3
+from contextlib import closing
 from pathlib import Path
 from time import time
 from uuid import uuid4
@@ -45,7 +46,9 @@ def migrate_legacy_restore(base, config):
         source=installation/name;target=result/'workspace'/name
         target.parent.mkdir(parents=True,exist_ok=True)
         shutil.copytree(source,target) if source.is_dir() else shutil.copy2(source,target)
-    shutil.copy2(migrated.data/'agent.sqlite3',result/'database.sqlite3')
+    with closing(sqlite3.connect(migrated.data/'agent.sqlite3')) as source, closing(sqlite3.connect(result/'database.sqlite3')) as target:
+        source.backup(target)
+        target.execute('PRAGMA journal_mode=DELETE')
     for name in ['vault.git','worker-sessions','archived-sessions']:
         if (base/name).exists():shutil.copytree(base/name,result/name)
     files={p.relative_to(result).as_posix():sha256(p) for p in result.rglob('*') if p.is_file()}

@@ -79,8 +79,10 @@ Das Sicherungsformat agent-backup-v2 umfasst Workspaces, gemeinsames Wissen,
 IDENTITY.md, Pfadzuordnungen, SQLite, lokale Wissenshistorie und vorhandene
 Worker-Sitzungen. Programmcode und installierte Pakete werden nicht mit den
 Arbeitsdateien vermischt. Restore ersetzt einzelne Inhaltswurzeln, niemals
-den gesamten Installationsordner. Ein V1-Sicherungsstand muss vor Übernahme
-in eine V2-Installation separat migriert werden.
+den gesamten Installationsordner. Ein V1-Sicherungsstand wird vor Übernahme
+in einer getrennten Ablage migriert und erneut geprüft. Da V1 das gemeinsame
+Wissen nicht gesichert hat, bleibt dieses aus der aktuellen Installation
+erhalten. Der ursprüngliche Sicherungsstand wird nicht verändert.
 
 Identität, Wissen, Pfadzuordnungen und Betriebsdaten bleiben von Git
 ausgeschlossen. Der Quellenprüfer prüft auch die umgezogenen Dateien unter

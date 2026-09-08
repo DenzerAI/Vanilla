@@ -196,6 +196,22 @@ def test_existing_workers_stream_persist_and_resume_through_python(integration_r
             call("/knowledge/search?q=Prüfnotz")["results"][0]["path"]
             == "workspaces/Allgemein/knowledge/Prüfnotiz.md"
         )
+        project = call('/projects/save',{'name':'Website überarbeiten','knowledge':['personal']})['project']
+        assert project['path'] == 'workspaces/Website überarbeiten'
+        assert (tmp_path/project['path']/'workspace.json').is_file()
+        scoped = call('/chats',{'projectId':project['id'],'mode':'default'})['thread']['id']
+        call('/turn',{'id':scoped,'text':'Workspace prüfen','mode':'default'})
+        finished(scoped)
+        renamed = call('/projects/save',{'id':project['id'],'name':'Kundenportal','knowledge':['personal']})['project']
+        assert renamed['id'] == project['id']
+        assert renamed['knowledge'] == ['personal']
+        assert not (tmp_path/project['path']).exists()
+        assert (tmp_path/renamed['path']/'chats'/scoped/'transcript.json').is_file()
+        call('/turn',{'id':scoped,'text':'Nach Umbenennen weiterarbeiten','mode':'default'})
+        after = finished(scoped)['thread']
+        assert len(after['turns']) == 2
+        assert after['cwd'] == str(tmp_path/renamed['path'])
+        assert call('/bootstrap')['identitySource'] == 'IDENTITY.md'
     finally:
         if child and child.poll() is None:
             child.terminate()
