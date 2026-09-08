@@ -1,5 +1,4 @@
 import path from "node:path";
-import { identityInstructions } from "../wrapper/identity-preferences.mjs";
 import { readFile } from "node:fs/promises";
 import { fileURLToPath } from "node:url";
 import { companyRoot, companyInstructions, readCompanyFile } from "./company-base.mjs";
@@ -18,10 +17,9 @@ export async function workerInstructions({ root, workspace, cwd = workspace }) {
     readFile(path.join(workspace, "soul/IDENTITY.md"), "utf8"),
     readFile(path.join(workspace, "AGENTS.md"), "utf8"),
   ]);
-  return `Die folgenden Quellen wurden für diese Nachricht frisch geladen. Nur die unten vollständig enthaltenen Dateien gelten als geladen; Verweise auf weitere Dateien erfüllen deren Leseaufforderung nicht. Prüfe Zielordner und Herkunftspfade nach der Startprüfung in WORKER.md, auch nach Kontextverlust oder Projektwechsel; lies fehlende, für den Auftrag benötigte Quellen. Bei Änderungen ist die aktuelle Quelldatei maßgeblich.
-${company}\n\nGemeinsames System: ${system.root}\nAGENTS.md:\n${system.rules.content}\nWORKER.md:\n${system.worker.content}
+  return `${company}\n\nGemeinsames System: ${system.root}\n${system.rules.content}\n${system.worker.content}
 Arbeitsbereich: ${workspace}\nAktueller Projekt-/Jobordner: ${cwd}
-Identität (${path.join(workspace, "soul/IDENTITY.md")}):\n${identityInstructions(identity)}
+Identität (${path.join(workspace, "soul/IDENTITY.md")}):\n${identity}
 Lokaler Einstieg (${path.join(workspace, "AGENTS.md")}):\n${local}
-${path.resolve(cwd) !== path.resolve(workspace) ? "Lies zusätzlich die AGENTS.md im aktuellen Projekt-/Jobordner, falls vorhanden. " : ""}Lies Bereichsregeln nur für den betroffenen Bereich. Ergebnisordner: ${path.join(cwd, "output")}.`;
+Lies zusätzlich die AGENTS.md im aktuellen Projekt und die Regeln des betroffenen Bereichs. Ergebnisordner: ${path.join(cwd, "output")}.`;
 }

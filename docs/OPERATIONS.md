@@ -12,10 +12,8 @@ vorhandenen Design-Tokens, Settings-Zeilen und Dialoge.
 
 Python 3.12+, Node 22.12+ und Git installieren. Im Projekt `npm run setup:system`
 ausführen. Der Installer installiert die festgehaltenen Python-/Node-Abhängigkeiten,
-den Claude-ACP-Anschluss, das mehrsprachige lokale Embedding-Modell, lokales
-Diktat, Piper/Thorsten und restic. Er baut die Oberfläche; globale Dienste
-werden dabei nicht aktiviert. Die Sprachpakete und Modellprüfsummen führen
-`requirements-speech.lock` und `system/runtime-assets.mjs`.
+den Claude-ACP-Anschluss, das mehrsprachige lokale Embedding-Modell und restic.
+Er baut die Oberfläche und schreibt unter macOS zwei Benutzer-Dienstdateien.
 Modelle und Laufzeiten werden einmal pro Installation gespeichert.
 
 `npm start` öffnet den Kern auf Loopback-Port 1989. Unter **Zugang** einen

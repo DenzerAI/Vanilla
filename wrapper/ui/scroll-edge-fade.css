@@ -2,8 +2,8 @@
 .scroll-edge-fade {
   --fade-top: 0px;
   --fade-bottom: 0px;
-  -webkit-mask-image: linear-gradient(to bottom, transparent, var(--text) var(--fade-top), var(--text) calc(100% - var(--fade-bottom)), transparent);
-  mask-image: linear-gradient(to bottom, transparent, var(--text) var(--fade-top), var(--text) calc(100% - var(--fade-bottom)), transparent);
+  -webkit-mask-image: linear-gradient(to bottom, transparent, #000 var(--fade-top), #000 calc(100% - var(--fade-bottom)), transparent);
+  mask-image: linear-gradient(to bottom, transparent, #000 var(--fade-top), #000 calc(100% - var(--fade-bottom)), transparent);
 }
 .scroll-edge-fade[data-fade-top="true"] { --fade-top: var(--space-8); }
 .scroll-edge-fade[data-fade-bottom="true"] { --fade-bottom: var(--space-8); }

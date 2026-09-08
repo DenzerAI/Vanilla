@@ -2,8 +2,8 @@
 .system-search-content { min-height: 0; }
 .system-search-input { display: flex; align-items: center; gap: var(--space-12); padding: var(--space-8) var(--space-16); border-radius: var(--radius-pill); background: var(--workspace-backdrop); color: var(--muted); }
 .system-search-input > svg { flex-shrink: 0; }
-.system-search-input input { flex: 1; min-width: 0; width: 100%; padding: var(--space-4) 0; border: 0; appearance: none; -webkit-appearance: none; box-shadow: none; background: transparent; font-size: var(--text-body); }
-.system-search-input:focus-within > svg { color: var(--text); }
+.system-search-input input { flex: 1; min-width: 0; width: 100%; padding: var(--space-4) 0; border: 0; background: transparent; font-size: var(--text-body); }
+.system-search-input:focus-within { outline: 2px solid var(--blue); outline-offset: 2px; }
 .system-search-input input:focus-visible { outline: none; }
 .system-search-status { padding: var(--space-12) var(--space-4); color: var(--muted); font-size: var(--text-caption); }
 .system-search-status > span { display: block; margin-top: var(--space-4); }
@@ -16,10 +16,10 @@
 .system-search-excerpt { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; color: var(--muted); font-size: var(--text-small); margin-top: var(--space-4); }
 @media (pointer: coarse) { .system-search-input { min-height: var(--control-touch); } }
 
-/* Quiet sheet above a softened backdrop; the input matches the sidebar search. */
+/* Reuse the translucent sheet material, with a sharp highlight and a quiet backdrop. */
 :root[data-theme] .modal.system-search-dialog {
   background: var(--sheet-glass);
-  border: 0;
+  border: 1px solid var(--glass-highlight);
   box-shadow: var(--shadow);
   backdrop-filter: blur(40px) saturate(140%);
   -webkit-backdrop-filter: blur(40px) saturate(140%);
@@ -28,10 +28,10 @@
   flex-direction: column;
 }
 :root[data-theme] .modal.system-search-dialog:not([open]) { display: none; }
-.modal.system-search-dialog::backdrop { backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); background: var(--overlay); }
+.modal.system-search-dialog::backdrop { backdrop-filter: none; background: color-mix(in srgb, var(--overlay) 35%, transparent); }
 .system-search-dialog .modal-head { flex-shrink: 0; margin-bottom: var(--space-16); }
 .system-search-dialog .system-search-content { display: flex; flex-direction: column; overflow: hidden; }
-.system-search-dialog .system-search-input { flex-shrink: 0; border-radius: var(--radius-control); background: var(--workspace-backdrop); }
+.system-search-dialog .system-search-input { flex-shrink: 0; border-radius: var(--radius-control); background: color-mix(in srgb, var(--input) 45%, transparent); }
 .system-search-status { flex-shrink: 0; }
 .system-search-list { min-height: 0; display: flex; flex-direction: column; }
 .system-search-results { padding-block: var(--space-8); scroll-padding-block: var(--space-8); scrollbar-width: none; }
@@ -44,12 +44,10 @@
   :root[data-theme] .modal.system-search-dialog { background: var(--glass); }
 }
 @media (prefers-reduced-transparency: reduce) {
-  .modal.system-search-dialog::backdrop { backdrop-filter: none; -webkit-backdrop-filter: none; }
   :root[data-theme] .modal.system-search-dialog { background: var(--glass); backdrop-filter: none; -webkit-backdrop-filter: none; }
 }
 @media (forced-colors: active) {
   :root[data-theme] .modal.system-search-dialog { background: Canvas; border-color: CanvasText; }
-  .system-search-input:focus-within { outline: 1px solid Highlight; }
   .system-search-results { scrollbar-width: auto; }
   .system-search-results::-webkit-scrollbar { display: block; }
 }

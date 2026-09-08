@@ -33,8 +33,14 @@ export async function loadCompanyBase(base) {
 
 export async function companyInstructions(base) {
   const context = await loadCompanyBase(base);
-  return `Gemeinsame Firmenbasis: ${base}
-Frisch geladene Quellen (relative Links beziehen sich auf ${base}):
+  return `Gemeinsame Firmenbasis für diesen Auftrag: ${base}
+Die folgenden zentralen Dateien wurden für diesen Auftrag frisch gelesen.
+Berücksichtige zuerst AGENTS.md, dann FIRMA.md. Wähle anhand der Landkarte
+die passende Arbeitsweise und lies ihre vollständige Datei über ihren absoluten
+Pfad. Lade weitere Quellen nur bei Bedarf. Wähle bei Rollenwechsel neu.
+Frühere aufgabenspezifische Regeln gelten nicht automatisch weiter.
 ${context.rules.path}:\n${context.rules.content}
-${context.company.path}:\n${context.company.content}`;
+${context.company.path}:\n${context.company.content}
+Arbeitsweisen: ${JSON.stringify(context.workflows)}
+Relative Quellenpfade dieser Dateien beziehen sich auf ${base}.`;
 }

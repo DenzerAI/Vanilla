@@ -5,7 +5,6 @@ Diese Dateien sind verbindliche Bauanleitungen, keine Ideensammlung. Vor einer E
 | Bereich | Vertrag | Implementierung |
 | --- | --- | --- |
 | Chat / Projekte | [chat.md](chat.md) | app.jsx, chat-controls.jsx, dictation.jsx |
-| Inbox | [inbox.md](inbox.md) | app.jsx / Inbox-Sidebar, inbox.tsx, inbox.css; Designvorschau |
 | Aufträge | [jobs.md](jobs.md) | app.jsx / JobForm |
 | Verbindungen | [connections.md](connections.md) | app.jsx, connection-catalog.mjs, service-connection.jsx, service-catalog.mjs, brand-icon.jsx |
 | Bibliothek | [library.md](library.md) | library.jsx, file-content.jsx, filter-picker.jsx |
@@ -15,11 +14,11 @@ Diese Dateien sind verbindliche Bauanleitungen, keine Ideensammlung. Vor einer E
 
 ## Gemeinsamer Seitenkopf
 
-Aufträge, Verbindungen, Skills, Bibliothek und Einstellungen verwenden `PageHeading`: genau ein Seitentitel im Inhaltsbereich, daneben die unmittelbar zugehörigen Kopfaktionen. Keine zweite globale Titel- oder Tabzeile darüber. „Erstellen“ steht bei Aufträge; „Skill hinzufügen“ als Plus und „Skills neu laden“ stehen bei Skills. Verbindungen nutzt ausschließlich die vorhandenen Plus-Aktionen im Dienstekatalog. Die Bibliotheksaktionen stehen kompakt am PageHeading; der Ergebnisstatus unter den Dateien. Bei ausgeblendeter Seitenleiste steht ihr Öffnen-Button am Seitentitel; im Chat bei den Chataktionen. Die Navigation bleibt auch bei schmalen Fenstern erreichbar.
+Aufträge, Verbindungen, Skills, Bibliothek und Einstellungen verwenden `PageHeading`: genau ein Seitentitel im Inhaltsbereich, daneben die unmittelbar zugehörigen Kopfaktionen. Keine zweite globale Titel- oder Tabzeile darüber. „Erstellen“ steht bei Aufträge; „Skill hinzufügen“ als Plus und „Skills neu laden“ stehen bei Skills. Verbindungen nutzt ausschließlich die vorhandenen Plus-Aktionen im Dienstekatalog. Die Bibliotheksaktionen stehen bei ihrem Ergebnisstatus unter den Filtern. Bei ausgeblendeter Seitenleiste steht ihr Öffnen-Button am Seitentitel; im Chat bei den Chataktionen. Die Navigation bleibt auch bei schmalen Fenstern erreichbar.
 
 ## Gemeinsame Suche und Filter
 
-Skills und Bibliothek verwenden das gemeinsame Suchfeld und `FilterPicker`. Der kompakte Dateibrowser verwendet die zentrale control-Höhe; seine Filter dürfen neben der Suche umbrechen. Die Suche bleibt flexibel; reicht die verfügbare Inhaltsbreite nicht für beide Filter, bricht die Zeile um. Bis 900 CSS-Pixel Fensterbreite stehen Suche und Filter untereinander in voller Breite. Auch eine breite Seitenleiste darf das Suchfeld nicht zusammendrücken. Die gemeinsamen Regeln liegen in `ui/styles.css` und `ui/library-connections.css`.
+Skills und Bibliothek teilen Suchfeld und `FilterPicker` mit gleicher Höhe und Typografie. Die Suche bleibt flexibel; reicht die verfügbare Inhaltsbreite nicht für beide Filter, bricht die Zeile um. Bis 900 CSS-Pixel Fensterbreite stehen Suche und Filter untereinander in voller Breite. Auch eine breite Seitenleiste darf das Suchfeld nicht zusammendrücken. Die gemeinsamen Regeln liegen in `ui/styles.css` und `ui/library-connections.css`.
 
 ## Vorgehen bei Ergänzungen
 
@@ -47,36 +46,8 @@ Der Neustart prüft alle laufenden Turns, Übergaben und Sprachsessions serverse
 
 ## Globale Suche
 
-Der Einstieg in der Seitenleiste und Cmd/Ctrl+K öffnen denselben nativen Suchdialog. Er verwendet die randlose transparente gemeinsame Glasfläche mit Hintergrundunschärfe und eine zusätzlich um 8 px weichgezeichnete, über `overlay` abgedunkelte Kulisse. Das kompakte Suchfeld nutzt dieselbe dunkle Fläche wie die Seitenleistensuche (`workspace-backdrop`) ohne nativen Suchfeldrahmen. Schreibmarke und hervorgehobene Lupe zeigen Eingabefokus, Ergebniszeilen behalten sichtbaren Tastaturfokus. Nur die Trefferliste scrollt; ScrollEdgeFade mildert überlaufende Kanten über 8 px. Bei reduzierter Transparenz oder fehlender Blur-Unterstützung bleibt die Fläche deckend.
+Der Einstieg in der Seitenleiste und Cmd/Ctrl+K öffnen denselben nativen Suchdialog. Er verwendet die transparente gemeinsame Glasfläche mit Hintergrundunschärfe, ein kompaktes Suchfeld und flache gruppierte Ergebniszeilen. Nur die Trefferliste scrollt; ScrollEdgeFade mildert überlaufende Kanten über 8 px. Bei reduzierter Transparenz oder fehlender Blur-Unterstützung bleibt die Fläche deckend.
 
 Chats erscheinen zuerst, danach Bibliotheksdateien/Artefakte, Wissen und Notizen, Aufträge, Skills, Projekte und Navigation. Leere Eingabe zeigt letzte Gespräche. Titel und lokale Gesprächsinhalte, Dateinamen/Pfade/Herkunft, indexierte Wissenstexte, Auftragsanweisungen sowie Skillnamen/-beschreibungen werden über die vorhandenen Quellen durchsucht; binäre Dateien erhalten keine erfundene Volltextsuche. Bibliotheks-, Skill- und Auftragskataloge werden pro Dialog geladen und bei Ladefehler erneut angefragt. Einzelne Ausfälle verdecken die übrigen Treffer nicht und werden benannt. Ergebnisse erscheinen bereits während weitere Quellen laden. Die Anzeige begrenzt auf 80 Datentreffer und nennt die gelieferte Trefferzahl.
 
 Pfeiltasten navigieren, Enter öffnet, Escape schließt. Dateien, Notizen, Skills und Aufträge öffnen ihre vorhandenen Detailansichten, verwaltete Systemaufträge ihre Einstellungen. Eine Auswahl startet keinen Auftrag und führt keinen Skill aus.
-
-Aktualisieren lädt die Oberfläche direkt ohne Bestätigungsdialog neu. HTML und Assets werden mit `Cache-Control: no-store` ausgeliefert; laufende Serverantworten bleiben bestehen. Nur ein tatsächlicher Serverneustart verwendet die bestehende Session-Bestätigung.
-
-Neustarten und anschließendes frisches Laden gehören zu einer Aktion. Die gemeinsame
-SystemNotice bleibt während Anfrage und Wiederanlauf als dieselbe zentrierte,
-randlose Pille stehen: feste Buttonbreite, „Neustarten …“ und die ausgewählte System-Ladeanzeige über `AppLoader`. Keine wechselnden Vorbereitungs-, Erfolgs- oder Aktualisieren-Buttons.
-Erst die Antwort einer neuen Serverinstanz löst genau ein automatisches Neuladen
-aus; Antwort der alten Instanz und Verbindungsunterbrechung gelten nicht als Erfolg.
-Ein UI-Update alleine lädt direkt. Ein echter Serverneustart hat Vorrang, wenn
-beides erforderlich ist. Session-Bestätigung, Anmeldung und echte Fehler bleiben
-verständlich erreichbar. Stil, Größe und Tempo entsprechen der Systemauswahl. Reduzierte Bewegung zeigt die Ladeanzeige statisch; Dauerrollen
-für Rückmeldung und Fortschritt stammen aus der zentralen Designquelle.
-
-## Gemeinsames Prüftor
-
-Alle Bereiche unterliegen `npm --prefix wrapper run design:verify`, auch neue
-Dateien, importierte Vorlagen und Demos. Fehler müssen vor Übernahme behoben
-werden. Genaue Abdeckung und begründete Sonderfälle stehen ausschließlich im
-[Designvertrag](../DESIGN.md#verbindliches-prüftor-vor-übernahme).
-
-## Gemeinsame Skeletons
-
-`ui/skeleton.tsx` liefert List-, Settings-, Chat-, Document-, Media- und
-Shell-Platzhalter gemäß DESIGN.md. Nur fehlende Inhalte werden überbrückt,
-vorhandene Ergebnisse bleiben während Aktualisierungen bedienbar. Die globale
-Suche zeigt Listenformen bis erste Treffer eintreffen; ihre vorhandene
-Statuszeile übernimmt die Ansage. App-Start zeigt auf schmalen Ansichten
-nur den Inhaltsbereich; Fehler ersetzen die Platzhalter durch Wiederholen.

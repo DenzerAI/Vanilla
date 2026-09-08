@@ -23,9 +23,6 @@ try {
   await run(python,['-m','pip','install','-e','.','--no-deps']);
   await run('npm',['ci']);
   await run('npm',['--prefix','wrapper','ci']);
-  process.env.UWE_PYTHON ||= python;
-  await run('npm',['--prefix','wrapper','run','setup:dictation']);
-  await run('npm',['--prefix','wrapper','run','setup:speech']);
   await run('npm',['run','control:build']);
   await run(python,['-m','core.setup','--embeddings']);
 

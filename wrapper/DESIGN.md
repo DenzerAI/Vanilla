@@ -72,15 +72,6 @@ Ein erfolgreicher Build ersetzt keine Sichtprüfung. Fehlende Prüfwerkzeuge
 werden ausdrücklich benannt. Eine neue Oberfläche ist erst dann vollständig
 integriert, wenn Gestaltung, Verhalten, Dokumentation und Prüfung zusammenpassen.
 
-Die betroffene laufende Oberfläche muss am Desktop und auf dem Handy visuell
-geprüft werden. Dabei Gesamtwirkung, Hierarchie, Ausrichtung, Textumbrüche,
-Überlagerungen, Scrollverhalten und erreichbare Bedienelemente beurteilen;
-korrekte Tokens allein belegen keine stimmige Gestaltung. Screenshots beider
-Ansichten tatsächlich ansehen und die relevanten Interaktionen ausführen.
-Die Rückmeldung nennt Ansicht, Zustand, Viewport beziehungsweise Gerät und
-Prüfbeleg. Eine mobile Browseremulation wird als solche ausgewiesen; fehlt
-ein echtes Handy, bleibt dessen Geräteprüfung ausdrücklich offen.
-
 ## Verbindliche Quelle
 
 `ui/design-system.mjs` enthält Schriftfamilien, Größenrollen, Gewichte, Zeilenhöhen, Abstände, Radien und semantische Farbpaletten. `build.mjs` erzeugt daraus `ui/design-tokens.css`. Die Oberfläche verwendet diese CSS-Variablen; `ui/design-reference.jsx` liest dieselbe Quelle für **Einstellungen → Aussehen → Unser Design**. Die generierte CSS-Datei wird nicht von Hand bearbeitet.
@@ -97,7 +88,7 @@ React-Komponenten aus externen Katalogen werden an diese Tokens und die
 Bereichsverträge angepasst. Motion ist installiert; der gemeinsame MotionConfig
 berücksichtigt die Systemeinstellung für reduzierte Bewegung.
 
-Inter ist die gemeinsame Schrift für Oberfläche, Nutzernachrichten und Überschriften. Gesprächstexte und Eingabe verwenden die native Systemschrift über font-conversation, auf macOS San Francisco; Statusmeldungen verwenden die UI-Schrift. IBM Plex Mono wird für Code, Tastenkürzel und technische Werte eingesetzt. Keine dekorative Monospace-Schrift in Navigation oder Überschriften. Inter wird einschließlich echtem Kursivschnitt lokal ausgeliefert, Plex Mono im regulären Schnitt; Browser dürfen in bestehenden Codeauszeichnungen Gewicht/Kursiv synthetisch darstellen.
+Inter ist die gemeinsame Schrift für Oberfläche, Nutzernachrichten und Überschriften. Agentenantworten verwenden die vorhandene System-Serifenschrift (Charter, Sitka Text oder Georgia); Statusmeldungen bleiben in Inter. IBM Plex Mono wird für Code, Tastenkürzel und technische Werte eingesetzt. Keine dekorative Monospace-Schrift in Navigation oder Überschriften. Inter wird einschließlich echtem Kursivschnitt lokal ausgeliefert, Plex Mono im regulären Schnitt; Browser dürfen in bestehenden Codeauszeichnungen Gewicht/Kursiv synthetisch darstellen.
 
 Die verbindlichen Größen, Gewichte, Zeilenhöhen und Verwendungszwecke stehen in `typography` der zentralen Quelle und werden in Aussehen als Schriftproben angezeigt. Die Basis für rem beträgt 16 px. Die Skala reicht von 12 px für Zusatzinformationen bis 28 px für Seitentitel; 48 px sind für die bestehende Sprachansicht reserviert. Standardbedienelemente verwenden 14 px, längere Inhalte 16 px. Komponenten können für ihren Inhalt einen passenden Zeilenabstand aus `leading` wählen. Schriftgrößen sind in rem definiert und unterstützen Browserzoom.
 
@@ -105,7 +96,7 @@ Die verbindlichen Größen, Gewichte, Zeilenhöhen und Verwendungszwecke stehen 
 
 Ein 4-px-Raster organisiert die Oberfläche; 2 px sind optischen Details vorbehalten. Enge Gruppen verwenden 8 px, normale Innenabstände 16 px, Gruppentrennungen 24–32 px und große Seitenränder 48–64 px. Die Detailsansicht zeigt alle definierten Abstufungen und Rundungen aus der Quelle.
 
-Ruhige neutrale Bedienelemente bestimmen die Oberfläche. Der bisherige Markenakzent bleibt für bewusst gewählte Projekt- und Avatarfarben verfügbar. Links in Chatantworten verwenden die bestehende kontrastgeprüfte Rolle `blue` und eine feine Unterstreichung, damit sie klar als Links erkennbar sind. Fokus verwendet die neutrale Rolle `focus-ring` als feine 1-px-Linie; normale Klicks erhalten keinen zusätzlichen Außenrahmen. Textauswahl verwendet eine neutrale Fläche. Erfolg, Hinweis und Fehler besitzen eigene Farbrollen mit passenden Hintergründen. Beide Erscheinungsbilder implementieren dieselben Rollen. Einstellungen sind flach gruppiert; Schatten dienen schwebenden Bedienelementen. Farbwerte, Schatten und die Rundungen wiederkehrender Komponenten kommen aus der gemeinsamen Quelle.
+Ruhige neutrale Bedienelemente bestimmen die Oberfläche. Der bisherige Markenakzent bleibt für bewusst gewählte Projekt- und Avatarfarben verfügbar. Blau bezeichnet Links und Tastaturfokus. Erfolg, Hinweis und Fehler besitzen eigene Farbrollen mit passenden Hintergründen. Beide Erscheinungsbilder implementieren dieselben Rollen. Einstellungen sind flach gruppiert; Schatten dienen schwebenden Bedienelementen. Farbwerte, Schatten und die Rundungen wiederkehrender Komponenten kommen aus der gemeinsamen Quelle.
 
 Textfarben müssen mindestens 4,5:1 Kontrast zu ihren vorgesehenen Flächen erreichen. Status benötigt zusätzlich Text. Tastaturfokus muss sichtbar sein. Die CI-Werte stehen in der Unterseite „Unser Design“; interaktive Bausteinbeispiele verändern nur ihren lokalen Vorschauzustand. Nutzereinstellungen umfassen Hell/Dunkel, die Farbwelten Ausgewogen/Warm/Neutral, Hervorhebung in Terrakotta/Graphit/Salbei, Inter/Systemschrift, drei Schriftgrößen und reduzierte Bewegung. `ui/appearance.mjs` definiert die erlaubten Optionen für Oberfläche und Server gemeinsam. Schriftgrößen skalieren die Rollen aus `typography`, ohne eine zweite Größentabelle. Projektsymbole werden als stabile Schlüssel gespeichert. Chatlisten zeigen standardmäßig alle Gespräche im verfügbaren Scrollbereich; „Weniger anzeigen“ begrenzt auf fünf aktuelle Gespräche plus angepinnte Chats; alle Texte einschließlich „Neuer Chat“ und „Mehr anzeigen“ teilen dieselbe linke Kante. Statussymbole stehen links vor dem Chatnamen: rotierender Ring während der Arbeit, grüner Haken bei erfolgreichem Abschluss, eigene Symbole für Fehler und Unterbrechung. Die Farbe `chat-complete` ist zentral und für beide Themes definiert.
 
@@ -147,15 +138,13 @@ Original-Markenassets mit dunklen oder transparenten Signets erhalten bei Bedarf
 
 ## Persönlicher Gesprächsfluss
 
-Nutzernachrichten verwenden die 14-px-Rolle control, Agentenantworten die 15-px-Rolle conversation mit der nativen Systemschrift. Die Uhrzeit bleibt unter der Nachricht; der ausgewählte Bot-Avatar steht bereits ab Beginn über der Antwort. Erfolgreiche Antworten erhalten keine zusätzliche Abschlusszeile. Fehler, Unterbrechungen und laufende Arbeit bleiben ausdrücklich sichtbar. Nachrichtenaktionen erscheinen auf Geräten mit präzisem Hover bei Hover oder Tastaturfokus; auf Touch bleiben sie erreichbar. Die Eingabe beginnt mit einer kompakten Schreibzeile und wächst mit dem Entwurf. Arbeitsmodus und Modell stehen zurückhaltend darunter.
+Nutzernachrichten verwenden die 15-px-Textrolle, Agentenantworten die 16-px-Leserolle mit System-Serif. Die Uhrzeit steht jeweils unter der eigenen Nachricht: Nutzer rechts, Agent links neben dem ausgewählten Bot-Avatar. Erfolgreiche Antworten erhalten keine zusätzliche Abschlusszeile. Fehler, Unterbrechungen und laufende Arbeit bleiben ausdrücklich sichtbar. Nachrichtenaktionen erscheinen auf Geräten mit präzisem Hover bei Hover oder Tastaturfokus; auf Touch bleiben sie erreichbar. Die Eingabe beginnt mit einer kompakten Schreibzeile und wächst mit dem Entwurf. Arbeitsmodus und Modell stehen zurückhaltend darunter.
 
-Die Gesprächswünsche führt soul/IDENTITY.md; der gemeinsame Initialstandard liegt in identity-preferences.mjs. Die Oberfläche ergänzt kein zweites sprachliches Regelwerk.
-
-Werkzeugaktivität und Begleitdateien bleiben leise, aufklappbare Zeilen in der gemeinsamen kleinen Beschriftungsrolle. Herkunft, Pfade und ausführliche Fehlerdetails gehören in die geöffneten Inhalte. ActivityGroup und ChatArtifacts verwenden vorhandene Abstands-, Text- und Touchrollen; der konkrete Aufbau steht im Chatvertrag.
+Der serverseitige Gesprächsstandard gilt bei jedem neuen Turn auch in bestehenden Chats: normalerweise ein bis drei kurze Sätze, gelegentlich ein passendes Emoji und höchstens zwei. Ausführlichkeit folgt dem Nutzerwunsch oder der notwendigen Vollständigkeit; die tatsächliche Arbeit wird dadurch nicht verkürzt.
 
 ## Composer und Dateiergebnisse
 
-Die Schreibzeile ist eine Pille mit der zentralen großen Rundung. Ein Mikrofon diktiert in den Entwurf; separate Voice-/Vorlese-Icons entfallen im Composer. Arbeitsmodus und Modellwahl stehen direkt nebeneinander links auf einer gemeinsamen horizontalen Linie außerhalb der gefüllten Schreibfläche darunter. Einheitliche 32-px-Bedienelemente, 13-px-Schriftrolle und Chevrons verbinden beide Auswahlen. Der Denkaufwand folgt dem Modell mit einem zurückhaltenden Mittelpunkt. Workername und Computer-Use-Einstieg entfallen dort; Hinweise auf eine Vertretung stehen bei Bedarf innerhalb der Modellwahl. Anhänge stehen oberhalb. Diffs behalten Plus/Minus und nutzen Erfolgs-/Fehlerfarben für hinzugefügte/entfernte Zeilen. Explizite lokale Ergebnisse, die nicht bereits im Antworttext verlinkt oder als Bild dargestellt sind, liegen in der gemeinsamen ChatArtifacts-Gruppe hinter einer kompakten, zunächst geschlossenen Dateizeile; Vorschau und Download erscheinen beim Aufklappen. Der Vertrag unter surfaces/chat.md beschreibt Ladegrenzen, Fehlerzustände und die Engine-Kompatibilität.
+Die Schreibzeile ist eine Pille mit der zentralen großen Rundung. Ein Mikrofon diktiert in den Entwurf; separate Voice-/Vorlese-Icons entfallen im Composer. Arbeitsmodus und Modellwahl stehen direkt nebeneinander links auf einer gemeinsamen horizontalen Linie außerhalb der gefüllten Schreibfläche darunter. Einheitliche 32-px-Bedienelemente, 13-px-Schriftrolle und Chevrons verbinden beide Auswahlen. Der Denkaufwand folgt dem Modell mit einem zurückhaltenden Mittelpunkt. Workername und Computer-Use-Einstieg entfallen dort; Hinweise auf eine Vertretung stehen bei Bedarf innerhalb der Modellwahl. Anhänge stehen oberhalb. Diffs behalten Plus/Minus und nutzen Erfolgs-/Fehlerfarben für hinzugefügte/entfernte Zeilen. Explizite lokale Ergebnisse sind klickbare Dateizeilen mit Vorschau und Download. Der Vertrag unter surfaces/chat.md beschreibt Ladegrenzen, Fehlerzustände und die Engine-Kompatibilität.
 
 
 ## Menüs und unmittelbare Vorschau
@@ -198,7 +187,7 @@ an Schriftgröße oder Panelbreite wird die Höhe neu gemessen.
 
 ## Schwebende Chatnavigation und Eingabe
 
-Die Seitenleiste ist eine nach innen versetzte Fläche mit großen Rundungen und Abstand zum Fensterrand. Der Composer verwendet die getönte Farbrolle `composer-blur` mit 40 px Hintergrundunschärfe, verstärkter Sättigung und einer dezenten inneren Glaskante aus `composer-glass-shadow`. Bei reduzierter Transparenz oder fehlender Blur-Unterstützung bleibt die Fläche deckend. Der Verlauf läuft dahinter weiter; sein Endabstand passt sich der Eingabehöhe an. Der Reiseeffekt ist unter Aussehen für neue oder alle Chats wählbar.
+Die Seitenleiste ist eine nach innen versetzte Fläche mit großen Rundungen und Abstand zum Fensterrand. Der Composer ist rahmenlos, flach und verwendet die zentrale getönte Farbrolle `composer-blur` mit Hintergrundunschärfe. Der Verlauf läuft dahinter weiter; sein Endabstand passt sich der Eingabehöhe an. Der Reiseeffekt ist unter Aussehen für neue oder alle Chats wählbar.
 
 Die Einzelansicht zeigt oben nur schwebende Kopfaktionen einschließlich kompaktem Chatmenü. Der Verlauf fadet oben und unter der Schreibfläche aus; Modus und Modell stehen frei auf der Grundfarbe. ScrollEdgeFade blendet scrollende Chat- und Suchlisten ausschließlich an überlaufenden Kanten über den bestehenden 8-px-Abstand aus. Auswahlfläche und Fokus bleiben außerhalb dieses schmalen Randes klar; im erzwungenen Kontrastmodus entfällt die Maske. Lange Seitenleistennamen verwenden am rechten Textrand einen Fade statt Auslassungspunkten, die Ziehkante bleibt im Ruhezustand unsichtbar. Mikrofon und Senden teilen kreisrunde Bedienflächen.
 
@@ -275,150 +264,6 @@ Oben in der Seitenleiste steht eine dunkle Suchpille mit Lupe auf der gemeinsame
 
 Navigation und Chatzeilen haben am Desktop mindestens 32 px Höhe, bei Touch mindestens 44 px. Die Projektüberschrift steht mit 8 px Abstand unter der Navigation, weitere Projekte mit 4 px Abstand. Unten bleibt eine kompakte 40-px-Agentenzeile mit 24-px-Avatar. Reine Iconbuttons sind systemweit kreisrund, einschließlich Plus-Hover im Composer.
 
-Der Update-/Neustart-Button ist eine kleine transparente Glaspille mit 40-px-Blur, verstärkter Sättigung und 14-px-RotateCcw-SVG, ohne Rand, Lichtsaum oder Schatten. Text bleibt lesbar und erklärt die Aktion. Reduzierte Transparenz und fehlende Blur-Unterstützung erhalten eine deckende Ersatzfläche.
+Der Update-/Neustart-Button ist eine kleine transparente Glaspille mit 40-px-Blur, verstärkter Sättigung, feinem Lichtsaum und 14-px-RotateCcw-SVG. Text bleibt lesbar und erklärt die Aktion. Reduzierte Transparenz und fehlende Blur-Unterstützung erhalten eine deckende Ersatzfläche.
 
-Die globale Suche verwendet die transparente `sheet-glass`-Fläche ohne Glanzrand und 40 px Hintergrundunschärfe. Die gesamte Kulisse wird mit `overlay` abgedunkelt und um 8 px weichgezeichnet. Das Suchfeld verwendet wie die Suchpille der Seitenleiste `workspace-backdrop`, ohne native Suchfelddekoration oder Fokusrahmen. Fokus zeigen Schreibmarke und hervorgehobene Lupe; im erzwungenen Kontrastmodus bleibt ein Systemrahmen erhalten. Treffer bleiben flach, gruppiert und mit sichtbarem Tastaturfokus bedienbar. Reduzierte Transparenz und fehlender Blur erhalten eine deckende Glasfarbe.
-
-Aktualisieren lädt die Oberfläche direkt ohne Bestätigungsdialog neu. HTML und Assets werden mit `Cache-Control: no-store` ausgeliefert; laufende Serverantworten bleiben bestehen. Nur ein tatsächlicher Serverneustart verwendet die bestehende Session-Bestätigung.
-
-Neustarten und anschließendes frisches Laden gehören zu einer Aktion. Die gemeinsame
-SystemNotice bleibt während Anfrage und Wiederanlauf als dieselbe zentrierte,
-randlose Pille stehen: feste Buttonbreite, „Neustarten …“ und die ausgewählte System-Ladeanzeige über `AppLoader`. Keine wechselnden Vorbereitungs-, Erfolgs- oder Aktualisieren-Buttons.
-Erst die Antwort einer neuen Serverinstanz löst genau ein automatisches Neuladen
-aus; Antwort der alten Instanz und Verbindungsunterbrechung gelten nicht als Erfolg.
-Ein UI-Update alleine lädt direkt. Ein echter Serverneustart hat Vorrang, wenn
-beides erforderlich ist. Session-Bestätigung, Anmeldung und echte Fehler bleiben
-verständlich erreichbar. Stil, Größe und Tempo entsprechen der Systemauswahl. Reduzierte Bewegung zeigt die Ladeanzeige statisch; Dauerrollen
-für Rückmeldung und Fortschritt stammen aus der zentralen Designquelle.
-
-## Verbindliches Prüftor vor Übernahme
-
-`npm --prefix wrapper run design:verify` ist vor jeder Übernahme von UI-Code
-auszuführen. Der Befehl prüft die vollständigen Bäume `wrapper/ui/` und
-`wrapper/public/`, die Design-/Appearance- und Scanner-Regressionstests sowie
-TypeScript. Neue Unterordner sind automatisch erfasst, auch nicht importierte
-Demos. `node wrapper/build.mjs` führt die statische Prüfung selbst vor Vite aus;
-ein fehlerhafter Baum ersetzt keinen Produktionsbuild. `publish-source.py`
-prüft vor dem Kopieren/Übernehmen. Der GitHub-Workflow `Design gate` prüft
-Pull Requests und main-Pushes. Die lokalen Hooks unter `.githooks/` prüfen
-Commits, Merge-Commits und Pushes. Aktivierung in einem neuen Checkout:
-`git config core.hooksPath .githooks`. Staged UI und geprüfte Arbeitskopie
-müssen identisch sein. Ein Push muss die geprüfte ausgecheckte Revision
-verwenden. Fast-forward-Merges haben keinen Git-Vorab-Hook; die Prüfung ist
-dafür vor dem Merge manuell auszuführen. Serverseitige Branch Protection ist
-eine gesonderte Repository-Einstellung, keine Behauptung dieses Prüftors.
-
-### Automatisch geprüft
-
-- CSS über PostCSS, JSX/TSX/JS/TS über den TypeScript-Parser, HTML auf eingebettete Styles; keine Beschränkung auf styles.css.
-- Farbwerte einschließlich Hex/RGB/HSL, benannter Farben und Farbverläufe; Schriftfamilie, Größe, Gewicht, Zeilenhöhe und Laufweite; sichtbare Abstände und Radien als zentrale Tokens.
-- Statische Tokenreferenzen über alle Dateien, synchron erzeugte Token-CSS und Kontraste sämtlicher wählbarer Paletten. Lokale Geometriemaße wie Breiten, SVG-Koordinaten und Breakpoints sind keine zweite Abstandsskala.
-- Harte und dynamische Inline-Stile, eingebettete Stylesheets, fremde Tailwind-Farb-/Typografie-/Abstandsskalen, lokale Font-Registrierung und nicht unterstützte neue Quellformate.
-- Gemeinsame Einstellungszeilen, Seitenköpfe und Dialoge; Schalterzustand und gemeinsame Schalterdarstellung, Namen von Iconbuttons/Bildern, Tastaturbedienbarkeit von Klickflächen.
-- Vorhandene wirksame gemeinsame Fokus-, Disabled-, Auswahl- und Reduced-Motion-Regeln; entfernte Fokusumrandungen werden gesondert geprüft.
-
-### Geprüfte Sonderfälle statt pauschaler Freistellung
-
-`scripts/design-exceptions.json` enthält ausschließlich konkrete Fundstellen
-(Datei, Regel und exakter Ausdruck) mit fachlicher Begründung. Bestehende
-Ausnahmen umfassen versteckte zugängliche Beschriftungen, Fokus am umgebenden
-Suchfeld, native Markdown-Eventdelegation, den nichtmodalen Modell-Popover,
-direkte Katalogwerte und proportionale Geometrie des gemeinsamen Loaders.
-Neue oder veränderte Ausdrücke sind erneut prüfpflichtig; verwaiste Einträge
-schlagen fehl. Keine pauschale Dateiausnahme oder automatische Baseline.
-
-SVG-Markenassets und eigene Avatarzeichnungen werden mit begründetem SHA-256
-in `scripts/design-assets.json` erfasst. Neue oder geänderte Motive verlangen
-eine erneute Sicht-/Quellenprüfung. Rasterbilder und Font-Binärdateien werden
-inventarisiert, aber nicht als CSS gelesen; Fontdateien und Lizenzen haben
-eigene Tests. Die kanonische Designquelle wird durch Schema-/Kontrasttests
-geprüft; generierte Tokens werden exakt mit ihrer Quelle verglichen.
-
-### Grenzen und ergänzende Abnahme
-
-Statische Prüfungen beweisen keine CSS-Kaskade, DOM-Erreichbarkeit aller
-lokalen Variablen, sinnvollen Texte oder vollständigen Async-Zustände.
-Laden, Leerzustand, Fehler, Erfolg, Tastatur, Touch, Zoom und reduzierte
-Bewegung bleiben in den passenden Funktionstests und der Sichtprüfung des
-betroffenen Bereichs verpflichtend. Fehlende Browserbelege ausdrücklich
-ausweisen. Die nicht ausgelieferte Legacy-App unter `frontend/` hat weiterhin
-einen eigenen Vertrag und ist nicht der Wrapper.
-
-Nachrichtenaktionen erscheinen bei Hover oder Tastaturfokus und bleiben auf Touch sowie bei aktiver Wiedergabe erreichbar; bei Platzmangel brechen sie um.
-Löschen nutzt den bestehenden Papierkorb-Iconbutton und Bestätigungsdialog.
-Vorlesen nutzt denselben IconButton mit Lautsprecher, Vorbereiten und Stoppen;
-Anbieter und Anschlussstellen führt die zentrale Systemlandkarte.
-
-## Skeleton Loader
-
-`ui/skeleton.tsx` ist der gemeinsame Platzhalter für erstmals geladene Inhalte:
-Listen, Einstellungszeilen, Gesprächsverläufe, Dokumente, Medien und App-Start.
-Seitenkopf, Filter und erreichbare Navigation bleiben stehen. Formen passen sich
-der verfügbaren Breite an, ohne erfundene Texte oder Prozentwerte. Farben und
-Abstände verwenden die bestehenden Rollen, die ruhige Pulsdauer kommt aus
-`motion-skeleton-duration`. App-/Systemvorgaben für reduzierte Bewegung zeigen
-statische Formen; außerhalb des Sichtbereichs und bei verborgenem Tab pausiert
-die Animation. Dekorative Formen sind nicht fokussierbar und vor Screenreadern
-verborgen; genau eine Statuszeile benennt den Ladevorgang.
-
-Skeletons erscheinen nur, solange echte Inhalte fehlen. Aktualisierungen
-erhalten vorhandene Daten; Laden, leer und Fehler bleiben getrennte Zustände.
-Bei Medien bleibt das echte Element unter dem Platzhalter gemountet, damit
-Ladeabschluss, Fehler und Zeitlimit den Platzhalter zuverlässig beenden.
-Laufende Worker, Speichern und andere Aktionen behalten den AppLoader bzw.
-ihren bestehenden Arbeitsstatus. Aussehen → Unser Design zeigt die Bausteine.
-
-## Rechte Workspace-Fläche
-
-Der rechte Bereich „Workspace“ verwendet die eigene Rolle `workspace-panel-bg`: in allen dunklen Farbwelten Schwarz als Basis. Die fast deckende `workspace-panel-glass`-Fläche mit 32 px Hintergrundunschärfe, zwei sehr schwachen diffusen Helligkeitsverläufen (`workspace-panel-sheen`), einer feinen inneren Lichtkante und weichem Außenschatten (`workspace-panel-shadow`) gibt dem Bereich dezente Tiefe. Diese Materialgestaltung folgt der Apple-Bildreferenz; sie bleibt klar vom Chat abgegrenzt. Ohne Blur-Unterstützung oder bei reduzierter Transparenz wird die schwarze Basis deckend. Im hellen Erscheinungsbild bleibt die bisherige Farbzuordnung erhalten. App-Grundfläche und Suche behalten `workspace-backdrop`. Nur diese rechte Fläche wird dunkler; die linke Navigation behält `sidebar`. Der Workspace öffnet direkt Dateien; die drei großen Startkacheln entfallen. Dateien, Änderungen und die Nebenfunktion Befehle sind über die kompakte Auswahl im Kopf erreichbar. Rundung, Innenabstand und Farbzuordnung gelten ebenso in schmaler und vergrößerter Ansicht. Die Bausteinreferenz zeigt die gemeinsame Workspace-Basisfarbe.
-
-## Bibliotheksvorschau
-
-`LibraryPreview` erweitert den gemeinsamen Modal um Quick Look: dieselbe transparente `sheet-glass`-Fläche und weichgezeichnete Kulisse wie die Suche, kompakter Titel, große Medienfläche und ruhige Aktionen. Dateidetails sind aufklappbar; Pfeile navigieren durch die zuletzt geänderten gefilterten Dateien. Reduzierte Transparenz erhält die deckende `glass`-Ersatzfläche. Die Bibliothek verwendet kompakte flache Ergebniszeilen mit Name, Art und Änderungsdatum oder ein umschaltbares Bildraster ohne Kartenhintergründe. Ein Klick markiert und zeigt rechts den gemeinsamen Workspace-Stil mit FileContent; Vergrößern öffnet Quick Look. Die Reiter Dateien/Wissen und Notizen entfallen. Suche und Filter sind kompakt, die Ansichtspräferenz bleibt lokal gespeichert.
-
-## Ruhiger Gesprächsfluss
-
-Ab Beginn steht über der Agentenantwort eine eigene Autorenzeile: ausgewählter Avatar, tatsächlicher Agentenname und relatives Nachrichtenalter (zum Beispiel „vor 2 Min.“). Der exakte Zeitstempel bleibt im Tooltip und time-Element zugänglich. Direkt unter dem jeweils neuesten Antworttext, vor den bei Hover eingeblendeten Nachrichtenaktionen, stehen ausgewählter AppLoader, Live-Status, Schrittanzahl und tatsächliche Bearbeitungszeit. Diese aufklappbare ActivityGroup wandert beim Streaming mit dem Text nach unten und bleibt nach Abschluss dort als kompakter Verlauf erhalten. Ohne Werkzeuge steht der kompakte Arbeitsstatus ebenfalls direkt unter dem Text vor den Aktionen. Die Aktionszeile reserviert keinen Platz zwischen Text und Status. Die Anzeige liegt im normalen Gesprächsfluss, ohne Inhalte zu überdecken; manuelles Hochscrollen pausiert weiterhin das automatische Mitlaufen. Der Spinner endet mit der Arbeit und behauptet keinen weiteren Fortschritt.
-
-Zwischenmeldungen bleiben während der Arbeit im Gespräch sichtbar. Sobald eine abschließende Antwort vorliegt und die Arbeit beendet ist, werden Zwischenmeldungen und Werkzeugschritte in ihrer ursprünglichen Reihenfolge in die automatisch geschlossene Gruppe aufgenommen. Aufklappen zeigt den vollständigen Ablauf. Laufende oder fehlgeschlagene Turns ohne Abschlussantwort verlieren ihre sichtbaren Zwischenmeldungen nicht. Nutzernachrichten und Antworten behalten ihre Reihenfolge; Nachträge werden nicht vor die erste Nutzernachricht verschoben.
-
-Antworten nutzen die zentrale 15-px-Rolle conversation und die native Systemschrift (auf macOS San Francisco). Nutzernachrichten und Desktop-Eingabe nutzen control (14 px); Touch-Eingabe bleibt in reading. Links verwenden blue und Unterstreichung. Routinemäßige Prüfberichte werden nicht als Abschlussanhang erzeugt oder verlinkt. Dateien gehören in die Antwort, wenn sie ein angefragtes oder direkt nützliches Ergebnis liefern, etwa eine HTML-Visualisierung.
-
-Bei Nutzernachrichten bleibt die Uhrzeit eng unter dem Text; bei Agentenantworten ersetzt das relative Alter in der Autorenzeile die zusätzliche Uhrzeit am Fuß. Nachrichtenaktionen erscheinen auf Desktop bei Hover oder Tastaturfokus ohne Layoutsprung; auf Touch bleiben sie mit mindestens 44 px Bedienfläche sichtbar. Der aktive Vorlesen-Stoppen-Button bleibt erreichbar.
-
-## Dezentes Flächenlicht
-
-Seitenleiste und Workspace verwenden den gemeinsamen dekorativen Baustein `PanelLight`. Die Seitenleiste behält ihre hellere Grundfläche `sidebar` und erhält über `sidebar-material-shadow` eine sehr feine innere Kante; `sidebar-sheen` zeigt zwei diffuse, schwache radiale Verläufe. Der Workspace nutzt seine bestehende schwarze Materialfläche und `workspace-panel-sheen`. Nur die Lichtschicht bewegt sich, um jeweils wenige Prozent, mit 48 Sekunden je Richtung, sanften Wendepunkten und gegenläufiger Phase links/rechts. Dauer und Easing liegen in der zentralen Designquelle. Keine zufälligen Sprünge, kein Pulsieren von Text oder Kante.
-
-Aussehen → Visuell → Flächenlicht bietet Aus, Ruhend und Sanft bewegt (Standard). Die Auswahl wird gemeinsam mit den bestehenden Darstellungseinstellungen validiert und gespeichert. App- und Systemvorgaben für reduzierte Bewegung zeigen statische Verläufe. Versteckte Tabs, eingeklappte Seitenleisten und nicht sichtbare Flächen pausieren. Nur die Dekoration wird an den Rundungen beschnitten; Menüs, Tastaturfokus und Ziehkanten bleiben erreichbar. Erzwungener Kontrast blendet die Dekoration aus. Unser Design zeigt denselben Baustein.
-
-
-Das Terminal im Workspace verwendet einen transparenten Inhaltsuntergrund, damit die gemeinsame dunkle Materialfläche mit Lichtverlauf bis zur Eingabe durchgeht. Es legt keine eckige deckende Fläche über die abgerundete Workspace-Hülle. Ausgabe, Eingabe und deren Fokus bleiben unverändert bedienbar.
-
-Die Gesprächsschrift ist bewusst zurückhaltend: Antworten 15 px bei normalem Gewicht und 1,5-fachem Zeilenabstand, Nutzernachrichten, Zwischenmeldungen und Desktop-Eingabe 14 px in derselben Systemschrift. Absätze trennen 12 px, der letzte Absatz hat keinen Endabstand. Markdown-Hervorhebungen nutzen semibold; Überschriften bleiben mit reading (16 px) kompakt. Browserzoom und gespeicherte Schriftgrößenskalierung bleiben wirksam; Touch-Eingabe behält mindestens die bestehende reading-Rolle.
-
-
-## Kompakter Workspace als Arbeitsbegleiter
-
-Der Workspace dient dem Nachsehen und Prüfen neben dem Gespräch: Dateien sind der direkte Einstieg, Änderungen eine weitere Ansicht, Befehle ein manuelles Zusatzwerkzeug. Er startet bei jedem Öffnen mit 280 px; Vergrößern und Ziehen bleiben explizite Aktionen. Es gibt keine drei großen Startbuttons und keine automatische Breitenänderung beim Ansichtswechsel.
-
-Kopf und Bereichsauswahl nutzen control (14 px), Dateizeilen und Begleittexte small (13 px), Pfad-/Statusangaben und Befehlsausgaben caption (12 px). Die gewählte Textskalierung bleibt wirksam; Touch-Eingaben verwenden reading, Touchziele mindestens 44 px. Ordner stehen vor Dateien, beide natürlich nach Namen sortiert. Der Ordnername und eine kompakte relative Pfadzeile ersetzen den ausgeschriebenen absoluten Systempfad; dieser bleibt im Tooltip. Kopf und Eintragsstatus bleiben stehen, nur die Dateiliste scrollt. Geschützte Einträge sind standardmäßig ausgeblendet und über einen beschrifteten Button einblendbar; Zugriffsrechte bleiben erhalten.
-
-„Befehle“ verwendet normale UI-Schrift im Leerzustand, Monospace nur für Eingabe und tatsächliche Ausgabe. Der kurze Hinweis benennt Einzelaufrufe und das 30-Sekunden-Limit. Die Eingabe bleibt unten als kompakte getönte Zeile. Die gemeinsame schwarze Materialfläche, feine Kante und Lichtbewegung bleiben in allen Ansichten sichtbar. Der Bereich ist kein persistentes Terminal und bietet keine neu erfundene native Finder-/Terminal-Anbindung.
-
-
-Avatar und Bearbeitungssymbol teilen eine feste senkrechte Mittelachse: Die Signatur reserviert `control-turn-loader-slot` (19,2 px, entsprechend dem 16-px-AppLoader mit Faktor 1,2) und zentriert darin den 24-px-Avatar per Flexbox. Eine spezifische Autorenregel verhindert, dass allgemeine Avatarregeln diese Größe überschreiben. Keine nachträgliche Transform-Verschiebung. Der bisherige Abstand zum Namen bleibt erhalten. Auch das statische Aktivitätssymbol nach Abschluss nutzt denselben Symbolplatz; der laufende Loader und sein Statustext bleiben unverändert. Name und relative Zeit stehen in einer eigenen, an der Textgrundlinie ausgerichteten Flexgruppe und dürfen bei Platzmangel umbrechen.
-
-## Inbox
-
-Die Inbox übernimmt wie Einstellungen die bestehende linke Seitenleiste mit Zurück-Einstieg, Suche und kompakter Gesprächsliste. Kanal-Icon, Name, Uhrzeit und Ungelesen-Punkt genügen; Betreff-/Vorschauunterzeilen entfallen. Die volle Hauptfläche zeigt Verlauf und eine automatisch wachsende, ausschließlich vertikal scrollende Antwortzeile. Bis 650 px Fensterbreite wechseln Liste und Verlauf in voller Breite. Beispiele und Speichergrenzen werden ausschließlich im Konzeptdialog erklärt. PageHeading, FilterPicker, BrandIcon, Modal und zentrale Tokens bleiben gemeinsam; InboxConversationRow steht unter Unser Design. Aufbau und Verhalten führt [surfaces/inbox.md](surfaces/inbox.md).
-
-Bibliotheks-Quick-Look bleibt eine reine Großansicht ohne doppelte Dateiverwaltung. Dateiaktionen stehen im rechten Workspace. Markdown nutzt dort den bestehenden bereinigten Renderer mit kompakten Dokumentrollen statt Editorfläche. Der Liste/Raster-Umschalter verwendet Symbolbetonung ohne rechteckige Auswahlfüllung; sämtliche Iconbuttons bleiben rund.
-
-
-Der leere Composer zeigt auf Desktop und Handy nur „Nachricht“ in der zurückhaltenden Rolle `faint`, vertikal zentriert mit 2 px optischer Absenkung. Die leere Schreibzeile bleibt eine volle Pille; ausschließlich tatsächlicher mehrzeiliger Text oder die aktive Aufnahme erweitern die Rundung. Die Höhenmessung berücksichtigt den Textinnenabstand und ignoriert Platzhalterumbrüche für den Mehrzeilenzustand.
-
-Dateiminiaturen verwenden LibraryThumbnail: echte erste PDF-Seite, Textausschnitt, Bild oder Videostandbild. Audio und nicht unterstützte Formate erhalten ein ruhiges Formatsymbol mit Endung. PdfPreview ist der gemeinsame lokale PDF-Lesebaustein mit Seitensteuerung und Lade-/Fehlerzuständen. Dokumentformen, Typografie und Abstände verwenden vorhandene Tokens.
-
-
-Erneut ausführen sendet die ursprüngliche Nachricht samt Anhängen als neuen Turn in derselben Session. Chat-ID, Titel, bisheriger Verlauf und Composer-Entwurf bleiben erhalten; es entsteht kein Seitenleistenduplikat. Während Übertragung und laufender Antwort ist die Aktion gesperrt. Kopieren schreibt ausschließlich in die Zwischenablage. Verzweigen ist eine separate Aktion an der Antwort und übernimmt den Verlauf bis einschließlich des gewählten Turns. Bearbeiten und Verzweigen bleibt ausdrücklich beschriftet.
+Die globale Suche verwendet die transparente `sheet-glass`-Fläche, den gemeinsamen Glanzrand und 40 px Hintergrundunschärfe. Die Kulisse wird nur leicht abgedunkelt; Suchfeld und Treffer bleiben flach, gruppiert und tastaturbedienbar. Reduzierte Transparenz und fehlender Blur erhalten eine deckende Glasfarbe.
