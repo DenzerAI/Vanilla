@@ -477,8 +477,11 @@ Die Reasoning-Spur ist eine horizontale Pille, ihr stärker mattierter Glasgriff
 
 
 Der schwebende Neustart-/Aktualisieren-Button verwendet `GlassButton` aus
-`ui/components/ui/glass-button.tsx`: transparente Pille mit Lichtkante,
-weichem Schatten und unmittelbarer Druckrückmeldung. Material und Unschärfe
+`ui/components/ui/glass-button.tsx`: klare Glaspille mit gewölbter Lichtkante, breitem diagonalen Reflex,
+schmalem Glanzlicht und abgesetztem Schatten. 12 px Blur erhalten erkennbaren
+Hintergrund; der Reflex bleibt auch auf ruhiger Fläche sichtbar. Hover verstärkt
+das Licht, Druck gibt unmittelbar nach. Alle Materialwerte liegen zentral in
+den glass-button-Rollen für Hell und Dunkel. Material und Unschärfe
 verwenden zentrale Tokens; die feste Mindestbreite erhält den ruhigen Ladezustand.
 Ref, native Buttonattribute und deaktivierter Zustand gelten für den inneren Button;
 `className` gestaltet die Hülle, `contentClassName` den Inhalt. Ohne angegebenen
