@@ -95,6 +95,9 @@
 .activity-group > summary > svg { flex-shrink: 0; }
 .turn-meta > span + span::before { content: none; }
 
+@media (prefers-reduced-motion: reduce) { .activity-dots i { animation: none !important; } }
+:root[data-reduce-motion="on"] .activity-dots i { animation: none; }
+
 /* Conversation: two voices, with metadata attached to the message it describes. */
 .user-message-row .user-message { font-family: var(--font-conversation); font-size: var(--text-control); line-height: var(--leading-normal); }
 .agent-message:not(.commentary-message) > .markdown { font-family: var(--font-conversation); font-size: var(--text-conversation); line-height: var(--leading-normal); font-weight: var(--weight-regular); }
