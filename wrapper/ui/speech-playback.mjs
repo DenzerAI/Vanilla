@@ -7,9 +7,7 @@ export function speechChunks(text, max = 2000) {
   while(remaining.length) { let end=Math.min(max,remaining.length); if(end<remaining.length) { const space=remaining.lastIndexOf(' ',end); if(space>max/2) end=space; } parts.push(remaining.slice(0,end)); remaining=remaining.slice(end).trimStart(); }
   return parts;
 }
-let activePlayback = null;
 export class SpeechPlayback {
-  /** @param {any} api @param {(state: string) => void} onState */
   constructor(api, onState=()=>{}) { this.api=api; this.onState=onState; this.generation=0; }
   async unlock() {
     this.context ||= new AudioContext();
@@ -21,14 +19,12 @@ export class SpeechPlayback {
     }
     if (this.context.state!=='running') await this.context.resume();
   }
-  cancel() { if(activePlayback===this) activePlayback=null; this.generation++; this.source?.stop(); this.source=null; this.onState('idle'); }
+  cancel() { this.generation++; this.source?.stop(); this.source=null; this.onState('idle'); }
   async close() { this.cancel(); await this.context?.close(); this.context=null; this.primed=false; }
   async speak(text) {
-    if(activePlayback && activePlayback!==this) activePlayback.cancel();
-    this.cancel(); activePlayback=this; const generation=this.generation;
-    this.onState('loading');
+    this.cancel(); const generation=this.generation;
+    try { await this.unlock(); } catch { throw new Error('Wiedergabe freigeben: Bitte auf Vorlesen klicken.'); }
     try {
-      try { await this.unlock(); } catch { if(generation!==this.generation) return false; throw new Error('Wiedergabe freigeben: Bitte auf Vorlesen klicken.'); }
       for(const part of speechChunks(text)) {
         if(generation!==this.generation) return false;
         this.onState('loading');
@@ -44,7 +40,6 @@ export class SpeechPlayback {
         if(this.source===source) this.source=null;
       }
       return generation===this.generation;
-    } catch(error) { if(generation!==this.generation) return false; throw error;
-    } finally { if(generation===this.generation) { if(activePlayback===this) activePlayback=null; this.onState('idle'); } }
+    } finally { if(generation===this.generation) this.onState('idle'); }
   }
 }

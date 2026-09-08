@@ -4,6 +4,7 @@ import { DEFAULT_AGENT_AVATAR, validAgentAvatar } from "./ui/agent-avatars.mjs";
 import { readAgentProfile, updateAgentProfile } from "./identity-profile.mjs";
 import {
   mkdir,
+  open,
   readFile,
   writeFile,
   rename,
@@ -15,7 +16,7 @@ import path from "node:path";
 import { parse, stringify } from "yaml";
 import { randomUUID } from "node:crypto";
 import { recordKey, coreRequest } from "./core-client.mjs";
-export async function atomic(file, data) {
+export async function atomic(file, data, { durable = false } = {}) {
   const key = recordKey(file);
   if (key) {
     const value = typeof data === "string" ? JSON.parse(data) : data;
@@ -30,7 +31,15 @@ export async function atomic(file, data) {
     typeof data === "string" ? data : JSON.stringify(data, null, 2),
     { mode: 0o600 },
   );
+  if (durable) {
+    const handle = await open(tmp, 'r+');
+    try { await handle.sync(); } finally { await handle.close(); }
+  }
   await rename(tmp, file);
+  if (durable) {
+    const directory = await open(path.dirname(file), 'r');
+    try { await directory.sync(); } finally { await directory.close(); }
+  }
 }
 export async function jsonFile(file, fallback) {
   const key = recordKey(file);

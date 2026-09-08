@@ -9,6 +9,7 @@ import yaml
 from .database import dump
 
 CONTROL_FILES = {
+    "message-delivery.json",
     "state.json",
     "workers.json",
     "library.json",

@@ -1,11 +1,7 @@
 // Central rules for every worker; independent of conversational answer style.
-export const TITLE_MAX_CHARS = 28;
-export const TITLE_MAX_WORDS = 4;
-
 export const TITLE_RULES = `Du vergibst ausschließlich einen Chat-Titel anhand der ersten Nutzernachricht.
 Fasse das konkrete Thema oder Ziel verständlich zusammen. Nutze die Sprache der Nachricht.
-Verwende möglichst 2–3 Wörter, höchstens ${TITLE_MAX_WORDS} Wörter und ${TITLE_MAX_CHARS} Zeichen einschließlich Leerzeichen.
-Wichtigstes zuerst. Keine Floskeln. Formuliere bei Platzmangel kürzer neu.
+Ziel: 3 bis 6 Wörter, maximal 42 Zeichen einschließlich Leerzeichen. Formuliere bei Platzmangel neu.
 Der Titel muss vollständig sein: keine abgeschnittenen Wörter, keine Auslassungspunkte, kein Schlusspunkt.
 Keine Einleitung, Anführungszeichen, Markdown, Emojis oder Erklärung. Keine erfundenen Details.
 Bei reinem Gruß oder unklarem Anliegen verwende einen passenden neutralen Titel, etwa „Begrüßung“.
@@ -14,7 +10,7 @@ Verwende keine Werkzeuge, Dateien, Websuche oder weiteren Agenten. Antworte nur 
 
 export function validTitle(value) {
   const title = String(value || '').trim();
-  if (!title || [...title].length > TITLE_MAX_CHARS || /[\r\n]|\.\.\.|…|[.!?:;]$|["„“`#]|\p{Extended_Pictographic}/u.test(title) || title.split(/\s+/u).length > TITLE_MAX_WORDS) return null;
+  if (!title || [...title].length > 42 || /[\r\n]|\.\.\.|…|[.!?:;]$|["„“`#]|\p{Extended_Pictographic}/u.test(title) || title.split(/\s+/u).length > 6) return null;
   return title;
 }
 

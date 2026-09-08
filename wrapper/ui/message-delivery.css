@@ -1,0 +1,9 @@
+.message-deliveries { font-size: var(--text-small); color: var(--muted); margin-bottom: var(--space-8); }
+.message-deliveries summary { cursor: pointer; padding: var(--space-8); }
+.message-deliveries ul { list-style: none; margin: 0; padding: 0; max-height: 240px; overflow-y: auto; }
+.message-deliveries li { border-top: 1px solid var(--border); padding: var(--space-8); }
+.message-deliveries p { color: var(--text); white-space: pre-wrap; overflow-wrap: anywhere; margin: var(--space-4) 0; }
+.message-deliveries small { display: block; overflow-wrap: anywhere; }
+.delivery-meta, .delivery-actions { display: flex; flex-wrap: wrap; gap: var(--space-8); align-items: center; }
+.delivery-actions { margin-top: var(--space-8); }
+.delivery-editor textarea { width: 100%; min-height: 72px; color: var(--text); background: var(--raised); border: 1px solid var(--border); border-radius: var(--radius-control); }

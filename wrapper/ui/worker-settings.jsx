@@ -1,4 +1,3 @@
-import {Skeleton} from './skeleton.tsx';
 import React, { useEffect, useState } from "react";
 import { SettingRow } from "./settings-row.jsx";
 import "./worker-settings.css";
@@ -19,7 +18,6 @@ export function WorkerSettings({ api, onChange, onConnections }) {
     catch(e) { setError(e.message); }
     finally { setBusy(""); }
   }
-  if (!data && !error) return <Skeleton variant="settings" label="Anschlüsse werden geprüft …"/>;
   if (!data) return <div className="settings-group"><SettingRow title="Worker" description={error || "Anschlüsse werden geprüft …"} action={error && <button onClick={() => act("reload", "/workers")}>Erneut prüfen</button>} /></div>;
   const choices = data.workers.filter(w => w.configured);
   return <div className="worker-settings">

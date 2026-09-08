@@ -15,22 +15,13 @@ Entwicklung und Runtime sind eigenständige Clones dieses Repositories. Sie verw
 Voraussetzungen: Python ab 3.12, Node ab 22.12. Aus dem Vanilla-Projektordner:
 
 ```sh
-npm run setup:system
+python3 -m venv .venv
+.venv/bin/python -m pip install --no-cache-dir -r requirements.lock
+npm ci --ignore-scripts --cache .cache/npm --no-audit --no-fund
+npm --prefix wrapper ci --ignore-scripts --cache .cache/npm --no-audit --no-fund
+npm run control:build
 npm start
 ```
-
-`setup:system` installiert die festgelegten Python- und Node-Abhängigkeiten,
-baut die Oberfläche und richtet lokale Suche, Diktat sowie Piper/Thorsten
-und das Backup-Programm ein. Der erste Durchlauf braucht Internet und kann
-wegen der Modelldownloads einige Minuten dauern. Bei einem Fehler gilt das
-Setup als fehlgeschlagen; erneut ausführen setzt die Einrichtung fort.
-Piper-Pakete stehen in `requirements-speech.lock`; die Modelldateien werden
-gegen die Prüfsummen in `system/runtime-assets.mjs` geprüft. Nach erfolgreicher
-Einrichtung braucht Thorsten keinen zusätzlichen Handgriff und kein Internet.
-Git enthält Quellcode, Installationsablauf und Modellreferenzen; Zugangsdaten,
-Chats und persönliche Einstellungen gehören zur jeweiligen Installation.
-Der aktuelle Prüfhost ist macOS ARM64; die vollständige Neuinstallation auf
-anderen Betriebssystemen oder Prozessoren ist noch gesondert abzunehmen.
 
 `npm start` startet den FastAPI-Kern auf Loopback-Port **1989**, dieser seinen privaten Node-Adapter auf **1990**. Ctrl+C beendet beide. 8890/9090 und identische Kern-/Adapterports sind gesperrt. Die Daten bleiben in `data/control`, Arbeitsdateien in `workspaces/default`, jeweils innerhalb des Projekts. Symlink-Ausbrüche und externe Daten-/Modellpfade werden abgewiesen.
 

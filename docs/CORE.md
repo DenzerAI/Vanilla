@@ -1,7 +1,6 @@
 # Architektur und Betrieb
 
 Der integrierte Betriebsstand ist in [OPERATIONS.md](OPERATIONS.md) dokumentiert.
-Quellen und Lesewege beschreibt [CONTEXT.md](CONTEXT.md).
 
 ## Verantwortung
 
@@ -153,3 +152,35 @@ ACP-Testworker und prüft Chat, Kontext, Jobabschluss und Fortsetzen nach Neusta
 Vorhandene Node-Tests, TypeScript-Prüfung und Vite-Produktionsbuild bleiben Teil
 der Prüfung. Echte Dienstzugänge und ein physisches Handy sind separate
 Betriebsprüfungen; der Umbau führt keine Testnachrichten an externe Empfänger aus.
+
+## Dauerhafte Chat-Nachrichtensteuerung
+
+`wrapper/message-delivery.mjs` führt die Nachrichtenablage als einzelnen,
+serialisierten Datensatz `control/message-delivery.json` im vorhandenen
+SQLite-Speicher. Im direkten Adapterbetrieb wird dieselbe Ablage atomar mit
+Datei- und Verzeichnis-Synchronisierung geschrieben. Der einzelne private
+Adapter ist der zuständige Dispatcher; mehrere Browser teilen seine Zustände.
+Mehrere unabhängige Dispatcher auf demselben Datensatz werden nicht unterstützt.
+
+Der Speichereingang `/api/messages` dedupliziert global nach Nachrichten-ID und
+prüft einen Fingerprint des ursprünglichen Inhalts. Änderungen und Löschungen
+sind nur im Zustand `waiting` und mit passender Revision zulässig; IDs bleiben
+auch danach erhalten. Vor dem ersten Worker-Aufruf wird `dispatching` dauerhaft
+gespeichert. Nur eine RPC-Bestätigung erlaubt `delivered`; Timeout, Abbruch oder
+Neustart während einer Übergabe führen zu `unknown`, niemals zu blindem Replay.
+Vorbereitung ohne Worker-Aufruf darf bei einem Abschlussrennen wieder warten.
+
+Ein bestätigter Turnabschluss gibt die nächste Danach-Aufgabe frei. Ergänzungen
+verwenden den erwarteten aktiven Turn; fällt dieser während der Vorbereitung weg,
+folgt die Ergänzung als Fortsetzung desselben Auftrags. Früh eintreffende und
+veraltete Abschlussereignisse werden anhand der konkreten Turn-ID behandelt.
+Wiederaufnahme liest den nativen Thread; ein gecachter Export genügt nicht als
+Beleg. Unklare Einträge sperren weitere automatische Verarbeitung. Der ausdrückliche
+Fortsetzungsweg prüft den nativen Leerlauf und einen Zustandstoken und gibt nur
+wartende Einträge frei; er wiederholt keinen unklaren Aufruf.
+
+Die Browserablage verwendet je Nachricht einen eigenen Schlüssel und behält bei
+HTTP-Abbruch die ursprüngliche ID. Erneute Annahmeprüfung trifft denselben
+idempotenten Speichereingang. Der Status „Vom Worker bestätigt“ bedeutet Annahme
+am Worker, nicht den Abschluss der Modellarbeit. Worker ohne natives Steering
+verarbeiten Ergänzungen nach ihrem laufenden Turn, ohne Werkzeuge abzubrechen.
