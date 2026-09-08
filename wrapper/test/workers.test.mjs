@@ -260,9 +260,9 @@ test("actual HTTP server routes ACP chats and jobs, protects mutations and survi
     assert.equal(prompt[0].text.split('Nur mein eigener Stil.').length-1,1);
     assert.doesNotMatch(prompt[0].text,/Sei mein persönlicher Assistent/);
   }
-  const jobPrompt=prompts.find(p=>p[1].text.startsWith('Führe genau diesen einzelnen Lauf'));
-  assert.ok(jobPrompt);assert.match(jobPrompt[1].text,/aus SKILL.md.*geladen/);
-  assert.doesNotMatch(jobPrompt[1].text,/Lies SKILL.md/);
+  const jobPrompt=prompts.find(p=>p[0].text.includes('jobs/'+job.id));
+  assert.ok(jobPrompt);assert.match(jobPrompt[0].text,/aus SKILL.md.*geladen/);
+  assert.equal(jobPrompt[1].text,'Fiktiver Test');
   assert.equal(jobPrompt[1].text.split('Fiktiver Test').length-1,1);
   assert.match(jobPrompt[0].text,new RegExp('jobs/'+job.id));
   assert.equal(wire.find(m=>m.method==='thread/start').params.developerInstructions,undefined);

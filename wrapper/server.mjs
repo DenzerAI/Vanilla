@@ -428,7 +428,9 @@ async function sendTurnUnlocked(id, b) {
   }
   const companyContext = await workerInstructions({ root, workspace, cwd: c.cwd })
     + await routedContext({query:b.text || "",projectId:c.projectId || "default",chatId:id})
-    + routineInstructions(c.projectId || 'default');
+    + (c.jobId
+      ? '\n\nDies ist ein einzelner Lauf eines bereits eingerichteten Jobs. Führe die Aufgabe aus; lege keine neue Routine an. Die Arbeitsanweisung wurde aus SKILL.md im Auftragsordner geladen. Relative Ressourcenpfade beziehen sich auf diesen Ordner. Eingaben liegen in input/, Ergebnisse gehören in output/. Die fertige Antwort wird über die gespeicherte Benachrichtigungsregel zugestellt; versende keine zusätzliche Benachrichtigung selbst.'
+      : routineInstructions(c.projectId || 'default'));
   const policy = runMode(b.mode || c.mode || "default");
   if (policy.mode === "plan" && !workers.capability(workers.owner(id)).plan) throw new Error("Dieser Worker bietet hier keinen geschützten Planmodus.");
   const legacyJob = c.jobId && b.mode === undefined;
@@ -1068,7 +1070,7 @@ async function runJob(id, slot = null, coreRunId = null) {
     await atomic(path.join(runDir, "request.json"), { jobId: id, worker: job.worker, actualWorker: c.workerId, fallbackFrom: c.fallbackFrom, startedAt: new Date().toISOString() });
     await store.save();
     await sendTurn(c.id, {
-      text: `Führe genau diesen einzelnen Lauf des bereits eingerichteten Jobs aus. Lege dafür keine neue Routine an. Die folgende Anweisung wurde aus SKILL.md im aktuellen Ordner geladen; relative Ressourcenpfade beziehen sich auf diesen Ordner. Lies benötigte Dateien in input/ und speichere Ergebnisse in output/.\n\n${job.instructions}`,
+      text: job.instructions,
     });
     emit({ method: "wrapper/jobs" });
     return { threadId: c.id, runId };
