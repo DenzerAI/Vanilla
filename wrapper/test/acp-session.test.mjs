@@ -90,6 +90,18 @@ test('a resumed session does not advertise removed settings from its persisted s
   assert.equal(thread.workerSession.configOptions,undefined);
 });
 
+test('concatenated native prompt keeps loaded context separate from the unchanged user request', async()=>{
+  const {worker,thread,rpc,calls}=fixture();
+  rpc.call=async(method,params)=>{calls.push({method,params});return {stopReason:'end_turn'};};
+  const text='Execute the authorized file check.';
+  await worker.call('turn/start',{threadId:'chat',input:[{type:'text',text}],collaborationMode:{settings:{developer_instructions:'AGENTS.md: last rule without a newline.'}}});
+  await new Promise(resolve=>setImmediate(resolve));
+  const prompt=calls.find(c=>c.method==='session/prompt').params.prompt;
+  assert.match(prompt.map(p=>p.text).join(''),/last rule without a newline\.\n<\/vanilla_context>\n\nAktuelle Nutzernachricht:\n\nExecute the authorized file check\./);
+  assert.equal(prompt[1].text,text);
+  assert.equal(thread.turns[0].items[0].content[0].text,text);
+});
+
 test('concurrent session creation assigns early commands to their own chat', async()=>{
   const {worker,rpc}=fixture();
   rpc.call=async(method,params)=>{
@@ -169,4 +181,83 @@ test('commands received while the initial native auth probe runs remain attached
   };
   const result=await worker.call('thread/start',{cwd:'/fixture'});
   assert.equal(result.thread.workerSession.availableCommands[0].name,'model');
+});
+
+test('retry waits for a delayed native login update instead of rejecting the cached logged-out state', async()=>{
+  const {worker,rpc,saved}=fixture();
+  worker.info.agentCapabilities._meta={authStatus:{}};
+  worker.receive({method:'_auth/status_update',params:{authStatus:{kind:'none'}}});
+  rpc.call=async()=>{
+    setImmediate(()=>worker.receive({method:'_auth/status_update',params:{authStatus:{kind:'account',detail:'private identity'}}}));
+    return {sessionId:'after-login'};
+  };
+  const result=await worker.call('thread/start',{cwd:'/fixture'});
+  assert.equal(result.thread.workerSession.sessionId,'after-login');
+  assert.equal(worker.authenticated,true);
+  assert.ok(!JSON.stringify(saved).includes('private identity'));
+  assert.equal(worker.listenerCount('authentication'),0);
+});
+
+test('a fresh logged-out report still refuses the retry without persisting a chat', async()=>{
+  const {worker,rpc,saved}=fixture();
+  worker.info.agentCapabilities._meta={authStatus:{}}; worker.authenticated=false;
+  rpc.call=async()=>{
+    worker.receive({method:'_auth/status_update',params:{authStatus:{kind:'none'}}});
+    return {sessionId:'still-logged-out'};
+  };
+  await assert.rejects(worker.call('thread/start',{cwd:'/fixture'}),/nicht angemeldet/);
+  assert.equal(saved.length,0);
+});
+
+test('missing unused Claude session is restored under the same chat with native settings and no prompt', async()=>{
+  const {worker,thread,rpc,calls,saved}=fixture();
+  worker.id=thread.workerId='claw-code';worker.sessions.clear();
+  const configs=(model,effort)=>[
+    {id:'effort',category:'thought_level',type:'select',currentValue:effort,options:[{value:'low'},{value:'high'}]},
+    {id:'model',category:'model',type:'select',currentValue:model,options:[{value:'small'},{value:'large'}]},
+    ...config('two'),
+  ];
+  thread.workerSession.configOptions=configs('large','high');
+  let current=configs('small','low');current[2].currentValue='one';
+  rpc.call=async(method,params)=>{
+    calls.push({method,params});
+    if(method==='session/load')throw Error('Resource not found: native');
+    if(method==='session/new')return {sessionId:'replacement',configOptions:structuredClone(current)};
+    if(method==='session/set_config_option'){
+      current=current.map(o=>({...o,currentValue:o.id===params.configId?params.value:o.currentValue}));
+      return {configOptions:structuredClone(current)};
+    }
+    throw Error('Unexpected method');
+  };
+  const result=await worker.call('thread/resume',{threadId:'chat',cwd:'/fixture'});
+  assert.equal(result.thread.id,'chat'); assert.deepEqual(result.thread.turns,[]);
+  assert.equal(result.thread.workerSession.sessionId,'replacement');
+  assert.deepEqual(result.thread.workerSession.configOptions,configs('large','high'));
+  assert.deepEqual(calls.map(c=>c.method),['session/load','session/new','session/set_config_option','session/set_config_option','session/set_config_option']);
+  assert.equal(calls[2].params.configId,'model');
+  assert.equal(worker.sessions.get('replacement'),'chat');assert.equal(worker.sessions.has('native'),false);
+  assert.equal(saved.at(-1).id,'chat');
+});
+
+test('Claude recovery never replaces a session with accepted work or an unrelated load failure', async()=>{
+  for(const [turns,message] of [[[{id:'accepted',status:'failed',items:[]}],'Resource not found: native'],[[],'Connection interrupted']]){
+    const {worker,thread,rpc,calls,saved}=fixture();
+    worker.id=thread.workerId='claw-code';worker.sessions.clear();thread.turns=turns;
+    rpc.call=async(method)=>{calls.push(method);throw Error(message);};
+    await assert.rejects(worker.call('thread/resume',{threadId:'chat',cwd:'/fixture'}),e=>e.message===message);
+    assert.deepEqual(calls,['session/load']);assert.equal(saved.length,0);
+    assert.equal(thread.workerSession.sessionId,'native');
+  }
+});
+
+test('unavailable saved settings leave the original empty Claude session intact', async()=>{
+  const {worker,thread,rpc,saved}=fixture();
+  worker.id=thread.workerId='claw-code';worker.sessions.clear();
+  const previous=structuredClone(thread);
+  rpc.call=async(method)=>{
+    if(method==='session/load')throw Error('Resource not found: native');
+    return {sessionId:'replacement',configOptions:[]};
+  };
+  await assert.rejects(worker.call('thread/resume',{threadId:'chat',cwd:'/fixture'}),/nicht mehr verfügbar/);
+  assert.deepEqual(thread,previous);assert.equal(saved.length,0);assert.equal(worker.sessions.size,0);
 });

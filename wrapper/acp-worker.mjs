@@ -3,14 +3,14 @@ import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { WorkerRPC } from "./worker-rpc.mjs";
-import { sessionModelSelection } from "./worker-models.mjs";
+import { optionValues, sessionModelSelection } from "./worker-models.mjs";
 
 export class ACPWorker extends EventEmitter {
   constructor({ id, name, command, args, cwd, contextEnv, readThread, persist, rpc, mcpServers = () => [] }) {
     super(); Object.assign(this, { id, name, readThread, persist, mcpServers });
     this.rpc = rpc || new WorkerRPC({ command, args, cwd, env: contextEnv });
     this.threads = new Map(); this.sessions = new Map(); this.running = new Map(); this.requests = new Map();
-    this.connected = false; this.setupCount = 0; this.earlyUpdates = [];
+    this.connected = false; this.setupCount = 0; this.earlyUpdates = []; this.authRevision = 0;
     const save = this.persist;
     let saving = Promise.resolve();
     this.persist = thread => {
@@ -44,8 +44,8 @@ export class ACPWorker extends EventEmitter {
   models(thread) {
     return sessionModelSelection(thread?.workerSession).models;
   }
-  async checkAuthentication() {
-    if (this.authenticated === undefined && this.info?.agentCapabilities?._meta?.authStatus) {
+  async checkAuthentication(since = this.authRevision) {
+    if ((this.authenticated === undefined || (this.authenticated === false && since === this.authRevision)) && this.info?.agentCapabilities?._meta?.authStatus) {
       await new Promise(resolve => {
         const done = () => { clearTimeout(timer); this.off("authentication", done); resolve(); };
         const timer = setTimeout(done, 5500);
@@ -53,6 +53,51 @@ export class ACPWorker extends EventEmitter {
       });
     }
     if (this.authenticated === false) throw new Error(`${this.name} ist nicht angemeldet. Bitte in der CLI anmelden und danach erneut versuchen.`);
+  }
+  async newSession(cwd) {
+    const since = this.authRevision;
+    const session = await this.setup("session/new", { cwd, mcpServers: await this.mcpServers(cwd) });
+    if (!session?.sessionId) throw new Error("Worker hat keinen Chat angelegt. Anmeldung prüfen.");
+    this.setupCount++;
+    try { await this.checkAuthentication(since); return session; }
+    catch (error) {
+      this.earlyUpdates = this.earlyUpdates.filter(m => m.params.sessionId !== session.sessionId);
+      throw error;
+    } finally { this.setupCount--; }
+  }
+  async recreateEmptySession(thread, cwd) {
+    const previous = thread.workerSession, session = await this.newSession(cwd);
+    this.setupCount++;
+    try {
+      // The model determines which effort values are available. Preserve all
+      // selected native settings, accepting only fresh provider acknowledgements.
+      const options = (previous.configOptions || []).filter(o => o.type === "select")
+        .sort((a, b) => Number(b.category === "model" || b.id === "model") - Number(a.category === "model" || a.id === "model"));
+      for (const old of options) {
+        const current = session.configOptions?.find(o => o.id === old.id);
+        if (current?.currentValue === old.currentValue) continue;
+        if (current?.type !== "select" || !optionValues(current).some(o => o.value === old.currentValue)) throw new Error("Eine gespeicherte Sitzungseinstellung ist nicht mehr verfügbar. Bitte erneut auswählen.");
+        const result = await this.rpc.call("session/set_config_option", {sessionId:session.sessionId, configId:old.id, value:old.currentValue});
+        if (!Array.isArray(result?.configOptions) || result.configOptions.find(o => o.id === old.id)?.currentValue !== old.currentValue) throw new Error("Worker hat die gespeicherte Sitzungseinstellung nicht bestätigt.");
+        session.configOptions = result.configOptions;
+      }
+      if (previous.configOptions === undefined) {
+        for (const [field, currentKey, availableKey, valueKey, method, parameter] of [
+          ["models", "currentModelId", "availableModels", "modelId", "session/set_model", "modelId"],
+          ["modes", "currentModeId", "availableModes", "id", "session/set_mode", "modeId"],
+        ]) {
+          const value = previous[field]?.[currentKey];
+          if (!value || session[field]?.[currentKey] === value) continue;
+          if (!session[field]?.[availableKey]?.some(o => o[valueKey] === value)) throw new Error("Eine gespeicherte Sitzungseinstellung ist nicht mehr verfügbar. Bitte erneut auswählen.");
+          await this.rpc.call(method, {sessionId:session.sessionId, [parameter]:value});
+          session[field][currentKey] = value;
+        }
+      }
+      return session;
+    } catch (error) {
+      this.earlyUpdates = this.earlyUpdates.filter(m => m.params.sessionId !== session.sessionId);
+      throw error;
+    } finally { this.setupCount--; }
   }
   async setup(method, params) {
     this.setupCount++;
@@ -84,16 +129,9 @@ export class ACPWorker extends EventEmitter {
     if (method === "mcpServerStatus/list") return { data: [] };
     if (method === "thread/start") {
       if (p.sandbox === "read-only") throw new Error(`${this.name} bietet hier keinen geschützten Planmodus.`);
-      const session = await this.setup("session/new", { cwd: p.cwd, mcpServers: await this.mcpServers(p.cwd) });
-      if (!session?.sessionId) throw new Error("Worker hat keinen Chat angelegt. Anmeldung prüfen.");
       // A CLI can advertise models while logged out. Use its reported auth state,
       // without reading credentials or persisting account identity in the wrapper.
-      this.setupCount++;
-      try { await this.checkAuthentication(); }
-      catch (error) {
-        this.earlyUpdates = this.earlyUpdates.filter(m => m.params.sessionId !== session.sessionId);
-        throw error;
-      } finally { this.setupCount--; }
+      const session = await this.newSession(p.cwd);
       const thread = { id: `${this.id}-${randomUUID()}`, workerId: this.id, cwd: p.cwd, turns: [], workerSession: session };
       this.threads.set(thread.id, thread); this.sessions.set(session.sessionId, thread.id); this.applyEarly(thread);
       await this.persist(thread);
@@ -105,10 +143,20 @@ export class ACPWorker extends EventEmitter {
       if (!this.sessions.has(sid)) {
         if (!this.info.agentCapabilities.loadSession) throw new Error(`${this.name} kann diesen Chat nach Neustart nicht fortsetzen. Verlauf bleibt erhalten; bitte neuen Chat beginnen.`);
         // Ignore replay updates until load finishes: our persisted transcript is the display source.
-        const result = await this.setup("session/load", { sessionId: sid, cwd: p.cwd, mcpServers: await this.mcpServers(p.cwd) });
-        if (!result || (result.sessionId && result.sessionId !== sid)) throw new Error("Worker konnte den vorhandenen Chat nicht wiederherstellen. Bitte einen neuen Chat beginnen.");
-        thread.workerSession = { ...result, sessionId: sid };
-        thread.cwd = p.cwd; this.sessions.set(sid, thread.id); this.applyEarly(thread);
+        let result, sessionId = sid;
+        try {
+          result = await this.setup("session/load", { sessionId: sid, cwd: p.cwd, mcpServers: await this.mcpServers(p.cwd) });
+          if (!result || (result.sessionId && result.sessionId !== sid)) throw new Error("Worker konnte den vorhandenen Chat nicht wiederherstellen. Bitte einen neuen Chat beginnen.");
+        } catch (error) {
+          // Claude persists a native session only after its first prompt. Rebuild
+          // an explicitly missing, never-used session; never replay accepted work.
+          if (this.id !== "claw-code" || thread.turns?.length !== 0 || !/^Resource not found\b/i.test(error.message)) throw error;
+          this.earlyUpdates = this.earlyUpdates.filter(m => m.params.sessionId !== sid);
+          result = await this.recreateEmptySession(thread, p.cwd);
+          sessionId = result.sessionId;
+        }
+        thread.workerSession = { ...result, sessionId };
+        thread.cwd = p.cwd; this.sessions.set(sessionId, thread.id); this.applyEarly(thread);
         await this.persist(thread); this.publishSession(thread);
       }
       return { thread: structuredClone(thread) };
@@ -139,7 +187,11 @@ export class ACPWorker extends EventEmitter {
     if (method === "turn/start") {
       if (this.running.has(thread.id)) throw new Error("Bitte die laufende Antwort abwarten oder stoppen.");
       if (p.collaborationMode?.mode === "plan" || p.sandboxPolicy?.type === "readOnly") throw new Error(`${this.name} bietet hier keinen geschützten Planmodus.`);
-      const prompt = [{ type: "text", text: p.collaborationMode?.settings?.developer_instructions || "" }];
+      const context = p.collaborationMode?.settings?.developer_instructions;
+      const nativeCommand = p.input[0]?.type === "text" && p.input[0].text.startsWith("/");
+      // Some native adapters concatenate text blocks without a separator. End
+      // the loaded context explicitly so the request cannot become file content.
+      const prompt = context && !nativeCommand ? [{ type: "text", text: `<vanilla_context>\n${context}\n</vanilla_context>\n\nAktuelle Nutzernachricht:\n\n` }] : [];
       for (const input of p.input) {
         if (input.type === "text") prompt.push({ type: "text", text: input.text });
         else {
@@ -149,9 +201,6 @@ export class ACPWorker extends EventEmitter {
           prompt.push({ type: capability, data: (await readFile(input.path)).toString("base64"), mimeType: mime[path.extname(input.path).toLowerCase()] });
         }
       }
-      // Native commands may require exactly one text block (e.g. Claude /usage).
-      // Do not turn shared context into command arguments or dispatch a second prompt.
-      if (p.input[0]?.type === "text" && p.input[0].text.startsWith("/")) prompt.shift();
       if (p.model && thread.workerSession.configOptions === undefined && p.model !== thread.workerSession.models?.currentModelId) {
         if (!this.models(thread).some(m => m.model === p.model)) throw new Error("Modell gehört nicht zu diesem Worker. Bitte dessen Modell auswählen.");
         await this.rpc.call("session/set_model", { sessionId: thread.workerSession.sessionId, modelId: p.model });
@@ -185,6 +234,7 @@ export class ACPWorker extends EventEmitter {
     if (msg.method === "_auth/status_update") {
       const kind = msg.params?.authStatus?.kind;
       if (["none", "account", "api_key", "external", "gateway"].includes(kind)) {
+        this.authRevision++;
         this.authenticated = kind !== "none";
         this.emit("authentication", this.authenticated);
       }

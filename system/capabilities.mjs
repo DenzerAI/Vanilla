@@ -14,7 +14,7 @@ export const capabilities = {
     {id:'speech', sources:['wrapper/ui/message-speech.tsx','wrapper/ui/speech-playback.mjs','wrapper/speech.mjs','system/runtime-assets.mjs','requirements-speech.lock','scripts/setup-system.mjs'], contract:'wrapper/VOICE.md', status:'/api/speech/status'},
     {id:'dictation', sources:['wrapper/ui/dictation.jsx','wrapper/dictation.mjs'], contract:'wrapper/DICTATION.md', status:'/api/dictation/status'},
     {id:'connections', sources:['wrapper/ui/connection-catalog.mjs','wrapper/service-catalog.mjs','wrapper/crm-catalog.mjs','wrapper/integrations.mjs'], contract:'wrapper/surfaces/connections.md'},
-    {id:'workers', sources:['system/worker-catalog.mjs','wrapper/workers.mjs','wrapper/local-model-catalog.mjs'], contract:'wrapper/WORKERS.md'},
+    {id:'workers', sources:['system/worker-catalog.mjs','wrapper/workers.mjs','wrapper/acp-worker.mjs','wrapper/local-model-catalog.mjs'], contract:'wrapper/WORKERS.md', status:'/api/workers'},
     {id:'jobs', sources:['core/queue.py','core/routines.py','core/notifications.py','core/mcp.py','wrapper/job-notifications.mjs','wrapper/ui/job-notifications.jsx','wrapper/job-templates.mjs'], contract:'wrapper/surfaces/jobs.md', status:'/api/routines/tool (routine_capabilities)', backend:'existing SQLite scheduler'},
     {id:'library', sources:['wrapper/ui/library.jsx','core/files.py'], contract:'wrapper/surfaces/library.md'},
     {id:'skills', sources:['wrapper/ui/skill-details.jsx'], contract:'wrapper/surfaces/skills.md'},

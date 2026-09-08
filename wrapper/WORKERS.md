@@ -46,6 +46,9 @@ Drittanbieter stillschweigend.
 
 Der gemeinsame Kontext wird vor jedem neuen Turn frisch gelesen. Bei normalen Nachrichten erhält Codex
 ihn als Entwickleranweisung, ACP-Worker als vorangestellten Kontextblock. Der
+ACP-Block endet ausdrücklich mit `</vanilla_context>` und einer getrennten
+Kennzeichnung der aktuellen Nutzernachricht. Das erhält die Grenze auch bei
+nativen Adaptern, die mehrere Textblöcke ohne Trennzeichen zusammensetzen. Der
 sichtbare und exportierte Nutzertext bleibt unverändert. ACP-Slash-Eingaben werden ohne zusätzlichen Kontextblock gesendet: Manche nativen Befehle erwarten genau einen Textblock; Firmenkontext darf nicht zu Befehlsargumenten werden. Die gemeinsamen Pfade bleiben im Prozesskontext vorhanden. Die Worker-Prozesse
 kennen die gemeinsamen Pfade auch als Umgebungsvariablen. Die zentrale Basis
 wird nicht in engine-eigene Wissensdateien kopiert. Der Order-Bootstrap liefert
@@ -174,6 +177,25 @@ Die Modellwahl aktiviert Codex oder Claude Code über `POST /api/workers/activat
 Quellen: [Codex App Server · model/list](https://learn.chatgpt.com/docs/app-server), [Claude Code · Modellkonfiguration](https://code.claude.com/docs/en/model-config), [Claude Code · Anmeldung](https://code.claude.com/docs/en/authentication). Verfügbarkeit und Stufen werden zur Laufzeit ermittelt; die Webdokumentation ist keine fest codierte Modellliste.
 
 Wenn der ACP-Adapter die native Erweiterung `_auth/status_update` meldet, wird ihr Anmeldestatus vor der Übernahme einer neuen Sitzung geprüft. Ein ausdrücklich abgemeldeter Worker liefert einen erneuten Anmeldehinweis; die reine Modellliste beweist keinen Zugang. Es wird nur ein boolescher Status übernommen, keine Kontoidentität oder Zugangsdaten. Nicht gemeldeter Status bleibt unbekannt. Der installierte Claude-Adapter wurde am 08.09.2026 ohne Anmeldung geprüft: Handshake und Modellmetadaten vorhanden, Sitzungsübernahme mit korrektem Anmeldehinweis abgewiesen. Ein authentifizierter Modelllauf benötigt die eigene native Anmeldung.
+
+Beim erneuten Versuch nach einer Anmeldung wartet die Sitzungsübernahme auch
+bei einem zuvor abgemeldeten Status auf die neue native Rückmeldung (höchstens
+5,5 Sekunden). Ein frisch gemeldetes „abgemeldet“ bleibt ein Fehler. Es werden
+weder Zugangsdaten ausgelesen noch laufende Worker dafür neu gestartet.
+
+Claude kann eine vor dem ersten Prompt geöffnete Modellauswahl nach einem
+Neustart mit `Resource not found` ablehnen. Nur wenn der gespeicherte Chat
+nachweislich noch keinen Turn enthält, wird dafür eine neue native Sitzung
+unter derselben sichtbaren Chat-ID aufgebaut. Gespeicherte native Einstellungen
+werden erneut validiert und bestätigt, das Modell vor dem Denkaufwand. Es wird
+kein Prompt gesendet. Bereits angenommene Turns, auch fehlgeschlagene oder
+unterbrochene, werden niemals auf diesem Weg wiederholt oder ersetzt. Andere
+Ladefehler und nicht mehr verfügbare Einstellungen bleiben sichtbare Fehler.
+
+Die native Claude-Verlaufsspeicherung muss für den ausführenden Prozess
+beschreibbar sein. Der Wrapper-Export ersetzt sie nicht. Ein isolierter Prüflauf
+kann dafür `CLAUDE_CONFIG_DIR` in seinem eigenen Prüfverzeichnis verwenden;
+das verändert weder die Konfiguration noch den Zugang laufender Worker.
 
 Vorgemerkte Modellwahl: `/api/turn` akzeptiert `nextSelection: {model, effort}` für die nächste Antwort. Während eines aktiven Turns wird dieser Request abgewiesen, bevor `turn/steer` möglich ist. Im Leerlauf prüft Codex gegen den gemeldeten Katalog; ACP übernimmt Modell und Effort anhand aufeinanderfolgender nativer Antworten. Auswahl und Prompt bleiben unter derselben `turnLocks`-Sperre. Fehler verhindern die Promptübergabe.
 
