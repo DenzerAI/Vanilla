@@ -16,6 +16,8 @@ Diese Dateien sind verbindliche Bauanleitungen, keine Ideensammlung. Vor einer E
 
 ## Navigation
 
+Der gemeinsame Seitenleistenkopf zeigt AgentMenu mit konfiguriertem Avatar, Namen und integriertem Verbindungspunkt. Daneben stehen Suche als IconButton, Benachrichtigungen und Einklappen. Dies gilt auch für Inbox und Einstellungen. Der bisherige Agentenfuß und der separat bedienbare Serverstatus entfallen; Details und Neustart stehen im Agentenmenü. Aufbau und Tastaturbedienung führt chat.md.
+
 Inbox, Pipeline, Aufträge und die verfügbare Bibliothek bilden das Hauptmenü; Projekte und Chats folgen darunter. Verbindungen und Skills stehen in der vorhandenen Einstellungsnavigation mit ihren bisherigen Symbolen und Katalogansichten. Globale Suche und Querverweise öffnen den jeweiligen Einstellungsbereich direkt. Keine Modul-Platzhalter, zusätzliche Navigationsebene oder neue Seitengestaltung.
 
 ## Gemeinsamer Seitenkopf
@@ -40,6 +42,8 @@ Die Verträge schreiben keine Backend-Technik vor. Gemeinsame Frontend-Komponent
 
 ## Systemhinweise
 
+Auf schmalen Fenstern reserviert ein sichtbarer Update-/Neustarthinweis oberhalb des Agentenkopfes die Touchhöhe plus 16 px. Der Hinweis verdeckt weder Agentenbutton noch Suche oder Einklappen; ohne Hinweis entfällt der Abstand.
+
 `SystemNotice` zeigt Updates als einzelnen schlichten Button mittig an der oberen Fensterkante. Reine UI-Builds bieten „Aktualisieren“ an und laden ausschließlich die Seite neu. Nur geänderter Laufzeitcode beziehungsweise Laufzeitabhängigkeiten bieten „Neustarten“ an. Buildskript, UI-Quellen, Paketversion und reine Entwicklungsabhängigkeiten lösen keinen Serverneustart aus; serverseitig importierte gemeinsame UI-Module zählen dagegen zum Laufzeitcode. Fehler und Anmeldehinweise behalten ihre erklärende Benachrichtigung. Kein automatisches Neuladen oder Neustarten. Nach einem Neustart bleibt das Neuladen ausdrücklich wählbar, damit Entwürfe nicht unerwartet verloren gehen. Routine-Speicherbestätigungen entfallen; tatsächliche Fehler bleiben erreichbar.
 
 Bei einer fehlenden oder abgelaufenen Anmeldung hat „Bitte erneut anmelden“ Vorrang
@@ -52,7 +56,7 @@ Der Neustart prüft alle laufenden Turns, Übergaben und Sprachsessions serverse
 
 ## Globale Suche
 
-Der Einstieg in der Seitenleiste und Cmd/Ctrl+K öffnen denselben nativen Suchdialog. Er verwendet die randlose transparente gemeinsame Glasfläche mit Hintergrundunschärfe und eine zusätzlich um 8 px weichgezeichnete, über `overlay` abgedunkelte Kulisse. Das kompakte Suchfeld nutzt dieselbe dunkle Fläche wie die Seitenleistensuche (`workspace-backdrop`) ohne nativen Suchfeldrahmen. Schreibmarke und hervorgehobene Lupe zeigen Eingabefokus, Ergebniszeilen behalten sichtbaren Tastaturfokus. Nur die Trefferliste scrollt; ScrollEdgeFade mildert überlaufende Kanten über 8 px. Bei reduzierter Transparenz oder fehlender Blur-Unterstützung bleibt die Fläche deckend.
+Der Einstieg in der Seitenleiste und Cmd/Ctrl+K öffnen denselben nativen Suchdialog. Er verwendet die randlose transparente gemeinsame Glasfläche mit Hintergrundunschärfe und eine zusätzlich um 8 px weichgezeichnete, über `overlay` abgedunkelte Kulisse. Das kompakte Suchfeld nutzt dieselbe dunkle Fläche auf `workspace-backdrop` ohne nativen Suchfeldrahmen. Schreibmarke und hervorgehobene Lupe zeigen Eingabefokus, Ergebniszeilen behalten sichtbaren Tastaturfokus. Nur die Trefferliste scrollt; ScrollEdgeFade mildert überlaufende Kanten über 8 px. Bei reduzierter Transparenz oder fehlender Blur-Unterstützung bleibt die Fläche deckend.
 
 Chats erscheinen zuerst, danach Bibliotheksdateien/Artefakte, Wissen und Notizen, Aufträge, Skills, Projekte und Navigation. Leere Eingabe zeigt letzte Gespräche. Titel und lokale Gesprächsinhalte, Dateinamen/Pfade/Herkunft, indexierte Wissenstexte, Auftragsanweisungen sowie Skillnamen/-beschreibungen werden über die vorhandenen Quellen durchsucht; binäre Dateien erhalten keine erfundene Volltextsuche. Bibliotheks-, Skill- und Auftragskataloge werden pro Dialog geladen und bei Ladefehler erneut angefragt. Einzelne Ausfälle verdecken die übrigen Treffer nicht und werden benannt. Ergebnisse erscheinen bereits während weitere Quellen laden. Die Anzeige begrenzt auf 80 Datentreffer und nennt die gelieferte Trefferzahl.
 
@@ -85,3 +89,25 @@ vorhandene Ergebnisse bleiben während Aktualisierungen bedienbar. Die globale
 Suche zeigt Listenformen bis erste Treffer eintreffen; ihre vorhandene
 Statuszeile übernimmt die Ansage. App-Start zeigt auf schmalen Ansichten
 nur den Inhaltsbereich; Fehler ersetzen die Platzhalter durch Wiederholen.
+
+
+Der schwebende Neustart-/Aktualisieren-Button verwendet `GlassButton` aus
+`ui/components/ui/glass-button.tsx`: klare Glaspille mit gewölbter Lichtkante, breitem diagonalen Reflex,
+schmalem Glanzlicht und abgesetztem Schatten. 12 px Blur erhalten erkennbaren
+Hintergrund; der Reflex bleibt auch auf ruhiger Fläche sichtbar. Hover verstärkt
+das Licht, Druck gibt unmittelbar nach. Alle Materialwerte liegen zentral in
+den glass-button-Rollen für Hell und Dunkel. Material und Unschärfe
+verwenden zentrale Tokens; die feste Mindestbreite erhält den ruhigen Ladezustand.
+Ref, native Buttonattribute und deaktivierter Zustand gelten für den inneren Button;
+`className` gestaltet die Hülle, `contentClassName` den Inhalt. Ohne angegebenen
+Typ ist der Button `type="button"`. Tastaturfokus, reduzierte Bewegung,
+reduzierte Transparenz und erzwungener Kontrast sind berücksichtigt.
+Unser Design zeigt die vier Größen und den deaktivierten Zustand ohne Systemaktionen.
+Die bestehende Session-Bestätigung und Wiederanlauferkennung bleiben unverändert.
+
+Die vorhandene shadcn-Konfiguration löst `@/components/ui` nach
+`wrapper/ui/components/ui` auf. Dieser gemeinsame Ordner hält Importe und CLI-Ziele
+konsistent; kein zweiter Komponentenordner an der Repositorywurzel.
+Tailwind 4 liegt in `ui/tailwind.css`, gemeinsame Styles in `ui/styles.css`,
+Buttonstyles in `ui/components/ui/glass-button.css`. TypeScript und Tailwind
+sind bereits eingerichtet; keine erneute CLI-Initialisierung nötig.

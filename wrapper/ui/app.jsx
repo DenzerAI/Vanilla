@@ -112,7 +112,7 @@ import "./styles.css";
 import "./chat.css";
 import "./multi-chat.css";
 import { createEventSubscription } from "./chat-events.mjs";
-import { ChatMenu, ChatTitle, LayoutPicker, ConnectionStatus, PaneDivider } from "./chat-controls.jsx";
+import { ChatMenu, ChatTitle, LayoutPicker, PaneDivider } from "./chat-controls.jsx";
 import { MIN_CHAT_WIDTH, visiblePanes, selectPaneCount, conversationText } from "./chat-layout.mjs";
 import { AgentPreferences } from "./agent-preferences.jsx";
 import { AgentWelcome } from "./avatar-picker.jsx";
@@ -125,6 +125,7 @@ import { DesignReference } from "./design-reference.jsx";
 import { LocalWorkers } from "./local-workers.jsx";
 import { WorkerSettings } from "./worker-settings.jsx";
 import { workerName } from "../../system/worker-catalog.mjs";
+import { AgentMenu } from "./agent-menu";
 import { Avatar } from "./avatar.jsx";
 import { WelcomeParticles } from "./welcome-particles";
 import { nextChatGreeting } from "./chat-greetings.mjs";
@@ -666,7 +667,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     [usage, setUsage] = useState(null),
     [usageError, setUsageError] = useState(""),
     [jobFilter, setJobFilter] = useState("all"),
-    [profileMenu, setProfileMenu] = useState(false),
     [serverRestartBusy, setServerRestartBusy] = useState(false),
     [chatMenu, setChatMenu] = useState(null),
     [connectionState, setConnectionState] = useState("connecting");
@@ -1035,7 +1035,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         setView("settings");
       }
       if (e.key === "Escape") {
-        setProfileMenu(false);
         setChatMenu(null);
         setWorkspaceMenu(null);
       }
@@ -1149,7 +1148,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     setMode("default");
     setLoading(false);
     setModal(null);
-    setProfileMenu(false);
     setWorkspaceMenu(null);
     setView("chat");
     setChatId(null);
@@ -1553,7 +1551,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   useEffect(() => {
     function closeMenus(e) {
       if (!e.target.closest(".workspace-heading")) setWorkspaceMenu(null);
-      if (!e.target.closest(".sidebar-footer")) setProfileMenu(false);
       if (!e.target.closest(".chat-row")) setChatMenu(null);
     }
     document.addEventListener("pointerdown", closeMenus);
@@ -1699,8 +1696,9 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       {!embedded && <aside className="sidebar">
         <PanelLight mode={boot.settings.panelLight || "animated"} active={sidebar} />
         <div className="sidebar-resizer"><PaneDivider label="Seitenleistenbreite ändern" value={sidebarWidth} min={220} max={400} onReset={()=>setSidebarWidth(268)} onResize={delta=>setSidebarWidth(width=>Math.max(220,Math.min(400,width+delta)))}/></div>
-        {view !== "inbox" && <div className="sidebar-topbar">
-          <button className="sidebar-search" aria-label="System durchsuchen" title="System durchsuchen (⌘/Strg K)" onClick={()=>{setSearch("");setModal("search");}}>{icon(Search,18)}<span>Suche</span></button>
+        <div className="sidebar-topbar">
+          <AgentMenu name={boot.settings.name} avatar={boot.settings.avatar} avatarColor={boot.settings.avatarColor} connectionState={connectionState} restartBusy={serverRestartBusy} onNavigate={tab=>{setSettingsTab(tab);setView("settings");}} onRestart={()=>systemNoticeRef.current?.restart()} />
+          <IconButton label="System durchsuchen (⌘/Strg K)" aria-keyshortcuts="Meta+K Control+K" onClick={()=>{setSearch("");setModal("search");}}>{icon(Search,18)}</IconButton>
           {boot.features?.routines ? <IconButton label={`Benachrichtigungen${notificationState.data?.unread ? ` · ${notificationState.data.unread} ungelesen` : ''}${requests.length ? ` · ${requests.length} Rückfragen` : ''}`} onClick={()=>setModal("notifications")}>{icon(Bell,17)}{(notificationState.data?.unread>0||requests.length>0)&&<i className="notification-dot"/>}</IconButton> : requests.length > 0 && <IconButton label="Offene Rückfragen" onClick={()=>setModal("activity")}>{icon(Bell,17)}<i className="notification-dot"/></IconButton>}
           <IconButton
             label="Seitenleiste ausblenden"
@@ -1708,7 +1706,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
           >
             {icon(PanelLeft, 16)}
           </IconButton>
-        </div>}
+        </div>
         {view === "inbox" ? (
           <div className="inbox-sidebar-slot" ref={setInboxSidebarHost}/>
         ) : view === "settings" ? (
@@ -1852,66 +1850,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
             </div>
           </>
         )}
-        <div className="sidebar-footer">
-          {profileMenu && (
-            <div className="profile-menu">
-              <div className="profile-summary">
-                <Avatar avatar={boot.settings.avatar} color={boot.settings.avatarColor} />
-                <div>
-                  {boot.settings.name}
-                  <small>Lokaler Arbeitsbereich</small>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  setView("settings");
-                  setSettingsTab("usage");
-                  setProfileMenu(false);
-                }}
-              >
-                {icon(Activity)}Nutzung
-              </button>
-              <button
-                onClick={() => {
-                  setView("settings");
-                  setSettingsTab("general");
-                  setProfileMenu(false);
-                }}
-              >
-                {icon(Settings)}Einstellungen
-                <span className="shortcut">⌘ ,</span>
-              </button>
-              <button
-                onClick={() => {
-                  setView("settings");
-                  setSettingsTab("archive");
-                  setProfileMenu(false);
-                }}
-              >
-                {icon(Archive)}Archivierte Chats
-              </button>
-              <button
-                className="profile-restart"
-                disabled={serverRestartBusy}
-                onClick={() => {
-                  setProfileMenu(false);
-                  systemNoticeRef.current?.restart();
-                }}
-              >
-                {icon(RotateCcw)}{serverRestartBusy ? "Startet neu …" : "Server neu starten"}
-              </button>
-            </div>
-          )}
-          <button
-            className="profile-button"
-            aria-expanded={profileMenu}
-            onClick={() => setProfileMenu(!profileMenu)}
-          >
-            <Avatar avatar={boot.settings.avatar} color={boot.settings.avatarColor} />
-            <span>{boot.settings.name}</span>
-          </button>
-          <ConnectionStatus connectionState={connectionState}/>
-        </div>
+
       </aside>}
       <MainSurface className="main">
         {(
