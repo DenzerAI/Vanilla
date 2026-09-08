@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Orders</title>
+    <link rel="stylesheet" href="/styles.css">
+  </head>
+  <body>
+    <main>
+      <header>
+        <div>
+          <p class="eyebrow">GEMEINSAMER KOPF</p>
+          <h1>Orders</h1>
+        </div>
+        <span id="health" class="health">verbinden …</span>
+      </header>
+
+      <section class="whatsapp-card" aria-labelledby="whatsapp-title">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">BRIDGE</p>
+            <h2 id="whatsapp-title">WhatsApp</h2>
+          </div>
+          <span id="whatsapp-status" class="bridge-status">getrennt</span>
+        </div>
+        <div id="whatsapp-content">
+          <p class="bridge-copy">Verbinde ein WhatsApp-Konto, um Aufträge per Chat anzunehmen.</p>
+          <button id="whatsapp-connect" type="button">QR-Code erzeugen</button>
+        </div>
+      </section>
+
+      <section class="hero-card" aria-labelledby="hero-title">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">CRM</p>
+            <h2 id="hero-title">HERO Handwerkersoftware</h2>
+          </div>
+          <span id="hero-status" class="bridge-status">prüfen …</span>
+        </div>
+        <div id="hero-content">
+          <p class="bridge-copy">HERO-Verbindung wird geladen.</p>
+        </div>
+      </section>
+
+      <section class="composer">
+        <form id="order-form">
+          <label>Titel <input name="title" required placeholder="Was soll getan werden?"></label>
+          <label>Auftrag <textarea name="instructions" required rows="5" placeholder="Ziel, Kontext und Grenzen"></textarea></label>
+          <div class="row">
+            <label>Engine <input name="engine" value="any" placeholder="any, codex, hermes …"></label>
+            <button type="submit">Auftrag geben</button>
+          </div>
+        </form>
+      </section>
+
+      <section>
+        <div class="section-head"><h2>Verlauf</h2><button id="refresh" class="quiet">Aktualisieren</button></div>
+        <div id="orders" class="orders"><p class="empty">Noch keine Aufträge.</p></div>
+      </section>
+    </main>
+    <script type="module" src="/app.js"></script>
+  </body>
+</html>

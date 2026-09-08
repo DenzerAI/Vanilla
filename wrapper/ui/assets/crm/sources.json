@@ -1,0 +1,132 @@
+[
+  {
+    "id": "hero",
+    "file": "hero.png",
+    "source": "https://hero-software.de/assets/img/static/logos/hero-favicon-fallback.png",
+    "vendorPage": "https://hero-software.de",
+    "sha256": "de4e3e61ad507d74ddaa635f42f1f97dd05c05101aaac66976c5f4825d7ba946",
+    "retrievedAt": "2026-09-07",
+    "bytes": 433,
+    "note": "Unverändertes Original-Markenasset von der Anbieterwebsite; Markenrechte verbleiben beim Anbieter."
+  },
+  {
+    "id": "labelwin",
+    "file": "labelwin.png",
+    "source": "https://ba7f8bb0.delivery.rocketcdn.me/wp-content/uploads/2017/01/cropped-LabelWin-Favicon-300x300.png",
+    "vendorPage": "https://www.label-software.de",
+    "sha256": "f48215b824bc2bb30a4bc5716dda2c7ef2bd7e1ed2a4a51274376dbd252bb76a",
+    "retrievedAt": "2026-09-07",
+    "bytes": 22408,
+    "note": "Unverändertes Original-Markenasset von der Anbieterwebsite; Markenrechte verbleiben beim Anbieter."
+  },
+  {
+    "id": "plancraft",
+    "file": "plancraft.png",
+    "source": "https://cdn.prod.website-files.com/66f772bc196c10da7b538340/67186e5db00465391cd5e7ff_Group%201000006012%20(2).png",
+    "vendorPage": "https://plancraft.com/de-de",
+    "sha256": "1002d049a781957537b55091c7486b79ad9adb8aabea54455e248518fc17d69e",
+    "retrievedAt": "2026-09-07",
+    "bytes": 5091,
+    "note": "Unverändertes Original-Markenasset von der Anbieterwebsite; Markenrechte verbleiben beim Anbieter."
+  },
+  {
+    "id": "tooltime",
+    "file": "tooltime.png",
+    "source": "https://cdn.prod.website-files.com/5f182258ba28173e23fc2874/67408cbcd9159ec034296520_ToolTime_Midnight_Blue%40256px.png",
+    "vendorPage": "https://www.tooltime.app",
+    "sha256": "ab8752b9a3297e6bc0df3dd145afca980b974b5780f396133e249007b938c272",
+    "retrievedAt": "2026-09-07",
+    "bytes": 8640,
+    "note": "Unverändertes Original-Markenasset von der Anbieterwebsite; Markenrechte verbleiben beim Anbieter."
+  },
+  {
+    "id": "openhandwerk",
+    "file": "openhandwerk.png",
+    "source": "https://openhandwerk.de/wp-content/uploads/2022/08/256_445f77.png",
+    "vendorPage": "https://openhandwerk.de",
+    "sha256": "a458e8334727b5170c376f6a3d59cf74242a4805f3abdcd505752fcef78b7dde",
+    "retrievedAt": "2026-09-07",
+    "bytes": 2598,
+    "note": "Unverändertes Original-Markenasset von der Anbieterwebsite; Markenrechte verbleiben beim Anbieter."
+  },
+  {
+    "id": "pds",
+    "file": "pds.png",
+    "source": "https://pds.de/fileadmin/grafik/apple-touch-icon-152x152.png",
+    "vendorPage": "https://pds.de",
+    "sha256": "5443e42a6db6dbba5d07babd3196bd3558c81c14c8d91d6ebc20c8f74e1674f6",
+    "retrievedAt": "2026-09-07",
+    "bytes": 3685,
+    "note": "Unverändertes Original-Markenasset von der Anbieterwebsite; Markenrechte verbleiben beim Anbieter."
+  },
+  {
+    "id": "streit",
+    "file": "streit.png",
+    "source": "https://www.streit-software.de/apple-touch-icon.png",
+    "vendorPage": "https://www.streit-software.de",
+    "sha256": "e16c1c0418e8793aec98c03861b248335bb8b86627f87c486a4be592a1cacf3c",
+    "retrievedAt": "2026-09-07",
+    "bytes": 2429,
+    "note": "Unverändertes Original-Markenasset von der Anbieterwebsite; Markenrechte verbleiben beim Anbieter."
+  },
+  {
+    "id": "winworker",
+    "file": "winworker.png",
+    "source": "https://www.winworker.de/wp-content/uploads/2025/02/favicon-winworker-200x200.png",
+    "vendorPage": "https://www.winworker.de",
+    "sha256": "b77acb774cc08620c1bc99f9349299c2d6e5d32673659266769279002800a1f4",
+    "retrievedAt": "2026-09-07",
+    "bytes": 6978,
+    "note": "Unverändertes Original-Markenasset von der Anbieterwebsite; Markenrechte verbleiben beim Anbieter."
+  },
+  {
+    "id": "weclapp",
+    "file": "weclapp.png",
+    "source": "https://www.weclapp.com/de/wp-content/uploads/sites/4/2021/01/weclapp-site-icon-300x300.png",
+    "vendorPage": "https://www.weclapp.com/de/",
+    "sha256": "7bc22c0f064528732c55cd5ce399b0e514ad90377cd9d31795c46860c0bb9606",
+    "retrievedAt": "2026-09-07",
+    "bytes": 2845,
+    "note": "Unverändertes Original-Markenasset von der Anbieterwebsite; Markenrechte verbleiben beim Anbieter."
+  },
+  {
+    "id": "centralstationcrm",
+    "file": "centralstationcrm.svg",
+    "source": "https://centralstationcrm.de/_astro/logo-crm-icon.TqGkD-7P.svg",
+    "vendorPage": "https://centralstationcrm.de",
+    "sha256": "7bb800f317e29bde0d76f8dd1e7b9cd5818b63aed31f358acd2b2d0db75e0112",
+    "retrievedAt": "2026-09-07",
+    "bytes": 1173,
+    "note": "Unverändertes Original-Markenasset von der Anbieterwebsite; Markenrechte verbleiben beim Anbieter."
+  },
+  {
+    "id": "cas",
+    "file": "cas.png",
+    "source": "https://www.cas-software.com/storage/thumbs/512x512/r:1666708653/29173.png",
+    "vendorPage": "https://www.cas.de",
+    "sha256": "ba7b08421bd87ebcba56a5234045b1899ec3dcbd5d677e90f4d29749514729ed",
+    "retrievedAt": "2026-09-07",
+    "bytes": 27600,
+    "note": "Unverändertes Original-Markenasset von der Anbieterwebsite; Markenrechte verbleiben beim Anbieter."
+  },
+  {
+    "id": "cobra",
+    "file": "cobra.png",
+    "source": "https://cobra.de/wp-content/uploads/2026/01/favicon-cobra.png",
+    "vendorPage": "https://cobra.de",
+    "sha256": "48be2403465669b5c5d8a1987afb3466ba510191a759e1c9ffec76d5aae7f8d3",
+    "retrievedAt": "2026-09-07",
+    "bytes": 2480,
+    "note": "Unverändertes Original-Markenasset von der Anbieterwebsite; Markenrechte verbleiben beim Anbieter."
+  },
+  {
+    "id": "sap",
+    "file": "sap.svg",
+    "source": "https://help.sap.com/static/favicon.svg",
+    "vendorPage": "https://help.sap.com/docs/SAP_BUSINESS_ONE",
+    "sha256": "be93ac6d6c7eedca8775ae64ad77becc27c1c5fb07448fc222523e1bb435c282",
+    "retrievedAt": "2026-09-07",
+    "bytes": 277,
+    "note": "Unverändertes Original-Markenasset von der Anbieterwebsite; Markenrechte verbleiben beim Anbieter."
+  }
+]

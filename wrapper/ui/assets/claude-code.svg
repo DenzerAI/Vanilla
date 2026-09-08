@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 26" fill="none">
+<title>Claude Code · Clawd</title>
+<!-- Vector rendering of the block mascot used by Claude Code's terminal welcome screen. -->
+<path fill="#D97757" d="M6 2h20v4h4v12h-4v6h-4v-6h-4v6h-4v-6h-4v6H6v-6H2V6h4V2Z"/>
+<path fill="#1F1E1D" d="M10 7h3v5h-3zm9 0h3v5h-3z"/>
+</svg>

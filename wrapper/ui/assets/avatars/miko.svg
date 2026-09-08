@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="currentColor">
+  <path fill-rule="evenodd" d="M8 10a3 3 0 0 1 5-2l11 9h16l11-9a3 3 0 0 1 5 2v29a16 16 0 0 1-16 16H24A16 16 0 0 1 8 39Zm13 16a7 7 0 0 0-7 7v5a10 10 0 0 0 10 10h16a10 10 0 0 0 10-10v-5a7 7 0 0 0-7-7Z"/>
+  <g class="avatar-gaze"><g class="avatar-eyelids"><rect x="21" y="31" width="5" height="8" rx="2.5"/><rect x="38" y="31" width="5" height="8" rx="2.5"/></g></g>
+  <path d="M29 41h6l-3 3Z"/>
+</svg>

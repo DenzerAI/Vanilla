@@ -1,0 +1,4 @@
+{
+  "groq.svg": {"source":"https://console.groq.com/groq-logo.svg","description":"Original SVG from Groq Console; unmodified paths and colors; used to identify the service.","retrieved":"2026-09-06"},
+  "elevenlabs.svg": {"source":"https://elevenlabs.io","description":"Existing bundled ElevenLabs brand asset; reused without modification."}
+}

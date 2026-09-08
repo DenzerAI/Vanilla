@@ -1,0 +1,12 @@
+/* Only the last eight pixels fade, and only where more content can be scrolled into view. */
+.scroll-edge-fade {
+  --fade-top: 0px;
+  --fade-bottom: 0px;
+  -webkit-mask-image: linear-gradient(to bottom, transparent, var(--text) var(--fade-top), var(--text) calc(100% - var(--fade-bottom)), transparent);
+  mask-image: linear-gradient(to bottom, transparent, var(--text) var(--fade-top), var(--text) calc(100% - var(--fade-bottom)), transparent);
+}
+.scroll-edge-fade[data-fade-top="true"] { --fade-top: var(--space-8); }
+.scroll-edge-fade[data-fade-bottom="true"] { --fade-bottom: var(--space-8); }
+@media (forced-colors: active) {
+  .scroll-edge-fade { -webkit-mask-image: none; mask-image: none; }
+}

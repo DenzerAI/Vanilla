@@ -1,0 +1,20 @@
+.job-template-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+.job-template-controls .form-help {
+  flex: 1;
+  min-width: 0;
+}
+@media (max-width: 900px) {
+  .job-template-controls {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .job-template-controls .filter-picker,
+  .job-template-controls .filter-trigger {
+    width: 100%;
+  }
+}

@@ -1,0 +1,57 @@
+.system-notice {
+  position: fixed;
+  inset: calc(var(--space-64) + var(--space-32)) var(--space-16) auto auto;
+  transform: none;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  width: max-content;
+  max-width: min(440px, calc(100vw - var(--space-32)));
+  padding: var(--space-8) var(--space-8) var(--space-8) var(--space-20);
+  background: var(--composer-blur);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  color: var(--text);
+  border: 0;
+  border-radius: var(--radius-pill);
+  box-shadow: none;
+  font-size: var(--text-small);
+  line-height: var(--leading-normal);
+}
+.system-notice > svg { flex-shrink: 0; color: var(--muted); }
+.system-notice-text { min-width: 0; overflow-wrap: anywhere; }
+.system-notice button { flex-shrink: 0; border: 0; background: var(--raised); border-radius: var(--radius-pill); padding: var(--space-8) var(--space-12); font-size: inherit; color: var(--text); }
+.system-notice button:hover { background: var(--hover); }
+.system-notice-close { display: grid; place-items: center; width: var(--control-target); height: var(--control-target); padding: 0; border-radius: var(--radius-button); }
+:root .modal.system-confirmation { max-width: min(420px, calc(100vw - var(--space-32))); box-shadow: none; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-panel); backdrop-filter:none; -webkit-backdrop-filter:none; }
+.system-confirmation p { color: var(--muted); font-size: var(--text-control); line-height: var(--leading-normal); }
+.system-confirmation-actions { display:flex; justify-content:flex-end; gap:var(--space-8); margin-top:var(--space-24); flex-wrap:wrap; }
+@media (max-width: 480px) {
+  .system-notice { gap: var(--space-8); border-radius: var(--radius-large); }
+  .system-notice button { min-height:var(--control-touch); }
+  .system-notice .system-notice-close { width:var(--control-touch); height:var(--control-touch); }
+  .system-confirmation-actions button { width:100%; min-height:44px; }
+}
+
+.modal.system-confirmation::backdrop { backdrop-filter:none; -webkit-backdrop-filter:none; }
+
+.system-confirmation-actions .danger { color: var(--danger); }
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .system-notice { background: var(--surface); } }
+@media (prefers-reduced-transparency: reduce) { .system-notice { background: var(--surface); backdrop-filter: none; -webkit-backdrop-filter: none; } }
+
+/* A single quiet action, centered on the upper window edge. */
+.system-notice.system-update { inset: var(--space-8) auto auto 50%; transform: translateX(-50%); padding: 0; background: var(--notice-glass); backdrop-filter: blur(40px) saturate(160%); -webkit-backdrop-filter: blur(40px) saturate(160%); border: 0; box-shadow: none; }
+.system-update button { min-inline-size: 132px; transition: background-color var(--motion-feedback-duration) ease-out, color var(--motion-feedback-duration) ease-out; background: transparent; min-height: var(--control-height); padding: var(--space-4) var(--space-12); gap: var(--space-8); color: var(--muted); font-size: var(--text-caption); }
+.system-update button:hover { background: var(--hover); color: var(--text); }
+.system-update button > svg { flex-shrink: 0; }
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .system-notice.system-update { background: var(--surface); } }
+@media (prefers-reduced-transparency: reduce) { .system-notice.system-update { background: var(--surface); backdrop-filter: none; -webkit-backdrop-filter: none; } }
+
+.system-update button:disabled { opacity: 1; cursor: progress; }
+.system-update button:disabled:hover { background: transparent; color: var(--muted); }
+.system-notice-icon { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; flex: none; }
+@media (prefers-reduced-motion: reduce) {
+  .system-update button { transition: none; }
+}

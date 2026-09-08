@@ -1,0 +1,172 @@
+.local-workers .setting-row > button {
+  gap: var(--space-8);
+}
+.local-chevron-open {
+  transform: rotate(180deg);
+}
+.local-runtime {
+  border-bottom: 1px solid var(--border);
+}
+.local-runtime > .setting-row {
+  border: 0;
+}
+.local-device {
+  padding: var(--space-12) 0;
+  border-bottom: 1px solid var(--border);
+  font-size: var(--text-small);
+  color: var(--muted);
+}
+.local-device summary {
+  cursor: pointer;
+  width: fit-content;
+}
+.local-device dl {
+  margin: var(--space-12) 0 0;
+}
+.local-device dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-16);
+  padding: var(--space-4) 0;
+}
+.local-device dd {
+  margin: 0;
+  text-align: right;
+  color: var(--text);
+  overflow-wrap: anywhere;
+}
+.local-runtime-options {
+  display: grid;
+  gap: var(--space-20);
+  padding-bottom: var(--space-16);
+}
+.local-model-download,
+.local-test {
+  display: grid;
+  gap: var(--space-8);
+  min-width: 0;
+}
+.local-workers label {
+  font-size: var(--text-small);
+  color: var(--muted);
+}
+.local-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-8);
+  min-width: 0;
+}
+.local-controls input,
+.local-controls select {
+  flex: 1;
+  min-width: 0;
+}
+.local-workers input,
+.local-workers select {
+  width: 100%;
+  font-size: var(--text-small);
+}
+.local-workers button {
+  font-size: var(--text-small);
+  flex-shrink: 0;
+}
+.local-workers .local-hint {
+  font-size: var(--text-small);
+  color: var(--muted);
+  margin: 0 0 var(--space-12);
+}
+.local-model-download .local-hint {
+  margin: 0;
+}
+.local-machine-form {
+  padding: var(--space-16) 0;
+  display: grid;
+  gap: var(--space-12);
+  border-bottom: 1px solid var(--border);
+}
+.local-machine-form label {
+  display: grid;
+  gap: var(--space-8);
+}
+.local-form-actions {
+  justify-content: flex-end;
+}
+.local-footer,
+.local-endpoint,
+.local-operation-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+  font-size: var(--text-small);
+}
+.local-footer {
+  padding: var(--space-12) 0;
+  color: var(--muted);
+}
+.local-footer button,
+.local-endpoint button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-8);
+}
+.local-endpoint {
+  color: var(--muted);
+  overflow-wrap: anywhere;
+}
+.local-endpoint span {
+  min-width: 0;
+}
+.local-workers .local-error {
+  font-size: var(--text-small);
+  color: var(--danger);
+  overflow-wrap: anywhere;
+}
+.local-operation {
+  padding-bottom: var(--space-16);
+  font-size: var(--text-small);
+}
+.local-operation progress {
+  width: 100%;
+  height: 4px;
+  accent-color: var(--accent);
+  margin-top: var(--space-8);
+}
+.local-test-answer {
+  margin: var(--space-12) 0 0;
+  line-height: var(--leading-reading);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+@media (max-width: 480px) {
+  .local-controls {
+    flex-wrap: wrap;
+  }
+  .local-controls input,
+  .local-controls select {
+    flex-basis: 100%;
+  }
+  .local-device dl > div {
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+  .local-device dd {
+    text-align: left;
+  }
+}
+.local-installed-models { list-style: none; margin: 0; padding: 0 0 var(--space-12) var(--space-48); color: var(--muted); font-size: var(--text-small); }
+.local-installed-models li { display: flex; justify-content: space-between; gap: var(--space-12); padding: var(--space-4) 0; overflow-wrap: anywhere; }
+.local-model-catalog { margin-top: var(--space-24); }
+.local-model-catalog h4 { font-size: var(--text-control); font-weight: var(--weight-medium); margin: 0 0 var(--space-16); }
+.local-catalog-filters { margin-bottom: var(--space-16); }
+.local-catalog-filters select { flex: 0 1 190px; }
+.local-model-name { color: var(--text); text-decoration: none; }
+.local-model-name:hover { text-decoration: underline; }
+.local-model-state { color: var(--muted); font-size: var(--text-small); }
+@media (max-width: 560px) {
+  .local-model-catalog .setting-row { flex-wrap: wrap; gap: var(--space-12); }
+  .local-model-catalog .setting-row > div:first-child { flex-basis: 180px; }
+  .local-catalog-filters { flex-wrap: wrap; }
+  .local-catalog-filters input, .local-catalog-filters select { flex-basis: 100%; }
+}

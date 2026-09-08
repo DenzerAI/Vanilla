@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="currentColor">
+  <path fill-rule="evenodd" d="M32 8a24 24 0 1 1 0 48 24 24 0 0 1 0-48ZM17 23a9 9 0 0 0 0 18h30a9 9 0 0 0 0-18Z"/>
+  <g class="avatar-gaze"><g class="avatar-eyelids"><rect x="20" y="27" width="5" height="10" rx="2.5"/><rect x="39" y="27" width="5" height="10" rx="2.5"/></g></g>
+  <rect x="1" y="26" width="5" height="12" rx="2.5"/><rect x="58" y="26" width="5" height="12" rx="2.5"/>
+</svg>

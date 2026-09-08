@@ -1,0 +1,11 @@
+import {spawn} from 'node:child_process';
+import {existsSync} from 'node:fs';
+import path from 'node:path';
+import {fileURLToPath} from 'node:url';
+const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
+const local=path.join(root,'.venv',process.platform==='win32'?'Scripts/python.exe':'bin/python');
+const python=process.env.AGENT_PYTHON || (existsSync(local)?local:'python3');
+const child=spawn(python,['-m','core'],{cwd:root,stdio:'inherit',env:process.env});
+for(const signal of ['SIGINT','SIGTERM'])process.on(signal,()=>child.kill(signal));
+child.on('error',error=>{console.error('Python 3.12+ und die Projektabhängigkeiten werden benötigt. Siehe README.md.',error.message);process.exitCode=1;});
+child.on('exit',code=>{process.exitCode=code || 0;});

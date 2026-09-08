@@ -1,0 +1,41 @@
+.appearance-design fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
+.design-segments { display: inline-flex; padding: var(--space-2); border-radius: var(--radius-control); background: var(--raised); gap: var(--space-2); }
+.setting-row .design-segments button, .design-segments button { padding: var(--space-4) var(--space-12); min-height: var(--control-height); background: transparent; font-size: var(--text-small); color: var(--muted); border-radius: var(--radius-button); }
+.setting-row .design-segments button[aria-pressed="true"], .design-segments button[aria-pressed="true"] { color: var(--text); background: var(--selected); box-shadow: var(--shadow-control); }
+.design-tone-options { display: grid; grid-template-columns: repeat(3,minmax(0,1fr)); gap: var(--space-16); margin-bottom: var(--space-24); }
+.design-tone-option { position: relative; cursor: pointer; min-width: 0; }
+.design-tone-option input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.design-tone-option strong, .design-tone-option small { display: block; margin-top: var(--space-8); }
+.design-tone-option strong { font-size: var(--text-control); }
+.design-tone-option small { color: var(--muted); font-size: var(--text-small); margin-top: var(--space-4); }
+.design-miniature { display: flex; aspect-ratio: 1.65; border: 1px solid var(--border); border-radius: var(--radius-control); overflow: hidden; background: var(--bg); padding: var(--space-8); gap: var(--space-8); }
+.design-tone-option input:checked + .design-miniature { outline: 2px solid var(--accent); outline-offset: 3px; }
+.design-tone-option input:focus-visible + .design-miniature { outline: 1px solid var(--focus-ring); outline-offset: 5px; }
+.design-tone-option:has(input:disabled) { opacity: .6; }
+.design-mini-sidebar { flex: 0 0 28%; border-radius: var(--radius-small); background: var(--sidebar); padding: var(--space-8) var(--space-4); }
+.design-mini-sidebar i { display: block; height: 4px; background: var(--muted); opacity: .5; margin-bottom: var(--space-8); border-radius: var(--radius-small); }
+.design-mini-sidebar i:first-child { background: var(--accent); opacity: 1; }
+.design-mini-content { flex: 1; padding-block: var(--space-8); }
+.design-mini-content b, .design-mini-content i { display: block; height: 5px; width: 65%; background: var(--text); opacity: .6; border-radius: var(--radius-small); margin-bottom: var(--space-8); }
+.design-mini-content i { width: 90%; height: 4px; background: var(--muted); opacity: .3; }
+.design-mini-content > span { display: block; height: 24px; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-button); }
+.design-accent-options { display: flex; gap: var(--space-8); flex-wrap: wrap; }
+.design-accent-options label { position: relative; width: var(--control-target); height: var(--control-target); display: grid; place-items: center; }
+.design-accent-options input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
+.design-accent-options label > span { width: 22px; height: 22px; border-radius: var(--radius-pill); pointer-events: none; }
+.design-accent-options input:checked + span { outline: 2px solid var(--text); outline-offset: 3px; }
+.design-accent-options input:focus-visible + span { outline: 1px solid var(--focus-ring); outline-offset: 5px; }
+.design-back { margin-bottom: var(--space-20); color: var(--muted); }
+.ci-reference.design-reference-page { margin: 0; border: 0; padding: 0; }
+.design-reference-page .design-segments { flex-wrap: wrap; margin-bottom: var(--space-20); }
+.design-reference-page .settings-group { margin-bottom: var(--space-20); }
+.design-reference-page .ci-heading { margin-bottom: var(--space-16); }
+.design-reference-page .ci-heading h2 { font-size: var(--text-heading); }
+@media(max-width:560px) {
+ .design-tone-options { grid-template-columns: 1fr; gap: var(--space-20); }
+ .design-tone-option { display: grid; grid-template-columns: 104px 1fr; column-gap: var(--space-16); align-items: center; }
+ .design-miniature { grid-row: span 2; }
+ .design-tone-option strong, .design-tone-option small { margin: 0; }
+ .design-accent-options { gap: var(--space-4); }
+}
+@media(pointer:coarse) { .design-segments button { min-height:var(--control-touch); } .design-accent-options label { width:var(--control-touch); height:var(--control-touch); } }

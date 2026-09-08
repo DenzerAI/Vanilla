@@ -1,0 +1,21 @@
+import {Skeleton} from './skeleton.tsx';
+import React,{useState,useEffect} from 'react';
+export function SkillDetails({skill,api,Field,onUse,onChanged}) {
+  const [data,setData]=useState(null),[error,setError]=useState(''),[busy,setBusy]=useState(false),[name,setName]=useState('');
+  useEffect(()=>{if(!skill.id)return;let live=true;api('/skills/read?id='+encodeURIComponent(skill.id)).then(r=>{if(live)setData(r);}).catch(e=>{if(live)setError(e.message);});return()=>{live=false;};},[skill.id]);
+  if(!skill.id)return <><p>{skill.description}</p><code className="path-label">{skill.path}</code><div className="row end"><button className="primary" onClick={()=>onUse(skill)}>Im Chat verwenden</button></div></>;
+  return <><p>{skill.description}</p><p className="page-note">{skill.source||'Quelle unbekannt'}{skill.modified?' · Lokal geändert':''}</p><code className="path-label">{skill.path}</code><p className="page-note">{skill.availability==='shared'?'Gemeinsame Anweisung. Der Worker verwendet seine vorhandenen Werkzeuge.':`Aus der ${skill.source||'nativen'}-Installation. Voraussetzungen bei Verwendung mit einem anderen Worker prüfen.`}</p>{error&&<p role="alert">{error}</p>}
+    <details className="connection-details"><summary>Anweisung ansehen</summary>{data?<pre className="skill-source">{data.content}</pre>:!error&&<Skeleton variant="document" label="Anweisung wird geladen …"/>}</details>
+    <details className="connection-details"><summary>{skill.hub?'In eigene Skills installieren':'Eigene Variante anlegen'}</summary><Field label="Eindeutiger Skillname"><input value={name} onChange={e=>setName(e.target.value)} placeholder="mein-ablauf" pattern="[a-zA-Z0-9][a-zA-Z0-9_-]{0,95}"/></Field><button disabled={busy||!data||!name} onClick={async()=>{setBusy(true);setError('');try{await api('/skills/copy',{id:skill.id,name,version:data.version});await onChanged();}catch(e){setError(e.message);}finally{setBusy(false);}}}>{busy?'Wird kopiert …':'Kopie anlegen'}</button></details>
+    {!skill.hub&&<div className="row end"><button className="primary" disabled={!data||busy} onClick={()=>onUse(skill)}>Im Chat verwenden</button></div>}
+  </>;
+}
+export function SkillHub({api,Field,onSelect,onCreated}) {
+  const [skills,setSkills]=useState([]),[query,setQuery]=useState(''),[error,setError]=useState(''),[busy,setBusy]=useState(true);
+  useEffect(()=>{api('/skills/hub').then(r=>setSkills(r.skills)).catch(e=>setError(e.message)).finally(()=>setBusy(false));},[]);
+  return <><Field label="Weitere Skills suchen"><input value={query} onChange={e=>setQuery(e.target.value)} placeholder="Hermes-Skills durchsuchen"/></Field><p className="page-note">Optionale Skills der lokalen Hermes-Installation. Beim Installieren wird eine eigene Kopie samt Herkunft angelegt.</p>{busy&&!skills.length&&!error&&<Skeleton label="Katalog wird geladen …"/>}{error&&<p role="alert">{error}</p>}<div className="search-results">{skills.filter(s=>`${s.name} ${s.description}`.toLowerCase().includes(query.toLowerCase())).slice(0,80).map(s=><button key={s.id} onClick={()=>onSelect(s)}>{s.name}</button>)}</div>{!busy&&!error&&!skills.length&&<p>Kein lokaler optionaler Katalog gefunden.</p>}<div className="row end"><button onClick={onCreated}>Eigenen Skill erstellen</button></div></>;
+}
+export function CreateSkillForm({api,Field,onCreated}) {
+  const [busy,setBusy]=useState(false),[error,setError]=useState('');
+  return <form onSubmit={async e=>{e.preventDefault();const data=Object.fromEntries(new FormData(e.currentTarget));setBusy(true);try{await api('/skills/create',data);await onCreated();}catch(e){setError(e.message);}finally{setBusy(false);}}}><Field label="Skillname"><input name="name" required pattern="[a-zA-Z0-9][a-zA-Z0-9_-]{0,95}"/></Field><Field label="Kurzbeschreibung"><input name="description" required maxLength={500}/></Field><Field label="Arbeitsanweisung"><textarea name="content" rows={8} required maxLength={60000}/></Field><p className="page-note">Speichert einen eigenen Skill im Arbeitsbereich. Die Firmenbasis bleibt unverändert.</p>{error&&<p role="alert">{error}</p>}<div className="row end"><button disabled={busy} className="primary">Skill speichern</button></div></form>;
+}

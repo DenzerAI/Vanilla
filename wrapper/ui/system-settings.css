@@ -1,0 +1,10 @@
+.system-settings fieldset { border:0; padding:0; margin:0; min-width:0; }
+.system-settings .setting-row input[type=number] { width:96px; }
+.system-settings .setting-row input[type=time] { width:130px; }
+.system-settings .setting-row > input:not([type=number]):not([type=time]) { width:min(310px,100%); }
+.system-settings .setting-row strong, .system-settings .setting-row p { overflow-wrap:anywhere; }
+.system-settings .system-input { display:flex; gap:var(--space-8); flex-wrap:wrap; max-width:330px; }
+.system-input select { max-width:100%; min-width:0; }
+
+.system-log { white-space:pre-wrap; overflow-wrap:anywhere; max-height:360px; overflow:auto; font-size: var(--text-small); padding:var(--space-16); background:var(--bg); border-radius: var(--radius-control); }
+@media(max-width:600px) { .system-settings .setting-row { align-items:flex-start; flex-wrap:wrap; gap:var(--space-12); } .system-settings .setting-row > :first-child { flex:1 1 140px; min-width:0; } .system-settings .system-input { max-width:100%; } }

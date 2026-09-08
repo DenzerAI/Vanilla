@@ -1,0 +1,20 @@
+# Speech dependencies resolved on Python 3.14 / macOS arm64.
+certifi==2026.7.22
+charset-normalizer==3.5.1
+filelock==3.32.5
+flatbuffers==25.12.19
+fsspec==2026.7.0
+hf-xet==1.6.0
+huggingface-hub==0.34.4
+idna==3.19
+numpy==2.5.3
+onnxruntime==1.29.0
+packaging==26.3
+pathvalidate==3.3.1
+piper-tts==1.4.2
+protobuf==7.36.1
+PyYAML==6.0.3
+requests==2.34.2
+tqdm==4.70.0
+typing_extensions==4.16.0
+urllib3==2.7.0
