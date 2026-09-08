@@ -27,6 +27,7 @@ def public_text(text, limit=1200):
 class Memory:
     def __init__(self, db, config, knowledge, settings):
         self.db, self.config, self.knowledge, self.settings = db, config, knowledge, settings
+        self.crm = None
         self.lock = threading.RLock()
         self.git_dir = config.data / "vault.git"
         self.pending = {r['key'].removeprefix('memory/pending/') for r in db.rows("SELECT key FROM records WHERE key LIKE 'memory/pending/%' AND value='true'")}
@@ -252,10 +253,12 @@ class Memory:
     def context(self, query, project, chat_id=None, max_chars=None):
         options = self.settings.values["memory"]
         limit = min(max_chars or options["context_characters"], options["context_characters"])
-        result = self.knowledge.context(query, project, chat_id, limit)
+        current = self.crm.context_sources(query, min(2500, limit // 2)) if self.crm else []
+        reserved = sum(len(s["text"]) for s in current)
+        result = self.knowledge.context(query, project, chat_id, limit - reserved)
         # Shared notes are deliberately opt-in and never expose other projects.
         if options["shared_notes"] and project != "default":
-            left = limit - result["characters"]
+            left = limit - reserved - result["characters"]
             if left > 300:
                 hits = self.knowledge.search(query, "default", limit=4)
                 for hit in hits:
@@ -267,7 +270,12 @@ class Memory:
                     left -= len(text)
                     if left <= 300:
                         break
-                result["characters"] = limit - left
+                result["characters"] = limit - reserved - left
                 with self.db.transaction() as cx:
                     cx.execute("UPDATE context_routes SET sources=? WHERE id=?", (json.dumps([{k: v for k, v in s.items() if k != "text"} for s in result["sources"]]), result["id"]))
+        if current:
+            result["sources"] = current + result["sources"]
+            result["characters"] += reserved
+            with self.db.transaction() as cx:
+                cx.execute("UPDATE context_routes SET sources=? WHERE id=?", (json.dumps([{k:v for k,v in s.items() if k != "text"} for s in result["sources"]]), result["id"]))
         return result

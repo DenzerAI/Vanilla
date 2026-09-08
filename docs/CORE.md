@@ -30,6 +30,7 @@ Order-Dienstes werden nicht still mit den Wrapper-Daten vermischt.
 | --- | --- |
 | Chatliste, Einstellungen, Verbindungen und Workerwahl | SQLite records; Chats/Projekte zusätzlich relational abfragbar |
 | Öffentliche Nachrichten und Ergebnisse | SQLite messages; native Worker-Sitzung für die eigentliche Modellfortsetzung |
+| Personen, Firmen und Vorgänge | SQLite CRM-Fakten mit Herkunft; [CRM-Vertrag](CRM.md), Ansichten und Anbindungen sind davon getrennt |
 | Wissen | UTF-8-Markdown/Text; SQLite-Suche ist daraus wiederaufbaubar |
 | Jobbeschreibung und Zeitplan | jobs/*/SKILL.md und job.yaml; SQLite jobs ist deren Abfrageindex |
 | Reservierung, Laufstatus und Abschluss | SQLite executions und events |
@@ -158,3 +159,8 @@ ACP-Testworker und prüft Chat, Kontext, Jobabschluss und Fortsetzen nach Neusta
 Vorhandene Node-Tests, TypeScript-Prüfung und Vite-Produktionsbuild bleiben Teil
 der Prüfung. Echte Dienstzugänge und ein physisches Handy sind separate
 Betriebsprüfungen; der Umbau führt keine Testnachrichten an externe Empfänger aus.
+
+
+## Strukturierte Kundendaten
+
+Der [CRM-Kern](CRM.md) erweitert die vorhandene Datenbank additiv. Seine geprüften Schreibwege unterscheiden Rohsignal, Vorschlag und Fakt und halten ältere Feldwerte als Historie. `memory_context` ergänzt erkannte CRM-Kandidaten mit frisch gelesenen, versionsgebundenen Daten innerhalb des bisherigen Zeichenbudgets. Empfangs-/Prüflücken bleiben sichtbar. Die eigentliche Pipeline und externe Datenabgleiche sind separate Verbraucher; ihre UI-Studie ist noch nicht produktiv angebunden.
