@@ -39,3 +39,11 @@ Diktat- und Sprachinstallation selbst auf. Festgelegte Sprachpakete führt
 `runtime-assets.mjs`. Der Bereitschaftsmarker wird erst nach Dateiprüfung und
 erfolgreichem Laden durch Piper geschrieben; geänderte Versionen oder fehlende
 Dateien lösen bei erneuter Einrichtung eine Reparatur aus.
+
+## Datenschutz und gemeinsame Daten
+
+`settings.privacy` führt zu den bestehenden Einstellungen. `core/privacy.py`
+verwaltet lokale Regeln, Prüfpunkte und Auswertung. `wrapper/privacy.mjs`
+verbindet die Übergabeprüfstellen mit dem Kern. Status und Heartbeat-Anschluss
+stehen in [../docs/PRIVACY.md](../docs/PRIVACY.md). Die gemeinsame Suche liest
+Quellversionen vor Ausgabe erneut; kein separater Datenschutz-Suchindex.

@@ -87,7 +87,7 @@ export async function invokeConnection(store, id, payload, recordBoundary, netwo
   await recordBoundary("connector", {
     connectionId: id,
     payloadBytes: JSON.stringify(payload).length,
-  });
+  }, {text: JSON.stringify(payload)});
   const response = await safeRequest(c.url, {
     internalUrls: String(process.env.UWE_INTERNAL_URLS || "").split("\n").filter(Boolean),
     method: "POST",

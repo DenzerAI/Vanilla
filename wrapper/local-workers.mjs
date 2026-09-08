@@ -369,7 +369,7 @@ export class LocalWorkers {
         provider: machine.provider,
         model,
         inputBytes: Buffer.byteLength(text),
-      });
+      }, {text});
       const messages = [
         { role: "system", content: "Antworte kurz und auf Deutsch." },
         { role: "user", content: text.trim() },

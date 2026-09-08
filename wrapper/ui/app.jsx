@@ -1,3 +1,4 @@
+import {PrivacySettings} from './privacy-settings.tsx';
 import { InboxPage } from "./inbox";
 import { PanelLight } from "./panel-light";
 import {Skeleton} from './skeleton.tsx';
@@ -377,7 +378,6 @@ function ChatTurn({ turn, running, waiting, visible, actionsDisabled, paneNumber
   const history = (turn.items || []).filter(item => !['userMessage', 'plan'].includes(item.type) && (item.type !== 'agentMessage' || isCommentary(item)));
   const messages = groups.filter(group => group.type === "message" && !(collapseCommentary && isCommentary(group.item)));
   const firstReply = messages.findIndex(group => group.item.type !== "userMessage");
-  const lastReply = messages.findLastIndex(group => group.item.type !== "userMessage");
   const header = <div className="turn-response-header">
     <div className="turn-author">
       <span className="agent-signature" aria-hidden="true"><Avatar avatar={actions.agentProfile?.avatar} color={actions.agentProfile?.avatarColor} /></span>
@@ -386,8 +386,6 @@ function ChatTurn({ turn, running, waiting, visible, actionsDisabled, paneNumber
         <RelativeMessageTime value={turn.startedAt ?? turn.completedAt} visible={visible}/>
       </span>
     </div>
-  </div>;
-  const progress = <div className="turn-response-progress">
     {(activity.length || collapseCommentary && history.length) ? <ActivityGroup items={activity} running={running} turn={turn} waiting={waiting} visible={visible}>
       {(collapseCommentary ? history : activity).map(item => <Item key={item.id} item={item} workerId={workerId} {...actions} running={running} />)}
     </ActivityGroup> : <TurnStatus turn={turn} running={running} waiting={waiting} visible={visible} />}
@@ -396,14 +394,14 @@ function ChatTurn({ turn, running, waiting, visible, actionsDisabled, paneNumber
   return <section className="chat-turn" id={`pane-${paneNumber}-turn-${turn.id}`} tabIndex={-1} aria-label="Nachricht und Antwort">
     {messages.map((group, index) => <React.Fragment key={group.id}>
       {index === firstReply && header}
-      <Item item={group.item} beforeActions={index === lastReply ? progress : null} workerId={workerId} {...actions} running={actionsDisabled} sentAt={turn.startedAt} completedAt={!running && group.item.id === finalMessage?.id ? turn.completedAt : null} />
+      <Item item={group.item} workerId={workerId} {...actions} running={actionsDisabled} sentAt={turn.startedAt} completedAt={!running && group.item.id === finalMessage?.id ? turn.completedAt : null} />
     </React.Fragment>)}
-    {firstReply === -1 && <>{header}{progress}</>}
+    {firstReply === -1 && header}
     <ChatArtifacts items={turn.items} workspace={actions.workspace} directory={actions.directory} onFile={actions.onFile} api={api} />
     {turn.error && <div className="inline-error">{icon(AlertCircle)}{turn.error.message}</div>}
   </section>;
 }
-function Item({ item, beforeActions, agentProfile, workerId, onFork, onEdit, onRetry, onDelete, onFile, running, sentAt, completedAt, workspace, directory }) {
+function Item({ item, agentProfile, workerId, onFork, onEdit, onRetry, onDelete, onFile, running, sentAt, completedAt, workspace, directory }) {
   const [copied, setCopied] = useState(false);
   async function copy(t) {
     await navigator.clipboard.writeText(t);
@@ -468,7 +466,6 @@ function Item({ item, beforeActions, agentProfile, workerId, onFork, onEdit, onR
       >
         {i.type === "plan" && <span className="eyebrow">Plan</span>}
         <Markdown text={i.text} onFile={onFile} workspace={workspace} directory={directory} />
-        {beforeActions}
         <div className="message-actions agent-actions">
           {i.type === "agentMessage" && i.phase !== "commentary" && <MessageSpeech text={i.text} disabled={running} api={api} Button={IconButton} />}
           <IconButton label="Antwort kopieren" onClick={() => copy(i.text)}>
@@ -615,7 +612,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const systemNoticeRef = useRef(null);
   const [boot, setBoot] = useState(null),
     [audioConnections, setAudioConnections] = useState({Groq:false, ElevenLabs:false}),
-    [view, setView] = useState(() => !embedded && new URLSearchParams(window.location.search).get("view") === "inbox" ? "inbox" : "chat"),
+    [view, setView] = useState(() => !embedded && ["inbox", "settings"].includes(new URLSearchParams(window.location.search).get("view")) ? new URLSearchParams(window.location.search).get("view") : "chat"),
     [chatId, setChatId] = useState(null),
     [thread, setThread] = useState(null),
     [chats, setChats] = useState([]),
@@ -637,7 +634,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     [modal, setModal] = useState(null),
     [welcome, setWelcome] = useState(false),
     [search, setSearch] = useState(""),
-    [settingsTab, setSettingsTab] = useState("general"),
+    [settingsTab, setSettingsTab] = useState(() => new URLSearchParams(window.location.search).get("section") === "privacy" ? "privacy" : "general"),
     [selectedFile, setSelectedFile] = useState(null),
     [jobs, setJobs] = useState([]),
     [jobsLoading, setJobsLoading] = useState(true),
@@ -2604,16 +2601,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 </p>
               </>
             ) : settingsTab === "privacy" ? (
-              <>
-                <h3 className="section-heading">Datenwege</h3>
-                <div className="settings-group">
-                  <SettingRow title="Lokale Suche und Memory" description="Volltext, Fuzzy-Suche, Embeddings und die automatische Memory-Pflege laufen auf diesem Mac. Neue Quellen stammen aus öffentlichen Gesprächsnachrichten; erkannte Zugangsdaten werden vor der Memory-Aufnahme entfernt." action={<button onClick={()=>setSettingsTab('memory')}>Memory verwalten</button>}/>
-                  <SettingRow title="KI-Worker" description="Der gewählte Worker erhält deine Nachricht, Anhänge und ausgewählte Kontextstellen. Bei einem Cloud-Modell verlassen diese Inhalte das Gerät. Die Memory-Erkennung ist keine vollständige Anonymisierung; Werkzeuge können im gewählten Arbeitsmodus weitere Daten lesen oder übertragen." action={<button onClick={()=>setSettingsTab('engines')}>Worker wählen</button>}/>
-                  <SettingRow title="Übergaben erfassen" description="Nachrichtengröße, Anzahl der Anhänge und beteiligter Anschluss werden ohne Nachrichteninhalt im Übergabeprotokoll festgehalten." action={<span className="badge">Aktiv</span>}/>
-                  <SettingRow title="Zugang und Mobilgeräte" description="Die Anwendung bindet an localhost. Tailscale Serve ermöglicht privaten HTTPS-Zugang nach eingerichteter Anmeldung." action={<button onClick={()=>setSettingsTab('access')}>Zugang verwalten</button>}/>
-                  <SettingRow title="Aufbewahrung" description="Chatverlauf, aktives Memory, lokale Notizversionen und verschlüsselte Sicherungen besitzen unterschiedliche Lebenszyklen." action={<button onClick={()=>setSettingsTab('storage')}>Speicher verwalten</button>}/>
-                </div>
-              </>
+              <PrivacySettings api={api} onSettings={setSettingsTab} onSearch={()=>{setSearch("");setModal("search");}} />
             ) : settingsTab === "engines" ? (
               <>
                 <WorkerSettings api={api} onChange={refresh} onConnections={() => setView("connections")} />

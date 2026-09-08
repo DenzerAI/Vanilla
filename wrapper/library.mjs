@@ -75,7 +75,7 @@ export class Library {
     if(typeof prompt!=='string'||!prompt.trim()||prompt.length>10000)throw Error('Bildbeschreibung mit 1 bis 10.000 Zeichen erforderlich.');
     const project=this.store.project(projectId),output=await inside(this.store.root,path.join(project.path,'output'));
     const {token}=await services.credentials(c);if(!token)throw Error('API-Schlüssel fehlt.');
-    await services.recordBoundary('image',{connectionId,projectId,promptCharacters:prompt.length});
+    await services.recordBoundary('image',{connectionId,projectId,promptCharacters:prompt.length},{text:prompt});
     const result=await services.json('https://api.openai.com/v1/images/generations',{method:'POST',headers:{authorization:'Bearer '+token,'content-type':'application/json'},body:JSON.stringify({model:c.config.model,prompt,n:1,output_format:'png'}),timeoutMs:300000,maxBytes:36*1024*1024});
     const encoded=result.data?.[0]?.b64_json;if(typeof encoded!=='string'||encoded.length>34*1024*1024||!/^[A-Za-z0-9+/]+={0,2}$/.test(encoded))throw Error('Keine gültigen Bilddaten erhalten.');
     const bytes=Buffer.from(encoded,'base64');if(!bytes.subarray(0,8).equals(Buffer.from([137,80,78,71,13,10,26,10])))throw Error('Anbieter hat kein PNG geliefert.');

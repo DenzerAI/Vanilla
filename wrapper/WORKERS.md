@@ -164,3 +164,11 @@ Prüfbelege und Detailbewertung liegen im Auftrags-Arbeitsbereich unter
 geprüft. Die Browserprüfung ist offen: Chrome und Chromium scheitern in dieser
 Ausführungsumgebung beim macOS-Mach-Port-Aufbau mit „Permission denied“. Es gibt
 keinen Live-Nachweis neuer Funktionen gegen angemeldete Anbieter.
+
+## Datenschutz vor Übergaben
+
+Neue Turns und Steering werden nach Zusammenstellung des frischen Kontexts
+über die lokale Datenschutzprüfung freigegeben. Ohne Kern erfolgt keine
+Übergabe, auch nicht im Standalone-Adapter. Der reguläre Einstieg bleibt
+`npm start`. Native Werkzeuge und laufende Sitzungen sind keine vollständig
+kontrollierte Datenschutzgrenze; siehe `docs/PRIVACY.md`.

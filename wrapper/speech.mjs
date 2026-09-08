@@ -70,7 +70,7 @@ export async function installSpeechRoutes({route,dataRoot,recordBoundary, fetche
       const s=await settings();
       if (s.provider==='elevenlabs') {
         if (!s.elevenlabs || !s.voiceId) throw new Error('Bitte unter Stimme eine ElevenLabs-Stimme auswählen.');
-        await recordBoundary('speech-elevenlabs',{textCharacters:b.text.length,voiceId:s.voiceId});
+        await recordBoundary('speech-elevenlabs',{textCharacters:b.text.length,voiceId:s.voiceId},{text:b.text});
         const r=await request('https://api.elevenlabs.io/v1/text-to-speech/'+encodeURIComponent(s.voiceId),await secrets.read('speech-elevenlabs'),{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:b.text,model_id:'eleven_multilingual_v2'})});
         const audio=Buffer.from(await r.arrayBuffer()); if(audio.length>24*1024*1024) throw new Error('Sprachausgabe zu groß.');
         return {audio:audio.toString('base64'),mime:'audio/mpeg'};

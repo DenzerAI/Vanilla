@@ -250,12 +250,14 @@ class Knowledge:
             params,
         )
         if not query:
-            return [
-                self.result(d, 0, "recent")
-                for d in sorted(docs, key=lambda d: (-d["updated_at"], d["path"]))[
-                    :limit
-                ]
-            ]
+            results = []
+            for doc in sorted(docs, key=lambda d: (-d["updated_at"], d["path"])):
+                result = self.result(doc, 0, "recent")
+                if result is not None:
+                    results.append(result)
+                if len(results) >= limit:
+                    break
+            return results
         scores, methods, passages = {}, {}, {}
         terms = re.findall(r"\w+", query, re.UNICODE)
         if terms:
@@ -331,19 +333,33 @@ class Knowledge:
         ranked = sorted(
             (d for d in docs if d["path"] in scores),
             key=lambda d: (-scores[d["path"]], d["path"]),
-        )[:limit]
-        return [
-            self.result(d, scores[d["path"]], methods[d["path"]], query, passages.get(d["path"])) for d in ranked
-        ]
+        )
+        results = []
+        for d in ranked:
+            result = self.result(d, scores[d["path"]], methods[d["path"]], query, passages.get(d["path"]))
+            if result is not None:
+                results.append(result)
+            if len(results) >= limit:
+                break
+        return results
 
     def result(self, doc, score, method, query="", matched=None):
-        if "content" not in doc:
-            doc = {
-                **doc,
-                "content": self.db.rows(
-                    "SELECT content FROM documents WHERE path=?", (doc["path"],)
-                )[0]["content"],
-            }
+        # The index is a search aid, never a second authoritative source.
+        # A removed, changed, hidden or escaped source must not leak old snippets.
+        if self.db.get("memory/hidden/" + doc["path"])["found"]:
+            return None
+        try:
+            file = safe_path(self.config.workspace, doc["path"])
+            if file.stat().st_size > 2_000_000:
+                return None
+            if not any(project == doc["project_id"] and file.is_relative_to(root.resolve()) for project, root in self.roots()):
+                return None
+            content = file.read_text(encoding="utf-8")
+        except (OSError, ValueError, UnicodeError):
+            return None
+        if digest(content) != doc["digest"]:
+            return None
+        doc = {**doc, "content": content}
         selected, start = passage(doc["content"], query)
         if matched and matched in doc["content"]:
             selected, start = matched, doc["content"].find(matched)

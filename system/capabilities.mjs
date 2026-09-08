@@ -21,6 +21,7 @@ export const capabilities = {
     {id:'operations', sources:['core/operations.py','core/service.py','core/backups.py','core/restore.py','core/secrets.py'], contract:'docs/OPERATIONS.md'},
   ],
   actions: [
+    {id:'settings.privacy', surface:'Einstellungen → Datenschutz', component:'wrapper/ui/privacy-settings.tsx', selector:'[data-capability="settings.privacy"]', api:{status:'GET /api/privacy/status', settings:'POST /api/privacy/settings', preview:'POST /api/privacy/preview', export:'GET /api/privacy/export', check:'POST /internal/privacy/check'}, behavior:'Local pre-dispatch checks, versioned settings and content-free audit; native worker traffic remains outside full control', contract:'docs/PRIVACY.md'},
     {id:'inbox.preview', surface:'sidebar above jobs; inbox replaces sidebar with conversation list and back action', component:'wrapper/ui/inbox.tsx', selector:'[data-capability="inbox.preview"]', api:null, behavior:'Local fictional examples only; no connector calls, persistent drafts, agent work or sending. Concept: docs/INBOX.md'},
     {id:'chat.message.edit', surface:'user message actions', component:'wrapper/ui/app.jsx#Item', behavior:'Edit and branch via existing confirmation flow'},
     {id:'chat.message.delete', surface:'user message actions', component:'wrapper/ui/app.jsx#Item', behavior:'Direct delete button opens existing confirmation; disabled during active turn'},

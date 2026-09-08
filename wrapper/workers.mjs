@@ -1,4 +1,5 @@
 import {sharedMemoryACPServers} from './shared-memory.mjs';
+import {workerHandoff} from './privacy.mjs';
 import {fileURLToPath} from 'node:url';
 import { EventEmitter } from "node:events";
 import { access } from "node:fs/promises";
@@ -27,8 +28,8 @@ export async function findWorkerCommand(entry, env = process.env) {
 }
 
 export class Workers extends EventEmitter {
-  constructor({ store, root, codex, catalog = workerCatalog, resolveCommand = findWorkerCommand, makeACP = opts => new ACPWorker(opts) }) {
-    super(); Object.assign(this, { store, root, catalog, resolveCommand, makeACP });
+  constructor({ store, root, codex, catalog = workerCatalog, resolveCommand = findWorkerCommand, makeACP = opts => new ACPWorker(opts), checkHandoff = async () => {} }) {
+    super(); Object.assign(this, { store, root, catalog, resolveCommand, makeACP, checkHandoff });
     this.adapters = new Map(); this.requests = new Map(); this.errors = new Map(); this.connecting = new Map(); this.stopping = new Set();
     this.attach(catalog.find(w => w.adapter === "codex").id, codex);
     this.file = path.join(store.dataRoot, "workers.json");
@@ -123,6 +124,8 @@ export class Workers extends EventEmitter {
     throw new Error(failures.join(" ") || "Kein Worker eingerichtet. Unter Einstellungen → Worker verbinden.");
   }
   async call(method, params = {}, timeout) {
+    if (['turn/start', 'turn/steer'].includes(method)) await this.checkHandoff('worker', workerHandoff(params));
+    if (method === 'thread/realtime/start') await this.checkHandoff('voice', {opaque: true, attachments: 1});
     const requested = params.workerId || (params.threadId ? this.owner(params.threadId) : "auto");
     const id = requested === "auto" ? (await this.select()).id : requested;
     // Reading/exporting ACP history does not need a live connection.

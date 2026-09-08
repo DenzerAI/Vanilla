@@ -163,3 +163,25 @@ Die grafischen Loader benötigen die Utility-Klassen ihrer verschachtelten Kompo
 Seitenleiste und Workspace verwenden den gemeinsamen dekorativen Baustein `PanelLight`. Die Seitenleiste behält ihre hellere Grundfläche `sidebar` und erhält über `sidebar-material-shadow` eine sehr feine innere Kante; `sidebar-sheen` zeigt zwei diffuse, schwache radiale Verläufe. Der Workspace nutzt seine bestehende schwarze Materialfläche und `workspace-panel-sheen`. Nur die Lichtschicht bewegt sich, um jeweils wenige Prozent, mit 48 Sekunden je Richtung, sanften Wendepunkten und gegenläufiger Phase links/rechts. Dauer und Easing liegen in der zentralen Designquelle. Keine zufälligen Sprünge, kein Pulsieren von Text oder Kante.
 
 Aussehen → Visuell → Flächenlicht bietet Aus, Ruhend und Sanft bewegt (Standard). Die Auswahl wird gemeinsam mit den bestehenden Darstellungseinstellungen validiert und gespeichert. App- und Systemvorgaben für reduzierte Bewegung zeigen statische Verläufe. Versteckte Tabs, eingeklappte Seitenleisten und nicht sichtbare Flächen pausieren. Nur die Dekoration wird an den Rundungen beschnitten; Menüs, Tastaturfokus und Ziehkanten bleiben erreichbar. Erzwungener Kontrast blendet die Dekoration aus. Unser Design zeigt denselben Baustein.
+
+## Datenschutz
+
+Der bestehende Navigationspunkt verwendet `PrivacySettings` mit `SettingRow`,
+`apple-switch`, normalen Selects, Speicheraktion und dem gemeinsamen Modal.
+Reihenfolge: Datenschutzstand → Vor der Übergabe → Gemeinsame Daten → Im Betrieb
+klären. Kein Dashboard und keine zweite Anbieteranmeldung.
+
+Prozentwerte zeigen nur dokumentierte Prüfpunkte und blockierte Übergabeversuche
+im benannten Zeitraum. Ohne Versuche erscheint „Noch keine Daten“. Ein
+Dokumentationsstatus benötigt einen Nachweis oder eine Begründung; Änderungen
+werden erst nach versionsgeprüftem Speichern wirksam. Ladefehler bieten erneut
+Laden, Konflikte erhalten den Entwurf bis zum ausdrücklichen Verwerfen.
+
+Grenzen und betriebliche Prüfpunkte sind aufklappbar. Der Beispieltexttest
+verwendet gespeicherte Regeln, bleibt lokal und wird beim Schließen verworfen.
+Export enthält Prüfanmerkungen und Metadaten, keine Übergabetexte. Datenschutz
+übernimmt keine frei zugreifenden Worker-Werkzeuge; diese Grenze bleibt bereits
+an den Optionen sichtbar. Einzelheiten und Rechtsquellen: `docs/PRIVACY.md`.
+
+`?view=settings&section=privacy` öffnet denselben Datenschutzbereich direkt.
+Der Link erteilt keine Zugriffsrechte; die bestehende Anmeldung gilt weiterhin.

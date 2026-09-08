@@ -153,3 +153,10 @@ ACP-Testworker und prüft Chat, Kontext, Jobabschluss und Fortsetzen nach Neusta
 Vorhandene Node-Tests, TypeScript-Prüfung und Vite-Produktionsbuild bleiben Teil
 der Prüfung. Echte Dienstzugänge und ein physisches Handy sind separate
 Betriebsprüfungen; der Umbau führt keine Testnachrichten an externe Empfänger aus.
+
+## Datenschutzprüfung
+
+Die lokale Prüfung vor ausgewählten Worker-/Dienstübergaben, ihre Grenzen und
+der Heartbeat-Anschluss stehen in [PRIVACY.md](PRIVACY.md). Suchtreffer aus dem
+Wissensindex werden zusätzlich vor Anzeige auf aktuelle Quelldatei und Version
+geprüft. Der Index ersetzt keine führende Datei.

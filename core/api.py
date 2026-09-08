@@ -14,6 +14,12 @@ from .files import atomic_write
 from .knowledge import LocalEmbeddings
 from .service import install
 from .settings import SettingsUpdate
+from .privacy import Handoff, PrivacyOptions
+
+
+class PrivacyUpdate(BaseModel):
+    version: int = Field(ge=0)
+    values: PrivacyOptions
 
 
 class Action(BaseModel):
@@ -49,6 +55,28 @@ class MemoryTool(BaseModel):
 def routes(operations, queue):
     router = APIRouter()
     o = operations
+
+    @router.get("/api/privacy/status")
+    async def privacy_status():
+        return await asyncio.to_thread(o.privacy.status)
+
+    @router.post("/api/privacy/settings")
+    async def privacy_settings(b: PrivacyUpdate):
+        return await asyncio.to_thread(o.privacy.save, b.version, b.values)
+
+    @router.post("/api/privacy/preview")
+    async def privacy_preview(b: Handoff):
+        # No persistence of the test text, no provider request, no audit sample.
+        return await asyncio.to_thread(o.privacy.evaluate, b)
+
+    @router.get("/api/privacy/export")
+    async def privacy_export():
+        return JSONResponse(await asyncio.to_thread(o.privacy.export), headers={"Content-Disposition": 'attachment; filename="vanilla-datenschutz.json"', "Cache-Control": "no-store"})
+
+    @router.post("/internal/privacy/check")
+    async def privacy_check(b: Handoff):
+        result = await asyncio.to_thread(o.privacy.check, b)
+        return result
 
     @router.get("/api/system/mcp")
     async def mcp_config():

@@ -255,7 +255,10 @@ test("local testchat sends a bounded text request, records only metadata, and re
     bodies.push(options.body);
     return { message: { content: "Hallo vom lokalen Modell." } };
   });
-  worker.recordBoundary = async (...args) => metadata.push(args);
+  worker.recordBoundary = async (kind, meta, inspection) => {
+    metadata.push([kind, meta]);
+    assert.equal(inspection.text, "Hallo Test"); // transient input for the privacy check, never log metadata
+  };
   const op = worker.test("local-ollama", "qwen3:1.7b", "Hallo Test");
   const result = await finish(worker, op.id);
   assert.equal(result.status, "completed");

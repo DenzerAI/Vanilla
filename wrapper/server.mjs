@@ -1,3 +1,4 @@
+import {checkHandoff} from './privacy.mjs';
 import { searchConversations } from './search.mjs';
 import {localPath, localPort} from './isolation.mjs';
 import {sharedMemoryCodexConfig} from './shared-memory.mjs';
@@ -20,7 +21,7 @@ import { SkillLibrary, installSkillRoutes } from "./skill-library.mjs";
 import { Workers, installWorkerRoutes, findWorkerCommand } from "./workers.mjs";
 import { markReplyRead } from "./chat-read-state.mjs";
 import { readAgentProfile } from "./identity-profile.mjs";
-import { assignChatTitle } from "./chat-title.mjs";
+import { assignChatTitle, generateTitle } from "./chat-title.mjs";
 import { conversationInstructions } from "./chat-style.mjs";
 import { validateAppearance } from "./ui/appearance.mjs";
 import http from "node:http";
@@ -76,7 +77,7 @@ const nativeCodex = new Codex({
   binary: await findWorkerCommand(workerCatalog.find(w => w.id === "codex")) || "codex",
   contextEnv: { COMPANY_BASE: companyRoot(root), SYSTEM_BASE: systemRoot() },
 });
-const workers = new Workers({ store, root, codex: nativeCodex });
+const workers = new Workers({ store, root, codex: nativeCodex, checkHandoff });
 await workers.init();
 const clients = new Set(),
   loaded = new ThreadLoading(),
@@ -99,19 +100,13 @@ const touch = (id) => {
     return store.save();
   }
 };
-const recordBoundary = async (type, meta) => {
-  const { appendFile } = await import("node:fs/promises");
-  await mkdir(dataRoot, { recursive: true });
-  await appendFile(
-    path.join(dataRoot, "transfers.ndjson"),
-    JSON.stringify({
-      at: new Date().toISOString(),
-      mode: "prototype",
-      type,
-      ...meta,
-    }) + "\n",
-    { mode: 0o600 },
-  );
+const recordBoundary = async (type, meta, inspection = {}) => {
+  // Turns and realtime are checked at Workers.call after context assembly.
+  if (type === 'turn' || type === 'voice') return;
+  await checkHandoff(type, {
+    text: inspection.text || '', attachments: inspection.attachments || (type === 'dictation-groq' ? 1 : 0),
+    opaque: type === 'dictation-groq',
+  });
 };
 const services = new ServiceConnections({store,secrets,workers,recordBoundary});
 const library = await new Library({store,root}).init();
@@ -466,7 +461,9 @@ async function sendTurnUnlocked(id, b) {
   active.set(id, r.turn.id);
   // Title work runs independently and never delays or pollutes the conversation.
   void assignChatTitle({ chat: c, text: b.text, adapter: workers.adapters.get(workers.owner(id)),
-    save: () => store.save(), emit }).catch(() => {});
+    save: () => store.save(), emit,
+    generate: async (adapter, args) => { await checkHandoff('title', {text: args.text}); return generateTitle(adapter, args); },
+  }).catch(() => {});
   emit({ method: "wrapper/chats" });
   return r;
 }
