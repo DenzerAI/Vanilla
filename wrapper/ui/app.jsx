@@ -1532,7 +1532,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       chooseProject(result.project.id);
       newDraft(result.project.id);
     }
-    notify(change.id ? "Projekt gespeichert." : "Projekt angelegt.");
+    notify(change.id ? "Workspace gespeichert." : "Workspace angelegt.");
   }
   async function loadSkills() {
     setSkillsLoading(true);
@@ -1749,7 +1749,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               ))}
             </nav>
             <div className="workspace-projects">
-              <div className="sidebar-section-label projects-heading"><span>Projekte</span><IconButton label="Neues Projekt" onClick={()=>setModal({type:"project"})}>{icon(Plus,16)}</IconButton></div>
+              <div className="sidebar-section-label projects-heading"><span>Workspace</span><IconButton label="Neuer Workspace" onClick={()=>setModal({type:"project"})}>{icon(Plus,16)}</IconButton></div>
               {(boot.projects || []).map((space) => (
                 <section className={"workspace-group" + (expandedProject === space.id ? " expanded" : "")} key={space.id}>
                   <div className="workspace-heading">
@@ -1771,8 +1771,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       <span>{space.name}</span>
                       {icon(expandedProject === space.id ? ChevronDown : ChevronRight, 12)}
                     </button>
-                    <ChatMenu label={"Projekt verwalten: " + space.name} className="icon-button" items={[
-                      {id:"edit", label:"Projekt bearbeiten …", icon:icon(SquarePen,16), action:()=>setModal({type:"project",project:space})},
+                    <ChatMenu label={"Workspace verwalten: " + space.name} className="icon-button" items={[
+                      {id:"edit", label:"Workspace bearbeiten …", icon:icon(SquarePen,16), action:()=>setModal({type:"project",project:space})},
                       {id:"files", label:"Dateien öffnen", icon:icon(FolderOpen,16), action:()=>{if(projectId !== space.id) newDraft(space.id); chooseProject(space.id); setView("chat"); setPanel("files");}}
                     ]}>{icon(MoreHorizontal,17)}</ChatMenu>
                     <IconButton label={`Neuer Chat in ${space.name}`} onClick={()=>newDraft(space.id)}>{icon(Plus,16)}</IconButton>
@@ -2855,7 +2855,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       </Modal>}
       {modal?.type === "project" && (
         <Modal
-          title={modal.project ? "Projekt bearbeiten" : "Neues Projekt"}
+          title={modal.project ? "Workspace bearbeiten" : "Neuer Workspace"}
           className="project-dialog"
           onClose={() => setModal(null)}
         >
@@ -2871,21 +2871,21 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               <div className="project-preview" style={{color:projectColor(modal.color ?? modal.project?.color)}} aria-hidden="true">
                 {icon(projectGlyphs[modal.icon ?? modal.project?.icon ?? "folder"], 32)}
               </div>
-            <Field label="Projektname">
+            <Field label="Workspace-Name">
               <input
                 name="name"
                 defaultValue={modal.project?.name || ""}
-                placeholder="Mein Projekt"
+                placeholder="Mein Workspace"
                 autoFocus
                 required
                 maxLength={80}
               />
             </Field>
             </div>
-            <fieldset className="project-symbols" style={{"--project-preview":projectColor(modal.color ?? modal.project?.color)}}><legend>Projektsymbol</legend>
+            <fieldset className="project-symbols" style={{"--project-preview":projectColor(modal.color ?? modal.project?.color)}}><legend>Symbol</legend>
               {projectIcons.map(([value, label]) => <label key={value} title={label}><input type="radio" name="icon" value={value} checked={value === (modal.icon ?? modal.project?.icon ?? "folder")} onChange={()=>setModal(previous=>({...previous,icon:value}))} /><span>{icon(projectGlyphs[value], 20)}<span>{label}</span></span></label>)}
             </fieldset>
-            <fieldset className="project-symbols project-colors"><legend>Projektfarbe</legend>
+            <fieldset className="project-symbols project-colors"><legend>Farbe</legend>
               {projectColors.map(([value, label]) => <label key={value} title={label}><input type="radio" name="color" value={value} checked={value === (modal.color ?? modal.project?.color ?? "default")} onChange={()=>setModal(previous=>({...previous,color:value}))} /><span><span className="project-color-swatch" style={{backgroundColor:projectColor(value)}} aria-hidden="true">{icon(Check, 14)}</span><span>{label}</span></span></label>)}
             </fieldset>
             </div>
