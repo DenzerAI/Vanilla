@@ -97,6 +97,12 @@
       "url-credentials": [
         "d778ad3752b4e7909b74ec65d890eb13bfa13acf306b2d327bd011a3df416f46"
       ]
+    },
+    "core/tests/test_crm.py": {
+      "phone": [
+        "c6897abfe6f4c0ecaa14eb625ee40bd0ecd4d44db36467118d0954e313b8ca65",
+        "0974a61d68add0f67856100d614538f7786c3520def340d0386256225066c437"
+      ]
     }
   }
 }
