@@ -13,7 +13,7 @@ export function SystemSearch({api, pages, onOpen}: Props) {
   const [query, setQuery] = useState(''), [response, setResponse] = useState<Response | null>(null);
   const [error, setError] = useState(''), [loading, setLoading] = useState(true), [retry, setRetry] = useState(0);
   const search = useMemo(()=>createSystemSearch(api),[api]);
-  const labels: Record<string,string> = {chat:'Chats',file:'Bibliothek',knowledge:'Wissen und Notizen',job:'Aufträge',skill:'Skills',project:'Projekte',page:'Bereiche',setting:'Einstellungen'};
+  const labels: Record<string,string> = {chat:'Chats',file:'Bibliothek',knowledge:'Wissen und Notizen',job:'Aufträge',skill:'Skills',project:'Workspaces',page:'Bereiche',setting:'Einstellungen'};
   const list = useRef<HTMLDivElement>(null), input = useRef<HTMLInputElement>(null);
   useEffect(() => {
     let disposed = false;

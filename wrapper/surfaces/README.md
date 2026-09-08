@@ -18,7 +18,7 @@ Diese Dateien sind verbindliche Bauanleitungen, keine Ideensammlung. Vor einer E
 
 Der gemeinsame Seitenleistenkopf zeigt AgentMenu mit konfiguriertem Avatar, Namen und integriertem Verbindungspunkt. Daneben stehen Suche als IconButton, Benachrichtigungen und Einklappen. Dies gilt auch für Inbox und Einstellungen. Der bisherige Agentenfuß und der separat bedienbare Serverstatus entfallen; Details und Neustart stehen im Agentenmenü. Aufbau und Tastaturbedienung führt chat.md.
 
-Inbox, Pipeline, Aufträge und die verfügbare Bibliothek bilden das Hauptmenü; Projekte und Chats folgen darunter. Verbindungen und Skills stehen in der vorhandenen Einstellungsnavigation mit ihren bisherigen Symbolen und Katalogansichten. Globale Suche und Querverweise öffnen den jeweiligen Einstellungsbereich direkt. Keine Modul-Platzhalter, zusätzliche Navigationsebene oder neue Seitengestaltung.
+Inbox, Pipeline, Aufträge und die verfügbare Bibliothek bilden das Hauptmenü; Die Gruppe „Workspace“ und ihre Chats folgen darunter. Verbindungen und Skills stehen in der vorhandenen Einstellungsnavigation mit ihren bisherigen Symbolen und Katalogansichten. Globale Suche und Querverweise öffnen den jeweiligen Einstellungsbereich direkt. Keine Modul-Platzhalter, zusätzliche Navigationsebene oder neue Seitengestaltung.
 
 ## Gemeinsamer Seitenkopf
 
