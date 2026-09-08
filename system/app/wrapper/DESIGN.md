@@ -476,3 +476,25 @@ stehen in `surfaces/jobs.md`; keine weitere Hauptseite wird eingeführt.
 Die Modellwahl behält während einer Öffnung ihre horizontale Ausrichtung unabhängig von wechselnden Modell-, Denkaufwand- und Fast-Beschriftungen. Die beim Öffnen gemessene Triggerbreite bleibt der Anker; tatsächliche Layoutänderungen und Viewportgrenzen werden weiterhin berücksichtigt. Erneutes Öffnen richtet das Menü frisch aus.
 
 Die Reasoning-Spur ist eine horizontale Pille, ihr stärker mattierter Glasgriff eine vertikale Pille mit 16 px Blur. Bereits erreichte Punkte verschwinden; nur die noch vorausliegenden Rastpunkte bleiben neutral sichtbar. Die native Stufe Ultra verstärkt Terrakotta-Sättigung, Schweiflänge und Tempo zusätzlich, mit weichem Übergang beim Ziehen. Andere höchste Stufen werden nicht als Ultra behandelt. Die Werte liegen in amountSliderMotion und den slider-Glas-/Akzentrollen; reduzierte Bewegung bleibt statisch.
+
+
+Der schwebende Neustart-/Aktualisieren-Button verwendet `GlassButton` aus
+`ui/components/ui/glass-button.tsx`: klare Glaspille mit gewölbter Lichtkante, breitem diagonalen Reflex,
+schmalem Glanzlicht und abgesetztem Schatten. 12 px Blur erhalten erkennbaren
+Hintergrund; der Reflex bleibt auch auf ruhiger Fläche sichtbar. Hover verstärkt
+das Licht, Druck gibt unmittelbar nach. Alle Materialwerte liegen zentral in
+den glass-button-Rollen für Hell und Dunkel. Material und Unschärfe
+verwenden zentrale Tokens; die feste Mindestbreite erhält den ruhigen Ladezustand.
+Ref, native Buttonattribute und deaktivierter Zustand gelten für den inneren Button;
+`className` gestaltet die Hülle, `contentClassName` den Inhalt. Ohne angegebenen
+Typ ist der Button `type="button"`. Tastaturfokus, reduzierte Bewegung,
+reduzierte Transparenz und erzwungener Kontrast sind berücksichtigt.
+Unser Design zeigt die vier Größen und den deaktivierten Zustand ohne Systemaktionen.
+Die bestehende Session-Bestätigung und Wiederanlauferkennung bleiben unverändert.
+
+Die vorhandene shadcn-Konfiguration löst `@/components/ui` nach
+`wrapper/ui/components/ui` auf. Dieser gemeinsame Ordner hält Importe und CLI-Ziele
+konsistent; kein zweiter Komponentenordner an der Repositorywurzel.
+Tailwind 4 liegt in `ui/tailwind.css`, gemeinsame Styles in `ui/styles.css`,
+Buttonstyles in `ui/components/ui/glass-button.css`. TypeScript und Tailwind
+sind bereits eingerichtet; keine erneute CLI-Initialisierung nötig.

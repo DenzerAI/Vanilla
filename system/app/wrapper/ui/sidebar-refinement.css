@@ -206,7 +206,7 @@
 .agent-menu > button:last-child { color: var(--muted); }
 .agent-menu-preview { max-width: 268px; display: flex; }
 @media (max-width: 650px) {
-  .app:has(> .system-notice.system-update) > .sidebar .sidebar-topbar { margin-top: var(--space-40); }
+  .app:has(> .system-notice.system-update) > .sidebar .sidebar-topbar { margin-top: calc(var(--control-touch) + var(--space-16)); }
 }
 @media (pointer: coarse) {
   .sidebar-topbar > .agent-menu-trigger { min-height: var(--control-touch); }
