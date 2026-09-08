@@ -2134,10 +2134,10 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                                 {icon(Download, 16)}
                               </a>
                             </div>
-                            <FileContent key={selectedFile} path={selectedFile} api={api} />
+                            <FileContent key={selectedFile} path={selectedFile} api={api} onEnlarge={()=>setWorkspaceExpanded(true)} />
                           </>
                         ) : (
-                          boot.workspaceToolsVersion ? <AgentFiles api={api} initialFolder={agentFolderTarget}/> : <p role="status">Die neue Agent-Dateiansicht wird nach dem nächsten Serverstart verfügbar. Laufende Aufträge können zuerst fertig werden.</p>
+                          boot.workspaceToolsVersion ? <AgentFiles api={api} initialFolder={agentFolderTarget} onPreview={()=>setWorkspaceExpanded(true)}/> : <p role="status">Die neue Agent-Dateiansicht wird nach dem nächsten Serverstart verfügbar. Laufende Aufträge können zuerst fertig werden.</p>
                         )}
                       </div>
                     ) : panel === "terminal" ? (

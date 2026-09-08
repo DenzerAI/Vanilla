@@ -1,3 +1,4 @@
+import {htmlPreviewPolicy, readHtmlPreview} from './html-preview.mjs';
 import {saveHandoff, joinHandoff, handoffInstructions} from "./chat-handoff.mjs";
 import { searchConversations } from './search.mjs';
 import {localPath, localPort} from './isolation.mjs';
@@ -961,7 +962,7 @@ route("GET", "/api/file/info", async (b, u) => {
   const file = await readableFile(u);
   const info = await stat(file);
   if (!info.isFile()) throw new Error("Keine Datei.");
-  return {size:info.size};
+  return {size:info.size, htmlPreview: /\.html?$/i.test(file)};
 });
 route("GET", "/api/file/text", async (b, u) => {
   const file = await readableFile(u);
@@ -1227,6 +1228,14 @@ const server = http.createServer(async (req, res) => {
       res.setHeader("Cache-Control", "no-store");
       res.setHeader("Content-Disposition", "attachment; filename=dictation.wav");
       res.end(audio);
+      return;
+    }
+    if (req.method === 'GET' && u.pathname === '/api/file/preview') {
+      const content = await readHtmlPreview(await readableFile(u));
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Content-Security-Policy', htmlPreviewPolicy);
+      res.setHeader('Content-Length', content.length);
+      res.end(content);
       return;
     }
     if (u.pathname === "/api/file/raw") {
