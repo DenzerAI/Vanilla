@@ -24,12 +24,3 @@ auflisten kann. Ein ausgefallener Worker verdeckt die gemeinsame Basis nicht.
 Die vorhandene Liste ergänzt eine kurze Quellenzeile und denselben FilterPicker für die Herkunft. Quellen: Firmenbasis, eigene Workspace-/Projekt-Skills, Codex einschließlich nativ gemeldeter Plugins, Claude Code, gemeinsame lokale Skills und Hermes. „Installiert“ bestätigt die gefundene Quelle und garantiert keine providerübergreifende Ausführbarkeit.
 
 Der Plus-Button im PageHeading öffnet den gemeinsamen Hinzufügen-Dialog: lokale optionale Hermes-Skills suchen oder einen eigenen Skill erstellen. Details zeigen Pfad, Herkunft und aufklappbare Anweisung. Eine eigene Variante kopiert Referenzdateien und Herkunftsbeleg in Workspace/skills; Originalinstallationen werden nicht geändert. „Im Chat verwenden“ stellt einen Entwurf mit der genauen Skill-Datei bereit. Kein automatisches Ausführen oder Laden sämtlicher Skill-Inhalte in den Kontext.
-
-## Laden des Katalogs
-
-Der gemeinsame List-Skeleton überbrückt den ersten Abruf im Ergebnisbereich
-und im optionalen Hinzufügen-Katalog. Bereits geladene Skills bleiben beim
-Aktualisieren sichtbar; Fehler und echte leere Ergebnisse ersetzen den
-Platzhalter. Suchfeld und Filter bleiben an ihren vorgesehenen Stellen.
-
-Aufgeklappte Anweisungen zeigen bis zum Abruf einen Document-Skeleton; Ladefehler beenden ihn.
