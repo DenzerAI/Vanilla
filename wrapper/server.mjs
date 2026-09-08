@@ -18,7 +18,7 @@ import { ChannelRuntime } from "./channel-runtime.mjs";
 import { Library, installLibraryRoutes } from "./library.mjs";
 import { SkillLibrary, installSkillRoutes } from "./skill-library.mjs";
 import { Workers, installWorkerRoutes, findWorkerCommand } from "./workers.mjs";
-import { sessionModelSelection } from "./worker-models.mjs";
+import { applySessionSelection, sessionModelSelection, supportedEffort, visibleModels } from "./worker-models.mjs";
 import { markReplyRead } from "./chat-read-state.mjs";
 import { readAgentProfile } from "./identity-profile.mjs";
 import { assignChatTitle } from "./chat-title.mjs";
@@ -403,6 +403,7 @@ async function sendTurnUnlocked(id, b) {
     attachments: (b.attachments || []).length,
   });
   if (active.has(id)) {
+    if (b.nextSelection) throw new Error("Die vorgemerkte Modellwahl gilt für die nächste Antwort. Bitte die laufende Antwort abwarten oder stoppen.");
     if (b.mode && b.mode !== (c.mode || "default"))
       throw new Error(
         "Bitte zuerst die laufende Aufgabe stoppen, bevor du den Modus wechselst.",
@@ -413,6 +414,14 @@ async function sendTurnUnlocked(id, b) {
       expectedTurnId: active.get(id),
       input,
     });
+  }
+  if (b.nextSelection) {
+    if (!b.nextSelection.model || typeof b.nextSelection.model !== "string" || (b.nextSelection.effort && typeof b.nextSelection.effort !== "string")) throw new Error("Ungültige vorgemerkte Modellwahl.");
+    if (workers.entry(workers.owner(id)).adapter === "codex") {
+      const selected = visibleModels(modelCache).find(model => model.model === b.nextSelection.model);
+      if (!selected || b.nextSelection.effort && supportedEffort(selected, b.nextSelection.effort) !== b.nextSelection.effort) throw new Error("Die vorgemerkte Modellwahl ist nicht mehr verfügbar. Bitte erneut auswählen.");
+      b = {...b, model:selected.model, effort:supportedEffort(selected, b.nextSelection.effort)};
+    }
   }
   const companyContext = await workerInstructions({ root, workspace, cwd: c.cwd })
     + await routedContext({query:b.text || "",projectId:c.projectId || "default",chatId:id});
@@ -425,10 +434,15 @@ async function sendTurnUnlocked(id, b) {
   c.model = (workers.entry(workers.owner(id)).adapter === "codex" || c.models?.some(m => m.model === b.model)) ? b.model || c.model : c.model;
   c.effort = b.effort || c.effort || "medium";
   if (workers.entry(workers.owner(id)).adapter === "acp") {
-    const native = (await workers.call("thread/read", {threadId:id})).thread.workerSession;
+    let native = (await workers.call("thread/read", {threadId:id})).thread.workerSession;
+    if (b.nextSelection) native = await applySessionSelection(native, b.nextSelection, async change => {
+      const result = await workers.call(change.configId ? "session/set_config_option" : "session/set_model", {threadId:id, ...change});
+      return result.thread.workerSession;
+    });
     if (native?.configOptions !== undefined) {
       const selection = sessionModelSelection(native);
       Object.assign(c, {model:selection.model, effort:selection.effort, models:selection.models});
+      if (b.nextSelection) b = {...b, model:selection.model, effort:selection.effort};
     }
   }
   await store.save();

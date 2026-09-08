@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { visibleModels, preferredModel, supportedEffort, sessionModelSelection } from '../worker-models.mjs';
+import { visibleModels, preferredModel, supportedEffort, sessionModelSelection, applySessionSelection } from '../worker-models.mjs';
 
 test('Codex picker excludes older, hidden and lookalike models without affecting other providers', () => {
   const models = ['gpt-5.5','gpt-5.4-mini','gpt-5.3-codex-spark','gpt-6-astra','gpt-5.6-sol','gpt-5.6-terra','gpt-5.6-luna','gpt-60','gpt-5.60'].map(model => ({model}));
@@ -28,4 +28,22 @@ test('ACP native names, grouped values and model-specific effort options are pre
   assert.deepEqual(sessionModelSelection(session),{model:'',effort:'',models:[]});
   delete session.configOptions;
   assert.equal(sessionModelSelection(session).model,'stale');
+});
+
+
+test('queued native model choice uses newly acknowledged efforts and rejects unavailable values', async () => {
+  const make = (model, effort, levels) => ({configOptions:[
+    {id:'model',type:'select',currentValue:model,options:[{value:'a'},{value:'b'}]},
+    {id:'effort',type:'select',currentValue:effort,options:levels.map(value=>({value}))},
+  ]});
+  const before = make('a','low',['low']), calls=[];
+  const result = await applySessionSelection(before,{model:'b',effort:'high'},async change=>{
+    calls.push(change); return calls.length===1 ? make('b','medium',['medium','high']) : make('b','high',['medium','high']);
+  });
+  assert.deepEqual(calls,[{configId:'model',value:'b'},{configId:'effort',value:'high'}]);
+  assert.equal(sessionModelSelection(result).effort,'high');
+  assert.equal(sessionModelSelection(before).model,'a');
+  await assert.rejects(applySessionSelection(before,{model:'foreign'},()=>assert.fail('No native mutation allowed')),/nicht mehr verfügbar/);
+  await assert.rejects(applySessionSelection(before,{model:'a',effort:'ultra'},()=>assert.fail('No native mutation allowed')),/Denkaufwand/);
+  await assert.rejects(applySessionSelection(before,{model:'b'},async()=>before),/nicht bestätigt/);
 });

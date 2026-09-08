@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "@agentclientprotocol/claude-agent-acp": "0.75.1",
+    "@radix-ui/react-slider": "^1.4.7",
     "clsx": "^2.1.1",
     "dompurify": "^3.2.7",
     "framework7-icons": "^5.0.5",
