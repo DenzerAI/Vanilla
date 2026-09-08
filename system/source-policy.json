@@ -76,7 +76,8 @@
     "wrapper/ui/assets/openclaw.svg": "fa7e2ec07ebfa696bcc8c27d7e36425cbb7b1772f6f7f04ce390cf5f1c35cf0e",
     "wrapper/ui/assets/outlook.svg": "d67b8bb4bb8d7afe8e71e066112452d5d681ea7991fa1ec7c37df962246b2c31",
     "wrapper/ui/assets/telegram.svg": "85059d5e5bf7bda91ebab30664993c49867a26be6b947834aca16c846581766a",
-    "wrapper/ui/assets/whatsapp.svg": "1ab6db0cc2eb55d911f151b0aa339c55b6b225efcceddb8ff2050cab1410e347"
+    "wrapper/ui/assets/whatsapp.svg": "1ab6db0cc2eb55d911f151b0aa339c55b6b225efcceddb8ff2050cab1410e347",
+    "wrapper/ui/assets/21st.png": "e7c444bf3ebc8d8c6b9980832627ea6c86669ae672eef29c67cfbf6327aa2a50"
   },
   "syntheticLiterals": {
     "test/hero-client.test.mjs": {

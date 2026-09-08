@@ -45,6 +45,7 @@ export const connectionCatalog = [
   service('openai-image','image','design'),
   {name:'n8n',provider:'n8n',category:'automation',icon:'workflow',description:'Vorhandene Workflows ausführen',kind:'webhook'},
   {name:'Higgsfield',provider:'higgsfield',category:'design',icon:'image',description:'Bild- und Videodienste öffnen',kind:'link'},
+  {name:'21st.dev',provider:'21st',category:'design',icon:'image',description:'UI-Komponenten, Vorlagen und MCP-Einrichtung',kind:'link',url:'https://21st.dev',setupUrl:'https://21st.dev/mcp',setupNote:'Komponenten und Vorlagen im Browser öffnen. Für den MCP-Zugang ist ein eigener API-Schlüssel bei 21st.dev nötig. Das Speichern dieses Links aktiviert keine MCP-Werkzeuge.'},
   {name:'Groq',provider:'groq',category:'voice',icon:'audio',description:'Schnelle Diktaterkennung',kind:'audio'},
   {name:'ElevenLabs',provider:'elevenlabs',category:'voice',icon:'volume',description:'Stimmen für den Sprachchat',kind:'audio'},
   {name:'Eigener Dienst',provider:'custom',category:'automation',icon:'plug',description:'Link oder Workflow-Webhook',kind:'webhook'},
