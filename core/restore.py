@@ -26,7 +26,7 @@ def recover(config, journal):
         (config.data / 'restore-pending.json').unlink(missing_ok=True)
         journal.unlink()
         return
-    allowed = {config.workspace, config.data/'agent.sqlite3', config.data/'vault.git', config.data/'codex/sessions', config.data/'codex/archived_sessions', *[Path(str(config.data/'agent.sqlite3')+s) for s in ('-wal','-shm')]}
+    allowed = {config.workspace, config.data/'agent.sqlite3', config.data/'vault.git', config.data/'provider-vault', config.data/'codex/sessions', config.data/'codex/archived_sessions', *[Path(str(config.data/'agent.sqlite3')+s) for s in ('-wal','-shm')]}
     for step in reversed(state['steps']):
         target, old, prepared = (Path(step[k]) if step.get(k) else None for k in ('target','old','prepared'))
         if target not in allowed or old.parent != target.parent or not old.name.startswith('.agent-restore-'):
@@ -63,7 +63,7 @@ def apply_pending(config):
         id=uuid4().hex
         steps=[]
         sources=[(None,Path(str(config.data/'agent.sqlite3')+suffix)) for suffix in ('-wal','-shm')]
-        sources += [(base/'workspace',config.workspace),(base/'database.sqlite3',config.data/'agent.sqlite3'),(base/'vault.git',config.data/'vault.git'),(base/'worker-sessions',config.data/'codex/sessions'),(base/'archived-sessions',config.data/'codex/archived_sessions')]
+        sources += [(base/'provider-vault',config.data/'provider-vault'),(base/'workspace',config.workspace),(base/'database.sqlite3',config.data/'agent.sqlite3'),(base/'vault.git',config.data/'vault.git'),(base/'worker-sessions',config.data/'codex/sessions'),(base/'archived-sessions',config.data/'codex/archived_sessions')]
         record={'steps':steps,'snapshot':state['snapshot'],'created_at':time()}
         # Prepare every copy before modifying the live workspace or database.
         for source,target in sources:

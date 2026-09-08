@@ -11,7 +11,7 @@ test('local artifact paths reject remote schemes, encoded traversal and other wo
 
 test('artifacts deduplicate links and changes without inventing files from prose or failed writes',()=>{
  const items=[{type:'agentMessage',text:'[Report](output/report.pdf) ![Chart](output/chart.png) Plain output/no.txt [remote](https://example.com/a.png)'},{type:'fileChange',status:'completed',changes:[{path:'/workspace/output/report.pdf'},{path:'deleted.txt',kind:'delete'}]},{type:'fileChange',status:'failed',changes:[{path:'failed.txt'}]}];
- assert.deepEqual(collectArtifacts(items,'/workspace').map(f=>f.path),[]);
+ assert.deepEqual(collectArtifacts(items,'/workspace').map(f=>f.path),['output/report.pdf','output/chart.png']);
  assert.equal(fileKind('report.docx'),'download');assert.equal(fileKind('report.md'),'text');
 });
 
@@ -31,13 +31,4 @@ test('relative artifacts stay in the originating project rather than the workspa
  assert.equal(localFilePath('output/chart.png','/workspace','/workspace/projects/demo'),'projects/demo/output/chart.png');
  assert.equal(localFilePath('/workspace/output/chart.png','/workspace','/workspace/projects/demo'),'output/chart.png');
  assert.equal(localFilePath('output/chart.png','/workspace','/other'),null);
-});
-
-
-test('inline file links suppress matching artifacts regardless of order and path spelling',()=>{
- const tool={type:'fileChange',status:'completed',changes:[{path:'/workspace/projects/demo/output/My Report.md'},{path:'output/other.csv'}]};
- const answer={type:'agentMessage',text:'[Prüfdetails](<output/My%20Report.md#result>)'};
- for(const items of [[tool,answer],[answer,tool]]) assert.deepEqual(collectArtifacts(items,'/workspace','/workspace/projects/demo').map(f=>f.path),['projects/demo/output/other.csv']);
- assert.equal(collectArtifacts([tool,{...answer,phase:'commentary'}],'/workspace','/workspace/projects/demo').length,2);
- assert.equal(collectArtifacts([tool,{...answer,text:'`[example](output/My%20Report.md)`'}],'/workspace','/workspace/projects/demo').length,2);
 });

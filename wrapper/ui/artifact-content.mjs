@@ -19,11 +19,11 @@ export function localFilePath(value, workspace = '', directory = workspace) {
 }
 
 export function fileKind(path = '') {
-  if (/\.(png|jpe?g|webp|gif|avif|bmp)$/i.test(path)) return 'image';
+  if (/\.(png|jpe?g|webp|gif)$/i.test(path)) return 'image';
   if (/\.pdf$/i.test(path)) return 'pdf';
-  if (/\.(mp3|wav|m4a|ogg|flac|aac)$/i.test(path)) return 'audio';
-  if (/\.(mp4|webm|mov|m4v)$/i.test(path)) return 'video';
-  if (/\.(txt|md|markdown|mdx|log|ini|cfg|rst|csv|tsv|json|ya?ml|toml|xml|html?|css|scss|[cm]?js|jsx|tsx?|py|sh|sql|rs|go|swift|java|c|h|cpp|diff|patch|svg)$/i.test(path)) return 'text';
+  if (/\.(mp3|wav|m4a|ogg)$/i.test(path)) return 'audio';
+  if (/\.(mp4|webm)$/i.test(path)) return 'video';
+  if (/\.(txt|md|csv|tsv|json|ya?ml|toml|xml|html?|css|scss|[cm]?js|jsx|tsx?|py|sh|sql|rs|go|swift|java|c|h|cpp|diff|patch|svg)$/i.test(path)) return 'text';
   return 'download';
 }
 
@@ -45,7 +45,7 @@ export function diffLines(diff = '', limit = 400) {
 }
 
 export function collectArtifacts(items = [], workspace = '', directory = workspace) {
-  const files = new Map(), linked = new Set();
+  const files = new Map();
   const add = (value, label) => {
     const path = localFilePath(value, workspace, directory);
     if (path && !files.has(path)) files.set(path, {path, label:label || path.split('/').pop()});
@@ -53,10 +53,7 @@ export function collectArtifacts(items = [], workspace = '', directory = workspa
   for (const item of items) {
     if (item.type === 'agentMessage' && item.phase !== 'commentary' && typeof item.text === 'string') {
       marked.walkTokens(marked.lexer(item.text), token => {
-        if (token.type === 'link' || token.type === 'image') {
-          const path = localFilePath(token.href, workspace, directory);
-          if (path) linked.add(path);
-        }
+        if (token.type === 'link' || token.type === 'image') add(token.href, token.text);
       });
     }
     if (item.type === 'imageGeneration' && (item.path || item.savedPath)) add(item.path || item.savedPath);
@@ -66,6 +63,6 @@ export function collectArtifacts(items = [], workspace = '', directory = workspa
       for (const artifact of Array.isArray(item.artifacts) ? item.artifacts : []) add(artifact.path, artifact.name);
     }
   }
-  return [...files.values()].filter(file => !linked.has(file.path));
+  return [...files.values()];
 }
 

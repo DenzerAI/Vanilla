@@ -52,9 +52,6 @@ Arbeitsbereich und Worker gehören bei Nachrichtenanschlüssen in denselben Dial
 
 Lokal gespeicherte Verbindungen warten nicht auf MCP-Werkzeugabfragen. Der Server liefert den letzten bekannten Werkzeugstand je Worker und aktualisiert ihn im Hintergrund. Ein Fehler löscht diesen Stand nicht. Die Oberfläche hält Einträge während einer Aktualisierung sichtbar, bündelt gleichzeitige Abfragen und nutzt beim erneuten Öffnen einen kurzen Sitzungscache. Der erste Abruf besitzt einen Ladezustand; Fehler bieten erneutes Laden. Werkzeuge werden nur während laufender Ermittlung nachgeladen. Gespeichert/Empfang aktiv bleiben getrennte Zustände. Geheimnisse werden nicht im Browsercache gespeichert.
 
-## Ladeformen
+## Gmail und Outlook / Inbox
 
-Fehlen beim ersten Abruf eingerichtete Einträge, zeigt dieser Listenbereich
-den gemeinsamen List-Skeleton. Der lokal verfügbare Dienstekatalog und
-bereits geladene Verbindungen bleiben bedienbar. Fehler ersetzen den
-Platzhalter und behalten „Erneut laden“.
+Bei mailInbox-Fähigkeit ersetzen direkte Mailanschlüsse die Gmail-Workflow-Kachel und den generischen Outlook-Zugang im Hinzufügen-Katalog. Bestehende Verbindungen bleiben erhalten. MailConnectionForm nutzt das vorhandene Modal: Originalmarke, kurze Erklärung, primäre Google-/Microsoft-Anmeldung; einmalige App-Daten und Anbieterhilfe sind aufklappbar. Outlook bietet zusätzlich „Firmenpostfach mit Admin-Zugang“. „Mit Agent einrichten“ übergibt eine vorbereitete Frage an den bestehenden Chat und seine ausgewählte Maschine. Kein Kontozugriff ohne Anmeldung/Freigabe. Eingerichtete Konten werden mit ihrer Adresse und tatsächlichem Abrufstatus im aktiven Arbeitsbereich angezeigt. Bearbeiten ermöglicht Abgleichen, erneute Anmeldung und Trennen. Zugangsdaten verwenden den installationsbezogenen ProviderVault im Kern; der alte Host-Schlüsselbund ist keine Voraussetzung. Details und verbleibende Betreiber-Vorbereitung: ../../docs/MAIL.md.

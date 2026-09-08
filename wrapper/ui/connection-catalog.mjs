@@ -34,7 +34,8 @@ const service = (id,icon,category) => {const s=serviceDefinition(id);return {nam
 export const connectionCatalog = [
   {name:'Tailscale',provider:'tailscale',category:'automation',icon:'plug',description:'Privater HTTPS-Zugang für Mobilgeräte',kind:'system'},
   ...crmCatalog.map(provider => ({name:provider.name, description:provider.description, kind:'crm', category:'crm', provider:provider.id, icon:'plug'})),
-  {name:'Gmail',provider:'gmail',category:'office',icon:'mail',description:'E-Mail über einen Workflow anbinden',kind:'webhook'},
+  {name:'Gmail',provider:'gmail',category:'office',icon:'mail',description:'Postfach mit deiner Inbox verbinden',kind:'mail'},
+  {name:'Outlook',provider:'outlook',category:'office',icon:'mail',description:'Microsoft-Postfach mit deiner Inbox verbinden',kind:'mail'},
   service('microsoft-graph','mail','office'),
   {name:'Kalender',provider:'calendar',category:'office',icon:'calendar',description:'Termine über einen Workflow anbinden',kind:'webhook'},
   service('whatsapp-local','message','messaging'),
@@ -53,7 +54,7 @@ export const audioServices=connectionCatalog.filter(s=>s.kind==='audio');
 
 // The static UI can be rebuilt while older server processes finish active chats.
 export function catalogForFeatures(features={}) {
-  const available = connectionCatalog.filter(service => (service.kind !== 'crm' || features.crmConnections) && (service.kind !== 'system' || features.operations));
+  const available = connectionCatalog.filter(s=>s.kind==='mail'?features.mailInbox:!(features.mailInbox&&s.provider==='microsoft-graph')).filter(service => (service.kind !== 'crm' || features.crmConnections) && (service.kind !== 'system' || features.operations));
   if(features.serviceConnections)return available;
   return available.flatMap(s=>s.kind!=='service'?[s]:s.provider==='microsoft-graph'?[{name:'Outlook',provider:'outlook',category:'office',icon:'mail',description:'E-Mail über einen Workflow anbinden',kind:'webhook'}]:s.provider==='whatsapp-local'?[{name:'WhatsApp',provider:'whatsapp',category:'messaging',icon:'message',description:'Bestehende Bridge oder Workflow anbinden',kind:'webhook'}]:[]);
 }

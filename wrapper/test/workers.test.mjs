@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { EventEmitter, once } from "node:events";
 import { mkdtemp, rm, writeFile, mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
+import os from "node:os";
 import { Workers, findWorkerCommand } from "../workers.mjs";
 import { ACPWorker } from "../acp-worker.mjs";
 import { Storage } from "../storage.mjs";
@@ -14,7 +15,7 @@ import net from "node:net";
 import { fileURLToPath } from "node:url";
 
 async function fixture(t, {beforeCleanup} = {}) {
-  const dir = await mkdtemp(fileURLToPath(new URL("../.test-worker-contract-", import.meta.url)));
+  const dir = await mkdtemp(path.join(os.tmpdir(), "worker-contract-"));
   t.after(async () => { await beforeCleanup?.(); await rm(dir, { recursive: true, force: true }); });
   const store = new Storage(path.join(dir, "workspace"), path.join(dir, "data")); await store.init();
   return { dir, store };
@@ -105,28 +106,15 @@ test("ACP permission replies choose only a once option; unadvertised client meth
 
 const nativeFixture = `const readline = require('node:readline');
 const send = m => process.stdout.write(JSON.stringify({jsonrpc:'2.0',...m})+'\\n');
-let pending; const threads = new Map();
+let pending;
 readline.createInterface({input:process.stdin}).on('line', line => {
  const m=JSON.parse(line), p=m.params||{}; if(!m.method)return;
- if(process.env.FIXTURE_LOG)require('node:fs').appendFileSync(process.env.FIXTURE_LOG,JSON.stringify(m)+'\\n');
  const reply = result => send({id:m.id,result});
- if(m.method==='thread/start'){const thread={id:require('node:crypto').randomUUID(),turns:[],model:'fixture-model'};threads.set(thread.id,thread);return reply({thread,model:'fixture-model'});}
- if(m.method==='thread/read'||m.method==='thread/resume')return reply({thread:threads.get(p.threadId)});
- if(m.method==='turn/start'){
-  const turn={id:require('node:crypto').randomUUID(),status:'completed',items:[{type:'userMessage',content:p.input},{type:'agentMessage',text:'Codex fixture result'}]};
-  threads.get(p.threadId).turns.push(turn);reply({turn});
-  setTimeout(()=>send({method:'turn/completed',params:{threadId:p.threadId,turn}}),30);return;
- }
  if(m.method==='initialize')return reply({userAgent:'Fixture 1',protocolVersion:1,agentCapabilities:{loadSession:true,promptCapabilities:{image:true}},agentInfo:{name:'fixture',version:'1'}});
  if(m.method==='model/list')return reply({data:[{model:'fixture-model',displayName:'Fixture',isDefault:true}]});
  if(m.method==='account/read')return reply({});
  if(m.method==='mcpServerStatus/list')return reply({data:[]});
- if(m.method==='session/new') { reply({sessionId:'native-session',models:{currentModelId:'fixture-model',availableModels:[{modelId:'fixture-model',name:'Fixture'}]}});
-  send({method:'session/update',params:{sessionId:'native-session',update:{sessionUpdate:'available_commands_update',availableCommands:[{name:'inspect',description:'Inspect fixture',input:{hint:'query'}}]}}});
-  send({method:'session/update',params:{sessionId:'native-session',update:{sessionUpdate:'config_option_update',configOptions:[{id:'quality',name:'Quality',type:'select',currentValue:'low',options:[{value:'low',name:'Low'},{value:'high',name:'High'}]}]}}});
-  return;
- }
- if(m.method==='session/set_config_option')return reply({configOptions:[{id:'quality',name:'Quality',type:'select',currentValue:p.value,options:[{value:'low',name:'Low'},{value:'high',name:'High'}]}]});
+ if(m.method==='session/new')return reply({sessionId:'native-session',models:{currentModelId:'fixture-model',availableModels:[{modelId:'fixture-model',name:'Fixture'}]}});
  if(m.method==='session/load')return reply({models:{currentModelId:'fixture-model',availableModels:[{modelId:'fixture-model',name:'Fixture'}]}});
  if(m.method==='session/set_model')return reply({});
  if(m.method==='session/cancel' && pending){send({id:pending,result:{stopReason:'cancelled'}});pending=null;return;}
@@ -171,7 +159,6 @@ test("real stdio ACP lifecycle streams tools and answers, exports only the user 
 test("ACP rejects unsupported planning and foreign models before dispatch; cancellation is confirmed", async t => {
   const {adapter, store}=await acpFixture(t), {thread}=await adapter.call("thread/start",{cwd:store.root});
   await assert.rejects(adapter.call("turn/start", {threadId:thread.id,...input("Test"), sandboxPolicy:{type:"readOnly"}}), /Planmodus/);
-  delete adapter.threads.get(thread.id).workerSession.configOptions;
   await assert.rejects(adapter.call("turn/start", {threadId:thread.id,...input("Test"), model:"foreign"}), /Modell gehört nicht/);
   assert.equal((await adapter.call("thread/read",{threadId:thread.id})).thread.turns.length,0);
   const done=completion(adapter); await adapter.call("turn/start",{threadId:thread.id,...input("WAIT")});
@@ -199,10 +186,9 @@ test("actual HTTP server routes ACP chats and jobs, protects mutations and survi
   const port=reservation.address().port; await new Promise(r=>reservation.close(r));
   const base=`http://127.0.0.1:${port}/api`;
   async function start() {
-    child=spawn(process.execPath,[fileURLToPath(new URL('../server.mjs',import.meta.url))],{env:{PATH:process.env.PATH,HOME:dir,UWE_PORT:String(port),UWE_WORKSPACE:path.join(dir,'runtime'),UWE_DATA_ROOT:path.join(dir,'runtime-data'),COMPANY_BASE:path.join(dir,'company'),UWE_CODEX_BINARY:binary,UWE_HERMES_BINARY:binary,FIXTURE_LOG:path.join(dir,'wire.ndjson')},stdio:['ignore','pipe','pipe']});
-    let diagnostics=''; child.stderr.on('data', data => { diagnostics += data; });
+    child=spawn(process.execPath,[fileURLToPath(new URL('../server.mjs',import.meta.url))],{env:{PATH:process.env.PATH,HOME:dir,UWE_PORT:String(port),UWE_WORKSPACE:path.join(dir,'runtime'),UWE_DATA_ROOT:path.join(dir,'runtime-data'),COMPANY_BASE:path.join(dir,'company'),UWE_CODEX_BINARY:binary,UWE_HERMES_BINARY:binary},stdio:['ignore','pipe','pipe']});
     exited=once(child,'exit');
-    await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('Testserver startet nicht')),8000);child.stdout.on('data',data=>{if(String(data).includes('Agent läuft')){clearTimeout(timer);resolve();}});child.once('exit',()=>{clearTimeout(timer);reject(new Error('Testserver beendet: '+diagnostics));});child.once('error',reject);});
+    await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(new Error('Testserver startet nicht')),8000);child.stdout.on('data',data=>{if(String(data).includes('Agent läuft')){clearTimeout(timer);resolve();}});child.once('exit',()=>{clearTimeout(timer);reject(new Error('Testserver beendet'));});child.once('error',reject);});
     token=(await (await fetch(base+'/bootstrap')).json()).token;
   }
   async function call(route,body) {
@@ -211,7 +197,6 @@ test("actual HTTP server routes ACP chats and jobs, protects mutations and survi
   }
   await start();
   assert.equal((await fetch(base+'/workers/preferences',{method:'POST',body:'{}'})).status,403);
-  assert.equal((await fetch(base+'/worker-session',{method:'POST',body:'{}'})).status,403);
   await call('/workers/connect',{id:'hermes'});
   await call('/workers/preferences',{defaultWorker:'auto',fallbackWorker:'hermes'});
   const autoBoot = await call('/bootstrap');
@@ -223,23 +208,12 @@ test("actual HTTP server routes ACP chats and jobs, protects mutations and survi
   await call('/workers/preferences',{defaultWorker:'hermes',fallbackWorker:'codex'});
   const created=await call('/chats',{mode:'default'});
   assert.equal(created.meta.workerId,'hermes');
-  const session = (await call('/thread?id='+created.thread.id)).thread.workerSession;
-  assert.equal(session.availableCommands[0].name, 'inspect');
-  assert.equal(session.configOptions[0].currentValue, 'low');
-  const configured = await call('/worker-session', {id:created.thread.id,configId:'quality',value:'high'});
-  assert.equal(configured.thread.workerSession.configOptions[0].currentValue, 'high');
-  const invalid = await fetch(base+'/worker-session',{method:'POST',headers:{'content-type':'application/json','x-uwe-token':token},body:JSON.stringify({id:created.thread.id,configId:'quality',value:'invented'})});
-  assert.notEqual(invalid.status,200);
   await call('/turn',{id:created.thread.id,text:'Fiktiver Test',mode:'default'});
   async function finished(id) {
     for(let i=0;i<100;i++) { const r=await call('/thread?id='+id); if(r.thread.turns.at(-1)?.status==='completed')return r; await new Promise(r=>setTimeout(r,20)); }
     throw new Error('Testauftrag nicht abgeschlossen');
   }
   assert.equal((await finished(created.thread.id)).thread.turns[0].items.at(-1).text,'Ergebnis: Kontext erhalten');
-  await writeFile(path.join(dir,'runtime/soul/IDENTITY.md'),'Anzeigename: Ada\n<!-- user-preferences:start -->\nNur mein eigener Stil.\n<!-- user-preferences:end -->');
-  await writeFile(path.join(dir,'company/FIRMA.md'),'FIRMA: Aktueller Betrieb');
-  await call('/turn',{id:created.thread.id,text:'Weitere Nachricht',mode:'default'});
-  await finished(created.thread.id);
   const job=await call('/jobs/save',{name:'Fiktiver automatischer Auftrag',instructions:'Fiktiver Test',worker:'auto'});
   const run=await call('/jobs/run',{id:job.id}); await finished(run.threadId);
   for(let i=0;i<100;i++){const jobs=await call('/jobs');if(jobs[0].lastRun?.status==='completed')break;await new Promise(r=>setTimeout(r,20));}
@@ -247,29 +221,7 @@ test("actual HTTP server routes ACP chats and jobs, protects mutations and survi
   child.kill();await exited;await start();
   assert.equal((await call('/workers')).settings.defaultWorker,'hermes');
   await call('/turn',{id:created.thread.id,text:'Nach Neustart fortsetzen',mode:'default'});
-  const after=await finished(created.thread.id);assert.equal(after.thread.turns.length,3);
-  const codexChat=await call('/chats',{worker:'codex',mode:'default'});
-  await call('/turn',{id:codexChat.thread.id,text:'Codex Kontextprobe',mode:'default'});
-  await finished(codexChat.thread.id);
-  const wire=(await readFile(path.join(dir,'wire.ndjson'),'utf8')).trim().split('\n').map(JSON.parse);
-  const prompts=wire.filter(m=>m.method==='session/prompt' && m.params.prompt.length>1).map(m=>m.params.prompt);
-  assert.match(prompts[0][0].text,/Anzeigename: Agent/);
-  for(const prompt of prompts.slice(1)){
-    assert.match(prompt[0].text,/Anzeigename: Ada/);
-    assert.match(prompt[0].text,/FIRMA: Aktueller Betrieb/);
-    assert.equal(prompt[0].text.split('Nur mein eigener Stil.').length-1,1);
-    assert.doesNotMatch(prompt[0].text,/Sei mein persönlicher Assistent/);
-  }
-  const jobPrompt=prompts.find(p=>p[1].text.startsWith('Führe diesen Job aus.'));
-  assert.ok(jobPrompt);assert.match(jobPrompt[1].text,/aus SKILL.md.*geladen/);
-  assert.doesNotMatch(jobPrompt[1].text,/Lies SKILL.md/);
-  assert.equal(jobPrompt[1].text.split('Fiktiver Test').length-1,1);
-  assert.match(jobPrompt[0].text,new RegExp('jobs/'+job.id));
-  assert.equal(wire.find(m=>m.method==='thread/start').params.developerInstructions,undefined);
-  const codexContext=wire.find(m=>m.method==='turn/start').params.collaborationMode.settings.developer_instructions;
-  assert.match(codexContext,/Anzeigename: Ada/);assert.match(codexContext,/FIRMA: Aktueller Betrieb/);
-  assert.equal(codexContext.split('Nur mein eigener Stil.').length-1,1);
-
+  const after=await finished(created.thread.id);assert.equal(after.thread.turns.length,2);
 });
 
 

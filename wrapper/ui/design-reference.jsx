@@ -1,60 +1,30 @@
-import { InboxPatternPreview } from "./inbox";
-import { PanelLight } from "./panel-light";
-import {LibraryThumbnail} from './library-thumbnail.jsx';
-import {LibraryPreview} from './library.jsx';
-import {Skeleton} from './skeleton.tsx';
-import React, {useState} from "react";
-import { SettingsPatterns } from "./settings-patterns.jsx";
+import {InboxConversationRow} from "./inbox";
+import React from "react";
 import {
   identity,
   fonts,
   typography,
   spacing,
   radii,
-  resolveDesign,
+  themes,
   colorRoles,
 } from "./design-system.mjs";
 import interLicense from "./assets/fonts/Inter-LICENSE.txt";
 import monoLicense from "./assets/fonts/IBMPlexMono-LICENSE.txt";
 
-export function DesignReference({ theme, tone, accent }) {
-  const [preview, setPreview] = useState(false);
-  const [section, setSection] = useState("components");
-  const palette = resolveDesign(theme, tone, accent);
+export function DesignReference({ theme }) {
+  const palette = themes[theme] || themes.dark;
   return (
-    <section className="ci-reference design-reference-page" aria-labelledby="ci-title">
+    <section className="ci-reference" aria-labelledby="ci-title">
       <div className="ci-heading">
-        <h2 id="ci-title">AGENT</h2>
+        <h2 id="ci-title">Unser Design</h2>
         <span className="badge">CI {identity.version}</span>
       </div>
       <p className="ci-intro">
         {identity.description} Diese Vorgaben gelten im gesamten Arbeitsbereich.
       </p>
-      <div className="design-segments" role="group" aria-label="Designbereich">{[['components','Bausteine'],['colors','Farben'],['type','Schrift'],['layout','Formen'],['rules','Grundlage']].map(([id,label])=><button key={id} type="button" aria-pressed={section===id} onClick={()=>setSection(id)}>{label}</button>)}</div>
-      {section === 'components' && <>
-      <h3 className="section-heading">Bedienelemente & Seitenaufbau</h3>
-      <SettingsPatterns/>
-      <h3 className="section-heading">Composer · Glasfläche</h3>
-      <div className="composer pill-composer"><div className="composer-entry"><textarea aria-label="Nachricht · Designvorschau" placeholder="Nachricht" rows={1} readOnly/></div></div>
-      <p className="page-note">Einzeilige Pille mit gedämpftem Platzhalter, transparenter Tönung, Hintergrundunschärfe und feiner innerer Glaskante. Mehrzeiliger Text erweitert die Schreibfläche; reduzierte Transparenz erhält einen deckenden Hintergrund.</p>
-      <h3 className="section-heading">Inbox · Gesprächszeile</h3>
-      <InboxPatternPreview/>
-      <h3 className="section-heading">Flächenlicht</h3>
-      <div className="panel-light-preview"><PanelLight mode="animated"/><span>Dezente Tiefe mit ruhiger Lichtbewegung</span></div>
-      <h3 className="section-heading">Dateivorschau</h3>
-      <p className="page-note">Quick Look verwendet die gemeinsame Glasfläche, einen kompakten Dateikopf und aufklappbare Informationen. Die Bibliothek ergänzt kompakte Listen und ein Bildraster mit direkter Auswahlvorschau im rechten Workspace. Doppelklick oder Leertaste öffnen Quick Look.</p>
-      <div className="library-entries-grid" aria-label="Dateisymbole">{['PDF','DOCX','MP3','ZIP'].map(format=><div key={format}><LibraryThumbnail entry={{name:'Beispiel.'+format,path:'',missing:true,kind:format==='MP3'?'audio':'download'}}/></div>)}</div>
-      <button onClick={()=>setPreview(true)}>Vorschau öffnen</button>
-      {preview&&<LibraryPreview entry={{id:'example',name:'Dateivorschau',path:'output/beispiel',origin:'Designbeispiel'}} onClose={()=>setPreview(false)}><div className="library-preview"><p>Hier steht das Bild oder Dokument. Dateiaktionen bleiben im rechten Workspace; diese Großansicht zeigt ausschließlich den Inhalt.</p></div></LibraryPreview>}
-      <h3 className="section-heading">Inhalte laden</h3>
-      <p className="page-note">Platzhalter für Listen, Einstellungen, Gesprächsverläufe und Vorschauen. Vorhandene Inhalte bleiben beim Aktualisieren sichtbar. Reduzierte Bewegung zeigt ruhende Formen.</p>
-      <Skeleton variant="list" rows={2} announce={false}/>
-      <Skeleton variant="settings" rows={2} announce={false}/>
-      <Skeleton variant="chat" announce={false}/>
-      <Skeleton variant="document" rows={2} announce={false}/>
-      <Skeleton variant="media" announce={false}/>
-      </>}
-      {section === "type" && <>
+      <h3 className="section-heading">Inbox-Gespräch</h3>
+      <div className="inbox-pattern-preview"><InboxConversationRow conversation={{sender:'Beispielkontakt',provider:'gmail',updated:'2026-09-08T10:00:00Z',revision:1,seen:0,done:false}} onOpen={()=>{}}/></div>
       <h3 className="section-heading">Schriften</h3>
       <div className="settings-group ci-fonts">
         {fonts.map((font, index) => (
@@ -84,8 +54,10 @@ export function DesignReference({ theme, tone, accent }) {
           </div>
         ))}
       </div>
-      <div className="ci-details">
-        <h3 className="section-heading">Schriftgrößen</h3>
+      <details className="ci-details" open>
+        <summary>
+          Schriftgrößen <span>Feste Rollen für jede Ansicht</span>
+        </summary>
         <div className="ci-types">
           {typography.map((type) => (
             <div className="ci-type" key={type.id}>
@@ -111,11 +83,14 @@ export function DesignReference({ theme, tone, accent }) {
             </div>
           ))}
         </div>
-      </div>
-      </>}
-      {section === "colors" && <div className="ci-details">
-        <h3 className="section-heading">Aktive Farbwelt</h3>
-        <p>Diese Farben folgen deiner Auswahl unter Aussehen.</p>
+      </details>
+      <details className="ci-details" open>
+        <summary>
+          Farben{" "}
+          <span>
+            {theme === "light" ? "Helles" : "Dunkles"} Erscheinungsbild
+          </span>
+        </summary>
         <div className="ci-colors">
           {Object.entries(colorRoles).map(([token, label]) => (
             <div className="ci-color" key={token}>
@@ -131,9 +106,11 @@ export function DesignReference({ theme, tone, accent }) {
             </div>
           ))}
         </div>
-      </div>}
-      {section === "layout" && <div className="ci-details">
-        <h3 className="section-heading">Abstände & Formen</h3>
+      </details>
+      <details className="ci-details">
+        <summary>
+          Abstände & Formen <span>Ein gemeinsamer Rhythmus</span>
+        </summary>
         <p>
           4-px-Raster; 2 px nur für optische Feinkorrekturen. 8 px innerhalb
           enger Gruppen, 16 px für Innenabstände, 24–32 px zwischen Gruppen und
@@ -155,11 +132,10 @@ export function DesignReference({ theme, tone, accent }) {
                 {
                   {
                     small: "Kleine Details",
-                    control: "Eingabefelder & Menüs",
-                    button: "Aktionsbuttons",
+                    control: "Bedienelemente",
                     panel: "Gruppen",
                     large: "Große Flächen",
-                    pill: "Schalter & Iconflächen",
+                    pill: "Pillen",
                   }[name]
                 }
                 <code>{value === 999 ? "Vollrund" : `${value} px`}</code>
@@ -167,17 +143,19 @@ export function DesignReference({ theme, tone, accent }) {
             </div>
           ))}
         </div>
-      </div>}
-      {section === "rules" && <div className="ci-details">
-        <h3 className="section-heading">Gemeinsame Grundlage</h3>
+      </details>
+      <details className="ci-details">
+        <summary>
+          Gestaltungsregeln <span>Verbindlich für neue Ansichten</span>
+        </summary>
         <ul>
           <li>
             Inter für Navigation, Einstellungen und Inhalte. IBM Plex Mono für
             Code und technische Werte.
           </li>
           <li>
-            Hierarchie durch Schriftgröße, Gewicht und Abstand. Neutrale
-            Bedienelemente; Farbe für Links und verständliche Statusanzeigen.
+            Hierarchie durch Schriftgröße, Gewicht und Abstand. Orange sparsam
+            für Identität und Hervorhebung.
           </li>
           <li>
             Flache, gruppierte Einstellungen, zurückhaltende Trennlinien und
@@ -198,7 +176,7 @@ export function DesignReference({ theme, tone, accent }) {
           für die gesamte Oberfläche.
         </p>
         <code>ui/design-system.mjs</code>
-      </div>}
+      </details>
     </section>
   );
 }

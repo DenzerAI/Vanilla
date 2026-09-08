@@ -1,4 +1,3 @@
-import {Skeleton} from './skeleton.tsx';
 import React, {useEffect, useRef, useState} from 'react';
 import {SettingRow} from './settings-row.jsx';
 import {Modal} from './modal.jsx';
@@ -29,18 +28,16 @@ export function SystemSettings({api, section, chats, onJobs, onLibrary, onConnec
     setBusy(true); setError('');setMessage('');
     try {await fn(); setMessage(success); await load();} catch(e:any){setError(e.message);} finally{setBusy(false);}
   }
-  function change(group:string,key:string,value:any) {setMessage('');setError('');dirty.current=true;setDraft((d:any)=>({...d,values:{...d.values,[group]:{...d.values[group],[key]:value}}}));}
+  function change(group:string,key:string,value:any) {dirty.current=true;setDraft((d:any)=>({...d,values:{...d.values,[group]:{...d.values[group],[key]:value}}}));}
   const run=(id:string)=>act(()=>api('/jobs/run',{id:'system-'+id}),'Auftrag steht in der Warteschlange. Den Verlauf findest du unter Aufträge.');
   const toggle=(group:string,key:string,title:string,description:string)=> <SettingRow title={title} description={description}><Toggle label={title} value={draft.values[group][key]} change={(v:boolean)=>change(group,key,v)}/></SettingRow>;
   const number=(group:string,key:string,title:string,min:number,max:number,description?:string)=><SettingRow title={title} description={description}><input aria-label={title} type="number" min={min} max={max} value={draft.values[group][key]} onChange={e=>change(group,key,e.target.valueAsNumber)}/></SettingRow>;
   const time=(group:string,key:string,title:string)=><SettingRow title={title} description="Lokale Zeitzone dieses Macs"><input aria-label={title} type="time" value={draft.values[group][key]} onChange={e=>change(group,key,e.target.value)}/></SettingRow>;
-  if((!status || !draft) && !error) return <Skeleton variant="settings" label="System wird geladen …"/>;
   if(!status || !draft) return <p role="status">{error || 'System wird geladen …'} {error&&<button onClick={()=>act(()=>load())}>Erneut laden</button>}</p>;
   const v=draft.values;
   return <div className="system-settings" aria-busy={busy}>
     {error&&<p className="form-error" role="alert">{error} <button onClick={()=>act(()=>load(true),'Aktuelle Einstellungen geladen.')}>Neu laden</button></p>}
     {message&&<p className="form-help" role="status">{message}</p>}
-    {section!=='access'&&<div className="settings-save-row"><span role="status">{dirty.current?'Ungespeicherte Änderungen':message || 'Keine Änderungen'}</span><button type="button" className="primary" disabled={busy || !dirty.current} onClick={()=>act(async()=>{const saved=await api('/system/settings',draft);dirty.current=false;setDraft(saved);},'Einstellungen gespeichert.')}>{busy?'Bitte warten …':'Einstellungen speichern'}</button></div>}
     <fieldset disabled={busy}>
     {section==='system'&&<>
       <Group title="Heartbeat">
@@ -117,7 +114,7 @@ export function SystemSettings({api, section, chats, onJobs, onLibrary, onConnec
         {status.access.origin&&<SettingRow title="Mobile Adresse" description={status.access.origin}><a href={status.access.origin} target="_blank" rel="noreferrer">Öffnen</a></SettingRow>}
       </Group>
     </>}
-
+    {section!=='access'&&<div className="row end system-save"><button disabled={!dirty.current} onClick={()=>act(async()=>{const saved=await api('/system/settings',draft);dirty.current=false;setDraft(saved);},'Einstellungen gespeichert.')}>Einstellungen speichern</button></div>}
     </fieldset>
     {access&&<Modal wide={false} title="Zugangsschlüssel" onClose={()=>{setAccess(false);setPassword('');}}><form onSubmit={e=>{e.preventDefault();act(async()=>{await api('/system/access',{password});setPassword('');setAccess(false);location.reload();},'Zugang eingerichtet. Bitte erneut anmelden.');}}><label className="field"><span>Neuer Zugangsschlüssel</span><input type="password" autoComplete="new-password" minLength={8} required value={password} onChange={e=>setPassword(e.target.value)}/></label><p className="form-help">Bestehende Browser-Sitzungen werden abgemeldet.</p><div className="row end"><button className="primary" disabled={busy}>Schlüssel speichern</button></div></form></Modal>}
     {restore&&<Modal wide={false} title="Geprüfte Sicherung übernehmen" onClose={()=>setRestore(null)}><p>Die Prüfsummen und die SQLite-Datenbank sind gültig. Dieser Stand ersetzt beim Neustart den Workspace und die Datenbank. Der aktuelle Stand wird zuvor lokal zur Rückkehr aufbewahrt.</p><p className="form-help">Sicherung: {restore.snapshot.slice(0,12)} · Laufende Arbeit zuerst abschließen.</p><div className="row end"><button onClick={()=>setRestore(null)}>Abbrechen</button><button className="primary" disabled={busy} onClick={()=>act(()=>api('/system/backups/apply',{id:restore.id}),'Wiederherstellung wird beim Neustart übernommen.')}>Stand übernehmen und neu starten</button></div></Modal>}
@@ -134,5 +131,5 @@ export function TailscaleConnection({api}: {api:Api}) {
 export function CoreRunDetails({api,id}: {api:Api,id:string}) {
   const [data,setData]=useState<any>(null),[error,setError]=useState('');
   useEffect(()=>{let alive=true;const refresh=()=>api('/core/executions/'+id).then(d=>{if(alive)setData(d);}).catch(e=>{if(alive)setError(e.message);});refresh();const timer=setInterval(refresh,3000);return()=>{alive=false;clearInterval(timer);};},[id]);
-  return <>{error&&<p role="alert" className="form-error">{error}</p>}{data?<><div className="settings-group"><SettingRow title="Ausführung" description={id}><span>{names[data.run.status]||data.run.status}</span></SettingRow><SettingRow title="Beginn" description={date(data.run.started_at)}/><SettingRow title="Versuch" description={String(data.run.attempt)}/>{data.run.error&&<SettingRow title="Fehler" description={data.run.error}/>}</div>{data.log&&<pre className="system-log">{data.log}</pre>}{Object.keys(data.run.result||{}).length>0&&<pre className="system-log">{JSON.stringify(data.run.result,null,2)}</pre>}{['queued','dispatching','running'].includes(data.run.status)&&<div className="row end"><button onClick={()=>api('/core/executions/'+id+'/cancel',{}).catch(e=>setError(e.message))}>Ausführung stoppen</button></div>}</>:!error&&<Skeleton variant="settings" label="Ausführung wird geladen …"/>}</>;
+  return <>{error&&<p role="alert" className="form-error">{error}</p>}{data?<><div className="settings-group"><SettingRow title="Ausführung" description={id}><span>{names[data.run.status]||data.run.status}</span></SettingRow><SettingRow title="Beginn" description={date(data.run.started_at)}/><SettingRow title="Versuch" description={String(data.run.attempt)}/>{data.run.error&&<SettingRow title="Fehler" description={data.run.error}/>}</div>{data.log&&<pre className="system-log">{data.log}</pre>}{Object.keys(data.run.result||{}).length>0&&<pre className="system-log">{JSON.stringify(data.run.result,null,2)}</pre>}{['queued','dispatching','running'].includes(data.run.status)&&<div className="row end"><button onClick={()=>api('/core/executions/'+id+'/cancel',{}).catch(e=>setError(e.message))}>Ausführung stoppen</button></div>}</>:<p role="status">Ausführung wird geladen …</p>}</>;
 }
