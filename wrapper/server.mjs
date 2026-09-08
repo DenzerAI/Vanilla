@@ -1,6 +1,7 @@
 import { searchConversations } from './search.mjs';
 import {localPath, localPort} from './isolation.mjs';
 import {sharedMemoryCodexConfig} from './shared-memory.mjs';
+import {notificationTargets, sendJobNotification, routineInstructions} from './job-notifications.mjs';
 import { serverFingerprint, createRestartGate } from "./updates.mjs";
 import { coreEnabled, coreRequest, routedContext } from "./core-client.mjs";
 import { createMcpSnapshot } from './integration-snapshot.mjs';
@@ -218,6 +219,7 @@ workers.on("request", (msg) => {
   const connectionId=id&&store.chat(id).connectionId;
   if(connectionId)msg.connectionId=connectionId;
   emit({ method: "wrapper/request", params: msg });
+  if(id && store.chat(id).coreRunId) coreRequest('jobs/attention',{id:store.chat(id).coreRunId}).catch(()=>{});
 });
 workers.on("disconnected", (error) => {
   for (const c of store.state.chats) if (workers.owner(c.id) === error.workerId) {
@@ -347,6 +349,7 @@ async function finishThread(id, turn) {
     if (job) {
       const result = {
         status: turn.status,
+        text: (completedTurn?.items || []).filter(i=>i.type==='agentMessage' && i.phase!=='commentary').map(i=>i.text||'').join('\n\n'),
         threadId: id,
         workerId: c.workerId || "codex",
         fallbackFrom: c.fallbackFrom || null,
@@ -364,7 +367,7 @@ async function finishThread(id, turn) {
           .map((i) => i.text)
           .join("\n\n"),
       );
-      await store.saveJob({ ...job, lastRun: { ...result, runId: c.runId } });
+      await store.saveJobRun(job.id, {lastRun: { ...result, runId: c.runId }});
       if (c.coreRunId) await coreRequest("jobs/finish", {id:c.coreRunId,status:turn.status,result,error:turn.error?.message || null});
       emit({ method: "wrapper/jobs" });
     }
@@ -415,7 +418,8 @@ async function sendTurnUnlocked(id, b) {
     });
   }
   const companyContext = await workerInstructions({ root, workspace, cwd: c.cwd })
-    + await routedContext({query:b.text || "",projectId:c.projectId || "default",chatId:id});
+    + await routedContext({query:b.text || "",projectId:c.projectId || "default",chatId:id})
+    + routineInstructions(c.projectId || 'default');
   const policy = runMode(b.mode || c.mode || "default");
   if (policy.mode === "plan" && !workers.capability(workers.owner(id)).plan) throw new Error("Dieser Worker bietet hier keinen geschützten Planmodus.");
   const legacyJob = c.jobId && b.mode === undefined;
@@ -958,6 +962,9 @@ route("POST", "/api/engine/reconnect", async () => {
   return { ok: true };
 });
 route("GET", "/api/jobs", () => store.jobs());
+route('GET','/api/jobs/notification-targets',()=>({targets:notificationTargets(services,channels).map(({id,label,ready})=>({id,label,ready}))}));
+route('GET','/api/jobs/readiness',async()=>({ready:(await workers.status()).workers.some(w=>workers.routingOrder().includes(w.id)&&w.configured&&w.connected&&w.authenticated!==false)}));
+route('POST','/api/jobs/notify',b=>sendJobNotification(services,channels,b));
 route("POST", "/api/jobs/save", (b) => store.saveJob(b));
 route("POST", "/api/jobs/run", (b) => runJob(b.id, null, b.coreRunId));
 route("POST", "/api/terminal", async (b) => {
@@ -1000,8 +1007,7 @@ async function runJob(id, slot = null, coreRunId = null) {
   jobLocks.add(id);
   const runId = new Date().toISOString().replace(/[:.]/g, "-");
   try {
-    await store.saveJob({
-      ...job,
+    await store.saveJobRun(job.id, {
       lastSlot: slot || job.lastSlot,
       lastRun: {
         status: "running",
@@ -1024,8 +1030,7 @@ async function runJob(id, slot = null, coreRunId = null) {
         recordBoundary,
       );
       await atomic(path.join(runDir, "result.json"), result);
-      await store.saveJob({
-        ...job,
+      await store.saveJobRun(job.id, {
         lastSlot: slot || job.lastSlot,
         lastRun: {
           status: "completed",
@@ -1039,6 +1044,7 @@ async function runJob(id, slot = null, coreRunId = null) {
     const r = await newChat({
       title: job.name,
       worker: job.worker,
+      projectId: job.projectId || 'default',
       cwd: path.join(workspace, "jobs", id),
     });
     const c = store.chat(r.thread.id);
@@ -1048,13 +1054,12 @@ async function runJob(id, slot = null, coreRunId = null) {
     await atomic(path.join(runDir, "request.json"), { jobId: id, worker: job.worker, actualWorker: c.workerId, fallbackFrom: c.fallbackFrom, startedAt: new Date().toISOString() });
     await store.save();
     await sendTurn(c.id, {
-      text: `Führe diesen Job aus. Die folgende Anweisung wurde aus SKILL.md im aktuellen Ordner geladen; relative Ressourcenpfade beziehen sich auf diesen Ordner. Lies benötigte Dateien in input/ und speichere Ergebnisse in output/.\n\n${job.instructions}`,
+      text: `Führe genau diesen einzelnen Lauf des bereits eingerichteten Jobs aus. Lege dafür keine neue Routine an. Die folgende Anweisung wurde aus SKILL.md im aktuellen Ordner geladen; relative Ressourcenpfade beziehen sich auf diesen Ordner. Lies benötigte Dateien in input/ und speichere Ergebnisse in output/.\n\n${job.instructions}`,
     });
     emit({ method: "wrapper/jobs" });
     return { threadId: c.id, runId };
   } catch (e) {
-    await store.saveJob({
-      ...job,
+    await store.saveJobRun(job.id, {
       lastSlot: slot || job.lastSlot,
       lastRun: { status: "failed", runId, error: e.message },
     });

@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS chats(id TEXT PRIMARY KEY, project_id TEXT, title TEX
 CREATE INDEX IF NOT EXISTS chats_project ON chats(project_id, updated_at);
 CREATE TABLE IF NOT EXISTS messages(chat_id TEXT NOT NULL, turn_id TEXT NOT NULL, item_id TEXT NOT NULL, role TEXT NOT NULL, content TEXT NOT NULL, data TEXT NOT NULL, PRIMARY KEY(chat_id,turn_id,item_id));
 CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY, name TEXT NOT NULL, worker TEXT NOT NULL, status TEXT NOT NULL, manifest TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS job_notifications(id TEXT PRIMARY KEY, job_id TEXT NOT NULL, title TEXT NOT NULL, body TEXT NOT NULL, status TEXT NOT NULL, created_at REAL NOT NULL, read_at REAL, target TEXT NOT NULL, delivery TEXT NOT NULL, delivery_error TEXT);
+CREATE INDEX IF NOT EXISTS job_notifications_unread ON job_notifications(read_at,created_at);
 CREATE TABLE IF NOT EXISTS executions(id TEXT PRIMARY KEY, job_id TEXT NOT NULL, status TEXT NOT NULL CHECK(status IN ('queued','dispatching','running','completed','failed','interrupted','cancelled')), slot TEXT UNIQUE, created_at REAL NOT NULL, started_at REAL, finished_at REAL, adapter_run_id TEXT, thread_id TEXT, error TEXT, result TEXT);
 CREATE INDEX IF NOT EXISTS executions_status ON executions(status,created_at);
 CREATE UNIQUE INDEX IF NOT EXISTS execution_one_active_job ON executions(job_id) WHERE status IN ('queued','dispatching','running');
@@ -66,7 +68,7 @@ class Database:
             "INSERT OR IGNORE INTO schema_versions VALUES(1,?)", (time(),)
         )
         columns = {r["name"] for r in self.connection.execute("PRAGMA table_info(executions)")}
-        for name, definition in {"lease_until": "REAL", "attempt": "INTEGER NOT NULL DEFAULT 1", "parent_id": "TEXT", "progress": "TEXT", "not_before": "REAL NOT NULL DEFAULT 0"}.items():
+        for name, definition in {"job_snapshot": "TEXT", "lease_until": "REAL", "attempt": "INTEGER NOT NULL DEFAULT 1", "parent_id": "TEXT", "progress": "TEXT", "not_before": "REAL NOT NULL DEFAULT 0"}.items():
             if name not in columns:
                 self.connection.execute(f"ALTER TABLE executions ADD COLUMN {name} {definition}")
         self.connection.execute("INSERT OR IGNORE INTO schema_versions VALUES(2,?)", (time(),))

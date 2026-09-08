@@ -454,3 +454,14 @@ Die Pipeline ist eine ausdrücklich beauftragte bedienbare Designstudie im Haupt
 
 
 Die Eingabenavigation verwendet `ChapterScrubber` unter `ui/components/ui`. Position links bei 20 % und maximale Höhe 45 % bleiben erhalten. Eine gemeinsame Federbewegung erzeugt eine Kosinuswelle über benachbarte Striche; die einzelne Glasvorschau folgt innerhalb des Panels. Die Werte stehen in `scrubberSprings`. Klick und Enter springen weiterhin zur Nutzernachricht; Pfeiltasten, Home und End steuern den einzigen Tabstopp. App- und Systemvorgaben für reduzierte Bewegung zeigen die Welle ohne zeitliche Animation. Keine dauerhafte Dekoration.
+
+## Routine-Ergebnisse
+
+Die Glocke öffnet ein gemeinsames Benachrichtigungsmodal. `NotificationRow`
+erweitert die vorhandene `SettingsNavigationRow` mit Neu/Gelesen und Datum;
+Unser Design zeigt denselben Baustein. Ergebnistext nutzt den gemeinsamen
+Markdown-Renderer, Aktionen führen zur Ausführung oder ihrem Chat. Zielauswahl,
+Wochen-/Einmalpläne und Fehler bleiben im vorhandenen Field-/JobForm-Muster.
+Der Punkt signalisiert ungelesene Ergebnisse oder Rückfragen, kein bloßes
+Speicherereignis. Lesestatus bleibt dauerhaft gespeichert. Aufbau und Grenzen
+stehen in `surfaces/jobs.md`; keine weitere Hauptseite wird eingeführt.

@@ -7,6 +7,7 @@ from pathlib import Path
 import yaml
 
 from .database import dump
+from .routines import validate_schedule
 
 CONTROL_FILES = {
     "state.json",
@@ -125,12 +126,19 @@ class Storage:
                 ).read_text()
                 value.update(id=p.parent.name, instructions=instructions)
                 schedule = value.get("schedule", {})
+                validate_schedule(schedule or {'type': 'manual'})
+                if 'notification' in value:
+                    policy = value['notification']
+                    if not isinstance(policy, dict) or policy.get('when') not in {'always','errors'} or not isinstance(policy.get('target'), str) or (policy['target'] != 'app' and not re.fullmatch('[a-f0-9]{64}', policy['target'])):
+                        raise ValueError('Benachrichtigungsziel oder Regel ungültig.')
                 if not value.get("name") or schedule.get("type", "manual") not in {
                     "manual",
                     "daily",
                     "weekdays",
                     "interval",
                     "event",
+                    "once",
+                    "weekly",
                 }:
                     raise ValueError("Name oder Zeitplan ungültig.")
                 if schedule.get("type", "manual") in {"daily", "weekdays"} and not re.fullmatch(

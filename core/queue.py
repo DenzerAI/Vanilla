@@ -1,11 +1,13 @@
 from __future__ import annotations
 
-from datetime import datetime
+from datetime import datetime, timezone
 from time import time
 from uuid import uuid4
 from zoneinfo import ZoneInfo
 
 from .database import dump
+from .notifications import record_completion
+from .routines import instant
 
 
 class JobQueue:
@@ -14,7 +16,7 @@ class JobQueue:
         self.timezone = ZoneInfo(timezone)
 
     def enqueue(self, job_id, slot=None):
-        self.storage.job(job_id)
+        job = self.storage.job(job_id)
         id = uuid4().hex
         with self.db.transaction() as cx:
             if slot:
@@ -30,8 +32,8 @@ class JobQueue:
             if active:
                 return dict(active)
             cx.execute(
-                "INSERT INTO executions(id,job_id,status,slot,created_at) VALUES(?,?,'queued',?,?)",
-                (id, job_id, slot, time()),
+                "INSERT INTO executions(id,job_id,status,slot,created_at,job_snapshot) VALUES(?,?,'queued',?,?,?)",
+                (id, job_id, slot, time(), dump(job)),
             )
             cx.execute(
                 "INSERT INTO events(kind,entity_id,payload,created_at) VALUES('job.queued',?,?,?)",
@@ -74,7 +76,7 @@ class JobQueue:
             raise ValueError("Ungültiger Abschlussstatus.")
         with self.db.transaction() as cx:
             row = cx.execute(
-                "SELECT status FROM executions WHERE id=?", (id,)
+                "SELECT * FROM executions WHERE id=?", (id,)
             ).fetchone()
             if not row:
                 raise ValueError("Lauf nicht gefunden.")
@@ -88,6 +90,7 @@ class JobQueue:
                 "INSERT INTO events(kind,entity_id,payload,created_at) VALUES('job.finished',?,?,?)",
                 (id, dump({"status": status, "error": error}), time()),
             )
+            record_completion(cx, row, status, result, error)
         return self.get(id)
 
     def renew(self, id, progress=None):
@@ -135,9 +138,20 @@ class JobQueue:
             schedule = job.get("schedule", {})
             if job.get("status") != "active":
                 continue
+            local = now.astimezone(ZoneInfo(schedule.get('timezone', str(self.timezone)))) if now.tzinfo else now.replace(tzinfo=self.timezone)
+            start = instant(schedule['startAt']) if schedule.get('startAt') else None
+            if start and local < start:
+                continue
+            if schedule.get('type') == 'once':
+                if local >= instant(schedule['at']):
+                    self.enqueue(job['id'], f"{job['id']}:once:{instant(schedule['at']).astimezone(timezone.utc).isoformat()}")
+                continue
             if schedule.get("type") == "interval":
-                slot = int(now.timestamp()) // (schedule["minutes"] * 60)
-                self.enqueue(job["id"], f"{job['id']}:interval:{slot}")
+                slot = int((local.timestamp() - (start.timestamp() if start else 0)) // (schedule["minutes"] * 60))
+                if start and slot < 1:
+                    continue
+                anchor = f":{schedule['startAt']}" if start else ''
+                self.enqueue(job["id"], f"{job['id']}:interval{anchor}:{slot}")
                 continue
             if schedule.get("type") == "event":
                 key = "job/cursor/" + job["id"]
@@ -159,13 +173,20 @@ class JobQueue:
             if schedule.get("type") not in {
                 "daily",
                 "weekdays",
+                "weekly",
             }:
                 continue
-            if schedule["type"] == "weekdays" and now.weekday() >= 5:
+            if schedule["type"] == "weekdays" and local.weekday() >= 5:
+                continue
+            if schedule['type'] == 'weekly' and local.weekday() not in schedule['days']:
                 continue
             scheduled = schedule.get("time", "")
-            if len(scheduled) != 5 or now.strftime("%H:%M") < scheduled:
+            if len(scheduled) != 5 or local.strftime("%H:%M") < scheduled:
                 continue
-            slot = f"{job['id']}:{now.date()}:{scheduled}"
+            hour, minute = map(int, scheduled.split(':'))
+            due = local.replace(hour=hour, minute=minute, second=0, microsecond=0, fold=0)
+            if local.timestamp() < due.timestamp() or (start and due.timestamp() < start.timestamp()):
+                continue
+            slot = f"{job['id']}:{local.date()}:{scheduled}"
             # Catch up today's due slot once, never replay a backlog of old days.
             self.enqueue(job["id"], slot)

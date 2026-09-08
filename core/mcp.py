@@ -15,9 +15,18 @@ DEFINITIONS = [
     ('memory_write', 'Save a concise, sourced Markdown note. Never store secrets. Use the version from memory_read; null creates a new note. Preserves local Git history.', {'path':{'type':'string'},'text':{'type':'string','maxLength':1000000},'version':{'type':['string','null']}}, ['path','text','version']),
 ]
 
+SCHEDULE = {'type':'object','properties':{'type':{'type':'string','enum':['once','daily','weekdays','weekly','interval']},'time':{'type':'string','description':'HH:MM'},'at':{'type':'string','description':'ISO date/time with UTC offset for once'},'days':{'type':'array','items':{'type':'integer','minimum':0,'maximum':6},'description':'Monday=0, Sunday=6'},'minutes':{'type':'integer','minimum':1},'timezone':{'type':'string'}},'required':['type'],'additionalProperties':False}
+ROUTINE_FIELDS = {'name':{'type':'string','maxLength':200},'instructions':{'type':'string','maxLength':30000,'description':'Self-contained task, data sources and desired result. Runs have no implicit access to this chat history.'},'schedule':SCHEDULE,'notification':{'type':'object','properties':{'target':{'type':'string','description':'app or an exact ready target ID from routine_capabilities; external delivery only on explicit user request'},'when':{'type':'string','enum':['always','errors']}},'required':['target','when'],'additionalProperties':False},'status':{'type':'string','enum':['active','paused']}}
+DEFINITIONS += [
+    ('routine_capabilities','Check supported schedules, timezone, current time and real notification targets before creating a routine. No sending.',{},[]),
+    ('routine_list','Read routines in the current project, their revisions and next execution. Use before editing or pausing.',{},[]),
+    ('routine_create','Create and activate a routine requested by the user in chat. Check required data/tools first; ask only for missing essentials. Use the user-saved notification preference from routine_capabilities, otherwise App. Never claim creation without this tool succeeding. Reuse requestKey on retry.',{**ROUTINE_FIELDS,'requestKey':{'type':'string','minLength':8,'maxLength':150}},['name','instructions','schedule','requestKey']),
+    ('routine_update','Change or pause an existing routine on user request. Use the revision from routine_list. Never silently create a replacement.',{**ROUTINE_FIELDS,'id':{'type':'string'},'revision':{'type':'string'}},['id','revision']),
+]
+
 
 def tools():
-    return [{'name':name,'description':description,'inputSchema':{'type':'object','properties':{'projectId':{'type':'string','description':'ID of the current project, default for Allgemein. Never choose another project without user intent.'},**properties},'required':['projectId',*required],'additionalProperties':False},'annotations':{'readOnlyHint':name!='memory_write','destructiveHint':name=='memory_write','openWorldHint':False}} for name,description,properties,required in DEFINITIONS]
+    return [{'name':name,'description':description,'inputSchema':{'type':'object','properties':{'projectId':{'type':'string','description':'ID of the current project, default for Allgemein. Never choose another project without user intent.'},**properties},'required':['projectId',*required],'additionalProperties':False},'annotations':{'readOnlyHint':name not in {'memory_write','routine_create','routine_update'},'destructiveHint':name in {'memory_write','routine_update'},'openWorldHint':name.startswith('routine_')}} for name,description,properties,required in DEFINITIONS]
 
 
 def call_core(args, name, arguments):
@@ -37,6 +46,8 @@ def call_core(args, name, arguments):
         else:
             with urlopen(f'http://127.0.0.1:{args.port}/api/auth/session',timeout=5) as response:
                 headers['x-uwe-token']=json.load(response)['token']
+    if name.startswith('routine_'):
+        route = route.replace('/memory/tool', '/routines/tool')
     request=Request(f'http://127.0.0.1:{args.port}'+route,data=json.dumps({'name':name,'arguments':arguments}).encode(),headers=headers)
     try:
         with urlopen(request,timeout=60) as response:return json.load(response)

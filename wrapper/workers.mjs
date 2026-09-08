@@ -93,9 +93,10 @@ export class Workers extends EventEmitter {
       contextEnv: { COMPANY_BASE: companyRoot(this.root), SYSTEM_BASE: systemRoot(), UWE_WORKSPACE: this.store.root },
       readThread: threadId => jsonFile(path.join(this.store.root, "chats", safeName(threadId), "transcript.json"), null),
       persist: thread => this.store.exportThread(thread),
-      mcpServers: cwd => {
+      mcpServers: async cwd => {
         const project=this.store.state.projects.find(p=>p.path && path.resolve(this.store.root,p.path)===path.resolve(cwd||this.store.root));
-        return sharedMemoryACPServers(id,project?.id||'default');
+        const job=(await this.store.jobs()).find(j=>path.resolve(this.store.root,'jobs',j.id)===path.resolve(cwd||this.store.root));
+        return sharedMemoryACPServers(id,project?.id||job?.projectId||'default');
       },
     }));
   }

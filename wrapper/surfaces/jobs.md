@@ -52,3 +52,46 @@ Ausführungsdetails verwenden den gemeinsamen Settings-Skeleton.
 
 
 Auftrags-Skeletons verwenden job-row und job-info, mit kleinem Statussymbol sowie Aktions- und Schalterplätzen an den originalen Kanten.
+
+## Routinen aus dem Chat und Benachrichtigungen
+
+Ein ausdrücklicher Auftrag im Agentenchat erstellt über `routine_capabilities`,
+`routine_list`, `routine_create` und `routine_update` einen normalen Job. Kein
+zusätzlicher Cron-Dienst und keine Schlüsselworterkennung im Chat. Der Worker
+prüft Quellen und Werkzeuge, formuliert eine eigenständig ausführbare Aufgabe
+und bestätigt nur den gespeicherten Termin samt Zeitzone und Zustellweg.
+Einmalige Termine, täglich, werktags, ausgewählte Wochentage und Intervalle
+verwenden denselben Kernzeitplaner. Neue Routinen starten ab ihrer Einrichtung,
+ein bereits verstrichener heutiger Termin wird nicht sofort ausgelöst.
+
+`JobForm` bietet dieselben Wochen-/Einmalpläne und die Benachrichtigungsauswahl.
+Der Statusfilter heißt „Braucht Aufmerksamkeit“. Kategorien und eine Heute-Seite
+sind für diesen Ablauf nicht erforderlich. PageHeading, Field, Modal,
+SettingsNavigationRow, IconButton und bestehende Schrift-/Abstandsrollen bleiben
+unverändert. Keine zweite Komponenten- oder Tokenpalette.
+
+Die Glocke in der Seitenleiste und im Auftragskopf öffnet dasselbe Modal
+„Benachrichtigungen“. Sie kennzeichnet ungelesene Ergebnisse und bestehende
+Rückfragen. `NotificationRow` verwendet die vorhandene vollständig klickbare
+Einstellungszeile, mit Titel, Datum und Neu/Gelesen; ein Beispiel steht unter
+Unser Design. Öffnen markiert genau diesen Eintrag gelesen. Die Detailansicht
+zeigt Ergebnistext und tatsächlichen Versandstatus; Ausführung und zugehöriger
+Agentenchat bleiben direkt erreichbar. Rückfragen öffnen den bestehenden
+Freigabedialog. Laden, leer, Fehler, Nachladen älterer Meldungen und Wiederholen
+sind eigenständige Zustände. Lesestatus bleibt über Neustarts und Geräte erhalten.
+
+Im selben Modal wird einmal der Standard für neue Routinen gewählt. Pro Job
+kann er überschrieben werden: App oder ein vorhandenes, freigegebenes und
+bereites Telegram-/WhatsApp-Ziel; immer oder nur bei Problemen. Externe Konten
+werden weiterhin unter Verbindungen eingerichtet. Eine fehlende Verbindung
+verhindert die Aktivierung mit diesem Ziel, niemals das Pausieren einer Routine.
+App-Ergebnisse bleiben unabhängig vom externen Versand erhalten.
+
+Browserhinweise werden ausschließlich nach der Aktion „Gerätehinweise erlauben“
+angefordert. Sie setzen eine geöffnete App und Browserunterstützung voraus;
+das ist kein Web-Push bei geschlossener App. Telegram kann ohne geöffneten
+Browser zustellen. WhatsApp benötigt die aktive lokale Bridge und eine bekannte
+freigegebene Conversation. WhatsApp Business und Mail werden nicht als
+proaktive Versandziele angeboten. Empfang/Verbindungen starten nicht automatisch.
+Der Host muss wach und der Kern aktiv sein. Reale Geräte-/Anbieterzustellung
+wird separat von simulierten Funktionstests geprüft.
