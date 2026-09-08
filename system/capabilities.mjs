@@ -6,7 +6,6 @@ export const capabilities = {
   schemaVersion: 1,
   availability: 'Query the referenced status endpoint at runtime; source presence is not readiness.',
   domains: [
-    {id:'inbox', sources:['wrapper/ui/inbox.tsx','wrapper/ui/inbox.css'], contract:'wrapper/surfaces/inbox.md', status:'design-preview-only', backend:null},
     {id:'chat', sources:['wrapper/ui/app.jsx','wrapper/server.mjs'], contract:'wrapper/surfaces/chat.md'},
     {id:'speech', sources:['wrapper/ui/message-speech.tsx','wrapper/ui/speech-playback.mjs','wrapper/speech.mjs','system/runtime-assets.mjs','requirements-speech.lock','scripts/setup-system.mjs'], contract:'wrapper/VOICE.md', status:'/api/speech/status'},
     {id:'dictation', sources:['wrapper/ui/dictation.jsx','wrapper/dictation.mjs'], contract:'wrapper/DICTATION.md', status:'/api/dictation/status'},
@@ -21,7 +20,6 @@ export const capabilities = {
     {id:'operations', sources:['core/operations.py','core/service.py','core/backups.py','core/restore.py','core/secrets.py'], contract:'docs/OPERATIONS.md'},
   ],
   actions: [
-    {id:'inbox.preview', surface:'sidebar above jobs; inbox replaces sidebar with conversation list and back action', component:'wrapper/ui/inbox.tsx', selector:'[data-capability="inbox.preview"]', api:null, behavior:'Local fictional examples only; no connector calls, persistent drafts, agent work or sending. Concept: docs/INBOX.md'},
     {id:'chat.message.edit', surface:'user message actions', component:'wrapper/ui/app.jsx#Item', behavior:'Edit and branch via existing confirmation flow'},
     {id:'chat.message.delete', surface:'user message actions', component:'wrapper/ui/app.jsx#Item', behavior:'Direct delete button opens existing confirmation; disabled during active turn'},
     {id:'chat.message.read-aloud', surface:'final assistant message actions', component:'wrapper/ui/message-speech.tsx', selector:'[data-capability="chat.message.read-aloud"]', playback:'wrapper/ui/speech-playback.mjs', api:{status:'GET /api/speech/status', synthesize:'POST /api/speech/synthesize', settings:'POST /api/speech/settings', voices:'GET /api/speech/voices', connect:'POST /api/speech/connect'}, request:{text:'1–5000 characters; playback chunks at 2000'}, response:{audio:'base64',mime:'audio/wav or audio/mpeg'}, providers:[{id:'local',engine:'Piper',voice:'de_DE-thorsten-high',setup:'npm --prefix wrapper run setup:speech',ready:'localReady'},{id:'elevenlabs',connection:'speech-elevenlabs',ready:'elevenlabs && voiceId && provider === elevenlabs'}], settingsFile:'speech-settings.json under UWE_DATA_ROOT', secrets:'existing core secret store via integrations.mjs; never in this manifest', behavior:'User gesture; final prose only; exclusive playback; stop/unmount cancels; no automatic cloud fallback'},

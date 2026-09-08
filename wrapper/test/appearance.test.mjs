@@ -69,12 +69,12 @@ test('chat date groups use calendar boundaries and keep pinned chats separate', 
   assert.equal(chatDateGroup({updatedAt: new Date(2026, 2, 29, 0, 1).getTime()}, afterDST), 'Gestern');
 });
 
-test('welcome effect accepts off, new chats and all chats and persists across storage reloads', async () => {
+test('welcome effect accepts only on/off and persists across storage reloads', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'welcome-effect-'));
   try {
     const store = new Storage(path.join(dir, 'workspace'), path.join(dir, 'data'));
     await store.init();
-    for (const value of ['off', 'on', 'all']) {
+    for (const value of ['off', 'on']) {
       Object.assign(store.state.settings, validateAppearance({welcomeParticles: value}));
       await store.save();
       const restored = new Storage(path.join(dir, 'workspace'), path.join(dir, 'data'));
@@ -83,28 +83,4 @@ test('welcome effect accepts off, new chats and all chats and persists across st
     }
     for (const value of [true, false, 'invalid', null]) assert.throws(() => validateAppearance({welcomeParticles: value}));
   } finally { await rm(dir, {recursive:true, force:true}); }
-});
-
-test('color world and highlight persist and reject unknown choices', async () => {
-  const dir=await mkdtemp(path.join(os.tmpdir(),'appearance-palette-'));
-  try {
-    const store=new Storage(path.join(dir,'workspace'),path.join(dir,'data'));await store.init();
-    Object.assign(store.state.settings,validateAppearance({designTone:'neutral',highlightColor:'sage'}));await store.save();
-    const restored=new Storage(path.join(dir,'workspace'),path.join(dir,'data'));await restored.init();
-    assert.equal(restored.state.settings.designTone,'neutral');assert.equal(restored.state.settings.highlightColor,'sage');
-    assert.throws(()=>validateAppearance({designTone:'blueish'}));assert.throws(()=>validateAppearance({highlightColor:'#123456'}));
-  } finally {await rm(dir,{recursive:true,force:true});}
-});
-
-test('panel light choices persist and reject invalid modes', async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'agent-panel-light-'));
-  try {
-    const store = new Storage(path.join(root, 'workspace'), path.join(root, 'data')); await store.init();
-    for (const panelLight of ['off', 'static', 'animated']) {
-      Object.assign(store.state.settings, validateAppearance({panelLight})); await store.save();
-      const restored = new Storage(path.join(root, 'workspace'), path.join(root, 'data')); await restored.init();
-      assert.equal(restored.state.settings.panelLight, panelLight);
-    }
-    for (const panelLight of [null, true, 'fast']) assert.throws(() => validateAppearance({panelLight}));
-  } finally { await rm(root, {recursive: true, force: true}); }
 });

@@ -95,15 +95,3 @@ test("agent avatar foregrounds contrast with all backgrounds in both themes", ()
     for (const color of ['sand', 'clay', 'sage', 'sky', 'lavender'])
       assert.ok(contrast(palette.text, palette[`avatar-${color}`]) >= 4.5, `${theme} avatar ${color}`);
 });
-
-test('all selectable color worlds and accents keep readable text and distinct surfaces', async () => {
-  const {resolveDesign, designTones, designAccents} = await import('../ui/design-system.mjs');
-  for (const mode of ['light','dark']) for (const tone of designTones) for (const accent of designAccents) {
-    const palette=resolveDesign(mode,tone.id,accent.id);
-    for (const text of ['text','muted','faint','accent','blue']) for(const surface of ['bg','sidebar','surface','raised','input','composer'])
-      assert.ok(contrast(palette[text],palette[surface])>=4.5,`${mode}/${tone.id}/${accent.id}: ${text} on ${surface}`);
-    assert.notEqual(palette.bg,palette.surface);
-    assert.equal(palette['switch-on'],themes[mode]['switch-on']);
-  }
-  assert.deepEqual(resolveDesign('invalid','invalid','invalid'),resolveDesign());
-});
