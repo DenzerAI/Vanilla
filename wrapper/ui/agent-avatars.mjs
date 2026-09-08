@@ -3,9 +3,11 @@ export const agentAvatars = [
   { id: "nori", name: "Nori", description: "Rund mit kleiner Antenne" },
   { id: "orbit", name: "Orbit", description: "Mit weitem Visier" },
   { id: "miko", name: "Miko", description: "Mit neugierigen Ohren" },
-  { id: "pixel", name: "Pixel", description: "Ein kleiner Retro-Bot" },
+  { id: "pixel", name: "Pixel", description: "Ein Gesicht aus einem Pixelraster" },
   { id: "lumi", name: "Lumi", description: "Mit einem Blatt im Haar" },
-  { id: "kibo", name: "Kibo", description: "Mit runden Kopfhörern" },
+  { id: "kibo", name: "Kibo", description: "Ein weiches, kompaktes Gesicht" },
+  { id: "pebble", name: "Pebble", description: "Ein ruhiger, runder Kiesel" },
+  { id: "pad", name: "Pad", description: "Ein breites Gesicht aus einem Pixelraster" },
 ];
 export const DEFAULT_AGENT_AVATAR = "nori";
 export const validAgentAvatar = (value) =>

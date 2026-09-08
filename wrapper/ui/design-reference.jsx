@@ -1,3 +1,5 @@
+import { AvatarMotionSetting } from "./avatar-motion-setting.jsx";
+import { AvatarChoices } from "./avatar-picker.jsx";
 import GlassButtonDemo from "./components/ui/glass-button-demo";
 import { AgentMenu } from "./agent-menu";
 import {NotificationRow} from "./job-notifications.jsx";
@@ -26,6 +28,8 @@ import monoLicense from "./assets/fonts/IBMPlexMono-LICENSE.txt";
 
 export function DesignReference({ theme, tone, accent }) {
   const [modelPreview, setModelPreview] = useState(["gpt-6-astra", "medium"]);
+  const [avatarPreview, setAvatarPreview] = useState("kibo");
+  const [avatarMotionPreview, setAvatarMotionPreview] = useState("face");
   const [preview, setPreview] = useState(false);
   const [suggestionDraft, setSuggestionDraft] = useState("");
   const [section, setSection] = useState("components");
@@ -48,6 +52,11 @@ export function DesignReference({ theme, tone, accent }) {
       <h3 className="section-heading">Agent-Menü · Beispiel</h3>
       <div className="sidebar-topbar agent-menu-preview"><AgentMenu name="Agent" avatar="nori" connectionState="online" preview onNavigate={()=>{}} onRestart={()=>{}} /></div>
       <p className="page-note">Avatar und Name öffnen das gemeinsame Menü. Der Verbindungspunkt gehört zur Identität; Serverdetails stehen im geöffneten Menü. Die Vorschau verändert keine Einstellungen und startet keinen Server neu.</p>
+      <h3 className="section-heading">Agent-Gesichter · Beispiel</h3>
+      <div data-avatar-style={avatarMotionPreview}>
+        <AvatarChoices value={avatarPreview} onChange={setAvatarPreview} />
+        <div className="settings-group"><AvatarMotionSetting value={avatarMotionPreview} onChange={setAvatarMotionPreview} avatar={avatarPreview} /></div>
+      </div>
       <h3 className="section-heading">Benachrichtigung · Beispiel</h3>
       <div className="settings-group"><NotificationRow item={{title:'Tagesüberblick · Fertig',created_at:1788854400,read_at:null}} onClick={()=>{}}/></div>
       <h3 className="section-heading">Startvorschläge · Glaspillen</h3>

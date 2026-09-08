@@ -1,6 +1,6 @@
 # AGENT · CI 1.1
 
-Die Oberfläche ist eine ruhige lokale Arbeitszentrale. Sie verbindet die Klarheit einer Entwickleroberfläche mit warmen neutralen Flächen und macOS-typischer Navigation, gruppierten Einstellungen und zurückhaltenden Bedienelementen. Die Assistentenidentität beginnt als „Agent“ mit dem einfarbigen Bot-Avatar Nori. Sechs eigene SVG-Bots sind unter „Dein Agent“ auswählbar und passen sich dem Erscheinungsbild an. Der Anzeigename wird zentral in soul/IDENTITY.md konfiguriert. Die bestehende Informationsarchitektur, Icons und Funktionen bleiben erhalten.
+Die Oberfläche ist eine ruhige lokale Arbeitszentrale. Sie verbindet die Klarheit einer Entwickleroberfläche mit warmen neutralen Flächen und macOS-typischer Navigation, gruppierten Einstellungen und zurückhaltenden Bedienelementen. Die Assistentenidentität beginnt als „Agent“ mit dem einfarbigen Bot-Avatar Nori. Acht eigene SVG-Gesichter sind unter „Dein Agent“ auswählbar und passen sich dem Erscheinungsbild an. Der Anzeigename wird zentral in soul/IDENTITY.md konfiguriert. Die bestehende Informationsarchitektur, Icons und Funktionen bleiben erhalten.
 
 ## Verbindlicher Designvertrag für jede Erweiterung
 
@@ -121,7 +121,7 @@ Der Impeccable-Scan meldet Inter als verbreitete Schrift sowie die bestehende Zi
 
 ## Chat und Personalisierung
 
-Eine schmale Eingabenavigation mit Vorschau springt zu Nutzernachrichten. Uhrzeit und Nachrichtenaktionen bleiben außerhalb der Bubble; Löschen liegt im Mehr-Menü. Bildanhänge stehen als Vorschauen über dem Text. Der Sprung zur neuesten Nachricht erscheint beim Lesen älterer Inhalte. Allgemeine Auswahlzustände und Schalter sind neutral; Orange ist keine Standardfarbe für Bedienelemente. Ein-/Aus-Einstellungen und Zeitpläne verwenden denselben Schalter. „Dein Agent“ zeigt das Profilbild, bearbeitet Name und persönliche Arbeitswünsche direkt und bietet sechs Avatare im gemeinsamen Auswahlfenster an; letztere werden in einem abgegrenzten Abschnitt der vorhandenen Identitätsdatei gespeichert. Ein Versionsvergleich verhindert das Überschreiben zwischenzeitlicher Dateiänderungen beim Speichern.
+Eine schmale Eingabenavigation mit Vorschau springt zu Nutzernachrichten. Uhrzeit und Nachrichtenaktionen bleiben außerhalb der Bubble; Löschen liegt im Mehr-Menü. Bildanhänge stehen als Vorschauen über dem Text. Der Sprung zur neuesten Nachricht erscheint beim Lesen älterer Inhalte. Allgemeine Auswahlzustände und Schalter sind neutral; Orange ist keine Standardfarbe für Bedienelemente. Ein-/Aus-Einstellungen und Zeitpläne verwenden denselben Schalter. „Dein Agent“ zeigt das Profilbild, bearbeitet Name und persönliche Arbeitswünsche direkt und bietet acht Avatare im gemeinsamen Auswahlfenster an; letztere werden in einem abgegrenzten Abschnitt der vorhandenen Identitätsdatei gespeichert. Ein Versionsvergleich verhindert das Überschreiben zwischenzeitlicher Dateiänderungen beim Speichern.
 
 ## Mehrfachansicht und Chat-Kopf
 
@@ -175,11 +175,20 @@ gedeckten Hintergründen aus der zentralen Palette oder „Ohne Farbe“. Der le
 Chat zeigt den Agenten groß über einer von sechs wechselnden Begrüßungen mit
 der eigenen 36-px-Textrolle. Die Auswahl bleibt bei jeder Begrüßung unverändert.
 
-Die Avatare blinzeln gelegentlich und blicken mit kleinen Augenbewegungen in
-verschiedene Richtungen. Lange Ruhephasen, unterschiedliche Zeitabläufe und ein
-stiller Kopf halten die Bewegung zurückhaltend. Es sind direkte SVG-Animationen;
-kein Flackern, keine Maskierung und kein zusätzlicher Hintergrundeffekt.
-„Bewegung reduzieren“ lässt die Augen ruhig geöffnet. Unsichtbare Avatare pausieren.
+Die acht Avatare sind Gesichter ohne Füße. Nori und Lumi dürfen einen kurzen
+Halsansatz behalten. Pixel und Pad haben eine geschlossene Silhouette im Pixelraster,
+ohne abgesetzte Antenne. Kibo ist ein weiches kompaktes Gesicht, Pebble ein Kiesel.
+`Avatar` rendert eigene SVGs mit getrennten Gesichts-, Augen- und Ausdrucksebenen.
+Unter Aussehen → Visuell → Agent-Animation stehen Still, Nur Augen, Sanftes Gesicht
+(Standard), Kleine Gesten, Zwinkern, Fröhlich, Grimmig und Abwechslungsreich.
+Das Gesicht wandert minimal mit dem Blick; Gesten ergänzen seltenes Nicken und
+Blattwippen. Ausdrücke erscheinen kurz mit langen neutralen Pausen. Sie sind
+spielerische Dekoration, kein Arbeitsstatus. Zentrale Zeitrollen stehen in
+`design-system.mjs`; Instanzen variieren leicht. Keine Füße, Partikel oder Masken.
+`AvatarMotionSetting` verwendet die gemeinsame SettingRow; Unser Design zeigt
+denselben Baustein und die acht produktiven Motive. System-/App-Vorgaben für
+reduzierte Bewegung zeigen neutrale offene Augen. Unsichtbare Avatare und
+versteckte Tabs pausieren sämtliche Ebenen.
 
 ## Gemeinsame Bedienelemente
 

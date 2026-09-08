@@ -108,3 +108,16 @@ test('panel light choices persist and reject invalid modes', async () => {
     for (const panelLight of [null, true, 'fast']) assert.throws(() => validateAppearance({panelLight}));
   } finally { await rm(root, {recursive: true, force: true}); }
 });
+
+test('agent motion modes persist and reject invalid choices', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'agent-motion-'));
+  try {
+    const store = new Storage(path.join(dir, 'workspace'), path.join(dir, 'data')); await store.init();
+    for (const avatarMotion of ['off', 'eyes', 'face', 'gestures', 'wink', 'happy', 'grumpy', 'mixed']) {
+      Object.assign(store.state.settings, validateAppearance({avatarMotion})); await store.save();
+      const restored = new Storage(path.join(dir, 'workspace'), path.join(dir, 'data')); await restored.init();
+      assert.equal(restored.state.settings.avatarMotion, avatarMotion);
+    }
+    for (const avatarMotion of [null, true, 'invalid']) assert.throws(() => validateAppearance({avatarMotion}));
+  } finally { await rm(dir, {recursive: true, force: true}); }
+});

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="currentColor">
+  <g class="avatar-head"><path d="M13 18h38v6h5v21h-5v5H13v-5H8V24h5Z"/>
+    <g class="avatar-face"><rect class="avatar-screen" x="18" y="25" width="28" height="17" rx="0"/>
+      <g class="avatar-gaze"><g class="avatar-neutral"><g class="avatar-eyelids"><g class="avatar-eye avatar-eye-left"><rect x="23" y="30" width="5" height="8" rx="0"/></g><g class="avatar-eye avatar-eye-right"><rect x="37" y="30" width="5" height="8" rx="0"/></g></g></g>
+        <g class="avatar-happy"><path d="M22 35v-4h3v-3h3v3h3v4h-3v-3h-3v3Zm12 0v-4h3v-3h3v3h3v4h-3v-3h-3v3Z"/></g><g class="avatar-grumpy"><path d="M22 28h4v3h4v6h-8Zm12 3h4v-3h4v9h-8Z"/></g>
+      </g>
+    </g>
+  </g>
+</svg>

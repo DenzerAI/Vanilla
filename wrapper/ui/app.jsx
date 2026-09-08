@@ -126,6 +126,7 @@ import { WorkerSettings } from "./worker-settings.jsx";
 import { workerName } from "../../system/worker-catalog.mjs";
 import { AgentMenu } from "./agent-menu";
 import { Avatar } from "./avatar.jsx";
+import { AvatarMotionSetting } from "./avatar-motion-setting.jsx";
 import { WelcomeParticles } from "./welcome-particles";
 import { nextChatGreeting } from "./chat-greetings.mjs";
 import { Dictation } from "./dictation.jsx";
@@ -792,6 +793,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     for (const role of typography) root.style.setProperty(`--text-${role.id}`, `${role.size * scale / 16}rem`);
     root.style.setProperty("--font-ui", settings.uiFont === "system" ? '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' : fonts.find(font => font.token === "font-ui").value);
     root.dataset.reduceMotion = settings.reduceMotion || "system";
+    root.dataset.avatarStyle = settings.avatarMotion || "face";
     for (const [key, value] of Object.entries(designVariables(settings.theme, settings.designTone, settings.highlightColor))) root.style.setProperty(key, value);
   }, [boot?.settings]);
   async function loadUsage() {
@@ -2543,6 +2545,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 <LoaderSettings settings={boot.settings} onChange={saveSettings} />
                 <h3 className="section-heading">Visuell</h3>
                 <div className="settings-group">
+                  <AvatarMotionSetting value={boot.settings.avatarMotion || "face"} onChange={value => guard(() => saveSettings({avatarMotion: value}))()} avatar={boot.settings.avatar} color={boot.settings.avatarColor} />
                   <SettingRow title="Flächenlicht" description="Dezente Lichtverläufe in Seitenleiste und Workspace.">
                     <select aria-label="Flächenlicht" value={boot.settings.panelLight || "animated"} onChange={e => guard(() => saveSettings({panelLight: e.target.value}))()}>{appearanceOptions.panelLight.options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
                   </SettingRow>
