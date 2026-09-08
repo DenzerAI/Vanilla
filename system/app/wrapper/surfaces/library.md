@@ -54,3 +54,34 @@ LibraryThumbnail lädt nur sichtbare beziehungsweise unmittelbar benachbarte Ein
 
 
 Der Datei-Skeleton folgt der aktiven Listen-/Rasterwahl innerhalb des scrollenden Ergebnisbereichs. Die Liste besitzt dieselben Spalten Name/Art/Datum, 32-px-Zeilen und Touchhöhen. Das Raster verwendet dieselben 128-px-Mindestspalten und 112-px-Vorschauplätze. Mobile Spalten werden gemeinsam mit den echten Einträgen ausgeblendet.
+
+
+## HTML-Dokumente im Workspace und in der Großansicht
+
+HTML und HTM werden in FileContent standardmäßig als gerenderte Seite angezeigt.
+HtmlPreview ist der gemeinsame iframe-Baustein; Unser Design beschreibt diesen gemeinsamen Baustein. Bibliothek, Chat-Artefakte und Workspace verwenden denselben
+Anzeigeweg. HTML erhält einen eigenen Dateitypfilter; Miniaturen zeigen ein
+Formatsymbol und starten keine Dokumentskripte.
+
+Ein HTML-Link im Chat öffnet zunächst die kompakte Workspace-Vorschau. HTML reagiert
+auf die tatsächliche iframe-Breite wie auf einem schmalen Gerät. „Vollbild“ erweitert
+denselben Workspace; die Kopfaktion führt zurück. Dabei bleiben iframe, Scrollposition
+und Dokumentzustand erhalten. Die Bibliothek behält Auswahlvorschau, Doppelklick und
+Vergrößern in LibraryPreview. Kein automatischer Wechsel in die Bibliothek oder ein Modal.
+Die Großansicht nutzt bei HTML fast die gesamte Fensterbreite und -höhe; auf dem
+Handy bleiben Kopf und Schließen erreichbar. Der Inhalt scrollt im Dokument.
+
+„Bearbeiten“ öffnet im schreibbaren Workspace den Quelltext mit separatem Speichern.
+Schreibgeschützte Ansichten bieten „Quelltext“ zum Nachsehen. Wechseln zwischen
+Vorschau und Bearbeiten erhält ungespeicherte Änderungen; die Vorschau bezeichnet
+ausdrücklich den gespeicherten Stand. Aktualisieren ist bei ungespeicherten
+Änderungen deaktiviert. Erfolgreiches Speichern aktualisiert die Vorschau.
+Ladefehler bleiben sichtbar und erneut versuchbar. Der bestehende Download bleibt erhalten.
+
+Der dedizierte GET-Endpunkt `/api/file/preview` verwendet dieselbe Pfad- und
+Bereichsprüfung wie die Dateiansicht und begrenzt HTML auf 2 MB. HTML läuft mit
+`sandbox="allow-scripts"` ohne same-origin-Recht. Eine eigene CSP erlaubt eingebettete
+Skripte, CSS, Bilder und Fonts, sperrt aber API-Zugriff, externe Ressourcen,
+Formularversand und eingebettete Unterseiten. Die CSP der App und der geschützte
+Raw-/Download-Weg bleiben unverändert. Diese erste Vorschau ist für eigenständige
+HTML-Dateien gedacht; sie synchronisiert noch keine externen Dateiänderungen live.

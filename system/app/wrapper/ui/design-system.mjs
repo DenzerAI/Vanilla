@@ -134,7 +134,9 @@ export const typography = [
 export const spacing = [2, 4, 8, 12, 16, 20, 24, 28, 32, 40, 48, 64];
 export const radii = { small: 4, control: 8, button: 6, panel: 12, large: 24, pill: 999 };
 export const amountSliderGeometry = { cell: 6, gap: 1, thumb: 24 };
-export const amountSliderMotion = { magnet: .08, baseSpeed: .3, extraSpeed: 3.2, tail: .6, hint: .15, ultraSpeed: 3.5, ultraTail: .35, ultraIntensity: .6, ultraFalloff: .7 };
+export const amountSliderMotion = { magnet: .08, minDensity: .2, minSpread: .3, baseSpeed: .3, extraSpeed: 3.2, tail: .6, hint: .15, ultraSpeed: 3.5, ultraTail: .35, ultraIntensity: .6, ultraFalloff: .7 };
+// Visual intensity only: native capabilities still determine the available stops.
+export const reasoningAnimationLevels = { low: .03, medium: .35, high: .6, xhigh: .82, max: 1, ultra: 1 };
 export const controls = { "slider-thumb-width": `${amountSliderGeometry.thumb}px`, "turn-loader-slot": "19.2px", "composer-fallback":"112px", "nav-text-inset":"38px", "nav-group-inset":"46px", height: "32px", target: "40px", touch: "44px", "heading-height": "52px", "app-heading-height": "84px", "row-height": "48px", "switch-width": "36px", "switch-height": "20px", "switch-thumb": "16px", "switch-travel": "16px" };
 export const typeMetrics = { "font-root-size": "16px", "tracking-title": "-0.65px", "tracking-heading": "-0.35px", "tracking-welcome": "-0.7px" };
 export const weights = { regular: 400, medium: 500, semibold: 600, bold: 700 };
@@ -171,12 +173,9 @@ export const themes = {
     "slider-ultra-accent": "#ed986f",
     "slider-glass-shadow": "inset 0 0 0 1px #ffffff66, inset 0 1px 0 #ffffffa3, 0 2px 6px #00000033",
     "notice-glass": "#302e2b66",
-    "glass-button-blur": "12px",
-    "glass-button-shadow": "0 8px 14px #00000040",
-    "glass-button-tint": "#ffffff08",
-    "glass-button-reflection": "linear-gradient(155deg, #ffffff42 0%, #ffffff0a 35%, #ffffff00 52%, #ffffff16 82%, #ffffff30 100%)",
-    "glass-button-edge": "inset 0 0 0 1px #ffffff30, inset 1px 2px 1px #ffffff99, inset -1px -2px 1px #ffffff45, inset 0 -5px 8px #ffffff12",
-    "glass-button-glint": "linear-gradient(105deg, #ffffff00 8%, #ffffffb3 32%, #ffffff10 62%, #ffffff00 92%)",
+    "glass-button-blur": "24px",
+    "glass-button-tint": "#28272526",
+    "glass-button-edge": "inset 0 0 0 1px #ffffff0a",
     "suggestion-glass": "#302e2b52",
     "suggestion-glass-hover": "#302e2ba3",
     "glass-highlight": "#ffffff26",
@@ -254,12 +253,9 @@ export const themes = {
     "slider-ultra-accent": "#b34f2b",
     "slider-glass-shadow": "inset 0 0 0 1px #00000026, inset 0 1px 0 #ffffffcc, 0 2px 6px #0000001f",
     "notice-glass": "#f5f3ee80",
-    "glass-button-blur": "12px",
-    "glass-button-shadow": "0 8px 14px #00000024",
-    "glass-button-tint": "#ffffff0a",
-    "glass-button-reflection": "linear-gradient(155deg, #ffffffa6 0%, #ffffff24 35%, #ffffff00 52%, #00000008 82%, #ffffff80 100%)",
-    "glass-button-edge": "inset 0 0 0 1px #00000016, inset 1px 2px 1px #fffffff2, inset -1px -2px 1px #ffffffcc, inset 0 -5px 8px #00000008",
-    "glass-button-glint": "linear-gradient(105deg, #ffffff00 8%, #ffffffff 32%, #ffffff40 62%, #ffffff00 92%)",
+    "glass-button-blur": "24px",
+    "glass-button-tint": "#f0eee926",
+    "glass-button-edge": "inset 0 0 0 1px #00000008",
     "suggestion-glass": "#f5f3ee66",
     "suggestion-glass-hover": "#f5f3eeb8",
     "glass-highlight": "#ffffffb3",
@@ -334,6 +330,7 @@ export function resolveDesign(theme = 'dark', tone = 'balanced', accent = 'terra
   const palette = {...themes[mode], ...(toneSurfaces[tone]?.[mode] || {})};
   const selectedAccent = designAccents.find(item => item.id === accent) || designAccents[0];
   return {...palette, accent: selectedAccent[mode], highlight: selectedAccent[mode],
+    'glass-button-tint': palette.composer + '26',
     'composer-blur': palette.composer + (mode === 'light' ? 'b3' : '99'),
     'suggestion-glass': palette.glass + (mode === 'light' ? '66' : '52'),
     'suggestion-glass-hover': palette.glass + (mode === 'light' ? 'b8' : 'a3'),
@@ -361,7 +358,7 @@ export const colorRoles = {
   warning: "Hinweis",
   danger: "Fehler",
 };
-export const motion = { 'panel-light-duration': '48s', 'panel-light-easing': 'ease-in-out', 'feedback-duration': '160ms', 'progress-duration': '1000ms', 'skeleton-duration': '1600ms' };
+export const motion = { 'picker-duration': '280ms', 'picker-easing': 'cubic-bezier(.16, 1, .3, 1)', 'panel-light-duration': '48s', 'panel-light-easing': 'ease-in-out', 'feedback-duration': '160ms', 'progress-duration': '1000ms', 'skeleton-duration': '1600ms' };
 export function renderDesignCSS() {
   const shared = Object.fromEntries([
     ...Object.entries(typeMetrics),

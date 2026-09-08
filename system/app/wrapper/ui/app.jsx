@@ -1532,7 +1532,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       chooseProject(result.project.id);
       newDraft(result.project.id);
     }
-    notify(change.id ? "Projekt gespeichert." : "Projekt angelegt.");
+    notify(change.id ? "Workspace gespeichert." : "Workspace angelegt.");
   }
   async function loadSkills() {
     setSkillsLoading(true);
@@ -1771,7 +1771,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       <span>{space.name}</span>
                       {icon(expandedProject === space.id ? ChevronDown : ChevronRight, 12)}
                     </button>
-                    <ChatMenu label={"Projekt verwalten: " + space.name} className="icon-button" items={[
+                    <ChatMenu label={"Workspace verwalten: " + space.name} className="icon-button" items={[
                       {id:"edit", label:"Workspace bearbeiten …", icon:icon(SquarePen,16), action:()=>setModal({type:"project",project:space})},
                       {id:"files", label:"Dateien öffnen", icon:icon(FolderOpen,16), action:()=>{if(projectId !== space.id) newDraft(space.id); chooseProject(space.id); setView("chat"); setPanel("files");}}
                     ]}>{icon(MoreHorizontal,17)}</ChatMenu>
@@ -2134,10 +2134,10 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                                 {icon(Download, 16)}
                               </a>
                             </div>
-                            <FileContent key={selectedFile} path={selectedFile} api={api} />
+                            <FileContent key={selectedFile} path={selectedFile} api={api} onEnlarge={()=>setWorkspaceExpanded(true)} />
                           </>
                         ) : (
-                          boot.workspaceToolsVersion ? <AgentFiles api={api} initialFolder={agentFolderTarget}/> : <p role="status">Die neue Agent-Dateiansicht wird nach dem nächsten Serverstart verfügbar. Laufende Aufträge können zuerst fertig werden.</p>
+                          boot.workspaceToolsVersion ? <AgentFiles api={api} initialFolder={agentFolderTarget} onPreview={()=>setWorkspaceExpanded(true)}/> : <p role="status">Die neue Agent-Dateiansicht wird nach dem nächsten Serverstart verfügbar. Laufende Aufträge können zuerst fertig werden.</p>
                         )}
                       </div>
                     ) : panel === "terminal" ? (
@@ -2882,10 +2882,10 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               />
             </Field>
             </div>
-            <fieldset className="project-symbols" style={{"--project-preview":projectColor(modal.color ?? modal.project?.color)}}><legend>Workspace-Symbol</legend>
+            <fieldset className="project-symbols" style={{"--project-preview":projectColor(modal.color ?? modal.project?.color)}}><legend>Symbol</legend>
               {projectIcons.map(([value, label]) => <label key={value} title={label}><input type="radio" name="icon" value={value} checked={value === (modal.icon ?? modal.project?.icon ?? "folder")} onChange={()=>setModal(previous=>({...previous,icon:value}))} /><span>{icon(projectGlyphs[value], 20)}<span>{label}</span></span></label>)}
             </fieldset>
-            <fieldset className="project-symbols project-colors"><legend>Workspace-Farbe</legend>
+            <fieldset className="project-symbols project-colors"><legend>Farbe</legend>
               {projectColors.map(([value, label]) => <label key={value} title={label}><input type="radio" name="color" value={value} checked={value === (modal.color ?? modal.project?.color ?? "default")} onChange={()=>setModal(previous=>({...previous,color:value}))} /><span><span className="project-color-swatch" style={{backgroundColor:projectColor(value)}} aria-hidden="true">{icon(Check, 14)}</span><span>{label}</span></span></label>)}
             </fieldset>
             {boot.layoutVersion >= 2 && <div className="settings-group">

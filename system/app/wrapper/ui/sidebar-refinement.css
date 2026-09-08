@@ -146,6 +146,7 @@
 
 /* Only the expanded project's conversations scroll; project headings stay put. */
 .workspace-projects { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.app > .sidebar:has(> .workspace-projects) { padding-bottom: 0; }
 .workspace-projects > .projects-heading,
 .workspace-projects .workspace-heading,
 .sidebar > nav { flex-shrink: 0; }
@@ -156,8 +157,9 @@
   overscroll-behavior-y: contain;
   padding-bottom: var(--space-32);
   scroll-padding-block: var(--space-8) var(--space-32);
-  /* ScrollEdgeFade limits the edge transition to the shared small spacing. */
+  /* The list reaches the panel edge; its end padding keeps the final row readable. */
 }
+.workspace-projects .workspace-chats[data-fade-bottom="true"] { --fade-bottom: var(--space-32); }
 
 /* Recency shares the row surface, with its own space instead of an overlay. */
 .sidebar .workspace-chats .chat-row .chat-age {
@@ -190,14 +192,15 @@
 /* Agent identity anchors navigation; search remains a compact icon action. */
 .sidebar-topbar > .agent-menu-trigger {
   flex: 1; min-width: 0; width: auto; min-height: var(--control-target);
-  padding: var(--space-4) var(--space-8); gap: var(--space-8);
+  display: grid; grid-template-columns: 18px minmax(0, 1fr); align-items: center;
+  padding: var(--space-4) var(--space-8); gap: var(--space-12);
   border-radius: var(--radius-panel); text-align: left;
 }
 .agent-menu-trigger:is(:hover, [aria-expanded="true"]) { background: var(--selected); }
-.agent-menu-avatar { position: relative; display: flex; flex-shrink: 0; }
-.agent-menu-avatar > .avatar { width: 24px; height: 24px; }
-.agent-menu-avatar > .status-dot { position: absolute; right: 0; bottom: 0; margin: 0; box-shadow: 0 0 0 2px var(--sidebar); }
-.agent-menu-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: var(--weight-medium); }
+.agent-menu-avatar { position: relative; display: flex; justify-content: center; align-items: center; width: 18px; height: 32px; }
+.agent-menu-avatar > .avatar { width: 32px; height: 32px; }
+.agent-menu-avatar > .status-dot { position: absolute; right: calc(0px - var(--space-4)); bottom: var(--space-2); margin: 0; box-shadow: 0 0 0 2px var(--sidebar); }
+.agent-menu-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-reading); font-weight: var(--weight-semibold); }
 .agent-menu .agent-server-details { padding: var(--space-8) var(--space-12) var(--space-12); border-bottom: 1px solid var(--border); margin-bottom: var(--space-4); }
 .agent-server-details p { margin: 0; font-size: var(--text-small); font-weight: var(--weight-medium); }
 .agent-server-details dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-4) var(--space-12); margin: var(--space-8) 0 0; font-size: var(--text-caption); }
