@@ -2,7 +2,7 @@
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import * as React from "react";
 import { cn } from "../../lib/utils";
-import { amountSliderGeometry, amountSliderMotion } from "../../design-system.mjs";
+import { amountSliderGeometry, amountSliderMotion, reasoningAnimationLevels } from "../../design-system.mjs";
 import "./amount-slider.css";
 
 const { cell: CELL, gap: GAP, thumb: THUMB } = amountSliderGeometry;
@@ -14,16 +14,17 @@ function hash(x: number, y: number) {
 // Adapted from the supplied AmountSlider: one native option per magnetic stop.
 // No monetary readout. Keyboard, touch and pointer share Radix's commit path.
 export function AmountSlider({ value, onValueChange, onValueCommit, min = 0, max = 100,
-  stops, className, label, valueText, reduceMotion = false, disabled = false, unset = false, boost = 0,
+  stops, className, label, valueText, reduceMotion = false, disabled = false, unset = false, boost = 0, energy = 1,
 }: {
   value: number; onValueChange: (value: number) => void; onValueCommit: (value: number) => void;
   min?: number; max?: number; stops?: number[]; className?: string;
-  label: string; valueText: string; reduceMotion?: boolean; disabled?: boolean; unset?: boolean; boost?: number;
+  label: string; valueText: string; reduceMotion?: boolean; disabled?: boolean; unset?: boolean; boost?: number; energy?: number;
 }) {
   const [dragging, setDragging] = React.useState(false);
   const canvasRef = React.useRef<HTMLCanvasElement>(null), trackRef = React.useRef<HTMLSpanElement>(null);
   const repaint = React.useRef<(() => void) | null>(null);
   const fraction = Math.min(Math.max((value - min) / (max - min || 1), 0), 1);
+  const energyRef = React.useRef(energy); energyRef.current = energy;
   const boostRef = React.useRef(boost); boostRef.current = boost;
   const fractionRef = React.useRef(fraction); fractionRef.current = fraction;
   const [systemReduce, setSystemReduce] = React.useState(() => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
@@ -45,13 +46,13 @@ export function AmountSlider({ value, onValueChange, onValueCommit, min = 0, max
     let accent = getComputedStyle(track).color;
     const paint = (now: number) => {
       const dt = running ? Math.min((now - last) / 1000, .05) : 0; last = now;
-      const fill = fractionRef.current, emphasis = boostRef.current;
-      phase += dt * (amountSliderMotion.baseSpeed + fill * amountSliderMotion.extraSpeed + emphasis * amountSliderMotion.ultraSpeed);
+      const fill = fractionRef.current, emphasis = boostRef.current, activity = energyRef.current;
+      phase += dt * (amountSliderMotion.baseSpeed + activity * amountSliderMotion.extraSpeed + emphasis * amountSliderMotion.ultraSpeed);
       hintPhase += dt;
       ctx.clearRect(0, 0, width, height);
       const fillPx = THUMB / 2 + fill * (width - THUMB);
-      const bandPx = fill * (amountSliderMotion.tail + emphasis * amountSliderMotion.ultraTail) * width;
-      const hintStrength = amountSliderMotion.hint * (1 - fill);
+      const bandPx = Math.max(THUMB, (activity * amountSliderMotion.tail + emphasis * amountSliderMotion.ultraTail) * width);
+      const hintStrength = amountSliderMotion.hint * activity * (1 - fill);
       ctx.fillStyle = accent;
       for (let x = 0; x < Math.ceil(width / CELL); x++) {
         const px = x * CELL + CELL / 2, tail = px <= fillPx;
@@ -66,6 +67,9 @@ export function AmountSlider({ value, onValueChange, onValueCommit, min = 0, max
           base = hintStrength * Math.sin(along * Math.PI) * (.5 + .5 * Math.sin(px / width * 5 - hintPhase * 4.5));
         }
         for (let y = 0; y < Math.ceil(height / CELL); y++) {
+          // The native level shapes how much of the field is alive, not just its speed.
+          if (tail && (hash(x + 19, y + 7) > amountSliderMotion.minDensity + activity * (1 - amountSliderMotion.minDensity)
+            || Math.abs(y * CELL + CELL / 2 - height / 2) > height / 2 * (amountSliderMotion.minSpread + activity * (1 - amountSliderMotion.minSpread)))) continue;
           const ph = hash(x, y) * Math.PI * 2, stat = .6 + .4 * hash(x + 7.3, y - 3.1);
           const anim = reduce ? 1 : tail
             ? .35 + .325 * (1 + Math.sin(phase * 2.4 + x * .9 + y * .4 + ph))
@@ -100,7 +104,7 @@ export function AmountSlider({ value, onValueChange, onValueCommit, min = 0, max
     document.addEventListener("visibilitychange", sync);
     return () => { running = false; cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); theme.disconnect(); document.removeEventListener("visibilitychange", sync); repaint.current = null; };
   }, [reduce, disabled, unset]);
-  React.useEffect(() => { repaint.current?.(); }, [fraction]);
+  React.useEffect(() => { repaint.current?.(); }, [fraction, energy, boost]);
 
   return <SliderPrimitive.Root className={cn("amount-slider", className)} value={[value]} min={min} max={max} step={.001} disabled={disabled} data-dragging={dragging} data-unset={unset} data-reduce-motion={reduce}
     onPointerDownCapture={() => setDragging(true)} onPointerUpCapture={() => { setDragging(false); if (unset) onValueCommit(snap(value)); }} onPointerCancel={() => setDragging(false)}
@@ -129,9 +133,15 @@ export function AmountSlider({ value, onValueChange, onValueCommit, min = 0, max
   </SliderPrimitive.Root>;
 }
 
+export function reasoningLabel(label: string) {
+  if (/^x[ -]?high$/i.test(label)) return "X-High";
+  return label ? label[0].toUpperCase() + label.slice(1) : label;
+}
+
 export type ReasoningOption = { value: string; label: string; description?: string };
-export function ReasoningSlider({ options, value, onChange, disabled = false, reduceMotion = false }: {
-  options: ReasoningOption[]; value: string; onChange: (value: string) => Promise<unknown> | unknown; disabled?: boolean; reduceMotion?: boolean;
+type ReasoningHeading = { current: ReasoningOption; reset?: ReasoningOption; automatic: boolean; onReset: () => void };
+export function ReasoningSlider({ options, value, onChange, disabled = false, reduceMotion = false, renderHeading }: {
+  options: ReasoningOption[]; value: string; onChange: (value: string) => Promise<unknown> | unknown; disabled?: boolean; reduceMotion?: boolean; renderHeading?: (state: ReasoningHeading) => React.ReactNode;
 }) {
   const [preview, setPreview] = React.useState<number | null>(null), saving = React.useRef(false);
   const reset = options.find(option => option.value === "default" || option.value === "auto");
@@ -147,10 +157,14 @@ export function ReasoningSlider({ options, value, onChange, disabled = false, re
     saving.current = true;
     try { await onChange(levels[next].value); } finally { saving.current = false; setPreview(null); }
   };
+  const activityFor = (i: number) => reasoningAnimationLevels[levels[i]?.value as keyof typeof reasoningAnimationLevels] ?? i / Math.max(1, levels.length - 1);
+  const lower = Math.floor(index), upper = Math.ceil(index);
+  const energy = activityFor(lower) + (activityFor(upper) - activityFor(lower)) * (index - lower);
+  const onReset = () => { if (!disabled && reset) void onChange(reset.value); };
   return <div className="reasoning-slider" onPointerCancel={() => setPreview(null)} onKeyDown={event => { if (event.key === "Escape") setPreview(null); }}>
-    <div className="reasoning-slider-heading"><span>Denkaufwand</span>{reset && !automatic && <button className="reasoning-reset" type="button" disabled={disabled} title="Auf native Voreinstellung zurücksetzen" onClick={() => void onChange(reset.value)}>{reset.label}</button>}<output aria-live="off" title={current.description}><span key={current.value}>{current.label}</span></output></div>
+    {renderHeading ? renderHeading({current, reset, automatic, onReset}) : <div className="reasoning-slider-heading"><span>Denkaufwand</span>{reset && !automatic && <button className="reasoning-reset" type="button" disabled={disabled} title="Auf native Voreinstellung zurücksetzen" onClick={() => void onChange(reset.value)}>{reset.label}</button>}<output aria-live="off" title={current.description}><span key={current.value}>{reasoningLabel(current.label)}</span></output></div>}
     {levels.length > 1 && <>
-      <AmountSlider min={0} max={levels.length - 1} stops={levels.map((_, i) => i)} value={index} unset={automatic} boost={!automatic && levels.some(option => option.value === "ultra") ? Math.max(0, Math.min(1, index - levels.findIndex(option => option.value === "ultra") + 1)) : 0} label="Denkaufwand" valueText={current.label}
+      <AmountSlider min={0} max={levels.length - 1} stops={levels.map((_, i) => i)} value={index} energy={energy} unset={automatic} boost={!automatic && levels.some(option => option.value === "ultra") ? Math.max(0, Math.min(1, index - levels.findIndex(option => option.value === "ultra") + 1)) : 0} label="Denkaufwand" valueText={reasoningLabel(current.label)}
         disabled={disabled} reduceMotion={reduceMotion} onValueChange={setPreview} onValueCommit={next => void commit(next)}/>
     </>}
   </div>;
