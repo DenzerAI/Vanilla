@@ -1,3 +1,4 @@
+import { PipelinePatternPreview } from "./pipeline";
 import { ModelPicker } from "./model-picker.jsx";
 import { InboxPatternPreview } from "./inbox";
 import { WelcomeSuggestions } from "./welcome-suggestions";
@@ -50,7 +51,7 @@ export function DesignReference({ theme, tone, accent }) {
         hasConversation onProviderChange={async () => { throw new Error("Lokale Designvorschau. Anbieter im Chat auswählen."); }}/>
       <p className="page-note">Original-Icons, flache Zeilen und native Denkstufen auf transparenter Glasfläche. Die Beispieldaten bleiben lokal; im Chat liefert der Anbieter seine verfügbaren Werte.</p>
       <h3 className="section-heading">Inbox · Gesprächszeile</h3>
-      <InboxPatternPreview/>
+      <PipelinePatternPreview/><InboxPatternPreview/>
       <h3 className="section-heading">Flächenlicht</h3>
       <div className="panel-light-preview"><PanelLight mode="animated"/><span>Dezente Tiefe mit ruhiger Lichtbewegung</span></div>
       <h3 className="section-heading">Dateivorschau</h3>

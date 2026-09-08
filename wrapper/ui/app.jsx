@@ -1,3 +1,4 @@
+import { PipelinePage } from "./pipeline";
 import { InboxPage } from "./inbox";
 import { WelcomeSuggestions } from "./welcome-suggestions";
 import { PanelLight } from "./panel-light";
@@ -617,7 +618,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const systemNoticeRef = useRef(null);
   const [boot, setBoot] = useState(null),
     [audioConnections, setAudioConnections] = useState({Groq:false, ElevenLabs:false}),
-    [view, setView] = useState(() => !embedded && new URLSearchParams(window.location.search).get("view") === "inbox" ? "inbox" : "chat"),
+    [view, setView] = useState(() => !embedded && ["inbox", "pipeline"].includes(new URLSearchParams(window.location.search).get("view")) ? new URLSearchParams(window.location.search).get("view") : "chat"),
     [chatId, setChatId] = useState(null),
     [thread, setThread] = useState(null),
     [chats, setChats] = useState([]),
@@ -1585,6 +1586,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   );
   const nav = [
       ["inbox", Mail, "Inbox"],
+      ["pipeline", Workflow, "Pipeline"],
       ["jobs", Clock, "Aufträge"],
       ...(boot?.features?.library?[["library", FileText, "Bibliothek"]]:[]),
     ];
@@ -2211,6 +2213,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         )}
         {view === "chat" ? null : view === "inbox" ? (
           <InboxPage PageHeading={PageHeading} sidebarHost={inboxSidebarHost} sidebarVisible={sidebar} onShowSidebar={() => setSidebar(true)} onHideSidebar={() => setSidebar(false)} onBack={() => setView("chat")}/>
+        ) : view === "pipeline" ? (
+          <PipelinePage PageHeading={PageHeading} onShowSidebar={!sidebar ? () => setSidebar(true) : undefined}/>
         ) : view === "jobs" ? (
           <div className="page">
             <PageHeading title="Aufträge" onShowSidebar={!sidebar ? () => setSidebar(true) : undefined}>
