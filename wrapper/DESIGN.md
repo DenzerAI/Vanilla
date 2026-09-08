@@ -451,3 +451,6 @@ Originalstufen und Verfügbarkeit stammen aus dem jeweiligen nativen Anschluss, 
 ## Pipeline
 
 Die Pipeline ist eine ausdrücklich beauftragte bedienbare Designstudie im Hauptmenü. Data bleibt als gemeinsamer Datenkern im Hintergrund. Vier Phasen mit ruhigen Karten, gemeinsamer PageHeading, Suche und Modal folgen [surfaces/pipeline.md](surfaces/pipeline.md). PipelineCard zeigt Kunde, Vorgang, Wert und datierten nächsten Schritt und wird unter Unser Design wiederverwendet. Vier, zwei oder eine Spalte folgen der verfügbaren Fensterbreite. Beispiele sind sichtbar bezeichnet; offene Vorgänge verlangen Aktion und Datum. Keine zweite Palette, kein externer Abgleich in der Designstudie.
+
+
+Die Eingabenavigation verwendet `ChapterScrubber` unter `ui/components/ui`. Position links bei 20 % und maximale Höhe 45 % bleiben erhalten. Eine gemeinsame Federbewegung erzeugt eine Kosinuswelle über benachbarte Striche; die einzelne Glasvorschau folgt innerhalb des Panels. Die Werte stehen in `scrubberSprings`. Klick und Enter springen weiterhin zur Nutzernachricht; Pfeiltasten, Home und End steuern den einzigen Tabstopp. App- und Systemvorgaben für reduzierte Bewegung zeigen die Welle ohne zeitliche Animation. Keine dauerhafte Dekoration.

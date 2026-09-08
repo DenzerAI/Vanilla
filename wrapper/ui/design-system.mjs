@@ -362,3 +362,5 @@ export function renderDesignCSS() {
       .join("")
   );
 }
+
+export const scrubberSprings = { pointer: { stiffness: 700, damping: 52, mass: .5 }, strength: { stiffness: 260, damping: 30, mass: .6 } };

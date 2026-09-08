@@ -50,12 +50,6 @@
 @media (prefers-reduced-motion: reduce) { .thinking-dot { animation: none; } }
 /* Conversation navigation stays quiet until a message is selected. */
 .message-index { position: absolute; left: var(--space-8); top: 20%; max-height: 45%; z-index: 5; display: flex; flex-direction: column; }
-.message-index button { position: relative; border: 0; padding: 0 var(--space-4); min-height: 3px; height: 12px; flex: 1 1 12px; background: transparent; }
-.index-mark { width: 9px; height: 2px; background: var(--muted); opacity: .55; display: block; }
-.message-index button:hover .index-mark, .message-index button[aria-current] .index-mark { background: var(--accent); opacity: 1; width: 14px; }
-.index-preview { display: none; position: absolute; left: 28px; top: 0; width: 240px; padding: var(--space-12); border-radius: var(--radius-control); background: var(--raised); box-shadow: var(--shadow); color: var(--text); text-align: left; font-size: var(--text-small); line-height: var(--leading-normal); pointer-events: none; }
-.index-preview time { display: block; color: var(--muted); margin-bottom: var(--space-4); }
-.message-index button:hover .index-preview, .message-index button:focus-visible .index-preview { display: block; }
 .chat-turn { scroll-margin-top: var(--space-24); }
 .chat-turn:focus-visible { outline: 2px solid var(--blue); outline-offset: var(--space-4); }
 .chat-turn:focus-visible .user-message { outline: 2px solid var(--accent); outline-offset: 4px; }
@@ -81,7 +75,7 @@
 .apple-switch[aria-checked="true"] span { transform: translateX(var(--control-switch-travel)); }
 @media (pointer: coarse) { .apple-switch { flex-basis: var(--control-touch); width: var(--control-touch); height: var(--control-touch); } }
 
-@media (max-width: 600px) { .message-index { left: 0; } .index-preview { width: 200px; } .message-thumbnail { width: 72px; height: 72px; } }
+@media (max-width: 600px) { .message-index { left: 0; } .message-thumbnail { width: 72px; height: 72px; } }
 @container (max-width: 620px) {
   .message-column, .composer-area { --chat-gutter: var(--space-32); }
   .message-index { left: 0; }
@@ -100,26 +94,6 @@
 .activity-summary { flex: 0 1 auto; min-width: 0; overflow-wrap: anywhere; line-height: var(--leading-normal); }
 .activity-group > summary > svg { flex-shrink: 0; }
 .turn-meta > span + span::before { content: none; }
-
-/* A gentle fan keeps neighboring messages connected to the focused message. */
-.message-index button { --mark-scale: 1; --mark-opacity: .55; }
-.message-index .index-mark { width: 9px; opacity: var(--mark-opacity); transform: scaleX(var(--mark-scale)); transform-origin: left center; transition: transform 220ms cubic-bezier(.16,1,.3,1), opacity 160ms ease, background-color 160ms ease; }
-.message-index button:is(:hover, :focus-visible, [aria-current]) .index-mark { width: 9px; }
-.message-index button:is(:hover, :focus-visible) { --mark-scale: 2.2; --mark-opacity: 1; }
-.message-index button[aria-current]:not(:hover):not(:focus-visible) { --mark-scale: 1.55; --mark-opacity: 1; }
-.message-index button:has(+ button:is(:hover, :focus-visible)),
-.message-index button:is(:hover, :focus-visible) + button { --mark-scale: 1.7; --mark-opacity: .85; }
-.message-index button:has(+ button + button:is(:hover, :focus-visible)),
-.message-index button:is(:hover, :focus-visible) + button + button { --mark-scale: 1.3; --mark-opacity: .7; }
-.message-index .index-preview { display: block; visibility: hidden; opacity: 0; transform: translateX(-4px); transition: opacity 140ms ease, transform 200ms cubic-bezier(.16,1,.3,1), visibility 140ms; }
-.message-index button:is(:hover, :focus-visible) .index-preview { visibility: visible; opacity: 1; transform: translateX(0); }
-@media (prefers-reduced-motion: reduce) {
-  .activity-dots i { animation: none !important; }
-  .message-index .index-mark, .message-index .index-preview { transition: none; }
-}
-:root[data-reduce-motion="on"] .activity-dots i { animation: none; }
-:root[data-reduce-motion="on"] .message-index .index-mark,
-:root[data-reduce-motion="on"] .message-index .index-preview { transition: none; }
 
 /* Conversation: two voices, with metadata attached to the message it describes. */
 .user-message-row .user-message { font-family: var(--font-conversation); font-size: var(--text-control); line-height: var(--leading-normal); }
@@ -358,3 +332,17 @@
 .agent-message .markdown > :last-child { margin-bottom: 0; }
 .agent-message .markdown strong { font-weight: var(--weight-semibold); }
 .agent-message .markdown :is(h1, h2, h3) { font-size: var(--text-reading); font-weight: var(--weight-semibold); margin-top: var(--space-16); }
+
+/* Shared chapter navigation: spring wave and a single floating preview. */
+.chapter-scrubber { position: relative; display: flex; flex-direction: column; }
+.chapter-scrubber.message-index { position: absolute; }
+.chapter-scrubber button { display: flex; align-items: center; position: relative; border: 0; padding: 0 var(--space-4); min-height: 3px; flex: 1 1 auto; background: transparent; border-radius: var(--radius-small); }
+.chapter-tick { display: block; height: 2px; background: var(--text); border-radius: var(--radius-pill); transform-origin: left center; pointer-events: none; }
+.chapter-scrubber button[aria-current] .chapter-tick { background: var(--accent); }
+.chapter-scrubber button:focus-visible { outline: 1px solid var(--focus-ring); outline-offset: 2px; }
+.chapter-preview { position: absolute; z-index: 10; pointer-events: none; padding: var(--space-12); border-radius: var(--radius-control); background: var(--sheet-glass); backdrop-filter: blur(40px) saturate(1.3); border: 1px solid var(--border); box-shadow: var(--shadow); color: var(--text); text-align: left; font-size: var(--text-small); line-height: var(--leading-normal); overflow-wrap: anywhere; }
+.chapter-meta { color: var(--muted); font-size: var(--text-caption); margin-bottom: var(--space-4); }
+.chapter-preview strong { font-weight: var(--weight-semibold); }
+.chapter-description { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-top: var(--space-4); color: var(--muted); }
+@supports not (backdrop-filter: blur(1px)) { .chapter-preview { background: var(--glass); } }
+@media (prefers-reduced-transparency: reduce) { .chapter-preview { background: var(--glass); backdrop-filter: none; } }

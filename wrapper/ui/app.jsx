@@ -1,3 +1,4 @@
+import { ChapterScrubber } from "./components/ui/chapter-scrubber";
 import { PipelinePage } from "./pipeline";
 import { InboxPage } from "./inbox";
 import { WelcomeSuggestions } from "./welcome-suggestions";
@@ -1905,11 +1906,13 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                   {id:"close-panel", label:`Panel ${paneNumber+1} schließen`, icon:icon(X,16), action:()=>embedded ? onClosePane?.() : closePane(0)},
                 ]}/>
               </div></div>}
-              {!!thread?.turns?.length && <nav className="message-index" aria-label="Deine bisherigen Eingaben">{thread.turns.filter(t=>t.items?.some(i=>i.type === "userMessage")).map((t,n)=>{
-                const message=t.items.find(i=>i.type === "userMessage");
-                const preview=message.content?.filter(c=>c.type === "text").map(c=>c.text).join(" ") || "Anhang";
-                return <button key={t.id} aria-label={`Eingabe ${n+1}: ${preview.slice(0,100)}`} aria-current={selectedTurn === t.id ? "location" : undefined} onClick={()=>{followScroll.current=false;setAwayFromBottom(true);setSelectedTurn(t.id);const target=document.getElementById(`pane-${paneNumber}-turn-${t.id}`);target?.scrollIntoView({block:"start"});target?.focus({preventScroll:true})}}><span className="index-mark"/><span className="index-preview"><MessageTime value={t.startedAt}/>{preview.slice(0,180)}</span></button>;
-              })}</nav>}
+              <ChapterScrubber className="message-index" reduceMotion={boot.settings.reduceMotion === "on"}
+                chapters={(thread?.turns || []).filter(t=>t.items?.some(i=>i.type === "userMessage")).map((t,n)=>({
+                  id:t.id, title:`Eingabe ${n+1}`, meta:<MessageTime value={t.startedAt}/>,
+                  description:t.items.find(i=>i.type === "userMessage").content?.filter(c=>c.type === "text").map(c=>c.text).join(" ") || "Anhang",
+                }))}
+                currentIndex={(thread?.turns || []).filter(t=>t.items?.some(i=>i.type === "userMessage")).findIndex(t=>t.id === selectedTurn)}
+                onSelect={chapter=>{followScroll.current=false;setAwayFromBottom(true);setSelectedTurn(chapter.id);const target=document.getElementById(`pane-${paneNumber}-turn-${chapter.id}`);target?.scrollIntoView({block:"start"});target?.focus({preventScroll:true})}} />
               <div
                 className="conversation"
                 ref={scrollRef}

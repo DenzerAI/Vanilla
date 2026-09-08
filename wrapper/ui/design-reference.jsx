@@ -1,3 +1,4 @@
+import { ChapterScrubber } from "./components/ui/chapter-scrubber";
 import { PipelinePatternPreview } from "./pipeline";
 import { ModelPicker } from "./model-picker.jsx";
 import { InboxPatternPreview } from "./inbox";
@@ -46,6 +47,7 @@ export function DesignReference({ theme, tone, accent }) {
       <div className="composer pill-composer"><div className="composer-entry"><textarea aria-label="Nachricht · Designvorschau" placeholder="Nachricht" value={suggestionDraft} rows={1} readOnly/></div></div>
       <p className="page-note">Einzeilige Pille mit gedämpftem Platzhalter, transparenter Tönung, Hintergrundunschärfe und feiner innerer Glaskante. Mehrzeiliger Text erweitert die Schreibfläche; reduzierte Transparenz erhält einen deckenden Hintergrund.</p>
       <h3 className="section-heading">Modellwahl · Anbieter und Denkaufwand</h3>
+      <ChapterScrubber chapters={[{id:"example-one",title:"Erste Eingabe",description:"Eine Frage im Gespräch",meta:"Beispiel"},{id:"example-two",title:"Zweite Eingabe",description:"Eine weitere Nachricht",meta:"Beispiel"}]} />
       <ModelPicker model={modelPreview[0]} effort={modelPreview[1]} onChange={(model, effort) => setModelPreview([model, effort])}
         models={[{model:"gpt-6-astra",displayName:"GPT-6 Astra",defaultReasoningEffort:"medium",supportedReasoningEfforts:["low","medium","high","xhigh","max","ultra"].map(reasoningEffort => ({reasoningEffort}))}]}
         hasConversation onProviderChange={async () => { throw new Error("Lokale Designvorschau. Anbieter im Chat auswählen."); }}/>
