@@ -151,6 +151,8 @@ cache/
 # Original monochrome agent avatars.
 !/wrapper/ui/assets/avatars/
 !/wrapper/ui/assets/avatars/*.svg
+!/wrapper/ui/assets/avatars/faces/
+!/wrapper/ui/assets/avatars/faces/*.svg
 
 # Marken der neuen Verbindungsanbieter.
 !/wrapper/ui/assets/telegram.svg
