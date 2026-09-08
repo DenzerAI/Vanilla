@@ -141,7 +141,7 @@ Grüne Haken bezeichnen ausschließlich ungelesene abgeschlossene Antworten. Der
 
 Jeder Bereich hat einen verbindlichen Aufbau- und Erweiterungsvertrag unter [surfaces/README.md](surfaces/README.md). Vor UI-Änderungen ist der passende Vertrag zu lesen; [AGENTS.md](AGENTS.md) macht diesen Schritt für weitere Agenten verbindlich. Eine neue Funktion rechtfertigt keine neue Interaktionslogik. Gleichartige Elemente teilen Einstieg, Komponente, Zustände und Bearbeitungsweg.
 
-Neue externe Dienste stehen mit Original-Markenicon und Plus unter **Verbindungen → Weitere Dienste einrichten**, werden im vorhandenen Dialog eingerichtet und danach unter **Eingerichtet** bearbeitet. Keine zusätzlichen Zugangsfelder auf Übersichtsseiten. Einstellungen konfigurieren verfügbare Funktionen, keine Anbieterzugänge. Sprache liegt gesammelt unter **Stimme**; der Chat enthält nur kompakte Sprachaktionen.
+Neue externe Dienste stehen mit Original-Markenicon und Plus unter **Einstellungen → Verbindungen → Weitere Dienste einrichten**, werden im vorhandenen Dialog eingerichtet und danach unter **Eingerichtet** bearbeitet. Keine zusätzlichen Zugangsfelder auf Übersichtsseiten. Einstellungen bündeln Konfiguration, Skills und Verbindungen; Anbieterzugänge bleiben ausschließlich im Verbindungsbereich. Sprache liegt gesammelt unter **Stimme**; der Chat enthält nur kompakte Sprachaktionen.
 
 Original-Markenassets mit dunklen oder transparenten Signets erhalten bei Bedarf eine helle Trägerfläche über die gemeinsame Farbrolle `brand-asset-bg`, damit sie in beiden Erscheinungsbildern erkennbar bleiben. Größe, Rundung und Aktion folgen weiterhin der gemeinsamen Dienstekachel; die Markenfarben werden nicht verändert.
 
@@ -283,6 +283,8 @@ verweist auf diese Quellen und die Produktionsbausteine; er dupliziert keine
 Wertetabelle.
 
 ## Kompakte Navigation und Suche
+
+Das Hauptmenü zeigt Inbox, Aufträge und die verfügbare Bibliothek in dieser Reihenfolge, darunter Projekte und Chats. Skills und Verbindungen sind eigene Einträge der vorhandenen Einstellungsnavigation. Der Einstieg bleibt im Agentenmenü. Bestehende Icons, Textkanten, Abstände und Inhaltsansichten bleiben erhalten; keine Platzhalter oder reservierten Leerzeilen für künftige Module. Suche und Querverweise öffnen beide Kataloge direkt mit ausgewähltem Einstellungsbereich. Die Einstellungsnavigation scrollt bei Platzmangel innerhalb der Seitenleiste; Zurück-Einstieg und Agentenzeile bleiben erreichbar.
 
 Oben in der Seitenleiste steht eine dunkle Suchpille mit Lupe auf der gemeinsamen Icon-/Textkante. Sie öffnet den Suchdialog mit fokussierter Eingabe. Suche umfasst Gesprächstitel, lokal gespeicherte Nutzer- und Agententexte einschließlich archivierter Chats über alle Projekte, Projektnamen und Navigation/Einstellungen. Treffer zeigen Kontext und Textausschnitt; moderate Tippfehler, Buchstabendreher und Akzente werden toleriert. Werkzeugausgaben, interne Überlegungen und reine Kanalgespräche sind ausgeschlossen. Fehlende lokale Exporte werden als eingeschränkte Inhaltssuche kenntlich gemacht; es wird kein Worker für die Suche gestartet.
 

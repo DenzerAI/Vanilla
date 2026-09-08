@@ -663,6 +663,12 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     [serverRestartBusy, setServerRestartBusy] = useState(false),
     [chatMenu, setChatMenu] = useState(null),
     [connectionState, setConnectionState] = useState("connecting");
+  const connectionsActive = view === "settings" && settingsTab === "connections";
+  const skillsActive = view === "settings" && settingsTab === "skills";
+  function openSettings(section) {
+    setSettingsTab(section);
+    setView("settings");
+  }
   const [inboxSidebarHost, setInboxSidebarHost] = useState(null);
   const inboxActiveRef = useRef(view === "inbox");
   inboxActiveRef.current = view === "inbox";
@@ -1049,7 +1055,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       (view === "settings" && settingsTab === "secrets")
     )
       guard(async () => setIntegrations(await api("/integrations")))();
-    if (view === "skills") void loadSkills();
+    if (skillsActive) void loadSkills();
     if (view === "settings" && settingsTab === "usage")
       void loadUsage();
   }, [view, settingsTab]);
@@ -1205,12 +1211,12 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       .finally(()=>{cache.pending=null;});
     return cache.pending;
   }
-  useEffect(()=>{if(!embedded&&boot&&(view==='connections'||!connectionsRefresh.current.at))void refreshConnections();},[!!boot,view]);
+  useEffect(()=>{if(!embedded&&boot&&(connectionsActive||!connectionsRefresh.current.at))void refreshConnections();},[!!boot,connectionsActive]);
   useEffect(()=>{
-    if(view!=='connections'||!integrations.mcpLoading)return;
+    if(!connectionsActive||!integrations.mcpLoading)return;
     const timer=setTimeout(()=>void refreshConnections(true),2000);
     return ()=>clearTimeout(timer);
-  },[view,integrations]);
+  },[connectionsActive,integrations]);
   async function submit(e, voiceText) {
     e?.preventDefault();
     if ((!(voiceText ?? text).trim() && !attachments.length) || busy) { if (voiceText) throw new Error("Chat ist beschäftigt."); return; }
@@ -1520,8 +1526,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const nav = [
       ["inbox", Mail, "Inbox"],
       ["jobs", Clock, "Aufträge"],
-      ["connections", Plug, "Verbindungen"],
-      ["skills", Sparkles, "Skills"],
       ...(boot?.features?.library?[["library", FileText, "Bibliothek"]]:[]),
     ];
   const settingNav = [
@@ -1530,6 +1534,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     ["appearance", Sun, "Aussehen"],
     ["voice", Mic, "Stimme"],
     ["identity", User, "Dein Agent"],
+    ["connections", Plug, "Verbindungen"],
+    ["skills", Sparkles, "Skills"],
     ["secrets", KeyRound, "Secrets"],
     ["privacy", ShieldCheck, "Datenschutz"],
     ["engines", BrainCircuit, "Worker"],
@@ -1605,7 +1611,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                   className={
                     "nav-item " + (settingsTab === id ? "selected" : "")
                   }
-                  onClick={() => setSettingsTab(id)}
+                  onClick={() => openSettings(id)}
                 >
                   {icon(I)}
                   {label}
@@ -2310,14 +2316,14 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
           </div>
         ) : view === "library" ? (
           <LibraryPage revision={libraryRevision} api={api} notify={notify} projects={boot.projects} PageHeading={PageHeading} onShowSidebar={!sidebar?()=>setSidebar(true):undefined} onOpen={(entry,entries)=>setModal({type:'library-file',entry,entries})} onReuse={guard(async entry=>{const file=await api('/library/reuse',{id:entry.id,projectId});setAttachments(a=>[...a,file]);setView('chat');})} onSource={guard(async entry=>{if(chats.some(c=>c.id===entry.threadId))await openChat(entry.threadId);else notify('Das Quellgespräch ist nicht verfügbar.');})}/>
-        ) : view === "connections" ? (
+        ) : connectionsActive ? (
           <div className="page connections-page">
             <PageHeading title="Verbindungen" onShowSidebar={!sidebar ? () => setSidebar(true) : undefined}/>
             <ConnectionsContent api={api} features={boot.features} integrations={integrations} audioConnections={audioConnections}
               loaded={connectionsLoaded} error={connectionsError} category={connectionCategoryFilter} onCategory={setConnectionCategoryFilter}
               search={search} onSearch={setSearch} setModal={setModal} onRetry={()=>refreshConnections(true)} FilterPicker={FilterPicker} SearchBox={SearchBox}/>
           </div>
-        ) : view === "skills" ? (
+        ) : skillsActive ? (
           <div className="page skills-page">
             <PageHeading title="Skills" onShowSidebar={!sidebar ? () => setSidebar(true) : undefined}>
               {boot.features?.skillLibrary&&<IconButton label="Skill hinzufügen" onClick={()=>setModal({type:'skill-hub'})}>{icon(Plus)}</IconButton>}
@@ -2434,7 +2440,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         ) : (
           <div className={"page settings-page" + (settingsTab === "identity" ? " agent-settings-page" : "")}>
             <PageHeading title={settingsTab === "design" ? "Unser Design" : settingNav.find((s) => s[0] === settingsTab)?.[2]} onShowSidebar={!sidebar ? () => setSidebar(true) : undefined}/>
-            {['system','memory','storage','access'].includes(settingsTab) && boot.features.operations ? <SystemSettings key={settingsTab} api={api} section={settingsTab} chats={chats} onJobs={()=>setView('jobs')} onLibrary={()=>setView('library')} onConnections={()=>setView('connections')}/> : settingsTab === "general" ? (
+            {['system','memory','storage','access'].includes(settingsTab) && boot.features.operations ? <SystemSettings key={settingsTab} api={api} section={settingsTab} chats={chats} onJobs={()=>setView('jobs')} onLibrary={()=>setView('library')} onConnections={()=>openSettings('connections')}/> : settingsTab === "general" ? (
               <>
                 <h3 className="section-heading">Schaltzentrale</h3>
                 <div className="settings-group">
@@ -2468,7 +2474,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 </div>
               </>
             ) : settingsTab === "voice" ? (
-              <VoiceSettings api={api} notify={notify} openConnections={() => setView("connections")} onText={value => { setText(previous => previous ? previous + "\n" + value : value); setView("chat"); }} />
+              <VoiceSettings api={api} notify={notify} openConnections={() => openSettings("connections")} onText={value => { setText(previous => previous ? previous + "\n" + value : value); setView("chat"); }} />
             ) : settingsTab === "appearance" ? (
               <>
                 <AppearanceDesign settings={boot.settings} onChange={saveSettings}/>
@@ -2590,7 +2596,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               </>
             ) : settingsTab === "engines" ? (
               <>
-                <WorkerSettings api={api} onChange={refresh} onConnections={() => setView("connections")} />
+                <WorkerSettings api={api} onChange={refresh} onConnections={() => openSettings("connections")} />
                 <h3>Lokale Modelle</h3>
                 <LocalWorkers api={api} SettingRow={SettingRow} />
               </>
@@ -2745,13 +2751,13 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
             if (result.kind === "project") { newDraft(result.id); chooseProject(result.id); setExpandedProject(result.id); setView("chat"); return; }
             if (result.kind === "file") { setView("library"); setModal({type:"library-file",entry:result.entry}); return; }
             if (result.kind === "knowledge") { setView("library"); setModal({type:"search-note",entry:result.entry}); return; }
-            if (result.kind === "skill") { setView("skills"); setModal({type:"skill",skill:result.entry}); return; }
+            if (result.kind === "skill") { openSettings("skills"); setModal({type:"skill",skill:result.entry}); return; }
             if (result.kind === "job") {
               if (result.entry.managed) { setSettingsTab(result.id==='system-memory'?'memory':result.id==='system-backup'||result.id==='system-cleanup'?'storage':'system'); setView('settings'); }
               else { setView("jobs"); setModal({type:"job",job:result.entry}); }
               return;
             }
-            if (result.kind === "setting") { setSettingsTab(result.id); setView("settings"); return; }
+            if (result.kind === "setting") { openSettings(result.id); return; }
             setView(result.id);
           })}/>
         </Modal>
