@@ -1,7 +1,7 @@
-import { searchConversations } from './search.mjs';
+import { MessageDelivery } from "./message-delivery.mjs";
 import {localPath, localPort} from './isolation.mjs';
 import {sharedMemoryCodexConfig} from './shared-memory.mjs';
-import { serverFingerprint, createRestartGate } from "./updates.mjs";
+import { fingerprint, createRestartGate } from "./updates.mjs";
 import { coreEnabled, coreRequest, routedContext } from "./core-client.mjs";
 import { createMcpSnapshot } from './integration-snapshot.mjs';
 import {computerToolStatus} from "./ui/tool-content.mjs";
@@ -41,7 +41,11 @@ import { normalizeTool, mergeTools } from "./tool-events.mjs";
 import { runMode, PLAN_INSTRUCTIONS, planApprovalReply } from "./run-mode.mjs";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
-const sourceVersion = () => serverFingerprint(root);
+const sourceVersion = async () => JSON.stringify(await Promise.all([
+  fingerprint(here), fingerprint(path.join(root, "backend")), fingerprint(path.join(root, "system")),
+  fingerprint(path.join(root, "core")),
+  ...["appearance.mjs", "tool-content.mjs"].map(file => readFile(path.join(here,"ui",file),"utf8")),
+]));
 const startedSourceVersion = await sourceVersion();
 const instanceId = randomUUID();
 const voiceSessions = new Set();
@@ -130,6 +134,25 @@ const channels = await new ChannelRuntime({store,services,
   interrupt:async id=>{if(id&&active.has(id))await workers.call('turn/interrupt',{threadId:id,turnId:active.get(id)});},
 }).init();
 services.runtime=channels;
+const deliveryFile = path.join(dataRoot, 'message-delivery.json');
+const finishedTurns = new Set();
+function observeDeliveryThread(id, thread) {
+  for (const turn of thread.turns || []) if (['completed','failed','interrupted'].includes(turn.status)) {
+    finishedTurns.add(id + ':' + turn.id);
+    if (active.get(id) === turn.id) active.delete(id);
+  }
+  const live = thread.turns?.find(t => t.status === 'inProgress');
+  if (live && !active.has(id) && !finishedTurns.has(id + ':' + live.id)) active.set(id, live.id);
+}
+
+const deliveries = await new MessageDelivery({
+  read: () => jsonFile(deliveryFile, null), write: state => atomic(deliveryFile, state, {durable:true}),
+  active: id => active.get(id), canSteer: id => workers.capability(workers.owner(id)).steer,
+  send: (id, payload, delivery) => sendTurn(id, payload, delivery),
+  emit: () => emit({ method: 'wrapper/deliveries' }),
+  onError: error => emit({ method: 'wrapper/error', params: { message: error.message } }),
+}).init();
+
 workers.on("notification", (msg) => {
   if (["thread/realtime/closed", "thread/realtime/error"].includes(msg.method)) voiceSessions.delete(msg.params?.threadId);
   eventNames.add(msg.method);
@@ -173,7 +196,9 @@ workers.on("notification", (msg) => {
     touch(id);
   }
   if (msg.method === "turn/completed") {
-    active.delete(id);
+    finishedTurns.add(id + ':' + p.turn.id);
+    if (active.get(id) === p.turn.id) active.delete(id);
+    void deliveries.finished(id, p.turn).catch(e => emit({method:'wrapper/error',params:{message:e.message}}));
     if (own(id)) { store.chat(id).lastTurnStatus = p.turn.status; if (p.turn.status === "completed") store.chat(id).lastCompletedTurnId = p.turn.id; }
     emit({ method: "wrapper/chats" });
     for (const [key, request] of workers.requests) {
@@ -220,6 +245,7 @@ workers.on("request", (msg) => {
 workers.on("disconnected", (error) => {
   for (const c of store.state.chats) if (workers.owner(c.id) === error.workerId) {
     loaded.delete(c.id);
+    void deliveries.disconnected(c.id).catch(e => emit({method:'wrapper/error',params:{message:e.message}}));
     if (active.has(c.id)) {
       const turnId=active.get(c.id);
       active.delete(c.id); c.lastTurnStatus = "failed";
@@ -285,7 +311,7 @@ async function newChat({
     ...(mode === "plan" ? { approvalPolicy: "never" } : {}),
     approvalsReviewer: "user",
     historyMode: "legacy",
-    // Fresh shared context is supplied with each turn, including the first.
+    developerInstructions: await workerInstructions({ root, workspace, cwd }),
     experimentalRawEvents: true,
   });
   const c = {
@@ -369,13 +395,28 @@ async function finishThread(id, turn) {
   }
 }
 const turnLocks = new Set();
-async function sendTurn(id, b) {
-  if (turnLocks.has(id)) throw new Error("Eine Nachricht wird gerade übergeben. Bitte kurz warten.");
-  if (restartGate.restarting) throw new Error("Der Server wird neu gestartet. Bitte kurz warten.");
+const deliveryReads = new Set();
+const deliveryRecovery = setInterval(() => {
+  for (const id of new Set(deliveries.state.messages.filter(m => m.status === 'waiting').map(m => m.chatId))) {
+    if (!own(id)) continue;
+    if (!deliveries.state.gates[id]) deliveries.kick(id);
+    else if (!deliveryReads.has(id) && deliveries.state.gates[id].blocked && !deliveries.state.messages.some(m => m.chatId === id && m.status === 'unknown')) {
+      deliveryReads.add(id);
+      void workers.call('thread/read', {threadId:id, includeTurns:true})
+        .then(r => { observeDeliveryThread(id, r.thread); return deliveries.reconcile(id, r.thread); })
+        .catch(() => {}).finally(() => deliveryReads.delete(id));
+    }
+  }
+}, 5000);
+deliveryRecovery.unref();
+
+async function sendTurn(id, b, delivery) {
+  if (turnLocks.has(id)) throw Object.assign(new Error("Eine Nachricht wird gerade übergeben. Bitte kurz warten."), {deliveryPaused:true});
+  if (restartGate.restarting) throw Object.assign(new Error("Der Server wird neu gestartet. Bitte kurz warten."), {deliveryPaused:true});
   turnLocks.add(id);
-  try { return await sendTurnUnlocked(id, b); } finally { turnLocks.delete(id); }
+  try { return await sendTurnUnlocked(id, b, delivery); } finally { turnLocks.delete(id); deliveries.kick(id); }
 }
-async function sendTurnUnlocked(id, b) {
+async function sendTurnUnlocked(id, b, delivery) {
   const c = await ensure(id);
   const input = [];
   if (b.text?.trim()) input.push({ type: "text", text: b.text });
@@ -395,25 +436,33 @@ async function sendTurnUnlocked(id, b) {
   }
   if (!input.length) throw new Error("Nachricht ist leer.");
   // Context belongs to the model instructions, never to the user's visible message.
+  const companyContext = await workerInstructions({ root, workspace, cwd: c.cwd })
+    + await routedContext({query:b.text || "",projectId:c.projectId || "default",chatId:id});
   await recordBoundary("turn", {
     threadId: id,
     textCharacters: b.text?.length || 0,
     attachments: (b.attachments || []).length,
   });
+  const checkDelivery = () => {
+    if (delivery && (active.get(id) || null) !== delivery.targetTurnId)
+      throw Object.assign(new Error('Aufgabe wurde während der Vorbereitung abgeschlossen.'), { deliveryRace: true });
+    delivery?.beforeCall();
+  };
+  if (delivery && (active.get(id) || null) !== delivery.targetTurnId)
+    throw Object.assign(new Error('Aufgabe wurde während der Vorbereitung abgeschlossen.'), { deliveryRace: true });
   if (active.has(id)) {
     if (b.mode && b.mode !== (c.mode || "default"))
       throw new Error(
         "Bitte zuerst die laufende Aufgabe stoppen, bevor du den Modus wechselst.",
       );
     if (!workers.capability(workers.owner(id)).steer) throw new Error("Bitte zuerst die laufende Antwort abwarten oder stoppen.");
+    checkDelivery();
     return workers.call("turn/steer", {
       threadId: id,
       expectedTurnId: active.get(id),
       input,
     });
   }
-  const companyContext = await workerInstructions({ root, workspace, cwd: c.cwd })
-    + await routedContext({query:b.text || "",projectId:c.projectId || "default",chatId:id});
   const policy = runMode(b.mode || c.mode || "default");
   if (policy.mode === "plan" && !workers.capability(workers.owner(id)).plan) throw new Error("Dieser Worker bietet hier keinen geschützten Planmodus.");
   const legacyJob = c.jobId && b.mode === undefined;
@@ -462,8 +511,10 @@ async function sendTurnUnlocked(id, b) {
         developer_instructions: conversationInstructions() + "\n\n" + companyContext,
       },
     };
+  if (delivery?.continuation) p.collaborationMode.settings.developer_instructions += '\nDiese Nachricht wurde als Ergänzung des vorherigen Auftrags gesendet, der inzwischen endete. Bearbeite sie im Zusammenhang mit diesem Auftrag und behalte unerledigte Arbeit bei.';
+  checkDelivery();
   const r = await workers.call("turn/start", p);
-  active.set(id, r.turn.id);
+  if (!finishedTurns.has(id + ':' + r.turn.id)) active.set(id, r.turn.id);
   // Title work runs independently and never delays or pollutes the conversation.
   void assignChatTitle({ chat: c, text: b.text, adapter: workers.adapters.get(workers.owner(id)),
     save: () => store.save(), emit }).catch(() => {});
@@ -607,10 +658,6 @@ route("POST", "/api/projects/save", async (b) => {
     settings: store.state.settings,
   };
 });
-route("GET", "/api/search", async (b, u) => searchConversations({
-  workspace, chats:store.state.chats, projects:store.state.projects, threadCache,
-  query:u.searchParams.get("q") || "",
-}));
 route("GET", "/api/chats", async () => ({
   chats: store.state.chats.filter(c=>!c.channelOnly),
   active: Object.fromEntries(active),
@@ -638,6 +685,8 @@ route("GET", "/api/thread", async (b, u) => {
     });
     r.thread = mergeTools(r.thread, toolsByThread.get(id));
     threadCache.set(id, r.thread);
+    observeDeliveryThread(id, r.thread);
+    await deliveries.reconcile(id, r.thread);
     const lastStatus = r.thread.turns.at(-1)?.status;
     const completedId = r.thread.turns.findLast(t => t.status === "completed")?.id;
     if (lastStatus && (store.chat(id).lastTurnStatus !== lastStatus || store.chat(id).lastCompletedTurnId !== completedId)) {
@@ -658,20 +707,30 @@ route("GET", "/api/thread", async (b, u) => {
     throw e;
   }
 });
-route("POST", "/api/worker-session", async b => {
-  const id = b.id;
-  store.chat(id);
-  if (workers.entry(workers.owner(id)).adapter !== "acp") throw new Error("Dieser Worker verwendet keine ACP-Sitzungseinstellungen.");
-  if (active.has(id) || turnLocks.has(id) || restartGate.restarting) throw new Error("Bitte die laufende Arbeit abwarten.");
-  turnLocks.add(id);
-  try {
-    await ensure(id);
-    return await workers.call(b.configId !== undefined ? "session/set_config_option" : "session/set_mode", {
-      threadId: id, configId: b.configId, value: b.value, modeId: b.modeId,
-    });
-  } finally { turnLocks.delete(id); }
-});
 route("POST", "/api/turn", (b) => sendTurn(b.id, b));
+route("GET", "/api/messages", async (_b, u) => {
+  const id = u.searchParams.get('id'); store.chat(id);
+  return deliveries.list(id);
+});
+route("POST", "/api/messages", async b => {
+  store.chat(b.id);
+  if (restartGate.restarting) throw new Error('Der Server wird neu gestartet.');
+  return { message: await deliveries.enqueue(b.id, b) };
+});
+route("POST", "/api/messages/resume", async b => {
+  store.chat(b.id);
+  if (restartGate.restarting) throw new Error('Der Server wird neu gestartet.');
+  // Read-only verification: no cached transcript can prove a worker is idle.
+  const r = await workers.call('thread/read', {threadId:b.id,includeTurns:true});
+  if (!Array.isArray(r.thread?.turns) || r.thread.turns.some(t => t.status === 'inProgress')) throw new Error('Die vorherige Arbeit läuft noch. Bitte Abschluss abwarten.');
+  observeDeliveryThread(b.id, r.thread);
+  await deliveries.resume(b.id, b.pauseToken);
+  return deliveries.list(b.id);
+});
+route("POST", "/api/messages/edit", async b => {
+  store.chat(b.id);
+  return { message: await deliveries.edit(b.id, b.messageId, b.revision, b.text, b.remove === true) };
+});
 route("POST", "/api/stop", async (b) => {
   await ensure(b.id);
   for (let attempt = 0; attempt < 15; attempt++) {
@@ -1035,7 +1094,7 @@ async function runJob(id, slot = null, coreRunId = null) {
     await atomic(path.join(runDir, "request.json"), { jobId: id, worker: job.worker, actualWorker: c.workerId, fallbackFrom: c.fallbackFrom, startedAt: new Date().toISOString() });
     await store.save();
     await sendTurn(c.id, {
-      text: `Führe diesen Job aus. Die folgende Anweisung wurde aus SKILL.md im aktuellen Ordner geladen; relative Ressourcenpfade beziehen sich auf diesen Ordner. Lies benötigte Dateien in input/ und speichere Ergebnisse in output/.\n\n${job.instructions}`,
+      text: `Führe diesen Job aus. Lies SKILL.md im aktuellen Ordner und die Dateien in input/. Speichere Ergebnisse in output/.\n\n${job.instructions}`,
     });
     emit({ method: "wrapper/jobs" });
     return { threadId: c.id, runId };

@@ -39,3 +39,7 @@ Diktat- und Sprachinstallation selbst auf. Festgelegte Sprachpakete führt
 `runtime-assets.mjs`. Der Bereitschaftsmarker wird erst nach Dateiprüfung und
 erfolgreichem Laden durch Piper geschrieben; geänderte Versionen oder fehlende
 Dateien lösen bei erneuter Einrichtung eine Reparatur aus.
+
+## Gmail, Outlook und Inbox
+
+`mail.connections` führt die geführte Einrichtung unter Verbindungen, `inbox` den echten Nachrichteneingang. Die Domänen aus `mail-capabilities.mjs` sind in die zentrale Landkarte eingebunden. `/api/mail/setup` zeigt die Installationsbereitschaft, `/api/mail/accounts` den tatsächlichen Kontozustand. Die Installation enthält keine Konten. Verfahren, Grenzen und Prüfweg stehen in `docs/MAIL.md`.

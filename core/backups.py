@@ -141,6 +141,9 @@ class Backups:
                 copy_stable(self.config.workspace, stage / "workspace")
                 if self.memory.git_dir.exists():
                     copy_stable(self.memory.git_dir, stage / "vault.git")
+                provider_vault = self.config.data / "provider-vault"
+                if provider_vault.exists():
+                    copy_stable(provider_vault, stage / "provider-vault")
                 sessions = self.config.data / "codex/sessions"
                 if sessions.exists():
                     copy_stable(sessions, stage / "worker-sessions")
@@ -154,7 +157,7 @@ class Backups:
                 cx.commit()
                 cx.execute("VACUUM")
             files = {p.relative_to(stage).as_posix(): sha256(p) for p in sorted(stage.rglob("*")) if p.is_file()}
-            manifest = {"format": "agent-backup-v1", "created_at": time(), "schema": 2, "files": files, "models": "rebuild", "secrets": "keychain-reconnect"}
+            manifest = {"format": "agent-backup-v1", "created_at": time(), "schema": 2, "files": files, "models": "rebuild", "secrets": "local-provider-vault; system-access reconnect"}
             atomic_write(stage / "manifest.json", json.dumps(manifest, indent=2))
             output = self.command("backup", ".", "--json", "--tag", "agent-core", cwd=stage)
             summaries = [json.loads(line) for line in output.splitlines() if line.startswith("{")]

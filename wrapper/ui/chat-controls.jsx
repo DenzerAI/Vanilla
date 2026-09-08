@@ -6,7 +6,7 @@ import React, {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { Check, ChevronDown, MoreHorizontal } from "./icons.jsx";
+import { Check, ChevronDown } from "./icons.jsx";
 
 export function ChatMenu({
   label,
@@ -183,19 +183,19 @@ export function LayoutPicker({ count, onChange }) {
     </ChatMenu>
   );
 }
-export function ChatTitle({ session, compact = false, extraItems = [] }) {
+export function ChatTitle({ session }) {
   if (!session) return <span className="title-text">Neuer Chat</span>;
   return (
     <ChatMenu
       label={`Chat-Menü: ${session.title}`}
-      className={compact ? "icon-button" : "chat-title-button"}
-      items={[...extraItems, ...session.items]}
+      className="chat-title-button"
+      items={session.items}
     >
-      {compact ? <MoreHorizontal size={20} /> : <><span title={session.projectName} className="chat-project-icon">
+      <span title={session.projectName} className="chat-project-icon">
         {session.projectIcon}
       </span>
       <span className="title-text">{session.title}</span>
-      <ChevronDown size={14} /></>}
+      <ChevronDown size={14} />
     </ChatMenu>
   );
 }

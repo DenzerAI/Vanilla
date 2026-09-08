@@ -1,6 +1,4 @@
 import React from "react";
-import MaximizeGlyph from "framework7-icons/react/esm/ArrowUpLeftArrowDownRight.js";
-import MinimizeGlyph from "framework7-icons/react/esm/ArrowDownRightArrowUpLeft.js";
 import BriefcaseGlyph from "framework7-icons/react/esm/Briefcase.js";
 import ArchiveboxGlyph from "framework7-icons/react/esm/Archivebox.js";
 import Arrow2CirclepathGlyph from "framework7-icons/react/esm/Arrow2Circlepath.js";
@@ -84,8 +82,6 @@ const wrap = (Glyph, extraClass = "") =>
   };
 export const PanelLeft = wrap(SidebarLeftGlyph);
 export const PanelRight = wrap(SidebarRightGlyph);
-export const Maximize = wrap(MaximizeGlyph);
-export const Minimize = wrap(MinimizeGlyph);
 export const ChevronDown = wrap(ChevronDownGlyph);
 export const ChevronRight = wrap(ChevronRightGlyph);
 export const ChevronLeft = wrap(ChevronLeftGlyph);

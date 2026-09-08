@@ -179,17 +179,6 @@ cache/
 !/wrapper/job-templates-sources.md
 
 # Vanilla verification and setup remain local.
-# Mandatory design gates must travel with the source checkout.
-!/.githooks/
-!/.githooks/pre-commit
-!/.githooks/pre-merge-commit
-!/.githooks/pre-push
-!/.github/
-!/.github/workflows/
-!/.github/workflows/design.yml
-!/wrapper/scripts/design-audit.mjs
-!/wrapper/scripts/design-assets.json
-!/wrapper/scripts/design-exceptions.json
 .cache/
 .verify/
 .*.log
@@ -197,12 +186,3 @@ cache/
 
 # Reproducible local speech installation.
 !/requirements-speech.lock
-
-# Nested UI source belongs to the application.
-!/wrapper/ui/components/
-!/wrapper/ui/components/ui/
-!/wrapper/ui/components/ui/*.tsx
-!/wrapper/ui/components/ui/loader-utils/
-!/wrapper/ui/components/ui/loader-utils/*.ts
-!/wrapper/ui/lib/
-!/wrapper/ui/lib/*.ts

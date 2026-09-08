@@ -52,3 +52,11 @@
   .inbox-compose textarea { font-size: var(--text-reading); }
   .inbox-tabs button { min-height: var(--control-touch); }
 }
+.mail-setup { display: grid; gap: var(--space-16); }
+.mail-setup label { display: grid; gap: var(--space-8); margin-block: var(--space-12); }
+.mail-setup input, .mail-setup select { width: 100%; min-width: 0; }
+.mail-setup details { min-width: 0; }
+.mail-setup ol { padding-left: var(--space-24); line-height: var(--leading-reading); }
+.mail-setup li { margin-block: var(--space-12); }
+.mail-compose-actions { flex-wrap: wrap; margin-top: var(--space-12); }
+.mail-review-text { white-space: pre-wrap; overflow-wrap: anywhere; font: inherit; max-height: 40vh; overflow-y: auto; }

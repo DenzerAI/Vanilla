@@ -32,6 +32,7 @@ from .settings import Settings
 from .memory import Memory
 from .operations import Operations
 from .api import routes as operations_routes
+from .mail import Mail, routes as mail_routes
 
 
 class NoteInput(BaseModel):
@@ -61,6 +62,7 @@ def create_app(config=None):
     storage.system_jobs = operations.managed_jobs
     queue = JobQueue(db, storage, config.timezone)
     runtime = Runtime(config, queue, knowledge, operations)
+    mail = Mail(db, config)
     local_csrf = secrets.token_urlsafe(32)
     login_attempts = {}
 
@@ -69,7 +71,9 @@ def create_app(config=None):
         queue.recover()
         await asyncio.to_thread(knowledge.scan)
         await runtime.start()
+        mail.task = asyncio.create_task(mail.loop())
         yield
+        await mail.close()
         await runtime.close()
         db.close()
 
@@ -88,6 +92,7 @@ def create_app(config=None):
         runtime,
     )
     app.state.operations = operations
+    app.state.mail = mail
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(request, error):
@@ -159,6 +164,7 @@ def create_app(config=None):
             if (
                 not session
                 and not bearer
+                and request.url.path not in {"/api/mail/oauth/callback/gmail", "/api/mail/oauth/callback/outlook"}
                 and request.url.path
                 not in {"/login", "/login.js", "/login.css", "/api/auth/login", "/healthz"}
             ):
@@ -207,6 +213,7 @@ def create_app(config=None):
         return {"checks": operations.checks()}
 
     app.include_router(operations_routes(operations, queue))
+    app.include_router(mail_routes(mail))
 
     @app.get("/api/auth/session")
     async def session(request: Request):
@@ -435,6 +442,7 @@ def create_app(config=None):
             payload["token"] = request.state.csrf
             payload["features"] = {
                 **payload.get("features", {}),
+                "mailInbox": True,
                 "knowledge": True,
                 "sqlite": True,
                 "operations": True,

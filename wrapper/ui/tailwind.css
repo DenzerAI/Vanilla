@@ -1,9 +1,7 @@
 @layer theme, base, components, utilities;
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
-/* Include nested component sources explicitly, including locally ignored imports. */
-@source "./";
-@source "./components/ui/loader.tsx";
+@source "./**/*.{jsx,tsx,ts}";
 
 /* No preflight reset: our established accessible components keep their styles. */
 @theme inline {
@@ -25,18 +23,15 @@
 .knowledge-tabs { display:flex; gap:var(--space-8); margin-bottom:var(--space-24); }
 .knowledge-tabs button[aria-pressed="true"] { color:var(--text); background:var(--raised); }
 .knowledge-result { text-align:left; width:100%; }
-.knowledge-result .knowledge-excerpt { white-space:normal; overflow-wrap:anywhere; line-height: var(--leading-normal); }
+.knowledge-result .knowledge-excerpt { white-space:normal; overflow-wrap:anywhere; line-height:1.5; }
 .knowledge-note textarea { min-height:35dvh; width:100%; resize:vertical; font-family:var(--font-ui); }
 .knowledge-note label { display:grid; gap:var(--space-8); }
 .knowledge-links { border-top:1px solid var(--border); padding-top:var(--space-16); }
 .knowledge-links button { white-space:normal; text-align:left; }
 .knowledge-path { overflow-wrap:anywhere; }
 @media (max-width:650px) {
-  .knowledge-note textarea { min-height:30dvh; font-size: var(--text-reading); }
-  .knowledge-note input, .knowledge-panel input { font-size: var(--text-reading); }
+  .knowledge-note textarea { min-height:30dvh; font-size:16px; }
+  .knowledge-note input, .knowledge-panel input { font-size:16px; }
   .knowledge-tabs button, .knowledge-links button { min-height:44px; }
   .app { padding-bottom:env(safe-area-inset-bottom); }
 }
-
-.knowledge-gap-small { gap: var(--space-8); }
-.knowledge-gap { gap: var(--space-16); }

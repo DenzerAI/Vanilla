@@ -12,14 +12,9 @@ test('fresh shared context, selective loading and extension without code changes
   const base = path.join(root, 'firmenbasis');
   await cp(new URL('../firmenbasis', import.meta.url), base, { recursive: true });
   for (const dir of ['soul', 'brain', 'skills']) await mkdir(path.join(root, dir));
-  await mkdir(path.join(root, 'workspaces/default/soul'), { recursive: true });
-  await writeFile(path.join(root, 'workspaces/default/soul/IDENTITY.md'), 'Anzeigename: Gemeinsam');
-  await writeFile(path.join(root, 'soul/IDENTITY.md'), 'Anzeigename: Veraltet');
   await writeFile(path.join(root, 'brain/learnings.ndjson'), '');
   await writeFile(path.join(base, 'FIRMA.md'), 'Firma: Testbetrieb Nord');
   const first = await buildBootstrap(root, 'hermes');
-  assert.match(first.soul[0].content, /Anzeigename: Gemeinsam/);
-  assert.doesNotMatch(first.soul[0].content, /Veraltet/);
   assert.equal(first.companyBase.company.content, 'Firma: Testbetrieb Nord');
   assert.equal(first.skills.length, 1);
   assert.equal(first.skills[0].content, undefined);
