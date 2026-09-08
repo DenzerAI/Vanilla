@@ -1,4 +1,3 @@
-import {Skeleton} from './skeleton.tsx';
 import React, {useEffect, useRef, useState} from 'react';
 import {SettingRow} from './settings-row.jsx';
 import {Modal} from './modal.jsx';
@@ -34,7 +33,6 @@ export function SystemSettings({api, section, chats, onJobs, onLibrary, onConnec
   const toggle=(group:string,key:string,title:string,description:string)=> <SettingRow title={title} description={description}><Toggle label={title} value={draft.values[group][key]} change={(v:boolean)=>change(group,key,v)}/></SettingRow>;
   const number=(group:string,key:string,title:string,min:number,max:number,description?:string)=><SettingRow title={title} description={description}><input aria-label={title} type="number" min={min} max={max} value={draft.values[group][key]} onChange={e=>change(group,key,e.target.valueAsNumber)}/></SettingRow>;
   const time=(group:string,key:string,title:string)=><SettingRow title={title} description="Lokale Zeitzone dieses Macs"><input aria-label={title} type="time" value={draft.values[group][key]} onChange={e=>change(group,key,e.target.value)}/></SettingRow>;
-  if((!status || !draft) && !error) return <Skeleton variant="settings" label="System wird geladen …"/>;
   if(!status || !draft) return <p role="status">{error || 'System wird geladen …'} {error&&<button onClick={()=>act(()=>load())}>Erneut laden</button>}</p>;
   const v=draft.values;
   return <div className="system-settings" aria-busy={busy}>
@@ -134,5 +132,5 @@ export function TailscaleConnection({api}: {api:Api}) {
 export function CoreRunDetails({api,id}: {api:Api,id:string}) {
   const [data,setData]=useState<any>(null),[error,setError]=useState('');
   useEffect(()=>{let alive=true;const refresh=()=>api('/core/executions/'+id).then(d=>{if(alive)setData(d);}).catch(e=>{if(alive)setError(e.message);});refresh();const timer=setInterval(refresh,3000);return()=>{alive=false;clearInterval(timer);};},[id]);
-  return <>{error&&<p role="alert" className="form-error">{error}</p>}{data?<><div className="settings-group"><SettingRow title="Ausführung" description={id}><span>{names[data.run.status]||data.run.status}</span></SettingRow><SettingRow title="Beginn" description={date(data.run.started_at)}/><SettingRow title="Versuch" description={String(data.run.attempt)}/>{data.run.error&&<SettingRow title="Fehler" description={data.run.error}/>}</div>{data.log&&<pre className="system-log">{data.log}</pre>}{Object.keys(data.run.result||{}).length>0&&<pre className="system-log">{JSON.stringify(data.run.result,null,2)}</pre>}{['queued','dispatching','running'].includes(data.run.status)&&<div className="row end"><button onClick={()=>api('/core/executions/'+id+'/cancel',{}).catch(e=>setError(e.message))}>Ausführung stoppen</button></div>}</>:!error&&<Skeleton variant="settings" label="Ausführung wird geladen …"/>}</>;
+  return <>{error&&<p role="alert" className="form-error">{error}</p>}{data?<><div className="settings-group"><SettingRow title="Ausführung" description={id}><span>{names[data.run.status]||data.run.status}</span></SettingRow><SettingRow title="Beginn" description={date(data.run.started_at)}/><SettingRow title="Versuch" description={String(data.run.attempt)}/>{data.run.error&&<SettingRow title="Fehler" description={data.run.error}/>}</div>{data.log&&<pre className="system-log">{data.log}</pre>}{Object.keys(data.run.result||{}).length>0&&<pre className="system-log">{JSON.stringify(data.run.result,null,2)}</pre>}{['queued','dispatching','running'].includes(data.run.status)&&<div className="row end"><button onClick={()=>api('/core/executions/'+id+'/cancel',{}).catch(e=>setError(e.message))}>Ausführung stoppen</button></div>}</>:<p role="status">Ausführung wird geladen …</p>}</>;
 }

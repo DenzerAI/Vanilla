@@ -1,4 +1,4 @@
-import React, {useId, useMemo, useState} from 'react';
+import React, {useMemo, useState} from 'react';
 import {FileText, Download, ChevronDown} from './icons.jsx';
 import {collectArtifacts, fileKind, diffLines} from './artifact-content.mjs';
 import {FileContent} from './file-content.jsx';
@@ -9,7 +9,7 @@ function Artifact({file, onFile, api}) {
   const [open, setOpen] = useState(fileKind(file.path) === 'image');
   return <div className="chat-artifact">
     <div className="artifact-row">
-      <button className="artifact-open" onClick={()=>onFile(file.path)} title={file.path}><FileText size={16}/><span>{file.label}</span></button>
+      <button className="artifact-open" onClick={()=>onFile(file.path)} title={file.path}><FileText size={18}/><span>{file.label}<small>{file.path}</small></span></button>
       {fileKind(file.path) !== 'download' && <button className="icon-button" aria-label={'Vorschau: '+file.label} title="Vorschau" aria-expanded={open} onClick={()=>setOpen(!open)}><ChevronDown size={16}/></button>}
       <a className="icon-button" aria-label={'Herunterladen: '+file.label} title="Herunterladen" href={'/api/file/raw?path='+encodeURIComponent(file.path)+'&download=1'} download><Download size={16}/></a>
     </div>
@@ -20,17 +20,10 @@ function Artifact({file, onFile, api}) {
 export function ChatArtifacts({items, workspace, directory, onFile, api}) {
   const files = useMemo(()=>collectArtifacts(items,workspace,directory),[items,workspace,directory]);
   const [all, setAll] = useState(false);
-  const [expanded, setExpanded] = useState(false);
-  const filesId = useId();
   if (!files.length) return null;
   return <div className="chat-artifacts" role="group" aria-label="Dateien aus diesem Arbeitsschritt">
-    <button className="artifact-toggle" aria-expanded={expanded} aria-controls={filesId} onClick={()=>setExpanded(!expanded)}><FileText size={16}/><span>{files.length === 1 ? '1 Datei' : `${files.length} Dateien`}</span><ChevronDown size={14}/></button>
-    <div id={filesId} hidden={!expanded}>
-      {expanded && <>
-        {(all?files:files.slice(0,4)).map(file=><Artifact key={file.path} file={file} onFile={onFile} api={api}/>)}
-        {files.length>4 && <button className="artifact-more" onClick={()=>setAll(!all)}>{all?'Weniger Dateien':`${files.length-4} weitere Dateien`}</button>}
-      </>}
-    </div>
+    {(all?files:files.slice(0,4)).map(file=><Artifact key={file.path} file={file} onFile={onFile} api={api}/>)}
+    {files.length>4 && <button className="artifact-more" onClick={()=>setAll(!all)}>{all?'Weniger Dateien':`${files.length-4} weitere Dateien`}</button>}
   </div>;
 }
 

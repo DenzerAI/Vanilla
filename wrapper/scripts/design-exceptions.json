@@ -19,7 +19,7 @@
   "ui/design-reference.jsx|dynamic-style|style fontWeight: type.weight": "Reference specimen reads its line height/weight directly from the central typography catalog.",
   "ui/model-picker.jsx|shared-component|Use shared Modal": "Existing nonmodal anchored model popover; Escape, blur close and focus restoration are handled here. Native modal would incorrectly block the composer.",
   "ui/styles.css|spacing|.skill-results-status | margin: -1px": "Standard visually-hidden clipping offset for an accessible legend/status; not a visible layout spacing.",
-  "ui/system-search.css|focus|.system-search-input input:focus-visible removes focus": "Search input deliberately uses the visible caret and highlighted search icon instead of an enclosing frame, as requested. Forced-colors mode retains an explicit system outline; result buttons retain keyboard focus.",
+  "ui/system-search.css|focus|.system-search-input input:focus-visible removes focus": "Focus indicator is deliberately drawn on the enclosing .system-search-input:focus-within; preserve the 2px blue group outline.",
   "ui/app.jsx|dynamic-style|style expression: embedded ? undefined : {order:paneOrder.indexOf(0)*2, flexGrow:paneWeights[0] || 1}": "Multi-panel order and flex weight only; no color, typography or spacing styles.",
   "ui/appearance-design.jsx|dynamic-style|style expression: designVariables(settings.theme,tone.id,settings.highlightColor)": "Complete preview palette comes directly from central designVariables; this is the single source of truth.",
   "ui/chat-controls.jsx|dynamic-style|style expression: position": "Anchored popover position from viewport measurements; only geometric properties, no theme styles.",

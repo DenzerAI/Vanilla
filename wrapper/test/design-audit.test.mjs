@@ -22,7 +22,6 @@ test('finds hardcoded values across CSS syntax and inline JSX',()=>{
 });
 
 test('accepts semantic tokens and structural geometry',()=>{
- assert.deepEqual(rules('a.css','button:focus:not(:focus-visible){outline:none}'),[]);
  assert.deepEqual(rules('a.css','.a{color:var(--text);gap:var(--space-8);padding:0;border-radius:var(--radius-control);width:320px;font-variant-numeric:tabular-nums}'),[]);
  assert.deepEqual(rules('a.tsx','const Demo=()=> <button aria-label="Öffnen" className="icon-button" style={{width:32}}>+</button>'),[]);
 });

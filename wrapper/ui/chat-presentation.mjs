@@ -96,15 +96,3 @@ export function liveActivityLabel(items = [], waiting = false) {
   if (items.at(-1)?.type === 'agentMessage') return 'Schreibt eine Antwort';
   return 'Denkt nach';
 }
-
-export function relativeTimeLabel(value, now = Date.now()) {
-  const ms = timestamp(value);
-  if (ms == null) return '';
-  const minutes = Math.floor(Math.max(0, now - ms) / 60000);
-  if (minutes < 1) return 'gerade eben';
-  if (minutes < 60) return `vor ${minutes} Min.`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `vor ${hours} Std.`;
-  const days = Math.floor(hours / 24);
-  return `vor ${days} ${days === 1 ? 'Tag' : 'Tagen'}`;
-}

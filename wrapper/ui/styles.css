@@ -29,14 +29,6 @@
 * {
   box-sizing: border-box;
 }
-/* The viewport stays fixed; only the inner app regions scroll. */
-html,
-body,
-#root {
-  height: 100%;
-  overflow: hidden;
-  overscroll-behavior: none;
-}
 body {
   font-size: var(--text-control);
   line-height: var(--leading-normal);
@@ -79,15 +71,12 @@ button:disabled {
   opacity: 0.4;
   cursor: default;
 }
-:focus:not(:focus-visible) {
-  outline: none;
-}
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 1px solid var(--focus-ring);
+  outline: 2px solid var(--blue);
   outline-offset: 3px;
 }
 a {
@@ -949,7 +938,7 @@ nav {
 }
 .model-option:has(input:focus-visible),
 .effort-option:has(input:focus-visible) {
-  outline: 1px solid var(--focus-ring);
+  outline: 2px solid var(--blue);
   outline-offset: -2px;
 }
 .model-popover .effort-options {
@@ -1268,7 +1257,7 @@ nav {
   .page-heading-title { gap: var(--space-8); }
 }
 .search-box:focus-within {
-  outline: 1px solid var(--focus-ring);
+  outline: 2px solid var(--blue);
   outline-offset: 2px;
 }
 .search-box {
@@ -1384,7 +1373,7 @@ nav {
   background: var(--selected);
 }
 .filter-trigger:focus-visible {
-  outline: 1px solid var(--focus-ring);
+  outline: 2px solid var(--blue);
   outline-offset: 2px;
 }
 .filter-popover {
@@ -1416,7 +1405,7 @@ nav {
   background: var(--selected);
 }
 .filter-popover > button:focus-visible {
-  outline: 1px solid var(--focus-ring);
+  outline: 2px solid var(--blue);
   outline-offset: -2px;
 }
 .filter-popover > button:hover {
@@ -1643,8 +1632,6 @@ nav {
   color: var(--faint);
 }
 .settings-page {
-  min-height: 0;
-  overscroll-behavior: none;
   max-width: 1030px;
   padding: var(--space-64) var(--space-64);
 }
@@ -1800,7 +1787,7 @@ nav {
   border-radius: var(--radius-panel);
 }
 .theme-choice.active {
-  border-color: var(--focus-ring);
+  border-color: var(--blue);
 }
 .theme-preview {
   height: 135px;
@@ -2018,7 +2005,7 @@ nav {
   font-size: var(--text-control);
 }
 .answer-options button.selected {
-  border-color: var(--focus-ring);
+  border-color: var(--blue);
 }
 .answer-options button small {
   color: var(--faint);
@@ -2552,7 +2539,7 @@ time {
   border-radius: var(--radius-small);
 }
 .ci-reference summary:focus-visible {
-  outline: 1px solid var(--focus-ring);
+  outline: 2px solid var(--blue);
   outline-offset: 4px;
 }
 .ci-details {

@@ -39,7 +39,7 @@ export function auditSource(file,source,definitions=new Set()) {
    const selector=d.parent.selector || '@'+d.parent.name;
    const rule=styleViolation(d.prop,d.value);if(rule && d.parent.name!=='font-face')add(rule,d.source.start.line,`${selector} | ${d.prop}: ${d.value}`);
    for(const [,token]of d.value.matchAll(/var\((--[\w-]+)/g))if(!definitions.has(token))add('unknown-token',d.source.start.line,`${selector} | ${token}`);
-   if(d.prop==='outline'&&/^(?:none|0)$/.test(d.value)&&/focus/.test(selector)&&!/:not\(\s*:focus-visible\s*\)/.test(selector))add('focus',d.source.start.line,`${selector} removes focus`);
+   if(d.prop==='outline'&&/^(?:none|0)$/.test(d.value)&&/focus/.test(selector))add('focus',d.source.start.line,`${selector} removes focus`);
   });
   return issues;
  }

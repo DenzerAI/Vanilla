@@ -1,4 +1,3 @@
-import {Skeleton} from './skeleton.tsx';
 import { SettingRow as SettingsRow } from "./settings-row.jsx";
 import React, {useState,useEffect,useRef} from 'react';
 import {Play, Square, Download, Trash2, RotateCcw, Check, Volume2, Plus} from './icons.jsx';
@@ -9,17 +8,14 @@ import {SpeechPlayback} from './speech-playback.mjs';
 const actionButton=(label,Icon,action,disabled=false)=><button type="button" className="icon-button" aria-label={label} title={label} onClick={action} disabled={disabled}><Icon size={18}/></button>;
 export function VoiceSettings({api,notify,openConnections,onText}) {
   const [speech,setSpeech]=useState(null),[dictation,setDictation]=useState(null),[devices,setDevices]=useState([]),[device,setDevice]=useState(()=>localStorage.getItem('agent-microphone') || ''),[voices,setVoices]=useState([]),[next,setNext]=useState(null),[saving,setSaving]=useState(false),[playState,setPlayState]=useState('idle'),[history,setHistory]=useState(false),[local,setLocal]=useState([]),[trash,setTrash]=useState(false);
-  const [loadError,setLoadError]=useState('');
   const playback=useRef(null); if(!playback.current) playback.current=new SpeechPlayback(api,setPlayState);
-  async function refresh() { setLoadError(''); const [s,d,l]=await Promise.all([api('/speech/status'),api('/dictation/status'),all('recordings').catch(()=>[])]);setSpeech(s);setDictation(d);setLocal(l); }
+  async function refresh() { const [s,d,l]=await Promise.all([api('/speech/status'),api('/dictation/status'),all('recordings').catch(()=>[])]);setSpeech(s);setDictation(d);setLocal(l); }
   const act=fn=>async()=>{setSaving(true);try{await fn();await refresh();}catch(e){notify(e.message);}finally{setSaving(false);}};
   async function listDevices(){const items=await navigator.mediaDevices?.enumerateDevices?.() || [];setDevices(items.filter(d=>d.kind==='audioinput'));}
-  useEffect(()=> {refresh().catch(e=>setLoadError(e.message));listDevices().catch(()=>{});navigator.mediaDevices?.addEventListener?.('devicechange',listDevices);return()=>{void playback.current.close();navigator.mediaDevices?.removeEventListener?.('devicechange',listDevices);};},[]);
+  useEffect(()=> {refresh().catch(e=>notify(e.message));listDevices().catch(()=>{});navigator.mediaDevices?.addEventListener?.('devicechange',listDevices);return()=>{void playback.current.close();navigator.mediaDevices?.removeEventListener?.('devicechange',listDevices);};},[]);
   useEffect(()=>{if(!history)return;const t=setInterval(()=>sync(api).then(refresh).catch(()=>{}),2000);return()=>clearInterval(t);},[history]);
   async function loadVoices(token){const r=await api('/speech/voices'+(token?'?next='+encodeURIComponent(token):''));setVoices(v=>token?[...v,...r.voices]:r.voices);setNext(r.hasMore?r.next:null);}
   useEffect(()=>{if(speech?.elevenlabs)loadVoices().catch(e=>notify(e.message));},[speech?.elevenlabs]);
-  if ((!speech || !dictation) && !loadError) return <Skeleton variant="settings" label="Stimme wird geladen …"/>;
-  if ((!speech || !dictation) && loadError) return <p role="alert">{loadError} <button onClick={()=>refresh().catch(e=>setLoadError(e.message))}>Erneut laden</button></p>;
   const patch=changes=>act(()=>api('/speech/settings',changes));
   const audition=()=>{if(playState!=='idle'){playback.current.cancel();return;}void playback.current.speak('Hallo, ich bin deine deutsche Stimme. Wie kann ich dir helfen?').catch(e=>notify(e.message));};
   return <>

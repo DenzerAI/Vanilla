@@ -33,7 +33,7 @@ export function LoaderSettings({
       <div className="settings-group">
         <SettingRow
           title="Stil"
-          description="Für Seitenleiste, Chat und Serverneustart. Änderungen werden automatisch gespeichert."
+          description="Für Seitenleiste und Chat. Änderungen werden automatisch gespeichert."
         >
           <AppLoader size={28} preview />
         </SettingRow>

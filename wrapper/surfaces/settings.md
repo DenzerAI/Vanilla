@@ -121,14 +121,14 @@ jeweiligen Bereich; Erfolg und Fehler sind sichtbar, Fehler erhalten den Entwurf
 
 ## Allgemein
 
-Allgemein zeigt den Projektordner und die Arbeitsmodi. Projektnamen werden ausschließlich über „Projekt bearbeiten …“ in der Seitenleiste geändert; kein zweites Namensfeld in den Einstellungen. Einstellungsinhalt und Navigation scrollen ohne sichtbare Scrollleisten. Der App-Rahmen bleibt auf die Fensterhöhe begrenzt. Aussehen und Unser Design scrollen ausschließlich im Inhaltsbereich; am Anfang und Ende wird weder an das Dokument weitergescrollt noch die gesamte App über den Fensterrand gezogen.
+Allgemein zeigt den Projektordner und die Arbeitsmodi. Projektnamen werden ausschließlich über „Projekt bearbeiten …“ in der Seitenleiste geändert; kein zweites Namensfeld in den Einstellungen. Einstellungsinhalt und Navigation scrollen ohne sichtbare Scrollleisten.
 
 ## Gemeinsame Ladeanzeige
 
 Unter Aussehen → Ladeanzeige stehen alle 17 Loader-Varianten als kompakte
 Radioauswahl mit gleich großen Vorschauplätzen. ASCII ist der Standard, Dither
 steht direkt daneben. Größe und Tempo werden wie die übrigen Darstellungswerte
-sofort serverseitig gespeichert. Seitenleiste, Paneltabs, Chatstatus und Serverneustart verwenden
+sofort serverseitig gespeichert. Seitenleiste, Paneltabs und Chatstatus verwenden
 denselben AppLoader und übernehmen Änderungen auch in offenen Panels. Breite
 Varianten werden innerhalb eines festen Platzes optisch verkleinert. Prozent
 ist eine wiederholte Animation, kein gemessener Fortschritt; die Auswahl nennt
@@ -145,21 +145,3 @@ die ungeprüfte Kontraste erlaubt. Die Unterseite Unser Design hat einen
 Rückweg zu Aussehen; ihre segmentierte Auswahl zeigt jeweils einen Bereich.
 Die Farbreferenz zeigt die aktive Palette einschließlich festem Terrakotta-
 Markenakzent. Tokenwerte und Regeln sind Referenz, keine nutzlosen Formulare.
-
-## Skeletons beim Öffnen
-
-Dein Agent, Worker, lokale Laufzeiten, Stimme, Systemeinstellungen und
-Ausführungsdetails verwenden gemeinsame Settings-Skeletons bis Daten
-vorliegen. Ladefehler beenden die Platzhalter. Die Designreferenz zeigt
-dieselben produktiven List-, Settings-, Chat-, Document- und Media-Formen.
-
-Nutzung ergänzt Settings-Skeletons nur für die noch fehlenden Kontingente.
-
-Die grafischen Loader benötigen die Utility-Klassen ihrer verschachtelten Komponenten. Der CSS-Build erfasst `ui/` einschließlich `components/` explizit; die Prüfung kontrolliert die Klassen im gebauten CSS, damit Vorschauen und echte Ladezustände gleichermaßen sichtbar bleiben.
-
-
-## Dezentes Flächenlicht
-
-Seitenleiste und Workspace verwenden den gemeinsamen dekorativen Baustein `PanelLight`. Die Seitenleiste behält ihre hellere Grundfläche `sidebar` und erhält über `sidebar-material-shadow` eine sehr feine innere Kante; `sidebar-sheen` zeigt zwei diffuse, schwache radiale Verläufe. Der Workspace nutzt seine bestehende schwarze Materialfläche und `workspace-panel-sheen`. Nur die Lichtschicht bewegt sich, um jeweils wenige Prozent, mit 48 Sekunden je Richtung, sanften Wendepunkten und gegenläufiger Phase links/rechts. Dauer und Easing liegen in der zentralen Designquelle. Keine zufälligen Sprünge, kein Pulsieren von Text oder Kante.
-
-Aussehen → Visuell → Flächenlicht bietet Aus, Ruhend und Sanft bewegt (Standard). Die Auswahl wird gemeinsam mit den bestehenden Darstellungseinstellungen validiert und gespeichert. App- und Systemvorgaben für reduzierte Bewegung zeigen statische Verläufe. Versteckte Tabs, eingeklappte Seitenleisten und nicht sichtbare Flächen pausieren. Nur die Dekoration wird an den Rundungen beschnitten; Menüs, Tastaturfokus und Ziehkanten bleiben erreichbar. Erzwungener Kontrast blendet die Dekoration aus. Unser Design zeigt denselben Baustein.

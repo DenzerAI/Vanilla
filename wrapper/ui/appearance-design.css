@@ -10,7 +10,7 @@
 .design-tone-option small { color: var(--muted); font-size: var(--text-small); margin-top: var(--space-4); }
 .design-miniature { display: flex; aspect-ratio: 1.65; border: 1px solid var(--border); border-radius: var(--radius-control); overflow: hidden; background: var(--bg); padding: var(--space-8); gap: var(--space-8); }
 .design-tone-option input:checked + .design-miniature { outline: 2px solid var(--accent); outline-offset: 3px; }
-.design-tone-option input:focus-visible + .design-miniature { outline: 1px solid var(--focus-ring); outline-offset: 5px; }
+.design-tone-option input:focus-visible + .design-miniature { outline: 2px solid var(--blue); outline-offset: 5px; }
 .design-tone-option:has(input:disabled) { opacity: .6; }
 .design-mini-sidebar { flex: 0 0 28%; border-radius: var(--radius-small); background: var(--sidebar); padding: var(--space-8) var(--space-4); }
 .design-mini-sidebar i { display: block; height: 4px; background: var(--muted); opacity: .5; margin-bottom: var(--space-8); border-radius: var(--radius-small); }
@@ -24,7 +24,7 @@
 .design-accent-options input { position: absolute; opacity: 0; width: 100%; height: 100%; margin: 0; cursor: pointer; }
 .design-accent-options label > span { width: 22px; height: 22px; border-radius: var(--radius-pill); pointer-events: none; }
 .design-accent-options input:checked + span { outline: 2px solid var(--text); outline-offset: 3px; }
-.design-accent-options input:focus-visible + span { outline: 1px solid var(--focus-ring); outline-offset: 5px; }
+.design-accent-options input:focus-visible + span { outline: 2px solid var(--blue); outline-offset: 5px; }
 .design-back { margin-bottom: var(--space-20); color: var(--muted); }
 .ci-reference.design-reference-page { margin: 0; border: 0; padding: 0; }
 .design-reference-page .design-segments { flex-wrap: wrap; margin-bottom: var(--space-20); }

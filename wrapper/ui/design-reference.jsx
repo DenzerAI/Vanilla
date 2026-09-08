@@ -1,8 +1,3 @@
-import { InboxPatternPreview } from "./inbox";
-import { PanelLight } from "./panel-light";
-import {LibraryThumbnail} from './library-thumbnail.jsx';
-import {LibraryPreview} from './library.jsx';
-import {Skeleton} from './skeleton.tsx';
 import React, {useState} from "react";
 import { SettingsPatterns } from "./settings-patterns.jsx";
 import {
@@ -18,7 +13,6 @@ import interLicense from "./assets/fonts/Inter-LICENSE.txt";
 import monoLicense from "./assets/fonts/IBMPlexMono-LICENSE.txt";
 
 export function DesignReference({ theme, tone, accent }) {
-  const [preview, setPreview] = useState(false);
   const [section, setSection] = useState("components");
   const palette = resolveDesign(theme, tone, accent);
   return (
@@ -34,25 +28,6 @@ export function DesignReference({ theme, tone, accent }) {
       {section === 'components' && <>
       <h3 className="section-heading">Bedienelemente & Seitenaufbau</h3>
       <SettingsPatterns/>
-      <h3 className="section-heading">Composer · Glasfläche</h3>
-      <div className="composer pill-composer"><div className="composer-entry"><textarea aria-label="Nachricht · Designvorschau" placeholder="Nachricht" rows={1} readOnly/></div></div>
-      <p className="page-note">Einzeilige Pille mit gedämpftem Platzhalter, transparenter Tönung, Hintergrundunschärfe und feiner innerer Glaskante. Mehrzeiliger Text erweitert die Schreibfläche; reduzierte Transparenz erhält einen deckenden Hintergrund.</p>
-      <h3 className="section-heading">Inbox · Gesprächszeile</h3>
-      <InboxPatternPreview/>
-      <h3 className="section-heading">Flächenlicht</h3>
-      <div className="panel-light-preview"><PanelLight mode="animated"/><span>Dezente Tiefe mit ruhiger Lichtbewegung</span></div>
-      <h3 className="section-heading">Dateivorschau</h3>
-      <p className="page-note">Quick Look verwendet die gemeinsame Glasfläche, einen kompakten Dateikopf und aufklappbare Informationen. Die Bibliothek ergänzt kompakte Listen und ein Bildraster mit direkter Auswahlvorschau im rechten Workspace. Doppelklick oder Leertaste öffnen Quick Look.</p>
-      <div className="library-entries-grid" aria-label="Dateisymbole">{['PDF','DOCX','MP3','ZIP'].map(format=><div key={format}><LibraryThumbnail entry={{name:'Beispiel.'+format,path:'',missing:true,kind:format==='MP3'?'audio':'download'}}/></div>)}</div>
-      <button onClick={()=>setPreview(true)}>Vorschau öffnen</button>
-      {preview&&<LibraryPreview entry={{id:'example',name:'Dateivorschau',path:'output/beispiel',origin:'Designbeispiel'}} onClose={()=>setPreview(false)}><div className="library-preview"><p>Hier steht das Bild oder Dokument. Dateiaktionen bleiben im rechten Workspace; diese Großansicht zeigt ausschließlich den Inhalt.</p></div></LibraryPreview>}
-      <h3 className="section-heading">Inhalte laden</h3>
-      <p className="page-note">Platzhalter für Listen, Einstellungen, Gesprächsverläufe und Vorschauen. Vorhandene Inhalte bleiben beim Aktualisieren sichtbar. Reduzierte Bewegung zeigt ruhende Formen.</p>
-      <Skeleton variant="list" rows={2} announce={false}/>
-      <Skeleton variant="settings" rows={2} announce={false}/>
-      <Skeleton variant="chat" announce={false}/>
-      <Skeleton variant="document" rows={2} announce={false}/>
-      <Skeleton variant="media" announce={false}/>
       </>}
       {section === "type" && <>
       <h3 className="section-heading">Schriften</h3>

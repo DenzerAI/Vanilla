@@ -12,7 +12,7 @@ Vor jeder Änderung an einer Oberfläche:
 3. Die dort genannten vorhandenen Komponenten und den aktuellen Code prüfen. Bestehende Muster erweitern; keine parallelen Sonderlösungen hinzufügen.
 4. Neue Funktionen an der vorgeschriebenen Stelle einfügen. Wenn der Nutzer einen Ablauf ändert, Vertrag und Umsetzung gemeinsam aktualisieren. Ungefragte neue Strukturen sind keine Erweiterung.
 5. Gemeinsame Farben, Typografie und Abstände kommen aus `ui/design-system.mjs`. Gemeinsame Komponenten wiederverwenden. Dienste nutzen `ui/connection-catalog.mjs` und `BrandIcon`.
-6. Vor jeder Übernahme `npm run design:verify` im Wrapper ausführen; bei Verstößen nicht übernehmen. Build führt den Scanner ebenfalls zwingend aus. Nach der Umsetzung Build und passende Funktionstests ausführen und die [visuelle Abnahme auf Desktop und Handy](DESIGN.md#fertig-bedeutet-ins-system-integriert-und-geprüft) durchführen. Keine Behauptung „funktioniert“, wenn nur ein Build geprüft wurde. Fehlende Schlüssel oder Hardwaretests konkret benennen.
+6. Vor jeder Übernahme `npm run design:verify` im Wrapper ausführen; bei Verstößen nicht übernehmen. Build führt den Scanner ebenfalls zwingend aus. Danach Build und passende Funktionstests ausführen; betroffene Oberfläche bei Desktop- und schmaler Breite prüfen. Keine Behauptung „funktioniert“, wenn nur ein Build geprüft wurde. Fehlende Schlüssel oder Hardwaretests konkret benennen.
 
 Zusätzliche verbindliche Regeln:
 

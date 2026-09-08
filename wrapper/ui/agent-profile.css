@@ -186,7 +186,7 @@
 }
 
 .avatar-choice input:focus-visible + .avatar-choice-content {
-  outline: 1px solid var(--focus-ring);
+  outline: 2px solid var(--blue);
   outline-offset: 3px;
 }
 .avatar-choice:hover .avatar-choice-content {
@@ -313,7 +313,7 @@
   outline-offset: 3px;
 }
 .avatar-color-choice input:focus-visible + span {
-  outline: 1px solid var(--focus-ring);
+  outline: 2px solid var(--blue);
   outline-offset: 3px;
 }
 .avatar-color-choice input:disabled + span {

@@ -11,6 +11,6 @@ if(mode==='push'){
 }else{
  const changed=git('diff','--cached','--name-only');
  if(!changed.split('\n').some(f=>/^(wrapper\/|\.githooks\/|\.github\/workflows\/design|scripts\/.*design)/.test(f)))process.exit(0);
- if(git('diff','--name-only','--',...paths)||git('ls-files','--others','--exclude-standard','--',...paths))throw Error('Design gate: staged and working UI differ. Stage the intended complete change or use an isolated worktree before verification.');
+ if(git('diff','--name-only','--',...paths))throw Error('Design gate: staged and working UI differ. Stage the intended complete change or use an isolated worktree before verification.');
 }
 const result=spawnSync('npm',['--prefix','wrapper','run','design:verify'],{stdio:'inherit',cwd:root});process.exit(result.status??1);

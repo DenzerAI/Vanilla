@@ -95,16 +95,3 @@ test('color world and highlight persist and reject unknown choices', async () =>
     assert.throws(()=>validateAppearance({designTone:'blueish'}));assert.throws(()=>validateAppearance({highlightColor:'#123456'}));
   } finally {await rm(dir,{recursive:true,force:true});}
 });
-
-test('panel light choices persist and reject invalid modes', async () => {
-  const root = await mkdtemp(path.join(os.tmpdir(), 'agent-panel-light-'));
-  try {
-    const store = new Storage(path.join(root, 'workspace'), path.join(root, 'data')); await store.init();
-    for (const panelLight of ['off', 'static', 'animated']) {
-      Object.assign(store.state.settings, validateAppearance({panelLight})); await store.save();
-      const restored = new Storage(path.join(root, 'workspace'), path.join(root, 'data')); await restored.init();
-      assert.equal(restored.state.settings.panelLight, panelLight);
-    }
-    for (const panelLight of [null, true, 'fast']) assert.throws(() => validateAppearance({panelLight}));
-  } finally { await rm(root, {recursive: true, force: true}); }
-});
