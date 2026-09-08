@@ -18,9 +18,11 @@
   "dependencies": {
     "@agentclientprotocol/claude-agent-acp": "0.75.1",
     "@radix-ui/react-slider": "^1.4.7",
+    "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "dompurify": "^3.2.7",
     "framework7-icons": "^5.0.5",
+    "lucide-react": "^1.43.0",
     "marked": "^15.0.12",
     "motion": "^12.43.0",
     "pdfjs-dist": "^6.3.289",
