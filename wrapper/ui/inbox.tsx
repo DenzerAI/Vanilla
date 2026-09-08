@@ -1,6 +1,6 @@
 import React, { useLayoutEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, Check, FileText, Mail, Search } from "./icons.jsx";
+import { ArrowLeft, Check, FileText, Inbox, Search } from "./icons.jsx";
 import { BrandIcon } from "./brand-icon.jsx";
 import { FilterPicker } from "./filter-picker.jsx";
 import { Modal } from "./modal.jsx";
@@ -121,7 +121,7 @@ export function InboxPage({ PageHeading, sidebarHost, sidebarVisible, onShowSide
       </div>
       <div className="inbox-list" ref={list} aria-label="Gespräche">
         {results.map(item => <InboxConversationRow key={item.id} conversation={item} selected={item.id === selectedId} onOpen={() => openConversation(item)}/>)}
-        {!results.length && <div className="inbox-empty" role="status"><Mail strokeWidth={1.55} size={24}/><p>{query ? "Keine Treffer" : filter === "done" ? "Noch nichts erledigt" : filter === "unread" ? "Alles gelesen" : "Keine passenden Gespräche"}</p></div>}
+        {!results.length && <div className="inbox-empty" role="status"><Inbox strokeWidth={1.55} size={24}/><p>{query ? "Keine Treffer" : filter === "done" ? "Noch nichts erledigt" : filter === "unread" ? "Alles gelesen" : "Keine passenden Gespräche"}</p></div>}
       </div>
     </div>, sidebarHost)}
     <section className="inbox-page" data-capability="inbox.preview" aria-label="Nachrichtenverlauf">

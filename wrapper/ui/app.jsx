@@ -96,7 +96,7 @@ import {
   Keyboard,
   Image,
   Volume2,
-  Mail,
+  Inbox,
   Calendar,
   MessageCircle,
   Braces,
@@ -1608,7 +1608,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       j.name.toLowerCase().includes(search.toLowerCase()),
   );
   const nav = [
-      ["inbox", Mail, "Inbox"],
+      ["inbox", Inbox, "Inbox"],
       ["pipeline", Workflow, "Pipeline"],
       ["jobs", Clock, "Aufträge"],
       ...(boot?.features?.library?[["library", FileText, "Bibliothek"]]:[]),
