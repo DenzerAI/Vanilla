@@ -3,16 +3,17 @@ import assert from 'node:assert/strict';
 import {mkdtemp, readFile, rm} from 'node:fs/promises';
 import {spawn} from 'node:child_process';
 import {once} from 'node:events';
+import os from 'node:os';
 import path from 'node:path';
 import net from 'node:net';
 
 test('project HTTP route retains selected color and icon across server restart', {timeout:60000}, async () => {
-  const dir=await mkdtemp(new URL('../.test-project-http-',import.meta.url));
+  const dir=await mkdtemp(path.join(os.tmpdir(),'project-http-'));
   const reservation=net.createServer(); reservation.listen(0,'127.0.0.1'); await once(reservation,'listening');
   const port=reservation.address().port; await new Promise(r=>reservation.close(r));
   let child, exited;
   const start=async()=>{
-    child=spawn(process.execPath,['server.mjs'],{cwd:new URL('..',import.meta.url),env:{PATH:process.env.PATH,HOME:dir,UWE_CODEX_SOURCE_HOME:'',UWE_PORT:String(port),UWE_WORKSPACE:path.join(dir,'workspace'),UWE_DATA_ROOT:path.join(dir,'data')},stdio:['ignore','pipe','pipe']});
+    child=spawn(process.execPath,['server.mjs'],{cwd:new URL('..',import.meta.url),env:{...process.env,UWE_PORT:String(port),UWE_WORKSPACE:path.join(dir,'workspace'),UWE_DATA_ROOT:path.join(dir,'data')},stdio:['ignore','pipe','pipe']});
     exited=once(child,'exit');
     for(let i=0;i<200;i++){
       try{const r=await fetch(`http://127.0.0.1:${port}/api/chats`);if(r.ok)return;}catch{}

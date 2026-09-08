@@ -5,16 +5,16 @@ Der gemeinsame `PageHeading` zeigt den Titel der gewählten Einstellungsseite ge
 
 ## Aufbau
 
-Eigene Einstellungsnavigation mit bestehenden Symbolen und „Zurück zur App“. Neue zusammenhängende Funktionen bekommen genau einen sachlich benannten Navigationspunkt. Inhalt: Titel → Gruppenüberschrift → `settings-group` mit gemeinsamen `SettingRow` aus `ui/settings-row.jsx`. Links Bezeichnung und optional eine kurze erklärende Zeile, rechts Steuerung. Optionaler `SettingsHeader` nur für eine sinnvolle Bereichseinführung. Kein Dashboard. `SettingsNavigationRow` öffnet Details als ganze Zeile; Icons und Chevron liegen innerhalb der Gruppe. Die Bausteinreferenz unter Aussehen verwendet dieselben Produktionskomponenten.
+Eigene Einstellungsnavigation mit bestehenden Symbolen und „Zurück zur App“. Neue zusammenhängende Funktionen bekommen genau einen sachlich benannten Navigationspunkt. Inhalt: Titel → Gruppenüberschrift → `settings-group` mit gemeinsamen `SettingRow` aus `ui/settings-row.jsx`. Links Bezeichnung und optional eine kurze erklärende Zeile, rechts Steuerung. Kein Dashboard, keine Kachelübersicht innerhalb der Einstellungen.
 
 ## Elemente
 
-Auswahl über vorhandene Selects, Ein/Aus über `apple-switch`, Aktion über den gemeinsamen kompakten, leicht gerundeten Aktionsbutton, auch in verschachtelten Aktionsgruppen. Native Selects verwenden dieselbe Form und den gemeinsamen Chevron. Iconaktionen sind kreisrund. Auf schmalen Ansichten dürfen Aktionsgruppen umbrechen. Gruppentrennung, Schriften und Flächen aus dem Designsystem. Primäre Funktion und Zustand auf einen Blick. Technische Installationsbefehle gehören in Dokumentation, nicht in den normalen Einstellungsfluss. Nicht verfügbare Funktionen zeigen einen ehrlichen Status.
+Auswahl über vorhandene Selects, Ein/Aus über `apple-switch`, Aktion über den gemeinsamen kompakten Pillenbutton, auch in verschachtelten Aktionsgruppen. Native Selects verwenden dieselbe Form und den gemeinsamen Chevron. Iconaktionen sind kreisrund. Auf schmalen Ansichten dürfen Aktionsgruppen umbrechen. Gruppentrennung, Schriften und Flächen aus dem Designsystem. Primäre Funktion und Zustand auf einen Blick. Technische Installationsbefehle gehören in Dokumentation, nicht in den normalen Einstellungsfluss. Nicht verfügbare Funktionen zeigen einen ehrlichen Status.
 
 ## Dein Agent
 
-Reihenfolge: Speicheraktion und Änderungsstatus → **Profil** mit aktuellem Avatar und Name → **Wie soll dein Agent
-arbeiten?** mit editierbarer Vorgabe → **Arbeitsgrundlage** mit den
+Reihenfolge: **Profil** mit aktuellem Avatar und Name → **Wie soll dein Agent
+arbeiten?** mit editierbarer Vorgabe → Speichern → **Arbeitsgrundlage** mit den
 direkt sichtbaren Zeilen für Identität und gemeinsame Arbeitsregeln. Kein
 „Erweitert“-Aufklappen. Die Gruppen verwenden die vorhandenen Einstellungszeilen.
 
@@ -88,9 +88,9 @@ für neue Chats und automatische Aufträge. Bestehende Chats und ausdrücklich
 zugewiesene Aufträge behalten ihren Worker. Die Vertretung übernimmt vor
 Auftragseingabe; nach Beginn gibt es keine automatische Wiederholung.
 
-## Reiseeffekt im Chat
+## Reiseeffekt auf der Startansicht
 
-Neue Chats ohne Gespräch zeigen standardmäßig dezente Lichtpunkte in drei Tiefenebenen, die langsam aus der Mitte nach außen wandern und sanft pulsieren. Inhalt und Layout bleiben unverändert. Unter Aussehen → Visuell → Reiseeffekt stehen „Aus“, „Nur neue Chats“ (Standard) und „Alle Chats“ dauerhaft zur Auswahl. „Alle Chats“ zeigt den Effekt auch hinter bestehenden Gesprächen in jedem sichtbaren Panel. Reduzierte Bewegung in App oder System zeigt ruhende Punkte; unsichtbare Ansichten pausieren.
+Neue Chats ohne Gespräch zeigen standardmäßig dezente Lichtpunkte in drei Tiefenebenen, die langsam aus der Mitte nach außen wandern und sanft pulsieren. Inhalt und Layout bleiben unverändert. Bestehende Gespräche zeigen den Effekt nicht. Unter Aussehen → Visuell → Reiseeffekt lässt er sich dauerhaft ein- und ausschalten. Reduzierte Bewegung in App oder System zeigt ruhende Punkte; unsichtbare Ansichten pausieren.
 
 „Auto“ probiert eingerichtete Worker in Katalogreihenfolge. Eine gewählte Vertretung
 steht am Ende dieser Reihenfolge; „Automatisch“ nutzt alle eingerichteten Worker.
@@ -110,56 +110,3 @@ nur auf Klick, bei laufendem Ollama und passender Hardware; weitere Modelle sind
 ## Integrierter Betrieb
 
 System, Memory, Speicher & Sicherung und Zugang verwenden dieselben SettingRow-Gruppen. System bietet Minutenprüfung, Wiederanlauf, Ruhezeiten und Dienstzustand. Memory verbindet Aufnahme, Dreaming, Kontextbudget, lokale Suche und Versionsverlauf. Sicherung verbindet Ziel, verschlüsselte Snapshots, Aufbewahrung und geprüfte Wiederherstellung. Tailscale verwendet die gemeinsame Kachel und den Dialog unter Verbindungen. Einstellungen sind versionsgeprüft; Konflikte erhalten den Entwurf.
-
-## Speichern
-
-Dein Agent sowie System, Memory und Speicher & Sicherung zeigen die Speicheraktion
-mit Änderungsstatus direkt unter dem Seitentitel im normalen Dokumentfluss.
-Keine schwebende Leiste über den Einstellungsfeldern. Ohne Änderungen ist die
-Aktion deaktiviert und mit „Keine Änderungen“ erklärt. Speichern gilt für den
-jeweiligen Bereich; Erfolg und Fehler sind sichtbar, Fehler erhalten den Entwurf.
-
-## Allgemein
-
-Allgemein zeigt den Projektordner und die Arbeitsmodi. Projektnamen werden ausschließlich über „Projekt bearbeiten …“ in der Seitenleiste geändert; kein zweites Namensfeld in den Einstellungen. Einstellungsinhalt und Navigation scrollen ohne sichtbare Scrollleisten. Der App-Rahmen bleibt auf die Fensterhöhe begrenzt. Aussehen und Unser Design scrollen ausschließlich im Inhaltsbereich; am Anfang und Ende wird weder an das Dokument weitergescrollt noch die gesamte App über den Fensterrand gezogen.
-
-## Gemeinsame Ladeanzeige
-
-Unter Aussehen → Ladeanzeige stehen alle 17 Loader-Varianten als kompakte
-Radioauswahl mit gleich großen Vorschauplätzen. ASCII ist der Standard, Dither
-steht direkt daneben. Größe und Tempo werden wie die übrigen Darstellungswerte
-sofort serverseitig gespeichert. Seitenleiste, Paneltabs, Chatstatus und Serverneustart verwenden
-denselben AppLoader und übernehmen Änderungen auch in offenen Panels. Breite
-Varianten werden innerhalb eines festen Platzes optisch verkleinert. Prozent
-ist eine wiederholte Animation, kein gemessener Fortschritt; die Auswahl nennt
-diesen Unterschied. App- und Systempräferenz für reduzierte Bewegung zeigen
-einen statischen Zustand. Animierte Glyphen sind vor Screenreadern verborgen.
-
-## Aussehen und Unser Design
-
-Reihenfolge: Hell/Dunkel → drei Farbwelten mit echter Vorschau →
-Hervorhebungsfarbe → Schrift/Bewegung → bestehende Ladeanzeige und Reiseeffekt
-→ Navigationszeile Unser Design mit CI-Version. Farbwelt und Akzent sind
-serverseitig validierte, sofort gespeicherte Präferenzen. Keine Farbeingabe,
-die ungeprüfte Kontraste erlaubt. Die Unterseite Unser Design hat einen
-Rückweg zu Aussehen; ihre segmentierte Auswahl zeigt jeweils einen Bereich.
-Die Farbreferenz zeigt die aktive Palette einschließlich festem Terrakotta-
-Markenakzent. Tokenwerte und Regeln sind Referenz, keine nutzlosen Formulare.
-
-## Skeletons beim Öffnen
-
-Dein Agent, Worker, lokale Laufzeiten, Stimme, Systemeinstellungen und
-Ausführungsdetails verwenden gemeinsame Settings-Skeletons bis Daten
-vorliegen. Ladefehler beenden die Platzhalter. Die Designreferenz zeigt
-dieselben produktiven List-, Settings-, Chat-, Document- und Media-Formen.
-
-Nutzung ergänzt Settings-Skeletons nur für die noch fehlenden Kontingente.
-
-Die grafischen Loader benötigen die Utility-Klassen ihrer verschachtelten Komponenten. Der CSS-Build erfasst `ui/` einschließlich `components/` explizit; die Prüfung kontrolliert die Klassen im gebauten CSS, damit Vorschauen und echte Ladezustände gleichermaßen sichtbar bleiben.
-
-
-## Dezentes Flächenlicht
-
-Seitenleiste und Workspace verwenden den gemeinsamen dekorativen Baustein `PanelLight`. Die Seitenleiste behält ihre hellere Grundfläche `sidebar` und erhält über `sidebar-material-shadow` eine sehr feine innere Kante; `sidebar-sheen` zeigt zwei diffuse, schwache radiale Verläufe. Der Workspace nutzt seine bestehende schwarze Materialfläche und `workspace-panel-sheen`. Nur die Lichtschicht bewegt sich, um jeweils wenige Prozent, mit 48 Sekunden je Richtung, sanften Wendepunkten und gegenläufiger Phase links/rechts. Dauer und Easing liegen in der zentralen Designquelle. Keine zufälligen Sprünge, kein Pulsieren von Text oder Kante.
-
-Aussehen → Visuell → Flächenlicht bietet Aus, Ruhend und Sanft bewegt (Standard). Die Auswahl wird gemeinsam mit den bestehenden Darstellungseinstellungen validiert und gespeichert. App- und Systemvorgaben für reduzierte Bewegung zeigen statische Verläufe. Versteckte Tabs, eingeklappte Seitenleisten und nicht sichtbare Flächen pausieren. Nur die Dekoration wird an den Rundungen beschnitten; Menüs, Tastaturfokus und Ziehkanten bleiben erreichbar. Erzwungener Kontrast blendet die Dekoration aus. Unser Design zeigt denselben Baustein.

@@ -111,15 +111,13 @@
 .agent-working-style {
   margin-bottom: var(--space-16);
 }
-.settings-save-row {
-  margin-bottom: var(--space-24);
-  flex-wrap: wrap;
+.agent-save-row {
   display: flex;
   align-items: center;
   justify-content: flex-end;
   gap: var(--space-16);
 }
-.settings-save-row > span {
+.agent-save-row > span {
   color: var(--muted);
   font-size: var(--text-small);
 }
@@ -186,7 +184,7 @@
 }
 
 .avatar-choice input:focus-visible + .avatar-choice-content {
-  outline: 1px solid var(--focus-ring);
+  outline: 2px solid var(--blue);
   outline-offset: 3px;
 }
 .avatar-choice:hover .avatar-choice-content {
@@ -313,7 +311,7 @@
   outline-offset: 3px;
 }
 .avatar-color-choice input:focus-visible + span {
-  outline: 1px solid var(--focus-ring);
+  outline: 2px solid var(--blue);
   outline-offset: 3px;
 }
 .avatar-color-choice input:disabled + span {

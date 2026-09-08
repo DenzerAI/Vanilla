@@ -2,7 +2,7 @@
 export const serviceCatalog = [
   { id: 'telegram', name: 'Telegram', description: 'Bot und zugelassene Nutzer', runtime: 'polling', fields: [
     {key:'token', label:'Bot-Token', secret:true},
-    {key:'allowedUsers', label:'Zugelassene Nutzer-IDs', type:'list', hint:'Eine Telegram-Nutzer-ID pro Zeile. Ohne Freigabe startet niemand einen Auftrag.'},
+    {key:'users', label:'Zugelassene Nutzer', type:'telegram-users', hint:'Nur eingetragene IDs erhalten Zugang zum gewählten Arbeitsbereich.'},
   ], help:'https://core.telegram.org/bots/features#botfather' },
   { id:'whatsapp-local', name:'WhatsApp', description:'Eigene Nummer und getrennte Bridge', runtime:'bridge', fields:[
     {key:'identity', label:'Nummer / Bezeichnung', required:true},

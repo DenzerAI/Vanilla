@@ -1,4 +1,3 @@
-import {Skeleton} from './skeleton.tsx';
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronDown, RefreshCw, X } from "./icons.jsx";
 import "./local-workers.css";
@@ -86,7 +85,6 @@ export function LocalWorkers({ api, SettingRow }) {
     else await refresh();
     return result;
   }
-  if (!data && !error) return <Skeleton variant="settings" label="Lokale Laufzeiten werden geladen …"/>;
   const device = data?.device,
     connected = data?.machines.filter((m) => m.connected).length || 0;
   return (

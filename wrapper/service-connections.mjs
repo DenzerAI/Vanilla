@@ -3,6 +3,7 @@ import { isIP } from 'node:net';
 import { serviceDefinition, serviceCatalog } from './service-catalog.mjs';
 import { safeName } from './storage.mjs';
 import { safeRequest } from './safe-request.mjs';
+import { telegramUsers } from './telegram-users.mjs';
 
 const text = value => String(value ?? '').trim();
 function address(value) {
@@ -17,7 +18,10 @@ export function validateService(input, store) {
   const config = {};
   for (const field of spec.fields.filter(f => !f.secret)) {
     let value = input.config?.[field.key] ?? field.default ?? '';
-    if (field.type === 'list') {
+    if (field.type === 'telegram-users') {
+      value = telegramUsers(input.config);
+      config.allowedUsers = value.map(user => user.id);
+    } else if (field.type === 'list') {
       value = [...new Set((Array.isArray(value) ? value : text(value).split(/[\s,;]+/)).map(text).filter(Boolean))];
       if (value.length > 200 || value.some(v => !/^\+?\d{1,22}$/.test(v))) throw Error(`${field.label}: gültige IDs oder Rufnummern erforderlich.`);
       if (spec.id.startsWith('whatsapp')) value = value.map(v => v.replace(/^\+/, ''));

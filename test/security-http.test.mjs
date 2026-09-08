@@ -13,11 +13,6 @@ test('actual order HTTP routes protect data and downloads; legitimate synthetic 
   for (const dir of ['backend','frontend','soul','brain','skills','data/artifacts/run-test']) await mkdir(path.join(root,dir), {recursive:true});
   for (const name of ['server','security','artifacts','store','bootstrap','company-base','worker-context','hero-client','whatsapp-bridge'])
     await copyFile(new URL(`../backend/${name}.mjs`, import.meta.url),path.join(root,'backend',`${name}.mjs`));
-  await mkdir(path.join(root, 'wrapper'));
-  for (const name of ['isolation', 'identity-preferences'])
-    await copyFile(new URL(`../wrapper/${name}.mjs`, import.meta.url), path.join(root, 'wrapper', `${name}.mjs`));
-  await mkdir(path.join(root, 'workspaces/default/soul'), {recursive:true});
-  await writeFile(path.join(root, 'workspaces/default/soul/IDENTITY.md'), 'Anzeigename: Synthetic');
   await cp(new URL('../system', import.meta.url), path.join(root, 'system'), {recursive:true});
   await cp(new URL('../firmenbasis', import.meta.url), path.join(root, 'firmenbasis'), {recursive:true});
   await symlink(new URL('../node_modules',import.meta.url).pathname,path.join(root,'node_modules'));

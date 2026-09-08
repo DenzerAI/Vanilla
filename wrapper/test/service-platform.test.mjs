@@ -192,3 +192,25 @@ test('stopping Telegram during a media download prevents a late worker dispatch'
   await f.runtime.start(c.id);await started;await f.runtime.stop(c.id);releaseDownload([]);
   await new Promise(resolve=>setImmediate(resolve));assert.equal(f.calls.length,0);
 });
+
+
+test('Telegram names persist, legacy IDs migrate and only the canonical list grants access',async t=>{
+  const f=await fixture(t);
+  const c=await connection(f,'telegram',{users:[{id:'123',name:'Alex'},{id:'456',name:'Sam'}],allowedUsers:['999']});
+  assert.deepEqual(c.config.allowedUsers,['123','456']);
+  const disk=JSON.parse(await readFile(path.join(f.store.dataRoot,'state.json'),'utf8'));
+  assert.deepEqual(disk.connections.find(item=>item.id===c.id).config.users,c.config.users);
+  assert.equal(await f.runtime.accept(c.id,{sender:'999',chatId:'999',messageId:'blocked',text:'Alex'}),null);
+  const accepted=await f.runtime.accept(c.id,{sender:'123',chatId:'123',messageId:'allowed',text:'Frage zum Arbeitsbereich'});
+  assert.equal(f.calls[0].connection.worker,'hermes');
+  assert.equal(f.calls[0].connection.projectId,'default');
+  await f.runtime.complete(accepted.threadId,{id:accepted.turnId,status:'completed'},'Antwort');
+  const removed=await f.services.save({...c,config:{...c.config,users:[]}});
+  assert.deepEqual(removed.config.allowedUsers,[]);
+  assert.equal(await f.runtime.accept(c.id,{sender:'123',chatId:'123',messageId:'revoked',text:'Noch einmal'}),null);
+  const legacy=await connection(f,'telegram',{allowedUsers:'123\n456'});
+  assert.deepEqual(legacy.config.users,[{id:'123',name:''},{id:'456',name:''}]);
+  for(const users of [[{id:'123',name:'A'},{id:'123',name:'B'}],[{id:'-123',name:'A'}],[{id:'4503599627370496',name:'A'}],[{id:'123',name:'x'.repeat(101)}]])
+    await assert.rejects(connection(f,'telegram',{users}));
+  assert.equal(f.calls.length,1);
+});

@@ -52,9 +52,21 @@ Arbeitsbereich und Worker gehören bei Nachrichtenanschlüssen in denselben Dial
 
 Lokal gespeicherte Verbindungen warten nicht auf MCP-Werkzeugabfragen. Der Server liefert den letzten bekannten Werkzeugstand je Worker und aktualisiert ihn im Hintergrund. Ein Fehler löscht diesen Stand nicht. Die Oberfläche hält Einträge während einer Aktualisierung sichtbar, bündelt gleichzeitige Abfragen und nutzt beim erneuten Öffnen einen kurzen Sitzungscache. Der erste Abruf besitzt einen Ladezustand; Fehler bieten erneutes Laden. Werkzeuge werden nur während laufender Ermittlung nachgeladen. Gespeichert/Empfang aktiv bleiben getrennte Zustände. Geheimnisse werden nicht im Browsercache gespeichert.
 
-## Ladeformen
+## Telegram-Nutzerfreigabe
 
-Fehlen beim ersten Abruf eingerichtete Einträge, zeigt dieser Listenbereich
-den gemeinsamen List-Skeleton. Der lokal verfügbare Dienstekatalog und
-bereits geladene Verbindungen bleiben bedienbar. Fehler ersetzen den
-Platzhalter und behalten „Erneut laden“.
+Telegram verwendet `TelegramUsers` im bestehenden Verbindungsdialog: jede Person
+hat eine Zeile mit optionalem Anzeigenamen, erforderlicher positiver Telegram-ID
+und beschriftetem Entfernen-Button. Hinzufügen bleibt unter der Liste. Leere Liste
+bedeutet kein Zugang; doppelte IDs sind Fehler. Alte reine ID-Listen werden beim
+Bearbeiten übernommen. Der Server leitet die Freigabeliste ausschließlich aus den
+validierten Zeilen ab. Namen erteilen keine Rechte und gelangen nicht in Prompts.
+Bei aktivem Empfang bleiben Änderungen gesperrt; Hinzufügen/Entfernen markiert den
+Dialog als ungespeichert und sperrt Prüfen/Starten bis zum Speichern.
+
+„Systemstandard verwenden“ nennt einen fest eingestellten Standard beim Namen.
+Eine feste Workerwahl bleibt möglich. Der ausgewählte Arbeitsbereich bestimmt den
+Kontext für neue Kanalgespräche. Bestehende Sessions wechseln ihren Worker nicht.
+Der Telegram-Dialog blendet den Scrollbalken aus, bleibt aber vertikal scrollbar.
+Bei schmaler Breite stehen Name und ID untereinander. Die Bausteinreferenz enthält
+dieselbe Nutzerliste. Gateway-Zuständigkeit und Wissensgrenzen führt
+[../../docs/TELEGRAM.md](../../docs/TELEGRAM.md).
