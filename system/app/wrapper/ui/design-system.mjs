@@ -134,7 +134,7 @@ export const typography = [
 export const spacing = [2, 4, 8, 12, 16, 20, 24, 28, 32, 40, 48, 64];
 export const radii = { small: 4, control: 8, button: 6, panel: 12, large: 24, pill: 999 };
 export const amountSliderGeometry = { cell: 6, gap: 1, thumb: 24 };
-export const amountSliderMotion = { magnet: .08, baseSpeed: .3, extraSpeed: 3.2, tail: .6, hint: .15 };
+export const amountSliderMotion = { magnet: .08, baseSpeed: .3, extraSpeed: 3.2, tail: .6, hint: .15, ultraSpeed: 3.5, ultraTail: .35, ultraIntensity: .6, ultraFalloff: .7 };
 export const controls = { "slider-thumb-width": `${amountSliderGeometry.thumb}px`, "turn-loader-slot": "19.2px", "composer-fallback":"112px", "nav-text-inset":"38px", "nav-group-inset":"46px", height: "32px", target: "40px", touch: "44px", "heading-height": "52px", "app-heading-height": "84px", "row-height": "48px", "switch-width": "36px", "switch-height": "20px", "switch-thumb": "16px", "switch-travel": "16px" };
 export const typeMetrics = { "font-root-size": "16px", "tracking-title": "-0.65px", "tracking-heading": "-0.35px", "tracking-welcome": "-0.7px" };
 export const weights = { regular: 400, medium: 500, semibold: 600, bold: 700 };
@@ -167,7 +167,8 @@ export const themes = {
     "popover-glass": "#302e2b66",
     "popover-glass-sheen": "linear-gradient(135deg, #ffffff12, #ffffff00 45%, #ffffff06)",
     "popover-glass-shadow": "inset 0 0 0 1px #ffffff14, inset 0 1px 0 #ffffff26, 0 8px 24px #00000024",
-    "slider-glass": "#f3f1ed38",
+    "slider-glass": "#dedbd47a",
+    "slider-ultra-accent": "#ed986f",
     "slider-glass-shadow": "inset 0 0 0 1px #ffffff66, inset 0 1px 0 #ffffffa3, 0 2px 6px #00000033",
     "notice-glass": "#302e2b66",
     "suggestion-glass": "#302e2b52",
@@ -243,7 +244,8 @@ export const themes = {
     "popover-glass": "#f5f3ee99",
     "popover-glass-sheen": "linear-gradient(135deg, #ffffff4d, #ffffff00 45%, #ffffff26)",
     "popover-glass-shadow": "inset 0 0 0 1px #0000000f, inset 0 1px 0 #ffffffb3, 0 8px 24px #00000014",
-    "slider-glass": "#ffffffb3",
+    "slider-glass": "#ffffffd1",
+    "slider-ultra-accent": "#b34f2b",
     "slider-glass-shadow": "inset 0 0 0 1px #00000026, inset 0 1px 0 #ffffffcc, 0 2px 6px #0000001f",
     "notice-glass": "#f5f3ee80",
     "suggestion-glass": "#f5f3ee66",

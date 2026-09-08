@@ -14,16 +14,17 @@ function hash(x: number, y: number) {
 // Adapted from the supplied AmountSlider: one native option per magnetic stop.
 // No monetary readout. Keyboard, touch and pointer share Radix's commit path.
 export function AmountSlider({ value, onValueChange, onValueCommit, min = 0, max = 100,
-  stops, className, label, valueText, reduceMotion = false, disabled = false, unset = false,
+  stops, className, label, valueText, reduceMotion = false, disabled = false, unset = false, boost = 0,
 }: {
   value: number; onValueChange: (value: number) => void; onValueCommit: (value: number) => void;
   min?: number; max?: number; stops?: number[]; className?: string;
-  label: string; valueText: string; reduceMotion?: boolean; disabled?: boolean; unset?: boolean;
+  label: string; valueText: string; reduceMotion?: boolean; disabled?: boolean; unset?: boolean; boost?: number;
 }) {
   const [dragging, setDragging] = React.useState(false);
   const canvasRef = React.useRef<HTMLCanvasElement>(null), trackRef = React.useRef<HTMLSpanElement>(null);
   const repaint = React.useRef<(() => void) | null>(null);
   const fraction = Math.min(Math.max((value - min) / (max - min || 1), 0), 1);
+  const boostRef = React.useRef(boost); boostRef.current = boost;
   const fractionRef = React.useRef(fraction); fractionRef.current = fraction;
   const [systemReduce, setSystemReduce] = React.useState(() => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
   React.useEffect(() => {
@@ -44,12 +45,12 @@ export function AmountSlider({ value, onValueChange, onValueCommit, min = 0, max
     let accent = getComputedStyle(track).color;
     const paint = (now: number) => {
       const dt = running ? Math.min((now - last) / 1000, .05) : 0; last = now;
-      const fill = fractionRef.current;
-      phase += dt * (amountSliderMotion.baseSpeed + fill * amountSliderMotion.extraSpeed);
+      const fill = fractionRef.current, emphasis = boostRef.current;
+      phase += dt * (amountSliderMotion.baseSpeed + fill * amountSliderMotion.extraSpeed + emphasis * amountSliderMotion.ultraSpeed);
       hintPhase += dt;
       ctx.clearRect(0, 0, width, height);
       const fillPx = THUMB / 2 + fill * (width - THUMB);
-      const bandPx = fill * amountSliderMotion.tail * width;
+      const bandPx = fill * (amountSliderMotion.tail + emphasis * amountSliderMotion.ultraTail) * width;
       const hintStrength = amountSliderMotion.hint * (1 - fill);
       ctx.fillStyle = accent;
       for (let x = 0; x < Math.ceil(width / CELL); x++) {
@@ -59,7 +60,7 @@ export function AmountSlider({ value, onValueChange, onValueCommit, min = 0, max
           if (bandPx <= .5) continue;
           const band = 1 - (fillPx - px) / bandPx;
           if (band <= 0) continue;
-          base = band * band;
+          base = Math.pow(band, 2 - emphasis * amountSliderMotion.ultraFalloff) * (1 + emphasis * amountSliderMotion.ultraIntensity);
         } else {
           const along = (px - fillPx) / Math.max(1, width - fillPx);
           base = hintStrength * Math.sin(along * Math.PI) * (.5 + .5 * Math.sin(px / width * 5 - hintPhase * 4.5));
@@ -95,6 +96,7 @@ export function AmountSlider({ value, onValueChange, onValueCommit, min = 0, max
     const io = new IntersectionObserver(entries => { visible = entries[0]?.isIntersecting ?? false; sync(); }); io.observe(track);
     const theme = new MutationObserver(() => { accent = getComputedStyle(track).color; paint(performance.now()); });
     theme.observe(document.documentElement, {attributes: true, attributeFilter: ["class", "style", "data-theme"]});
+    theme.observe(track, {attributes:true, attributeFilter:["style"]});
     document.addEventListener("visibilitychange", sync);
     return () => { running = false; cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); theme.disconnect(); document.removeEventListener("visibilitychange", sync); repaint.current = null; };
   }, [reduce, disabled, unset]);
@@ -118,7 +120,7 @@ export function AmountSlider({ value, onValueChange, onValueCommit, min = 0, max
       const next = sorted[event.key === "Home" ? 0 : event.key === "End" ? sorted.length - 1 : Math.max(0, Math.min(sorted.length - 1, i + (delta || (event.key === "PageUp" ? 1 : -1))))];
       onValueChange(next); onValueCommit(next);
     }}>
-    <SliderPrimitive.Track ref={trackRef} className="amount-slider-track">
+    <SliderPrimitive.Track ref={trackRef} className="amount-slider-track" style={{color:`color-mix(in srgb, var(--brand-accent), var(--slider-ultra-accent) ${boost * 100}%)`}}>
       <canvas ref={canvasRef} aria-hidden="true"/>
       {sorted.map(stop => <span className="amount-slider-tick" key={stop} aria-hidden="true" data-passed={!unset && stop <= value}
         style={{left: `calc(${(stop - min) / (max - min || 1)} * (100% - ${THUMB}px) + ${THUMB / 2}px)`}}/>)}
@@ -148,7 +150,7 @@ export function ReasoningSlider({ options, value, onChange, disabled = false, re
   return <div className="reasoning-slider" onPointerCancel={() => setPreview(null)} onKeyDown={event => { if (event.key === "Escape") setPreview(null); }}>
     <div className="reasoning-slider-heading"><span>Denkaufwand</span>{reset && !automatic && <button className="reasoning-reset" type="button" disabled={disabled} title="Auf native Voreinstellung zurücksetzen" onClick={() => void onChange(reset.value)}>{reset.label}</button>}<output aria-live="off" title={current.description}><span key={current.value}>{current.label}</span></output></div>
     {levels.length > 1 && <>
-      <AmountSlider min={0} max={levels.length - 1} stops={levels.map((_, i) => i)} value={index} unset={automatic} label="Denkaufwand" valueText={current.label}
+      <AmountSlider min={0} max={levels.length - 1} stops={levels.map((_, i) => i)} value={index} unset={automatic} boost={!automatic && levels.some(option => option.value === "ultra") ? Math.max(0, Math.min(1, index - levels.findIndex(option => option.value === "ultra") + 1)) : 0} label="Denkaufwand" valueText={current.label}
         disabled={disabled} reduceMotion={reduceMotion} onValueChange={setPreview} onValueCommit={next => void commit(next)}/>
     </>}
   </div>;

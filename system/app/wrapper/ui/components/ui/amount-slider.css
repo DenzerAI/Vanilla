@@ -3,11 +3,11 @@
 .reasoning-slider-heading output > span { display: inline-block; animation: reasoning-label-in var(--motion-feedback-duration) ease-out; }
 @keyframes reasoning-label-in { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
 .amount-slider { position: relative; display: flex; align-items: center; width: 100%; height: var(--control-touch); touch-action: none; user-select: none; }
-.amount-slider-track { position: relative; width: 100%; height: var(--control-height); overflow: hidden; border-radius: var(--radius-control); background: var(--hover); color: var(--brand-accent); }
+.amount-slider-track { position: relative; width: 100%; height: var(--control-height); overflow: hidden; border-radius: var(--radius-pill); background: var(--hover); color: var(--brand-accent); }
 .amount-slider canvas { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
 .amount-slider-tick { position: absolute; top: 50%; width: 4px; height: 4px; transform: translate(-50%, -50%); border-radius: var(--radius-pill); background: var(--muted); pointer-events: none; }
-.amount-slider-tick[data-passed="true"] { background: var(--brand-accent); }
-.amount-slider-thumb { display: block; width: var(--control-slider-thumb-width); height: var(--control-target); border-radius: var(--radius-control); background: var(--slider-glass); box-shadow: var(--slider-glass-shadow); backdrop-filter: blur(4px) saturate(180%); -webkit-backdrop-filter: blur(4px) saturate(180%); cursor: grab; transition: transform var(--motion-feedback-duration) ease; }
+.amount-slider-tick[data-passed="true"] { opacity: 0; }
+.amount-slider-thumb { display: block; width: var(--control-slider-thumb-width); height: var(--control-target); border-radius: var(--radius-pill); background: var(--slider-glass); box-shadow: var(--slider-glass-shadow); backdrop-filter: blur(16px) saturate(140%); -webkit-backdrop-filter: blur(16px) saturate(140%); cursor: grab; transition: transform var(--motion-feedback-duration) ease; }
 .amount-slider-thumb:active { cursor: grabbing; transform: scale(1.06); }
 .amount-slider-thumb:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
 .amount-slider[data-disabled] { opacity: .5; }
