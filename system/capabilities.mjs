@@ -21,6 +21,7 @@ export const capabilities = {
     {id:'operations', sources:['core/operations.py','core/service.py','core/backups.py','core/restore.py','core/secrets.py'], contract:'docs/OPERATIONS.md'},
   ],
   actions: [
+    {id:'chat.model.select', surface:'composer model popover', component:'wrapper/ui/model-picker.jsx', sources:['wrapper/worker-models.mjs','system/worker-catalog.mjs'], api:{activate:'POST /api/workers/activate', create:'POST /api/chats', configure:'POST /api/worker-session', status:'GET /api/workers'}, behavior:'Explicit Codex/Claude Code selection; native CLI/OAuth auth; no worker restart; GPT-5.6/6 UI filter; exact advertised effort values; confirmed ACP configs; provider switch starts a new chat and preserves history'},
     {id:'inbox.preview', surface:'sidebar above jobs; inbox replaces sidebar with conversation list and back action', component:'wrapper/ui/inbox.tsx', selector:'[data-capability="inbox.preview"]', api:null, behavior:'Local fictional examples only; no connector calls, persistent drafts, agent work or sending. Concept: docs/INBOX.md'},
     {id:'chat.message.edit', surface:'user message actions', component:'wrapper/ui/app.jsx#Item', behavior:'Edit and branch via existing confirmation flow'},
     {id:'chat.message.delete', surface:'user message actions', component:'wrapper/ui/app.jsx#Item', behavior:'Direct delete button opens existing confirmation; disabled during active turn'},

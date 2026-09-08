@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import { EventEmitter, once } from "node:events";
 import { mkdtemp, rm, writeFile, mkdir, readFile } from "node:fs/promises";
 import path from "node:path";
-import { Workers, findWorkerCommand } from "../workers.mjs";
+import { Workers, findWorkerCommand, installWorkerRoutes } from "../workers.mjs";
 import { ACPWorker } from "../acp-worker.mjs";
 import { Storage } from "../storage.mjs";
 import { workerCatalog } from "../../system/worker-catalog.mjs";
@@ -154,7 +154,7 @@ function completion(adapter) { return new Promise(resolve => { const cb = msg =>
 test("real stdio ACP lifecycle streams tools and answers, exports only the user message and resumes", async t => {
   const {adapter, create, store} = await acpFixture(t), events=[]; adapter.on("notification", msg=>events.push(msg));
   const {thread} = await adapter.call("thread/start", {cwd:store.root});
-  assert.equal(adapter.connected,true); assert.equal(adapter.models(thread)[0].model,"fixture-model");
+  assert.equal(adapter.connected,true); assert.deepEqual(adapter.models(thread),[]); // Explicit configOptions supersede legacy models.
   const done=completion(adapter); await adapter.call("turn/start", {threadId:thread.id,...input("Testauftrag")});
   assert.equal((await done).status,"completed");
   assert.ok(events.some(e=>e.method==='item/agentMessage/delta'));
@@ -290,4 +290,18 @@ test("Auto tries configured workers in stable order, reserves explicit backup an
   assert.equal(adapters.get('hermes').calls.length,0);
   const reloaded = new Workers({store,root:store.root,codex:new Adapter()}); await reloaded.init();
   assert.equal(reloaded.settings.defaultWorker,'auto'); assert.deepEqual(reloaded.routingOrder(),workers.routingOrder());
+});
+
+
+test("picker activation reuses a connected worker without restart or preference changes", async t => {
+  const {store}=await fixture(t), adapter=new Adapter(); let stops=0;
+  adapter.stop=()=>{stops++;};
+  adapter.call=async method => method === "model/list" ? {data:[{model:"gpt-6-astra"}]} : {};
+  const workers=new Workers({store,root:store.root,codex:adapter,resolveCommand:async()=>process.execPath});
+  await workers.init(); await workers.connect("codex");
+  const settings=structuredClone(workers.settings), routes=new Map();
+  installWorkerRoutes({route:(method,url,handler)=>routes.set(url,handler),workers,active:new Map([["active-chat","turn"]]),store});
+  const result=await routes.get("/api/workers/activate")({id:"codex"});
+  assert.equal(stops,0); assert.equal(result.models[0].model,"gpt-6-astra");
+  assert.deepEqual(workers.settings,settings);
 });

@@ -80,14 +80,20 @@ test('adoption gate rejects a different working copy instead of approving the st
  const {spawnSync}=await import('node:child_process');
  const {fileURLToPath}=await import('node:url');
  const root=await mkdtemp(path.join(os.tmpdir(),'design-adoption-'));
+ // Hooks export repository variables; the fixture must never use the caller's index.
+ const env={...process.env};
+ const localEnv=spawnSync('git',['rev-parse','--local-env-vars'],{encoding:'utf8'});
+ assert.equal(localEnv.status,0);
+ for(const key of localEnv.stdout.trim().split('\n'))delete env[key];
+ const options={cwd:root,env,encoding:'utf8'};
  try{
   await mkdir(path.join(root,'wrapper/ui'),{recursive:true});
-  spawnSync('git',['init','-q'],{cwd:root});
+  assert.equal(spawnSync('git',['init','-q'],options).status,0);
   const file=path.join(root,'wrapper/ui/new.css');await writeFile(file,'.a{padding:0}');
-  assert.equal(spawnSync('git',['add','.'],{cwd:root}).status,0);
+  assert.equal(spawnSync('git',['add','.'],options).status,0);
   await writeFile(file,'.a{padding:13px}');
   const script=fileURLToPath(new URL('../../scripts/verify-design-adoption.mjs',import.meta.url));
-  const result=spawnSync(process.execPath,[script,'commit'],{cwd:root,encoding:'utf8'});
+  const result=spawnSync(process.execPath,[script,'commit'],options);
   assert.notEqual(result.status,0);assert.match(result.stderr,/staged and working UI differ/);
  }finally{await rm(root,{recursive:true,force:true});}
 });

@@ -128,6 +128,7 @@ import { Dictation } from "./dictation.jsx";
 import { VoiceSettings, AudioConnectionForm } from "./voice-settings.jsx";
 import { SettingRow } from "./settings-row.jsx";
 import { ModelPicker } from "./model-picker.jsx";
+import { effortConfig, modelConfig, preferredModel, sessionModelSelection, supportedEffort } from "../worker-models.mjs";
 import { WorkerSessionControls } from "./worker-session-controls";
 import { groupSkills } from "./skill-categories.mjs";
 import { FilterPicker } from "./filter-picker.jsx";
@@ -624,6 +625,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     [text, setText] = useState(""),
     [attachments, setAttachments] = useState([]),
     [model, setModel] = useState(""),
+    [draftWorker, setDraftWorker] = useState("auto"),
     [effort, setEffort] = useState("medium"),
     [mode, setMode] = useState("default"),
     [projectId, setProjectId] = useState(initialProject),
@@ -734,6 +736,11 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const current = chats.find((c) => c.id === chatId),
     running = !!active[chatId],
     project = boot?.projects?.find((p) => p.id === projectId);
+  const pickerWorker = current?.workerId || (draftWorker === "auto" ? boot?.effectiveWorker || "codex" : draftWorker);
+  const nativeSelection = thread?.workerSession ? sessionModelSelection(thread.workerSession) : null;
+  const pickerModels = nativeSelection?.models || boot?.modelsByWorker?.[pickerWorker] || current?.models || [];
+  const pickerModel = nativeSelection ? nativeSelection.model : model;
+  const pickerEffort = nativeSelection ? nativeSelection.effort : supportedEffort(pickerModels.find(m => m.model === model), effort);
   const toastTimer = useRef(null);
   const notify = useCallback((msg) => {
     if (embedded) {
@@ -798,13 +805,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     setActive(b.active);
     setRequests(b.requests);
     setConnectionState(b.engine.connected ? "online" : "offline");
-    setModel(
-      (m) =>
-        m ||
-        b.models.find((m) => m.isDefault)?.model ||
-        b.models[0]?.model ||
-        "",
-    );
+    setModel(m => m || preferredModel(b.models, b.effectiveWorker || "codex")?.model || "");
     document.documentElement.dataset.theme = b.settings.theme;
     return b;
   }
@@ -1140,6 +1141,10 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     setView("chat");
     setChatId(null);
     setThread(null);
+    const nextWorker = draftWorker === "auto" ? boot.effectiveWorker || "codex" : draftWorker;
+    const nextModel = preferredModel(boot.modelsByWorker?.[nextWorker] || [], nextWorker);
+    setModel(nextModel?.model || "");
+    setEffort(supportedEffort(nextModel));
     const saved = draftCache.current.get(`new:${id}`);
     setText(saved?.text || "");
     setAttachments(saved?.attachments || []);
@@ -1210,6 +1215,60 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     const timer=setTimeout(()=>void refreshConnections(true),2000);
     return ()=>clearTimeout(timer);
   },[view,integrations]);
+  async function refreshPickerWorkers() {
+    try {
+      const state = await api("/workers");
+      setBoot(old => ({...old, workers: state.workers}));
+    } catch (error) { notify(error.message); }
+  }
+  async function chooseProvider(workerId) {
+    if (busy || running) throw new Error("Bitte die laufende Arbeit abwarten.");
+    setBusy(true);
+    const sourceChat = chatRef.current, sourceProject = projectRef.current;
+    try {
+      const state = await api("/workers/activate", {id: workerId});
+      setBoot(old => ({...old, workers: state.workers, modelsByWorker: {...old.modelsByWorker, [workerId]: state.models}}));
+      if (chatRef.current !== sourceChat || projectRef.current !== sourceProject) return;
+      const worker = state.workers.find(w => w.id === workerId);
+      const nextModel = preferredModel(state.models, workerId, workerId === pickerWorker ? model : "");
+      if (worker.adapter === "codex" && !nextModel) throw new Error("Codex meldet noch keine Modelle der 5.6- oder 6er-Serie. Bitte die CLI-Anmeldung prüfen.");
+      // ACP negotiates its exact model/effort options when the empty session is opened.
+      const result = worker.adapter === "acp" ? await api("/chats", {worker: workerId, mode: "default", projectId: sourceProject, title: !sourceChat ? draftTitle || undefined : undefined}) : null;
+      if (chatRef.current !== sourceChat || projectRef.current !== sourceProject) return;
+      saveDraft();
+      setDraftWorker(workerId); setMode(worker.capabilities.plan ? mode : "default");
+      if (result) {
+        chatRef.current = result.thread.id; setChatId(result.thread.id); setThread(result.thread);
+        const selection = sessionModelSelection(result.thread.workerSession);
+        setModel(selection.model); setEffort(selection.effort);
+        setChats(old => [result.meta, ...old.filter(c => c.id !== result.meta.id)]);
+      } else {
+        chatRef.current = null; setChatId(null); setThread(null);
+        setModel(nextModel.model); setEffort(supportedEffort(nextModel));
+      }
+      if (sourceChat) setDraftTitle("");
+      followScroll.current = true;
+    } finally { setBusy(false); }
+  }
+  async function changePickerSelection(nextModel, nextEffort) {
+    if (busy || running) throw new Error("Bitte die laufende Arbeit abwarten.");
+    if (!thread?.workerSession) { setModel(nextModel); setEffort(nextEffort); return; }
+    const id = chatId, session = thread.workerSession;
+    const option = nextModel !== pickerModel ? modelConfig(session) : effortConfig(session);
+    const change = nextModel !== pickerModel
+      ? option ? {configId: option.id, value: nextModel} : {modelId: nextModel}
+      : option ? {configId: option.id, value: nextEffort} : null;
+    if (!change) return;
+    setBusy(true);
+    try {
+      const result = await api("/worker-session", {id, ...change});
+      if (chatRef.current !== id) return;
+      const selection = sessionModelSelection(result.thread.workerSession);
+      setThread(old => old ? {...old, workerSession: result.thread.workerSession} : old);
+      setModel(selection.model); setEffort(selection.effort);
+      setChats(old => old.map(c => c.id === id ? {...c, model: selection.model, models: selection.models, effort: selection.effort} : c));
+    } finally { setBusy(false); }
+  }
   async function submit(e, voiceText) {
     e?.preventDefault();
     if ((!(voiceText ?? text).trim() && !attachments.length) || busy) { if (voiceText) throw new Error("Chat ist beschäftigt."); return; }
@@ -1218,13 +1277,14 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     const originalText = text,
       originalAttachments = attachments;
     try {
-      let id = chatId, selectedModel = model;
+      let id = chatId, selectedModel = pickerModel;
       const msg = voiceText ?? text,
         files = voiceText ? [] : attachments;
       followScroll.current = true;
       if (!id) {
         const r = await api("/chats", {
           model,
+          worker: draftWorker,
           mode,
           projectId: projectRef.current,
           title: draftTitle || undefined,
@@ -1268,7 +1328,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         text: msg,
         attachments: files,
         model: selectedModel,
-        effort,
+        effort: pickerEffort || undefined,
         mode,
       });
       return { id };
@@ -2011,22 +2071,20 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                         selected={mode}
                         items={[
                           { id: "default", label: "Ausführen", icon: icon(Play, 16), action: () => setMode("default") },
-                          { id: "plan", label: "Planen", icon: icon(SquarePen, 16), disabled: current ? current.capabilities?.plan === false : boot.planAvailable === false, action: () => setMode("plan") },
+                          { id: "plan", label: "Planen", icon: icon(SquarePen, 16), disabled: current ? current.capabilities?.plan === false : draftWorker !== "auto" ? boot.workers?.find(w => w.id === draftWorker)?.capabilities?.plan === false : boot.planAvailable === false, action: () => setMode("plan") },
                         ]}
                       >
                         <span>{mode === "plan" ? "Planen" : "Ausführen"}</span>
                         {icon(ChevronDown, 14)}
                       </ChatMenu>
-                      {thread?.workerSession?.configOptions === undefined && <ModelPicker
-                        models={thread?.workerSession?.models ? thread.workerSession.models.availableModels.map(m => ({model:m.modelId,displayName:m.name || m.modelId,supportedReasoningEfforts:[]})) : current?.models?.length ? current.models : boot.modelsByWorker?.[current?.workerId || boot.effectiveWorker || "codex"] || []}
-                        model={model}
-                        effort={effort}
+                      <ModelPicker
+                        models={pickerModels} model={pickerModel} effort={pickerEffort}
+                        workerId={pickerWorker} workers={boot.workers || []}
+                        hasConversation={!!chatId} disabled={running || busy}
+                        onProviderChange={chooseProvider} onRefresh={refreshPickerWorkers}
                         context={current?.fallbackFrom ? `${workerName(current.workerId)} übernimmt als Vertretung für ${workerName(current.fallbackFrom)}.` : undefined}
-                        onChange={(nextModel, nextEffort) => {
-                          setModel(nextModel);
-                          setEffort(nextEffort);
-                        }}
-                      />}
+                        onChange={changePickerSelection}
+                      />
                       {thread?.workerSession && <WorkerSessionControls
                         session={thread.workerSession}
                         disabled={running || busy}

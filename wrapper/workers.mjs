@@ -148,7 +148,7 @@ export class Workers extends EventEmitter {
     const workers = await Promise.all(this.catalog.map(async entry => {
       const adapter = this.adapters.get(entry.id), command = await this.resolveCommand(entry);
       const configured = this.settings.enabled.includes(entry.id), connected = !!adapter?.connected;
-      return { ...entry, installed: !!command, configured, connected, status: connected ? "Verbunden" : this.errors.has(entry.id) ? "Nicht erreichbar" : !command ? (entry.command ? "Nicht installiert" : "Anschluss vorbereiten") : configured ? "Noch nicht geprüft" : "Bereit zum Verbinden", error: this.errors.get(entry.id) || null, version: adapter?.info?.userAgent || null, nativeCapabilities: adapter?.info?.agentCapabilities || null, capabilitySource: entry.adapter === "acp" ? (connected ? "ACP initialize + Wrapper-Unterstützung" : "Noch nicht ausgehandelt") : "Wrapper-Unterstützung; keine native Fähigkeitsliste", capabilities: this.capability(entry.id) };
+      return { ...entry, installed: !!command, configured, connected, authenticated: adapter?.authenticated ?? null, status: connected ? adapter?.authenticated === false ? "Anmeldung fehlt" : "Verbunden" : this.errors.has(entry.id) ? "Nicht erreichbar" : !command ? (entry.command ? "Nicht installiert" : "Anschluss vorbereiten") : configured ? "Noch nicht geprüft" : "Bereit zum Verbinden", error: this.errors.get(entry.id) || null, version: adapter?.info?.userAgent || null, nativeCapabilities: adapter?.info?.agentCapabilities || null, capabilitySource: entry.adapter === "acp" ? (connected ? "ACP initialize + Wrapper-Unterstützung" : "Noch nicht ausgehandelt") : "Wrapper-Unterstützung; keine native Fähigkeitsliste", capabilities: this.capability(entry.id) };
     }));
     return { workers, settings: this.settings, routingOrder: this.routingOrder(), effectiveWorker: this.effectiveWorker, paths: { company: companyRoot(this.root), system: systemRoot(), workspace: this.store.root } };
   }
@@ -186,6 +186,12 @@ export class Workers extends EventEmitter {
 
 export function installWorkerRoutes({ route, workers, active, store }) {
   route("GET", "/api/workers", () => workers.status());
+  // Explicit picker action: reuse native CLI/OAuth authentication and an existing
+  // connection, including while other chats are running. Never restart a worker.
+  route("POST", "/api/workers/activate", async b => {
+    const state = await workers.connect(b.id);
+    return { ...state, models: (await workers.modelLists())[b.id] || [] };
+  });
   route("POST", "/api/workers/preferences", b => workers.preferences(b));
   route("POST", "/api/workers/connect", async b => {
     if ([...active.keys()].some(id => workers.owner(id) === b.id)) throw new Error("Dieser Worker arbeitet noch. Bitte zuerst abschließen oder stoppen.");

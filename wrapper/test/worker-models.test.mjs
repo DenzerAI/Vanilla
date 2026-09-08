@@ -1,0 +1,31 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { visibleModels, preferredModel, supportedEffort, sessionModelSelection } from '../worker-models.mjs';
+
+test('Codex picker excludes older, hidden and lookalike models without affecting other providers', () => {
+  const models = ['gpt-5.5','gpt-5.4-mini','gpt-5.3-codex-spark','gpt-6-astra','gpt-5.6-sol','gpt-5.6-terra','gpt-5.6-luna','gpt-60','gpt-5.60'].map(model => ({model}));
+  models.push({model:'gpt-6-hidden',hidden:true});
+  assert.deepEqual(visibleModels(models).map(m=>m.model), ['gpt-6-astra','gpt-5.6-sol','gpt-5.6-terra','gpt-5.6-luna']);
+  assert.equal(preferredModel(models,'codex','gpt-5.5').model,'gpt-6-astra');
+  assert.equal(visibleModels([{model:'claude-native-model'}],'claw-code').length,1);
+});
+test('changing models cannot retain an unsupported effort or invent a default', () => {
+  const model = {defaultReasoningEffort:'medium',supportedReasoningEfforts:['low','medium','high','xhigh','max'].map(reasoningEffort=>({reasoningEffort}))};
+  assert.equal(supportedEffort(model,'ultra'),'medium');
+  assert.equal(supportedEffort(model,'max'),'max');
+  assert.equal(supportedEffort({supportedReasoningEfforts:[]},'high'),'');
+});
+test('ACP native names, grouped values and model-specific effort options are preserved exactly', () => {
+  const session = {models:{currentModelId:'stale',availableModels:[{modelId:'stale'}]},configOptions:[
+    {id:'native-model',category:'model',type:'select',currentValue:'opus',options:[{name:'Models',options:[{value:'opus',name:'Claude Opus'},{value:'haiku',name:'Claude Haiku'}]}]},
+    {id:'native-effort',category:'thought_level',type:'select',currentValue:'xhigh',options:[{value:'low',name:'Low'},{value:'xhigh',name:'Extra high'}]},
+  ]};
+  const result = sessionModelSelection(session);
+  assert.equal(result.model,'opus'); assert.equal(result.effort,'xhigh');
+  assert.deepEqual(result.models[0].supportedReasoningEfforts.map(e=>[e.reasoningEffort,e.displayName]),[['low','Low'],['xhigh','Extra high']]);
+  assert.deepEqual(result.models[1].supportedReasoningEfforts,[]);
+  session.configOptions=[];
+  assert.deepEqual(sessionModelSelection(session),{model:'',effort:'',models:[]});
+  delete session.configOptions;
+  assert.equal(sessionModelSelection(session).model,'stale');
+});

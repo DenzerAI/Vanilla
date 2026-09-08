@@ -1,3 +1,4 @@
+import { ModelPicker } from "./model-picker.jsx";
 import { InboxPatternPreview } from "./inbox";
 import { PanelLight } from "./panel-light";
 import {LibraryThumbnail} from './library-thumbnail.jsx';
@@ -18,6 +19,7 @@ import interLicense from "./assets/fonts/Inter-LICENSE.txt";
 import monoLicense from "./assets/fonts/IBMPlexMono-LICENSE.txt";
 
 export function DesignReference({ theme, tone, accent }) {
+  const [modelPreview, setModelPreview] = useState(["gpt-6-astra", "medium"]);
   const [preview, setPreview] = useState(false);
   const [section, setSection] = useState("components");
   const palette = resolveDesign(theme, tone, accent);
@@ -37,6 +39,11 @@ export function DesignReference({ theme, tone, accent }) {
       <h3 className="section-heading">Composer · Glasfläche</h3>
       <div className="composer pill-composer"><div className="composer-entry"><textarea aria-label="Nachricht · Designvorschau" placeholder="Nachricht" rows={1} readOnly/></div></div>
       <p className="page-note">Einzeilige Pille mit gedämpftem Platzhalter, transparenter Tönung, Hintergrundunschärfe und feiner innerer Glaskante. Mehrzeiliger Text erweitert die Schreibfläche; reduzierte Transparenz erhält einen deckenden Hintergrund.</p>
+      <h3 className="section-heading">Modellwahl · Anbieter und Denkaufwand</h3>
+      <ModelPicker model={modelPreview[0]} effort={modelPreview[1]} onChange={(model, effort) => setModelPreview([model, effort])}
+        models={[{model:"gpt-6-astra",displayName:"GPT-6 Astra",defaultReasoningEffort:"medium",supportedReasoningEfforts:["low","medium","high","xhigh","max","ultra"].map(reasoningEffort => ({reasoningEffort}))}]}
+        hasConversation onProviderChange={async () => { throw new Error("Lokale Designvorschau. Anbieter im Chat auswählen."); }}/>
+      <p className="page-note">Original-Icons, flache Zeilen und native Denkstufen auf transparenter Glasfläche. Die Beispieldaten bleiben lokal; im Chat liefert der Anbieter seine verfügbaren Werte.</p>
       <h3 className="section-heading">Inbox · Gesprächszeile</h3>
       <InboxPatternPreview/>
       <h3 className="section-heading">Flächenlicht</h3>

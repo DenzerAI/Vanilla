@@ -425,3 +425,9 @@ Erneut ausführen sendet die ursprüngliche Nachricht samt Anhängen als neuen T
 
 
 Skeletons übernehmen die produktiven Layoutklassen: integration-grid/-item für Verbindungen und Skills, library-entries-list/-grid und library-entry für Dateien, job-row/-info für Aufträge sowie SettingRow für Einstellungen. Die Suche teilt ihre Zeilengeometrie mit system-search-placeholder. Textformen reservieren echte Schriftzeilen (lh/em); Chatblasen, Absätze und Signatur folgen dem Gesprächslayout. Keine allgemeine Kartenhöhe über alle Bereiche. Layoutwechsel und mobile Spalten folgen denselben Regeln wie geladene Inhalte.
+
+## Modellwahl mit Anbieterbereichen
+
+Die gemeinsame `ModelPicker`-Komponente bietet kompakte anklickbare Codex- und Claude-Code-Bereiche mit vorhandenen Original-Markenassets aus `BrandIcon`. Eine höchstens 300 px breite, rand- und schattenlose `sheet-glass`-Fläche mit 40 px Blur und verstärkter Sättigung folgt dem flachen macOS-Stil. Gemeinsame Rundung, Schriftrollen und Abstände bleiben tokenbasiert. Modellzeilen haben 32 px Mindesthöhe; Denkstufen bilden eine schmale umbrechende Reihe ohne ungefüllte Kachelhintergründe. Nur die Auswahl ist neutral hervorgehoben. Touchziele haben mindestens 44 px. Kein zusätzlicher Fertig-Fuß.
+
+Originalstufen und Verfügbarkeit stammen aus dem jeweiligen nativen Anschluss, niemals aus einer anbieterübergreifenden Übersetzungstabelle. Laden, fehlende Anmeldung, Fehler und erneuter Versuch bleiben im Popover sichtbar. Reduzierte Transparenz und fehlende Blur-Unterstützung erhalten `glass` als deckende Fläche. Escape und Außenklick schließen; Fokus, Browserzoom und Bildschirmtastatur bleiben berücksichtigt. Aussehen → Unser Design zeigt denselben Baustein mit als Beispiel gekennzeichneten lokalen Daten. Ablauf und Anbieterwechsel führt `surfaces/chat.md`.

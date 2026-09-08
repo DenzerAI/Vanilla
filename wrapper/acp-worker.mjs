@@ -3,6 +3,7 @@ import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { WorkerRPC } from "./worker-rpc.mjs";
+import { sessionModelSelection } from "./worker-models.mjs";
 
 export class ACPWorker extends EventEmitter {
   constructor({ id, name, command, args, cwd, contextEnv, readThread, persist, rpc, mcpServers = () => [] }) {
@@ -19,7 +20,7 @@ export class ACPWorker extends EventEmitter {
     };
     this.rpc.on("message", msg => this.receive(msg));
     this.rpc.on("disconnected", error => {
-      this.connected = false; this.starting = null; this.sessions.clear(); this.earlyUpdates = [];
+      this.connected = false; this.starting = null; this.authenticated = undefined; this.sessions.clear(); this.earlyUpdates = [];
       for (const [id] of this.running) this.finish(id, "failed", { message: "Verbindung unterbrochen. Ergebnis prüfen, bevor du erneut startest." }).catch(() => {});
       this.requests.clear(); this.emit("disconnected", error);
     });
@@ -41,7 +42,17 @@ export class ACPWorker extends EventEmitter {
     return { chat: true, streaming: true, attachments: !!(this.info?.agentCapabilities?.promptCapabilities?.image || this.info?.agentCapabilities?.promptCapabilities?.audio), approvals: true, plan: false, steer: false, fork: false, archive: true, terminal: false, skills: false };
   }
   models(thread) {
-    return (thread?.workerSession?.models?.availableModels || []).map(m => ({ model: m.modelId, displayName: m.name || m.modelId, isDefault: m.modelId === thread.workerSession.models.currentModelId, supportedReasoningEfforts: [] }));
+    return sessionModelSelection(thread?.workerSession).models;
+  }
+  async checkAuthentication() {
+    if (this.authenticated === undefined && this.info?.agentCapabilities?._meta?.authStatus) {
+      await new Promise(resolve => {
+        const done = () => { clearTimeout(timer); this.off("authentication", done); resolve(); };
+        const timer = setTimeout(done, 5500);
+        this.once("authentication", done);
+      });
+    }
+    if (this.authenticated === false) throw new Error(`${this.name} ist nicht angemeldet. Bitte in der CLI anmelden und danach erneut versuchen.`);
   }
   async setup(method, params) {
     this.setupCount++;
@@ -75,10 +86,18 @@ export class ACPWorker extends EventEmitter {
       if (p.sandbox === "read-only") throw new Error(`${this.name} bietet hier keinen geschützten Planmodus.`);
       const session = await this.setup("session/new", { cwd: p.cwd, mcpServers: this.mcpServers(p.cwd) });
       if (!session?.sessionId) throw new Error("Worker hat keinen Chat angelegt. Anmeldung prüfen.");
+      // A CLI can advertise models while logged out. Use its reported auth state,
+      // without reading credentials or persisting account identity in the wrapper.
+      this.setupCount++;
+      try { await this.checkAuthentication(); }
+      catch (error) {
+        this.earlyUpdates = this.earlyUpdates.filter(m => m.params.sessionId !== session.sessionId);
+        throw error;
+      } finally { this.setupCount--; }
       const thread = { id: `${this.id}-${randomUUID()}`, workerId: this.id, cwd: p.cwd, turns: [], workerSession: session };
       this.threads.set(thread.id, thread); this.sessions.set(session.sessionId, thread.id); this.applyEarly(thread);
       await this.persist(thread);
-      return { thread: structuredClone(thread), model: session.models?.currentModelId || null };
+      return { thread: structuredClone(thread), model: sessionModelSelection(thread.workerSession).model || null };
     }
     const thread = p.threadId && await this.thread(p.threadId);
     if (method === "thread/resume") {
@@ -94,11 +113,15 @@ export class ACPWorker extends EventEmitter {
       }
       return { thread: structuredClone(thread) };
     }
-    if (method === "session/set_config_option" || method === "session/set_mode") {
+    if (["session/set_config_option", "session/set_mode", "session/set_model"].includes(method)) {
       if (this.running.has(thread.id)) throw new Error("Bitte die laufende Antwort abwarten oder stoppen.");
       if (!this.sessions.has(thread.workerSession.sessionId)) throw new Error("Sitzung zuerst fortsetzen.");
       const sessionId = thread.workerSession.sessionId;
-      if (method === "session/set_mode") {
+      if (method === "session/set_model") {
+        if (thread.workerSession.configOptions !== undefined || !this.models(thread).some(m => m.model === p.modelId)) throw new Error("Modell wird nicht angeboten.");
+        await this.rpc.call(method, { sessionId, modelId: p.modelId });
+        thread.workerSession.models.currentModelId = p.modelId;
+      } else if (method === "session/set_mode") {
         if (thread.workerSession.configOptions !== undefined || !thread.workerSession.modes?.availableModes?.some(m => m.id === p.modeId)) throw new Error("Sitzungsmodus wird nicht angeboten.");
         await this.rpc.call(method, { sessionId, modeId: p.modeId });
         thread.workerSession.modes.currentModeId = p.modeId;
@@ -159,6 +182,14 @@ export class ACPWorker extends EventEmitter {
   }
   event(method, threadId, params) { this.emit("notification", { method, params: { threadId, ...params } }); }
   receive(msg) {
+    if (msg.method === "_auth/status_update") {
+      const kind = msg.params?.authStatus?.kind;
+      if (["none", "account", "api_key", "external", "gateway"].includes(kind)) {
+        this.authenticated = kind !== "none";
+        this.emit("authentication", this.authenticated);
+      }
+      return;
+    }
     const id = this.sessions.get(msg.params?.sessionId), turn = this.running.get(id);
     if (msg.id !== undefined) {
       if (msg.method === "session/request_permission" && turn) {

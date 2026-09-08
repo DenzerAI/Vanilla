@@ -18,6 +18,7 @@ import { ChannelRuntime } from "./channel-runtime.mjs";
 import { Library, installLibraryRoutes } from "./library.mjs";
 import { SkillLibrary, installSkillRoutes } from "./skill-library.mjs";
 import { Workers, installWorkerRoutes, findWorkerCommand } from "./workers.mjs";
+import { sessionModelSelection } from "./worker-models.mjs";
 import { markReplyRead } from "./chat-read-state.mjs";
 import { readAgentProfile } from "./identity-profile.mjs";
 import { assignChatTitle } from "./chat-title.mjs";
@@ -422,6 +423,13 @@ async function sendTurnUnlocked(id, b) {
   c.mode = policy.mode;
   c.model = (workers.entry(workers.owner(id)).adapter === "codex" || c.models?.some(m => m.model === b.model)) ? b.model || c.model : c.model;
   c.effort = b.effort || c.effort || "medium";
+  if (workers.entry(workers.owner(id)).adapter === "acp") {
+    const native = (await workers.call("thread/read", {threadId:id})).thread.workerSession;
+    if (native?.configOptions !== undefined) {
+      const selection = sessionModelSelection(native);
+      Object.assign(c, {model:selection.model, effort:selection.effort, models:selection.models});
+    }
+  }
   await store.save();
   const pp = perms(permission);
   const sandboxPolicy =
@@ -666,9 +674,13 @@ route("POST", "/api/worker-session", async b => {
   turnLocks.add(id);
   try {
     await ensure(id);
-    return await workers.call(b.configId !== undefined ? "session/set_config_option" : "session/set_mode", {
-      threadId: id, configId: b.configId, value: b.value, modeId: b.modeId,
+    const result = await workers.call(b.configId !== undefined ? "session/set_config_option" : b.modelId !== undefined ? "session/set_model" : "session/set_mode", {
+      threadId: id, configId: b.configId, value: b.value, modeId: b.modeId, modelId: b.modelId,
     });
+    const selection = sessionModelSelection(result.thread.workerSession);
+    Object.assign(store.chat(id), { models: selection.models, model: selection.model, effort: selection.effort });
+    await store.save();
+    return result;
   } finally { turnLocks.delete(id); }
 });
 route("POST", "/api/turn", (b) => sendTurn(b.id, b));

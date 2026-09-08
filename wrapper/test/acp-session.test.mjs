@@ -100,3 +100,73 @@ test('concurrent session creation assigns early commands to their own chat', asy
   const results=await Promise.all(['first','second'].map(cwd=>worker.call('thread/start',{cwd})));
   assert.deepEqual(results.map(r=>r.thread.workerSession.availableCommands[0].name),['first','second']);
 });
+
+test('native model switches replace effort levels only after acknowledgement and reject foreign values', async()=>{
+  const {worker,thread,rpc,calls}=fixture();
+  const configs = model => [
+    {id:'model',category:'model',type:'select',currentValue:model,options:[{value:'large',name:'Large'},{value:'small',name:'Small'}]},
+    {id:'effort',category:'thought_level',type:'select',currentValue:'low',options:(model==='large'?['low','high','max']:['low','high']).map(value=>({value,name:value}))},
+  ];
+  thread.workerSession.configOptions=configs('large');
+  rpc.call=async(method,params)=>{calls.push({method,params});return {configOptions:configs(params.value)};};
+  await worker.call('session/set_config_option',{threadId:'chat',configId:'model',value:'small'});
+  const selected=worker.models(thread).find(m=>m.isDefault);
+  assert.equal(selected.model,'small');
+  assert.deepEqual(selected.supportedReasoningEfforts.map(e=>e.reasoningEffort),['low','high']);
+  await assert.rejects(worker.call('session/set_config_option',{threadId:'chat',configId:'effort',value:'max'}),/nicht angeboten/);
+  await assert.rejects(worker.call('session/set_config_option',{threadId:'chat',configId:'model',value:'gpt-6-astra'}),/nicht angeboten/);
+  assert.equal(calls.length,1);
+  rpc.call=async()=>{throw Error('Not authenticated');};
+  await assert.rejects(worker.call('session/set_config_option',{threadId:'chat',configId:'model',value:'large'}),/Not authenticated/);
+  assert.equal(worker.models(thread).find(m=>m.isDefault).model,'small');
+});
+
+test('legacy model selection is validated, persisted and used by the next prompt', async()=>{
+  const {worker,thread,rpc,calls,saved}=fixture();
+  delete thread.workerSession.configOptions;
+  thread.workerSession.models={currentModelId:'first',availableModels:[{modelId:'first',name:'First'},{modelId:'second',name:'Second'}]};
+  await assert.rejects(worker.call('session/set_model',{threadId:'chat',modelId:'foreign'}),/nicht angeboten/);
+  await worker.call('session/set_model',{threadId:'chat',modelId:'second'});
+  assert.equal(saved.at(-1).workerSession.models.currentModelId,'second');
+  rpc.call=async(method,params)=>{calls.push({method,params});return {stopReason:'end_turn'};};
+  await worker.call('turn/start',{threadId:'chat',model:'second',input:[{type:'text',text:'Test'}]});
+  await new Promise(resolve=>setImmediate(resolve));
+  assert.equal(calls.filter(c=>c.method==='session/set_model').length,1);
+  assert.equal(calls.filter(c=>c.method==='session/prompt').length,1);
+});
+
+test('an unauthenticated CLI model list never creates a selectable chat; a later native login works', async()=>{
+  const {worker,rpc,saved}=fixture();
+  worker.info.agentCapabilities._meta={authStatus:{}};
+  let authenticated=false;
+  rpc.call=async()=>{
+    setImmediate(()=>worker.receive({method:'_auth/status_update',params:{authStatus:{kind:authenticated?'account':'none',detail:'private identity'}}}));
+    return {sessionId:'new-native',models:{currentModelId:'native',availableModels:[{modelId:'native',name:'Native'}]}};
+  };
+  await assert.rejects(worker.call('thread/start',{cwd:'/fixture'}),/nicht angemeldet/);
+  assert.equal(worker.threads.size,1); assert.equal(saved.length,0);
+  authenticated=true;
+  // A new session reports the freshly signed-in account before returning.
+  rpc.call=async()=>{
+    worker.receive({method:'_auth/status_update',params:{authStatus:{kind:'account',detail:'private identity'}}});
+    return {sessionId:'signed-in',models:{currentModelId:'native',availableModels:[{modelId:'native',name:'Native'}]}};
+  };
+  const result=await worker.call('thread/start',{cwd:'/fixture'});
+  assert.equal(worker.models(result.thread)[0].model,'native');
+  assert.equal(worker.authenticated,true);
+  assert.ok(!JSON.stringify(saved).includes('private identity'));
+});
+
+test('commands received while the initial native auth probe runs remain attached to the new session', async()=>{
+  const {worker,rpc}=fixture();
+  worker.info.agentCapabilities._meta={authStatus:{}};
+  rpc.call=async()=>{
+    setImmediate(()=>{
+      worker.receive({method:'session/update',params:{sessionId:'auth-wait',update:{sessionUpdate:'available_commands_update',availableCommands:[{name:'model'}]}}});
+      worker.receive({method:'_auth/status_update',params:{authStatus:{kind:'api_key'}}});
+    });
+    return {sessionId:'auth-wait'};
+  };
+  const result=await worker.call('thread/start',{cwd:'/fixture'});
+  assert.equal(result.thread.workerSession.availableCommands[0].name,'model');
+});

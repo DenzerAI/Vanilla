@@ -4,7 +4,7 @@ import { ChevronDown } from "./icons.jsx";
 import "./worker-session-controls.css";
 
 type Choice = { value: string; name: string; description?: string; options?: Choice[] };
-type Config = { id: string; name: string; type: string; description?: string; currentValue: string; options?: Choice[] };
+type Config = { id: string; name: string; type: string; category?: string; description?: string; currentValue: string; options?: Choice[] };
 type Session = {
   availableCommands?: { name: string; description?: string; input?: { hint: string } }[];
   configOptions?: Config[];
@@ -31,7 +31,7 @@ export function WorkerSessionControls({ session, disabled, onCommand, onChange, 
       footer={commands === undefined ? "Der Worker hat noch keine Befehle gemeldet. Manuelle Eingabe bleibt möglich." : commands.length === 0 ? "Der Worker meldet aktuell keine Befehle." : "Auswahl übernimmt den Befehl in den Entwurf."}>
       <span>/</span><ChevronDown size={14} strokeWidth={undefined} />
     </ChatMenu>
-    {configs?.map(option => <ChatMenu key={option.id} label={`Sitzung: ${option.name}`} className="mode-trigger" placement="above"
+    {configs?.filter(option => !(option.type === "select" && [option.category, option.id].some(value => ["model", "thought_level", "effort"].includes(value || "")))).map(option => <ChatMenu key={option.id} label={`Sitzung: ${option.name}`} className="mode-trigger" placement="above"
       disabled={disabled || pending} selected={option.currentValue}
       items={option.type === "select" ? (option.options || []).flatMap(group => group.options || [group]).map(value => ({
         id: value.value, label: value.name, detail: value.description, action: () => void change({ configId: option.id, value: value.value }),

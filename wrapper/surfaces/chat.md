@@ -39,9 +39,7 @@ Die gemeinsame Darstellung verarbeitet normalisierte öffentliche Werkzeugdaten.
 ## Austauschbare Worker
 
 Der Composer zeigt die Modelle und unterstützten Funktionen des tatsächlichen Workers. Eine Übernahme wird innerhalb der Modellwahl mit dem tatsächlichen Worker und „Vertretung“ erklärt. Eine zusätzliche dauerhafte Worker-Beschriftung unter der Eingabe entfällt. Ein
-Planmodus ohne wirksamen Schreibschutz wird nicht angeboten. Workerwahl und
-Verbindung liegen ausschließlich unter Einstellungen → Worker. Chats bleiben
-beim ursprünglichen Worker; ein Wechsel des Standards betrifft neue Chats.
+Planmodus ohne wirksamen Schreibschutz wird nicht angeboten. Die gemeinsame Modellwahl bietet Codex und Claude Code immer als anklickbare Bereiche mit Original-Icons aus `BrandIcon`. Andere bestehende Worker erscheinen dort, wenn sie das aktuelle Gespräch führen. Standard und Vertretung bleiben unter Einstellungen → Worker. Ein Anbieterwechsel aus einem bestehenden Chat öffnet über die ausdrücklich beschriftete Aktion einen neuen Chat; der ursprüngliche Verlauf bleibt beim bisherigen Worker. Entwurf und Anhänge werden übernommen. Die Anbieterwahl im Chat verändert den globalen Standard nicht.
 
 
 ## Dateien anheften
@@ -221,3 +219,11 @@ Erneut ausführen sendet die ursprüngliche Nachricht samt Anhängen als neuen T
 
 
 Gesprächs-Skeletons verwenden user-message-row/user-message und agent-message/markdown. Blasenrundung, Absatzabstand und Schriftzeilenhöhe folgen damit den echten Nachrichten; die Signatur reserviert einen kleinen runden Avatarplatz.
+
+## Kompakte Modellwahl
+
+`ModelPicker` nutzt die gemeinsame `sheet-glass`-Fläche mit 40 px Blur, flachen 32-px-Zeilen und einer kompakten umbrechenden Effort-Auswahl. Auf Touch sind Ziele mindestens 44 px hoch. Kein Fertig-Button und keine dauerhaften Effort-Kacheln. Escape, Außenklick und Verlassen schließen; Tastaturfokus bleibt sichtbar. Fenster, Bildschirmtastatur und vergrößerte Schrift begrenzen Position und Scrollhöhe. Ohne Transparenz oder Blur wird die Fläche deckend.
+
+Codex zeigt ausschließlich gemeldete, sichtbare Modelle der GPT-5.6- und GPT-6-Serie. Bereits vorhandene Gespräche mit älteren Modellen behalten ihren tatsächlichen Modellnamen. Die Stufen kommen exakt aus `supportedReasoningEfforts`, mit den nativen Werten statt Übersetzungen. Beim Modellwechsel bleibt eine Stufe nur erhalten, wenn das neue Modell sie anbietet.
+
+Claude Code lädt seine echten Modelle beim Öffnen einer leeren nativen Sitzung. Vorhandene CLI-/OAuth-Anmeldung wird durch den bestehenden ACP-Anschluss verwendet. Ein erfolgreicher Handshake alleine gilt nicht als Modellzugang. Ohne Anmeldung bleiben verständlicher Fehler, erneuter Versuch und der Original-Einrichtungslink erreichbar. Es wird keine Nachricht gesendet und kein Modellkatalog erfunden. Native `configOptions` sind führend: Modell- und Effort-Auswahl stehen gemeinsam im Picker und erscheinen nicht nochmals neben dem Composer. Ein Modellwechsel übernimmt erst die vollständige Antwort mit den zu diesem Modell passenden Stufen; abgewiesene Werte bleiben unverändert. Übrige Sitzungseinstellungen und Befehle behalten ihre bisherigen Plätze.

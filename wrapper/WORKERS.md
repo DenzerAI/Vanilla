@@ -164,3 +164,13 @@ Prüfbelege und Detailbewertung liegen im Auftrags-Arbeitsbereich unter
 geprüft. Die Browserprüfung ist offen: Chrome und Chromium scheitern in dieser
 Ausführungsumgebung beim macOS-Mach-Port-Aufbau mit „Permission denied“. Es gibt
 keinen Live-Nachweis neuer Funktionen gegen angemeldete Anbieter.
+
+## Anbieter direkt im Chat auswählen
+
+Die Modellwahl aktiviert Codex oder Claude Code über `POST /api/workers/activate`. Dieser ausdrückliche Klick verwendet eine laufende Verbindung wieder, ohne laufende Chats zu unterbrechen, und nutzt die vorhandene native CLI-/OAuth-Anmeldung. Bei Claude Code lädt das anschließende Öffnen einer leeren Sitzung die tatsächlich angebotenen Modelle und Denkstufen, ohne einen Prompt zu senden. Ein fehlgeschlagener Sitzungsaufbau erzeugt keinen Chat in der Liste. Die globale Standard-/Vertretungswahl bleibt erhalten; ein bestehender Chat wechselt niemals still seinen Worker.
+
+`worker-models.mjs` normalisiert native Modell-/Effort-Optionen. ACP-Konfigurationsoptionen haben Vorrang vor Legacy-Modellfeldern. Nach `session/set_config_option` werden die vollständig bestätigten Optionen verwendet und die Chatmetadaten aktualisiert. Ältere ACP-Worker verwenden validiertes `session/set_model`.
+
+Quellen: [Codex App Server · model/list](https://learn.chatgpt.com/docs/app-server), [Claude Code · Modellkonfiguration](https://code.claude.com/docs/en/model-config), [Claude Code · Anmeldung](https://code.claude.com/docs/en/authentication). Verfügbarkeit und Stufen werden zur Laufzeit ermittelt; die Webdokumentation ist keine fest codierte Modellliste.
+
+Wenn der ACP-Adapter die native Erweiterung `_auth/status_update` meldet, wird ihr Anmeldestatus vor der Übernahme einer neuen Sitzung geprüft. Ein ausdrücklich abgemeldeter Worker liefert einen erneuten Anmeldehinweis; die reine Modellliste beweist keinen Zugang. Es wird nur ein boolescher Status übernommen, keine Kontoidentität oder Zugangsdaten. Nicht gemeldeter Status bleibt unbekannt. Der installierte Claude-Adapter wurde am 08.09.2026 ohne Anmeldung geprüft: Handshake und Modellmetadaten vorhanden, Sitzungsübernahme mit korrektem Anmeldehinweis abgewiesen. Ein authentifizierter Modelllauf benötigt die eigene native Anmeldung.
