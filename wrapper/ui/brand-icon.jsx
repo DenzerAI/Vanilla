@@ -5,6 +5,7 @@ import groq from "./assets/groq.svg";
 import gmail from "./assets/gmail.svg";
 import outlook from "./assets/outlook.svg";
 import whatsapp from "./assets/whatsapp.svg";
+import twentyFirst from "./assets/21st.png";
 import higgsfield from "./assets/higgsfield.png";
 import elevenlabs from "./assets/elevenlabs.svg";
 import n8n from "./assets/n8n.svg";
@@ -43,6 +44,7 @@ const brands = {
   outlook,
   whatsapp,
   higgsfield,
+  "21st.dev": twentyFirst,
   elevenlabs,
   n8n,
 

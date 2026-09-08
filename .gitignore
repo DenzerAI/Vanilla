@@ -219,3 +219,5 @@ cache/
 
 # Reproducible local speech installation.
 !/requirements-speech.lock
+
+!/wrapper/ui/assets/21st.png

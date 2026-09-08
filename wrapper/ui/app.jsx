@@ -23,7 +23,7 @@ import { AgentFiles } from "./agent-files.jsx";
 import { ReviewPanel } from "./workspace-review.jsx";
 import "./workspace-layout.css";
 import { createChatScroll } from "./chat-scroll.mjs";
-import { connectionCategories, connectionCategory } from "./connection-catalog.mjs";
+import { connectionCatalog, connectionCategories, connectionCategory } from "./connection-catalog.mjs";
 import { CrmConnectionForm } from './crm-connection.jsx';
 import { ServiceConnectionForm } from './service-connection.jsx';
 import { LibraryPage, LibraryPreview, ImageForm } from './library.jsx';
@@ -3024,6 +3024,10 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
 
             })}
           >
+            {connectionCatalog.find(s=>s.provider===modal.connection?.provider)?.setupUrl && <p className="form-help">
+              {connectionCatalog.find(s=>s.provider===modal.connection?.provider).setupNote}{' '}
+              <a href={connectionCatalog.find(s=>s.provider===modal.connection?.provider).setupUrl} target="_blank" rel="noreferrer">MCP einrichten</a>
+            </p>}
             <Field label="Name">
               <input
                 name="name"

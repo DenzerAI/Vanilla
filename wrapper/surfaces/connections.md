@@ -62,3 +62,13 @@ Platzhalter und behalten „Erneut laden“.
 
 
 Verbindungs-Skeletons verwenden integration-grid und integration-item mit originalem Iconplatz, Textzeilen und rechter Aktionsform; Desktop-/Mobile-Spalten entsprechen dem Katalog.
+
+## 21st.dev
+
+21st.dev steht neben Higgsfield unter Design & Medien mit lokalem Originalicon
+und dem vorhandenen Link-Dialog. Die Website ist vorbelegt; ein Einrichtungshinweis
+verweist auf https://21st.dev/mcp. Speichern legt nur den Browserlink an.
+Der offizielle MCP-Endpunkt ist https://21st.dev/api/mcp und verlangt den
+Header `x-api-key`; ein Bearer-Token im Link-Dialog aktiviert diesen Zugang nicht.
+Die Worker-Einrichtung ist separat und wird nicht als verbunden dargestellt.
+Quelle: https://github.com/21st-dev/magic-mcp/blob/main/server.json (08.09.2026).

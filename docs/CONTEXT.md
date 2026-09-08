@@ -79,3 +79,8 @@ still in das Wrapper-Memory übernommen. Eine Umstellung dieses externen
 Protokolls auf reinen Bedarfskontext braucht eine versionierte Migration seiner
 Verbraucher. Die Firmen-Workflows werden schon heute nur als Referenzen geliefert
 und über den authentisierten Firmenbasis-Endpunkt geladen.
+
+
+## CRM-Kontext
+
+Für aktuelle Personen-, Firmen- und Vorgangsdaten führt der [CRM-Kern](CRM.md) strukturierte Feldwerte samt Quellen und Aktenrevision. CRM-Quellen im Memory-Kontext sind live erzeugte `crm/entity/<id>`-Referenzen und werden mit `crm_read` gelesen, nicht als Markdownpfad. Textmemory und historische Chats überschreiben keine CRM-Fakten. Neue bereits empfangene Hinweise machen den betroffenen Stand prüfbedürftig. Eine allumfassende Erkennung noch nicht angebundener oder abgerufener Nachrichten wird nicht behauptet. CRM ist workspaceweit, während Notizen ihre bestehenden Projektgrenzen behalten.
