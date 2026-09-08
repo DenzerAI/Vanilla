@@ -28,7 +28,6 @@ const GlassButton = React.forwardRef<HTMLButtonElement, GlassButtonProps>(
       <button className={glassButtonVariants({ size })} ref={ref} type={type} disabled={disabled} {...props}>
         <span className={cn(glassButtonTextVariants({ size }), contentClassName)}>{children}</span>
       </button>
-      <div className="glass-button-shadow" aria-hidden="true" />
     </div>
   ),
 );
