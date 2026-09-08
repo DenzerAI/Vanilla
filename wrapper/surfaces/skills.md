@@ -1,5 +1,6 @@
 # Skills
 
+Der Bereich liegt unter **Einstellungen → Skills** und verwendet deren Seitenleiste mit ausgewähltem Skills-Eintrag und „Zurück zur App“. Die globale Suche öffnet auch einzelne Skilldetails in diesem Bereich. Die bisherige Kataloggestaltung bleibt erhalten.
 
 Der gemeinsame `PageHeading` zeigt „Skills“, das Plus „Skill hinzufügen“ und die Aktion „Skills neu laden“ in einer Zeile. Das Plus erscheint, wenn der Server die Skillbibliothek anbietet. Eine zusätzliche globale Titel-/Tabzeile entfällt.
 

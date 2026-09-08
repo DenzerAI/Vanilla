@@ -1,5 +1,6 @@
 import { ModelPicker } from "./model-picker.jsx";
 import { InboxPatternPreview } from "./inbox";
+import { WelcomeSuggestions } from "./welcome-suggestions";
 import { PanelLight } from "./panel-light";
 import {LibraryThumbnail} from './library-thumbnail.jsx';
 import {LibraryPreview} from './library.jsx';
@@ -21,6 +22,7 @@ import monoLicense from "./assets/fonts/IBMPlexMono-LICENSE.txt";
 export function DesignReference({ theme, tone, accent }) {
   const [modelPreview, setModelPreview] = useState(["gpt-6-astra", "medium"]);
   const [preview, setPreview] = useState(false);
+  const [suggestionDraft, setSuggestionDraft] = useState("");
   const [section, setSection] = useState("components");
   const palette = resolveDesign(theme, tone, accent);
   return (
@@ -36,8 +38,11 @@ export function DesignReference({ theme, tone, accent }) {
       {section === 'components' && <>
       <h3 className="section-heading">Bedienelemente & Seitenaufbau</h3>
       <SettingsPatterns/>
+      <h3 className="section-heading">Startvorschläge · Glaspillen</h3>
+      <WelcomeSuggestions onSelect={setSuggestionDraft}/>
+      <p className="page-note">Flache, vollständig runde Vorschläge mit transparenter Glasfläche. Auf schmalen Ansichten kleiner und ohne Pfeile; die Trefferfläche bleibt auf Touchgeräten gut erreichbar. Die Auswahl füllt die Vorschau darunter.</p>
       <h3 className="section-heading">Composer · Glasfläche</h3>
-      <div className="composer pill-composer"><div className="composer-entry"><textarea aria-label="Nachricht · Designvorschau" placeholder="Nachricht" rows={1} readOnly/></div></div>
+      <div className="composer pill-composer"><div className="composer-entry"><textarea aria-label="Nachricht · Designvorschau" placeholder="Nachricht" value={suggestionDraft} rows={1} readOnly/></div></div>
       <p className="page-note">Einzeilige Pille mit gedämpftem Platzhalter, transparenter Tönung, Hintergrundunschärfe und feiner innerer Glaskante. Mehrzeiliger Text erweitert die Schreibfläche; reduzierte Transparenz erhält einen deckenden Hintergrund.</p>
       <h3 className="section-heading">Modellwahl · Anbieter und Denkaufwand</h3>
       <ModelPicker model={modelPreview[0]} effort={modelPreview[1]} onChange={(model, effort) => setModelPreview([model, effort])}

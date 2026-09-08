@@ -163,6 +163,8 @@ export const themes = {
     glass: "#302e2b",
     "sheet-glass": "#302e2bb8",
     "notice-glass": "#302e2b66",
+    "suggestion-glass": "#302e2b52",
+    "suggestion-glass-hover": "#302e2ba3",
     "glass-highlight": "#ffffff26",
     hover: "#ffffff09",
     composer: "#282725",
@@ -232,6 +234,8 @@ export const themes = {
     glass: "#f5f3ee",
     "sheet-glass": "#f5f3eecc",
     "notice-glass": "#f5f3ee80",
+    "suggestion-glass": "#f5f3ee66",
+    "suggestion-glass-hover": "#f5f3eeb8",
     "glass-highlight": "#ffffffb3",
     hover: "#00000005",
     composer: "#f0eee9",
@@ -305,6 +309,8 @@ export function resolveDesign(theme = 'dark', tone = 'balanced', accent = 'terra
   const selectedAccent = designAccents.find(item => item.id === accent) || designAccents[0];
   return {...palette, accent: selectedAccent[mode], highlight: selectedAccent[mode],
     'composer-blur': palette.composer + (mode === 'light' ? 'b3' : '99'),
+    'suggestion-glass': palette.glass + (mode === 'light' ? '66' : '52'),
+    'suggestion-glass-hover': palette.glass + (mode === 'light' ? 'b8' : 'a3'),
     'sheet-glass': palette.glass + (mode === 'light' ? 'cc' : 'b8')};
 }
 export function designVariables(theme, tone, accent) {
@@ -316,6 +322,8 @@ export const colorRoles = {
   "workspace-panel-bg": "Workspace · dunkle Tiefenfläche",
   surface: "Gruppenfläche",
   raised: "Erhöhte Fläche",
+  "suggestion-glass": "Startvorschläge · transparente Pille",
+  "suggestion-glass-hover": "Startvorschläge · Hover und Fokus",
   text: "Haupttext",
   muted: "Sekundärtext",
   faint: "Zusatztext",

@@ -89,6 +89,8 @@
   --glass: #302e2b;
   --sheet-glass: #302e2bb8;
   --notice-glass: #302e2b66;
+  --suggestion-glass: #302e2b52;
+  --suggestion-glass-hover: #302e2ba3;
   --glass-highlight: #ffffff26;
   --hover: #ffffff09;
   --composer: #282725;
@@ -159,6 +161,8 @@
   --glass: #f5f3ee;
   --sheet-glass: #f5f3eecc;
   --notice-glass: #f5f3ee80;
+  --suggestion-glass: #f5f3ee66;
+  --suggestion-glass-hover: #f5f3eeb8;
   --glass-highlight: #ffffffb3;
   --hover: #00000005;
   --composer: #f0eee9;
@@ -229,6 +233,8 @@
   --glass: #302e2b;
   --sheet-glass: #302e2bb8;
   --notice-glass: #302e2b66;
+  --suggestion-glass: #302e2b52;
+  --suggestion-glass-hover: #302e2ba3;
   --glass-highlight: #ffffff26;
   --hover: #ffffff09;
   --composer: #282725;
@@ -299,6 +305,8 @@
   --glass: #f5f3ee;
   --sheet-glass: #f5f3eecc;
   --notice-glass: #f5f3ee80;
+  --suggestion-glass: #f5f3ee66;
+  --suggestion-glass-hover: #f5f3eeb8;
   --glass-highlight: #ffffffb3;
   --hover: #00000005;
   --composer: #f0eee9;

@@ -69,7 +69,7 @@ Computer-Use-Schritte gehören in die bestehende Werkzeuggruppe. Sie zeigen den 
 
 Unter der Eingabe gibt es keinen Computer-Use-Einstieg und keine Werkzeugkatalog-Prüfung. Tatsächliche Computer-Use-Aktivität bleibt in den Werkzeuggruppen sichtbar. Bildschirm-/App-Freigaben bleiben beim ausführenden Worker und dessen Computer-Use-Anschluss.
 
-Die leere Navigation „Module“ entfällt. Chat, Aufträge, Verbindungen und Skills bleiben die funktionalen Einstiege.
+Das Hauptmenü zeigt Inbox, Aufträge und die verfügbare Bibliothek; darunter bleiben Projekte und Chats. Verbindungen und Skills werden über die Einstellungen im Agentenmenü erreicht. Modul-Platzhalter und reservierte Leerzeilen entfallen. Symbole, Textkanten, Abstände und Flächengestaltung bleiben erhalten.
 
 Derselbe Avatar steht bei den Antwortsignaturen. Nach dem Speichern des Profils übernehmen alle offenen Panels Namen und Avatar über das gemeinsame Identitätsereignis.
 
@@ -91,6 +91,21 @@ Nachrichtenanschlüsse verwenden normale Worker-Sessions mit persistenter connec
 ## Zeitgruppen in der Seitenleiste
 
 Chats stehen je Projekt nach letzter Aktivität absteigend. Angeheftete Chats bilden eine eigene Gruppe; danach gliedern dezente beschriftete Linien die sichtbaren Chats in Heute, Gestern, Letzte 7 Tage, Letzte 30 Tage und Älter. Leere Gruppen entfallen. Es gelten lokale Kalendertage; standardmäßig sind alle Chats im Scrollbereich sichtbar. „Weniger anzeigen“ begrenzt bei Bedarf auf fünf aktuelle Chats plus angepinnte Gespräche. Chatzeilen sind am Desktop mindestens 32 px hoch, bei größerer Schrift dürfen sie wachsen; Touch-Zeilen bleiben mindestens 44 px hoch. Gruppentitel und Chatnamen teilen die Textkante der Navigation, Status und Chataktionen eine gemeinsame linke Symbolspalte vor dem Chatnamen.
+
+## Startvorschläge
+
+Die drei Startvorschläge stehen als `WelcomeSuggestions` unter der Begrüßung.
+Ihre sichtbare Glasfläche ist mindestens 32 px hoch, vollständig abgerundet,
+stark transparent und mit 40 px Blur, ohne Rahmen oder Schatten. Abstände,
+Schrift und transparente Farbrollen kommen aus der zentralen Designquelle.
+Bis 620 px Gruppenbreite verwenden sie caption statt small und verzichten auf
+die dekorativen Pfeile. Die vollständigen Beschriftungen bleiben erhalten;
+Pillen umbrechen nach verfügbarem Platz und werden nicht auf gleiche Breite
+gestreckt. Touchziele sind unabhängig von der sichtbaren Fläche mindestens
+44 px hoch. Große Schrift und lange Texte dürfen die Pillen vergrößern.
+Hover, Fokus, deaktivierter Zustand und deckende Ersatzflächen bei reduzierter
+Transparenz beziehungsweise fehlendem Blur bleiben unterstützt. Eine Auswahl
+füllt wie bisher nur den Entwurf und fokussiert die Eingabe; sie sendet nichts.
 
 ## Reiseeffekt im Chat
 
