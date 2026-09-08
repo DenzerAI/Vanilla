@@ -9,6 +9,9 @@
   `wrapper/identity-preferences.mjs`; gespeicherte Wünsche verdrängen ihn.
 - `COMPANY_BASE/AGENTS.md` führt die fachliche Landkarte; `FIRMA.md` und dort
   verlinkte Quellen führen verbindliches Firmenwissen. Standard: `firmenbasis/`.
+  Dieser Ordner ist lokal und vollständig von Git ausgeschlossen. Die neutrale
+  Erstvorlage unter `templates/firmenbasis/` wird nur beim Einrichten einer neuen
+  Installation kopiert. Bestehende Inhalte werden bei Updates nicht überschrieben.
 - `SYSTEM_BASE/WORKER.md` beschreibt den technischen Anschluss; Standard:
   `system/`. Lokale `AGENTS.md` ergänzen den konkreten Arbeitsbereich.
 - `jobs/<id>/SKILL.md` führt den Jobinhalt, `job.yaml` die Ausführungseinstellungen.

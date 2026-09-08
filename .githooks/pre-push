@@ -1,2 +1,2 @@
 #!/bin/sh
-exec node "$(git rev-parse --show-toplevel)/scripts/verify-design-adoption.mjs" push
+exec node "$(git rev-parse --show-toplevel)/scripts/verify-source-adoption.mjs" push

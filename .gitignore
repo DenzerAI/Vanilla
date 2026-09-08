@@ -115,12 +115,14 @@ cache/
 !/wrapper/ui/assets/calendar.svg
 !/wrapper/ui/assets/sources.json
 
-# Gemeinsame fachliche Basis und ihre Betriebsdokumentation.
-!/firmenbasis/
-!/firmenbasis/AGENTS.md
-!/firmenbasis/FIRMA.md
-!/firmenbasis/*/
-!/firmenbasis/*/SKILL.md
+# Firmeninhalte bleiben lokal. Nur die geprüften neutralen Vorlagen reisen mit.
+/firmenbasis/
+!/templates/
+!/templates/firmenbasis/
+!/templates/firmenbasis/AGENTS.md
+!/templates/firmenbasis/FIRMA.md
+!/templates/firmenbasis/report-result/
+!/templates/firmenbasis/report-result/SKILL.md
 !/README.md
 !/wrapper/README.md
 !/AGENTS.md
@@ -201,9 +203,12 @@ cache/
 !/.githooks/pre-commit
 !/.githooks/pre-merge-commit
 !/.githooks/pre-push
+!/.githooks/commit-msg
 !/.github/
 !/.github/workflows/
 !/.github/workflows/design.yml
+!/.github/workflows/source-privacy.yml
+!/system/source-policy.json
 !/wrapper/scripts/design-audit.mjs
 !/wrapper/scripts/design-assets.json
 !/wrapper/scripts/design-exceptions.json

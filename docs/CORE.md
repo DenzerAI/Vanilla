@@ -146,6 +146,11 @@ Sitzungen, Schlüssel und lokale Testausgaben sind ausgeschlossen. Ein frischer
 Clone benötigt die dokumentierte Installation; bestehende Code-Komponenten
 werden übernommen und nicht durch einen Prompt rekonstruiert.
 
+Auch `firmenbasis/` bleibt ausschließlich lokal. In Git liegen nur exakt
+geprüfte neutrale Vorlagen. Der Quellenprüfer kontrolliert Index, Commit-Verlauf
+und eingehende Merge-Bäume; der geschützte Übernahmebefehl erhält vorhandenes
+Firmenwissen. Ablauf und Grenzen stehen in [CODE-SYNC.md](CODE-SYNC.md).
+
 Python-Tests prüfen Datenübernahme, abfragbare Nachrichten, Suche, Verweise,
 Pfadgrenzen, Versionskonflikte, Reservierungen, Zeitpläne und Anmeldung. Ein
 Integrationstest startet den echten Python- und Node-Prozess mit einem lokalen

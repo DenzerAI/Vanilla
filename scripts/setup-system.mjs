@@ -17,6 +17,8 @@ async function run(command,args) {
   });
 }
 try {
+  await run(process.execPath,['scripts/install-git-hooks.mjs']);
+  await run(process.execPath,['scripts/init-company.mjs']);
   if(!existsSync(python))await run(process.env.AGENT_PYTHON||'python3',['-m','venv','.venv']);
   await run(python,['-c','import sys; assert sys.version_info >= (3,12), "Python 3.12+ erforderlich"']);
   await run(python,['-m','pip','install','-r','requirements.lock','-r','requirements-embeddings.lock']);

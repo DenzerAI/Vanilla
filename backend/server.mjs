@@ -7,13 +7,14 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { ArtifactStore, detectTailscaleBaseUrl, formatResultWithArtifacts } from './artifacts.mjs';
 import { buildBootstrap } from './bootstrap.mjs';
-import { companyRoot, readCompanyFile } from './company-base.mjs';
+import { companyRoot, readCompanyFile, ensureCompanyBase } from './company-base.mjs';
 import { HeroApiError, HeroClient } from './hero-client.mjs';
 import { Store } from './store.mjs';
 import { WhatsAppBridge } from './whatsapp-bridge.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 await loadEnv(path.join(root, '.env'));
+await ensureCompanyBase(root);
 
 const port = Number(process.env.PORT || 8787);
 const token = process.env.ORDER_SYSTEM_TOKEN || '';

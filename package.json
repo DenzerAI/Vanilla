@@ -16,7 +16,11 @@
     "setup:core": "python3 -m venv .venv && .venv/bin/python -m pip install -e .",
     "typecheck": "npm --prefix wrapper run typecheck",
     "setup:system": "node scripts/setup-system.mjs",
-    "service:install": ".venv/bin/python -m core.service install"
+    "service:install": ".venv/bin/python -m core.service install",
+    "prepare": "node scripts/install-git-hooks.mjs",
+    "source:setup": "node scripts/install-git-hooks.mjs && node scripts/init-company.mjs",
+    "source:check": "python3 scripts/security-scan.py --index",
+    "source:merge": "python3 scripts/source-sync.py"
   },
   "engines": {
     "node": ">=22.12"

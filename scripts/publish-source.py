@@ -28,7 +28,7 @@ def source_files(root=ROOT):
         path = root / name
         if not path.exists():
             continue  # Deliberately deleted source files remain deleted in the export.
-        if (set(Path(name).parts) & forbidden or path.is_symlink()
+        if (name.startswith('firmenbasis/') or set(Path(name).parts) & forbidden or path.is_symlink()
                 or not path.resolve().is_relative_to(root.resolve()) or not path.is_file()
                 or path.name.startswith('.env') or path.suffix in {'.db', '.sqlite3', '.log', '.pem', '.key'}):
             raise ValueError('Export contains a prohibited file: ' + name)
@@ -48,7 +48,7 @@ def export(destination):
         target = destination / name
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(ROOT / name, target)
-    run(sys.executable, 'scripts/security-scan.py', cwd=destination, capture=False)
+    run(sys.executable, 'scripts/security-scan.py', '--directory', '.', cwd=destination, capture=False)
     digest = hashlib.sha256()
     for name in files:
         digest.update(name.encode() + b'\0' + (destination / name).read_bytes() + b'\0')

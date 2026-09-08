@@ -1,0 +1,101 @@
+{
+  "version": 1,
+  "neutralTemplates": {
+    "templates/firmenbasis/AGENTS.md": "da3e9026478f541627621afe7e01202e513b83a982bb67a1cbc49b3c2ba1ce08",
+    "templates/firmenbasis/FIRMA.md": "095d8035c761525936fd479fca089504e5f2a5a60bd308296ba6c496f179a942",
+    "templates/firmenbasis/report-result/SKILL.md": "278588c135dbd74b88b798dec01d911ec1f36e4d000982a2364a0e95c47cd077"
+  },
+  "legacyNeutralTemplates": {
+    "firmenbasis/AGENTS.md": [
+      "da3e9026478f541627621afe7e01202e513b83a982bb67a1cbc49b3c2ba1ce08"
+    ],
+    "firmenbasis/FIRMA.md": [
+      "095d8035c761525936fd479fca089504e5f2a5a60bd308296ba6c496f179a942"
+    ],
+    "firmenbasis/report-result/SKILL.md": [
+      "278588c135dbd74b88b798dec01d911ec1f36e4d000982a2364a0e95c47cd077"
+    ]
+  },
+  "reviewedBinaryAssets": {
+    "wrapper/ui/assets/crm/cas.png": "ba7b08421bd87ebcba56a5234045b1899ec3dcbd5d677e90f4d29749514729ed",
+    "wrapper/ui/assets/crm/cobra.png": "48be2403465669b5c5d8a1987afb3466ba510191a759e1c9ffec76d5aae7f8d3",
+    "wrapper/ui/assets/crm/hero.png": "de4e3e61ad507d74ddaa635f42f1f97dd05c05101aaac66976c5f4825d7ba946",
+    "wrapper/ui/assets/crm/labelwin.png": "f48215b824bc2bb30a4bc5716dda2c7ef2bd7e1ed2a4a51274376dbd252bb76a",
+    "wrapper/ui/assets/crm/openhandwerk.png": "a458e8334727b5170c376f6a3d59cf74242a4805f3abdcd505752fcef78b7dde",
+    "wrapper/ui/assets/crm/pds.png": "5443e42a6db6dbba5d07babd3196bd3558c81c14c8d91d6ebc20c8f74e1674f6",
+    "wrapper/ui/assets/crm/plancraft.png": "1002d049a781957537b55091c7486b79ad9adb8aabea54455e248518fc17d69e",
+    "wrapper/ui/assets/crm/streit.png": "e16c1c0418e8793aec98c03861b248335bb8b86627f87c486a4be592a1cacf3c",
+    "wrapper/ui/assets/crm/tooltime.png": "ab8752b9a3297e6bc0df3dd145afca980b974b5780f396133e249007b938c272",
+    "wrapper/ui/assets/crm/weclapp.png": "7bc22c0f064528732c55cd5ce399b0e514ad90377cd9d31795c46860c0bb9606",
+    "wrapper/ui/assets/crm/winworker.png": "b77acb774cc08620c1bc99f9349299c2d6e5d32673659266769279002800a1f4",
+    "wrapper/ui/assets/fonts/IBMPlexMono-Regular.woff2": "ba204497f16b6d334cee9d1e963a831b73e3a56e1d6300a8489d18df7214b350",
+    "wrapper/ui/assets/fonts/InterVariable-Italic.woff2": "e564f652916db6c139570fefb9524a77c4d48f30c92928de9db19b6b5c7a262a",
+    "wrapper/ui/assets/fonts/InterVariable.woff2": "693b77d4f32ee9b8bfc995589b5fad5e99adf2832738661f5402f9978429a8e3",
+    "wrapper/ui/assets/hermes.png": "d60d164e24fdcf6532133b8ea43c77a201e4b9e9dbc396187b58d51d8590ef52",
+    "wrapper/ui/assets/higgsfield.png": "47f5136c65f9dd2360c59d2b65d06d9e7289230aa4edd7b150f28e6f0582bf1c",
+    "wrapper/ui/assets/lmstudio.png": "e79ff2ac0fece5c0a76fcb8b20a29226794d11824ee7c7a2f521dcde0f88e12b",
+    "wrapper/ui/assets/ollama.png": "8f38edfb007d7b74f03d2ad7a57c023daa678031795ad11836df593970764a0b",
+    "wrapper/ui/assets/skills/artist-palette.png": "147e62f6523e7e923add4ed5497bf90982d22e04eb2e65ab916b743de2dbe1d2",
+    "wrapper/ui/assets/skills/balance-scale.png": "442cfa3f13a9052484475e388e021f248fc39d20a8a7f36b30ea70adcad0d217",
+    "wrapper/ui/assets/skills/bar-chart.png": "0d83833e992b128aa00b85220fc2f777516bbdeb92e9e1e019a7b715ecc6ef97",
+    "wrapper/ui/assets/skills/books.png": "36f75eaa1e1a849fc950f43962b447c206d96244858468240a6a81beaa97f7be",
+    "wrapper/ui/assets/skills/calendar.png": "7c377466753d5c5062e60edec0258ac78c512df423add89b2dd359035592d8ef",
+    "wrapper/ui/assets/skills/clapper-board.png": "1a6e2d6681865c8834b29576398f82045b170177e4e745d7bce210e80cc98561",
+    "wrapper/ui/assets/skills/desktop-computer.png": "f0ec12ccf1e9a2ff83f95cd8ba85e357e401d8dcdbc6bae596d23d77be7f74da",
+    "wrapper/ui/assets/skills/file-folder.png": "d07ff91df2a4ad9f08e281e9b99ad66924b6db0c0afd2a938feca4dd6b7a9039",
+    "wrapper/ui/assets/skills/framed-picture.png": "e70eeb3cd3b5c8bd6633a9ddf0c5f0bb7e0c4be45c89b9b2aad689276aad35bc",
+    "wrapper/ui/assets/skills/gear.png": "415296d4fadabc2e0f6593143ea632948fef20a1cd73fbbc3dbda571f0421988",
+    "wrapper/ui/assets/skills/globe-with-meridians.png": "4a9f820aa69194995d91c6a23432814d67ea6740acc9939eadcc8d6ad1b90546",
+    "wrapper/ui/assets/skills/locked.png": "8c8e9209b8420ac7caf8c94fde6586044d9b91e85728aaaf4b98c2482761ea16",
+    "wrapper/ui/assets/skills/magnifying-glass-tilted-left.png": "e8fea91e4652a36486aa9392a67873c987a13389afdae06bbcdae78ab30b4f4f",
+    "wrapper/ui/assets/skills/package.png": "9c7c74bb551e7f0a3a088791ac715c4ece8c45b2d1910915bc34159f148dee0e",
+    "wrapper/ui/assets/skills/page-facing-up.png": "f212d11ed09cfef2ca9cfd3b6b35b29ad7a57eb677aa6611fe284763303a1c57",
+    "wrapper/ui/assets/skills/pencil.png": "c33b52acc157fe010851709a6ba06ee7b9e107f9e421436c97fd4404c25dec3f",
+    "wrapper/ui/assets/skills/robot.png": "3f9b5a00b53c8bddda36b6a3f68d00718d9d7d8c04f986a3248e55ae93a7961b",
+    "wrapper/ui/assets/skills/spiral-notepad.png": "647fd6d44d8596c0b76f1a65815fb9f6baa6b1ac0df5c19c3915c5e1d6919e8a",
+    "wrapper/ui/assets/skills/test-tube.png": "60dc2ba1c1dd275624dc27a1a63548af6264c4288733b838af46e1ee31233668",
+    "wrapper/ui/assets/skills/toolbox.png": "904e3e9b5e16bfd6473ea1303ac6a60b2100ebb2078ccfcfe4ea7598bfd21052",
+    "wrapper/public/app-icon.svg": "f7049982cc53fec15ad6770985701f6f7d27eb4dc9e0f2e6bbb1b2088f8d8760",
+    "wrapper/ui/assets/a2a.svg": "ee46ec740f2180ddd5cc4376c55c5a7cf7bc1756aee72676f2f1b38ee7e07942",
+    "wrapper/ui/assets/avatars/kibo.svg": "47db54555690e5bde26d20f1326422d43ecfb15d6a5f4f5b903fc7418e8206f5",
+    "wrapper/ui/assets/avatars/lumi.svg": "b798e9fb8fdb01a39a07ba7752a3d35c851ed4fc915b7edc96086c0944fb3237",
+    "wrapper/ui/assets/avatars/miko.svg": "407867f9bb11c5c67059b0f19a5efb5cd5c7fbab76db512cebd4feae8d618db5",
+    "wrapper/ui/assets/avatars/nori.svg": "8105d9432e3251e39ff7bd34b5c2818a118e2ccd252fc7190fdf6c9d728a3485",
+    "wrapper/ui/assets/avatars/orbit.svg": "a181fe71eed7e986a2c3847fe94e3bff931496d2a4fd03fa2ee6b228ebb4ea92",
+    "wrapper/ui/assets/avatars/pixel.svg": "a5867100ae6e66ec7f1570194fd8ebe70c41c395e1df95f8104cfd9de56d99b7",
+    "wrapper/ui/assets/calendar.svg": "7f55cd877b2261948168db3d2e9468c0cf3f07766789489e853a0f9931dff8ea",
+    "wrapper/ui/assets/claude-code.svg": "70b7fc221aee2118da945ce3b0c1b83d4e56138ca336c421abcc0d1f14dcb504",
+    "wrapper/ui/assets/crm/centralstationcrm.svg": "7bb800f317e29bde0d76f8dd1e7b9cd5818b63aed31f358acd2b2d0db75e0112",
+    "wrapper/ui/assets/crm/sap.svg": "be93ac6d6c7eedca8775ae64ad77becc27c1c5fb07448fc222523e1bb435c282",
+    "wrapper/ui/assets/discord.svg": "79a8105c2fc15d8caa6ee7b87b58597432e171386d22a2cc2237f0eb3bbbe7dd",
+    "wrapper/ui/assets/elevenlabs.svg": "a8ccade64d9d38696c6f47a17ad1eb6d941d687bea0adc7af9b2ccce0e26c29a",
+    "wrapper/ui/assets/gmail.svg": "0a242131424b796a26247a8edd41d66fa294da6d177897526a19b7e81aedfdb8",
+    "wrapper/ui/assets/groq.svg": "970024cfe9c2c1a9202c415d6b4cd1274e8630d06cb4adce33ead13fc394ba2f",
+    "wrapper/ui/assets/n8n.svg": "fea58f324bd105a5d8a054e6cb80940c1e63fc51b606b780b73e9187e5bfdfa9",
+    "wrapper/ui/assets/openai.svg": "2b4a04ddc2395b20d168694d3850ce2050a702c4a0cdeb4d8b31b9a970481a8c",
+    "wrapper/ui/assets/openclaw.svg": "fa7e2ec07ebfa696bcc8c27d7e36425cbb7b1772f6f7f04ce390cf5f1c35cf0e",
+    "wrapper/ui/assets/outlook.svg": "d67b8bb4bb8d7afe8e71e066112452d5d681ea7991fa1ec7c37df962246b2c31",
+    "wrapper/ui/assets/telegram.svg": "85059d5e5bf7bda91ebab30664993c49867a26be6b947834aca16c846581766a",
+    "wrapper/ui/assets/whatsapp.svg": "1ab6db0cc2eb55d911f151b0aa339c55b6b225efcceddb8ff2050cab1410e347"
+  },
+  "syntheticLiterals": {
+    "test/hero-client.test.mjs": {
+      "credential-literal": [
+        "930bbdc51b6aed5c2a5678fd6e28dee7a05e8a4b643cfc0b4427c3efb86c0d94"
+      ]
+    },
+    "wrapper/test/crm-connections.test.mjs": {
+      "credential-literal": [
+        "e09701a507adb0c20a644665d41542a60b3bbf9e61ce4bc9d150add5fb8f0f6f"
+      ],
+      "url-credentials": [
+        "1231625e7e70c4e56347672932d37a1c35eff89051483b37cbd09f7b9c58337e"
+      ]
+    },
+    "wrapper/test/local-workers.test.mjs": {
+      "url-credentials": [
+        "d778ad3752b4e7909b74ec65d890eb13bfa13acf306b2d327bd011a3df416f46"
+      ]
+    }
+  }
+}

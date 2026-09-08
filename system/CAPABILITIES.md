@@ -14,6 +14,13 @@ bestehenden Aktionen und Kataloge. Geheimnisse gehören in den bestehenden
 Tresor, niemals in die Landkarte. Der technische Worker-Einstieg verweist auf
 diese Quelle, damit alle Worker dieselben Anschlüsse finden.
 
+## Neutraler Codeaustausch
+
+`source-privacy` führt die lokalen Git-Prüfungen, den geschützten Merge-Befehl und
+die einmalige Einrichtung der ausgeschlossenen Firmenbasis zusammen. Ablauf,
+Erstübernahme und Grenzen stehen in [../docs/CODE-SYNC.md](../docs/CODE-SYNC.md).
+Die Prüfungen benötigen keine Anbieter-Verbindung und verändern keine KI-Zugänge.
+
 ## Vorlesen / ElevenLabs
 
 `chat.message.read-aloud` bezeichnet den Lautsprecher unter fertigen

@@ -10,7 +10,7 @@ test('fresh shared context, selective loading and extension without code changes
   const root = await mkdtemp(path.join(os.tmpdir(), 'company-base-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   const base = path.join(root, 'firmenbasis');
-  await cp(new URL('../firmenbasis', import.meta.url), base, { recursive: true });
+  await cp(new URL('../templates/firmenbasis', import.meta.url), base, { recursive: true });
   for (const dir of ['soul', 'brain', 'skills']) await mkdir(path.join(root, dir));
   await mkdir(path.join(root, 'workspaces/default/soul'), { recursive: true });
   await writeFile(path.join(root, 'workspaces/default/soul/IDENTITY.md'), 'Anzeigename: Gemeinsam');
