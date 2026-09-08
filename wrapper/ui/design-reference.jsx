@@ -1,3 +1,4 @@
+import { AgentMenu } from "./agent-menu";
 import {NotificationRow} from "./job-notifications.jsx";
 import { ChapterScrubber } from "./components/ui/chapter-scrubber";
 import { PipelinePatternPreview } from "./pipeline";
@@ -41,6 +42,9 @@ export function DesignReference({ theme, tone, accent }) {
       {section === 'components' && <>
       <h3 className="section-heading">Bedienelemente & Seitenaufbau</h3>
       <SettingsPatterns/>
+      <h3 className="section-heading">Agent-Menü · Beispiel</h3>
+      <div className="sidebar-topbar agent-menu-preview"><AgentMenu name="Agent" avatar="nori" connectionState="online" preview onNavigate={()=>{}} onRestart={()=>{}} /></div>
+      <p className="page-note">Avatar und Name öffnen das gemeinsame Menü. Der Verbindungspunkt gehört zur Identität; Serverdetails stehen im geöffneten Menü. Die Vorschau verändert keine Einstellungen und startet keinen Server neu.</p>
       <h3 className="section-heading">Benachrichtigung · Beispiel</h3>
       <div className="settings-group"><NotificationRow item={{title:'Tagesüberblick · Fertig',created_at:1788854400,read_at:null}} onClick={()=>{}}/></div>
       <h3 className="section-heading">Startvorschläge · Glaspillen</h3>

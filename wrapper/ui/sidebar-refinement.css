@@ -76,7 +76,6 @@
   .sidebar .icon-button, .workspace-chats .chat-row > .icon-button { width: var(--control-touch); height: var(--control-touch); }
   .workspace-chats .chat-row > button:first-child { padding-right: var(--space-48); }
 }
-.sidebar-footer > .profile-button { padding-left: var(--space-8); gap: var(--space-4); }
 
 /* Project sheet: translucent material, native radio navigation, fixed actions. */
 :root[data-theme] .modal.project-dialog { width: min(480px, calc(100vw - 32px)); padding: 0; overflow: hidden; background: var(--sheet-glass); border: 1px solid var(--border); box-shadow: var(--shadow-small); backdrop-filter: blur(40px) saturate(140%); -webkit-backdrop-filter: blur(40px) saturate(140%); }
@@ -138,16 +137,6 @@
   .sidebar .workspace-chats .chat-row > button:first-child { padding-left: var(--space-48); }
 }
 
-/* Keep the agent selection inside the inset navigation surface. */
-.sidebar > .sidebar-footer { margin: auto var(--space-8) 0; border-top: 0; }
-.sidebar-footer > .profile-button { padding: var(--space-12) var(--space-48) var(--space-12) var(--space-8); gap: var(--space-8); border-radius: var(--radius-panel); }
-.sidebar-footer > .profile-button:is(:hover, [aria-expanded="true"]) { background: var(--selected); }
-.sidebar-footer > .profile-button > span:last-child { min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.sidebar-footer > .connection-status-button { right: var(--space-8); }
-.sidebar-footer > .profile-menu { bottom: calc(100% + var(--space-8)); left: 0; right: 0; max-height: calc(100dvh - 120px); overflow-y: auto; }
-.sidebar-footer > .profile-menu button { border-radius: var(--radius-control); }
-.sidebar-footer > .profile-menu .profile-restart { color: var(--muted); }
-
 /* Project names use the available width and truncate only on overflow. */
 .sidebar .workspace-select > span:not(.project-glyph) { flex: 1; min-width: 0; text-overflow: ellipsis; }
 @media (hover: hover) and (pointer: fine) {
@@ -182,14 +171,6 @@
 
 /* Compact navigation reserves the remaining height for conversations. */
 .app .sidebar-topbar { gap: var(--space-4); padding-inline: var(--space-8); }
-.sidebar-topbar > .sidebar-search {
-  display: flex; flex: 1; min-width: 0; min-height: var(--control-height);
-  padding: var(--space-4) var(--space-8); gap: var(--space-12);
-  border-radius: var(--radius-pill); background: var(--workspace-backdrop);
-  color: var(--muted); font-size: var(--text-control); text-align: left;
-}
-.sidebar-search > svg { width: 18px; flex-shrink: 0; }
-.sidebar-search:hover { color: var(--text); }
 .sidebar > nav .nav-item { min-height: var(--control-height); padding-block: var(--space-4); margin-bottom: 0; }
 .sidebar .projects-heading { padding: var(--space-8) var(--space-8) 0 var(--space-16); font-size: var(--text-caption); min-height: var(--control-height); }
 .sidebar .projects-heading > .icon-button { width: var(--control-height); height: var(--control-height); }
@@ -200,11 +181,35 @@
 .sidebar .workspace-chats .chat-row > button:first-child { min-height: var(--control-height); }
 .sidebar .chat-date-separator { margin-top: var(--space-8); }
 .sidebar .chat-date-separator:first-child { margin-top: var(--space-4); }
-.sidebar-footer > .profile-button { min-height: var(--control-target); padding-block: var(--space-4); padding-left: calc(var(--space-8) - var(--space-2)); gap: var(--space-8); }
-.sidebar-footer > .profile-button > .avatar { width: 24px; height: 24px; }
 @media (pointer: coarse) {
-  .sidebar-topbar > .sidebar-search, .sidebar > nav .nav-item,
-  .sidebar .workspace-select, .sidebar .workspace-chats .chat-row > button:first-child,
-  .sidebar-footer > .profile-button { min-height: var(--control-touch); }
+  .sidebar > nav .nav-item,
+  .sidebar .workspace-select, .sidebar .workspace-chats .chat-row > button:first-child { min-height: var(--control-touch); }
   .sidebar .workspace-heading > .icon-button, .sidebar .projects-heading > .icon-button { width: var(--control-touch); height: var(--control-touch); }
+}
+
+/* Agent identity anchors navigation; search remains a compact icon action. */
+.sidebar-topbar > .agent-menu-trigger {
+  flex: 1; min-width: 0; width: auto; min-height: var(--control-target);
+  padding: var(--space-4) var(--space-8); gap: var(--space-8);
+  border-radius: var(--radius-panel); text-align: left;
+}
+.agent-menu-trigger:is(:hover, [aria-expanded="true"]) { background: var(--selected); }
+.agent-menu-avatar { position: relative; display: flex; flex-shrink: 0; }
+.agent-menu-avatar > .avatar { width: 24px; height: 24px; }
+.agent-menu-avatar > .status-dot { position: absolute; right: 0; bottom: 0; margin: 0; box-shadow: 0 0 0 2px var(--sidebar); }
+.agent-menu-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: var(--weight-medium); }
+.agent-menu .agent-server-details { padding: var(--space-8) var(--space-12) var(--space-12); border-bottom: 1px solid var(--border); margin-bottom: var(--space-4); }
+.agent-server-details p { margin: 0; font-size: var(--text-small); font-weight: var(--weight-medium); }
+.agent-server-details dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-4) var(--space-12); margin: var(--space-8) 0 0; font-size: var(--text-caption); }
+.agent-server-details dt { color: var(--muted); }
+.agent-server-details dd { margin: 0; text-align: right; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+.agent-menu > button:last-child { color: var(--muted); }
+.agent-menu-preview { max-width: 268px; display: flex; }
+@media (max-width: 650px) {
+  .app:has(> .system-notice.system-update) > .sidebar .sidebar-topbar { margin-top: var(--space-40); }
+}
+@media (pointer: coarse) {
+  .sidebar-topbar > .agent-menu-trigger { min-height: var(--control-touch); }
+  .sidebar-topbar > .icon-button { width: var(--control-touch); height: var(--control-touch); flex-shrink: 0; }
+  .agent-menu > button { min-height: var(--control-touch); }
 }
