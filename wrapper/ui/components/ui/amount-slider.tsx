@@ -14,12 +14,13 @@ function hash(x: number, y: number) {
 // Adapted from the supplied AmountSlider: one native option per magnetic stop.
 // No monetary readout. Keyboard, touch and pointer share Radix's commit path.
 export function AmountSlider({ value, onValueChange, onValueCommit, min = 0, max = 100,
-  stops, className, label, valueText, reduceMotion = false, disabled = false,
+  stops, className, label, valueText, reduceMotion = false, disabled = false, unset = false,
 }: {
   value: number; onValueChange: (value: number) => void; onValueCommit: (value: number) => void;
   min?: number; max?: number; stops?: number[]; className?: string;
-  label: string; valueText: string; reduceMotion?: boolean; disabled?: boolean;
+  label: string; valueText: string; reduceMotion?: boolean; disabled?: boolean; unset?: boolean;
 }) {
+  const [dragging, setDragging] = React.useState(false);
   const canvasRef = React.useRef<HTMLCanvasElement>(null), trackRef = React.useRef<HTMLSpanElement>(null);
   const repaint = React.useRef<(() => void) | null>(null);
   const fraction = Math.min(Math.max((value - min) / (max - min || 1), 0), 1);
@@ -78,7 +79,7 @@ export function AmountSlider({ value, onValueChange, onValueCommit, min = 0, max
     const frame = (now: number) => { paint(now); if (running) raf = requestAnimationFrame(frame); };
     const sync = () => {
       cancelAnimationFrame(raf);
-      running = visible && !document.hidden && !reduce && !disabled;
+      running = visible && !document.hidden && !reduce && !disabled && !unset;
       last = performance.now(); paint(last);
       if (running) raf = requestAnimationFrame(frame);
     };
@@ -96,11 +97,18 @@ export function AmountSlider({ value, onValueChange, onValueCommit, min = 0, max
     theme.observe(document.documentElement, {attributes: true, attributeFilter: ["class", "style", "data-theme"]});
     document.addEventListener("visibilitychange", sync);
     return () => { running = false; cancelAnimationFrame(raf); ro.disconnect(); io.disconnect(); theme.disconnect(); document.removeEventListener("visibilitychange", sync); repaint.current = null; };
-  }, [reduce, disabled]);
+  }, [reduce, disabled, unset]);
   React.useEffect(() => { repaint.current?.(); }, [fraction]);
 
-  return <SliderPrimitive.Root className={cn("amount-slider", className)} value={[value]} min={min} max={max} step={1} disabled={disabled}
-    onValueChange={([next]) => onValueChange(snap(next))} onValueCommit={([next]) => onValueCommit(snap(next))}
+  return <SliderPrimitive.Root className={cn("amount-slider", className)} value={[value]} min={min} max={max} step={.001} disabled={disabled} data-dragging={dragging} data-unset={unset} data-reduce-motion={reduce}
+    onPointerDownCapture={() => setDragging(true)} onPointerUpCapture={() => { setDragging(false); if (unset) onValueCommit(snap(value)); }} onPointerCancel={() => setDragging(false)}
+    onValueChange={([raw]) => {
+      // Radix maps pointer positions over the whole root; align them with the
+      // inset thumb travel and visible dots before applying the magnetic zone.
+      const width = trackRef.current?.clientWidth || THUMB;
+      const next = width > THUMB ? Math.max(min, Math.min(max, min + ((raw - min) * width - (max - min) * THUMB / 2) / (width - THUMB))) : raw;
+      onValueChange(Math.abs(snap(next) - next) < amountSliderMotion.magnet ? snap(next) : next);
+    }} onValueCommit={([next]) => onValueCommit(snap(next))}
     onKeyDownCapture={event => {
       if (!sorted.length || disabled) return;
       const delta = event.key === "ArrowRight" || event.key === "ArrowUp" ? 1 : event.key === "ArrowLeft" || event.key === "ArrowDown" ? -1 : 0;
@@ -108,11 +116,11 @@ export function AmountSlider({ value, onValueChange, onValueCommit, min = 0, max
       event.preventDefault(); event.stopPropagation();
       const i = sorted.indexOf(snap(value));
       const next = sorted[event.key === "Home" ? 0 : event.key === "End" ? sorted.length - 1 : Math.max(0, Math.min(sorted.length - 1, i + (delta || (event.key === "PageUp" ? 1 : -1))))];
-      onValueChange(next); if (next !== value) onValueCommit(next);
+      onValueChange(next); onValueCommit(next);
     }}>
     <SliderPrimitive.Track ref={trackRef} className="amount-slider-track">
       <canvas ref={canvasRef} aria-hidden="true"/>
-      {sorted.map(stop => <span className="amount-slider-tick" key={stop} aria-hidden="true" data-passed={stop <= value}
+      {sorted.map(stop => <span className="amount-slider-tick" key={stop} aria-hidden="true" data-passed={!unset && stop <= value}
         style={{left: `calc(${(stop - min) / (max - min || 1)} * (100% - ${THUMB}px) + ${THUMB / 2}px)`}}/>)}
     </SliderPrimitive.Track>
     <SliderPrimitive.Thumb className="amount-slider-thumb" aria-label={label} aria-valuetext={valueText}/>
@@ -124,21 +132,24 @@ export function ReasoningSlider({ options, value, onChange, disabled = false, re
   options: ReasoningOption[]; value: string; onChange: (value: string) => Promise<unknown> | unknown; disabled?: boolean; reduceMotion?: boolean;
 }) {
   const [preview, setPreview] = React.useState<number | null>(null), saving = React.useRef(false);
-  const index = preview ?? Math.max(0, options.findIndex(option => option.value === value));
-  const current = options[index];
+  const reset = options.find(option => option.value === "default" || option.value === "auto");
+  const levels = options.filter(option => option !== reset);
+  const automatic = preview === null && value === reset?.value;
+  const index = preview ?? Math.max(0, levels.findIndex(option => option.value === value));
+  const current = automatic ? reset : levels[Math.round(index)];
   if (!current) return null;
   const commit = async (next: number) => {
     if (saving.current || disabled) return;
-    if (!options[next] || options[next].value === value) { setPreview(null); return; }
+    if (!levels[next] || levels[next].value === value) { setPreview(null); return; }
+    setPreview(next);
     saving.current = true;
-    try { await onChange(options[next].value); } finally { saving.current = false; setPreview(null); }
+    try { await onChange(levels[next].value); } finally { saving.current = false; setPreview(null); }
   };
   return <div className="reasoning-slider" onPointerCancel={() => setPreview(null)} onKeyDown={event => { if (event.key === "Escape") setPreview(null); }}>
-    <div className="reasoning-slider-heading"><span>Denkaufwand</span><output aria-live="off" title={current.description}><span key={current.value}>{current.label}</span></output></div>
-    {options.length > 1 && <>
-      <AmountSlider min={0} max={options.length - 1} stops={options.map((_, i) => i)} value={index} label="Denkaufwand" valueText={current.label}
+    <div className="reasoning-slider-heading"><span>Denkaufwand</span>{reset && !automatic && <button className="reasoning-reset" type="button" disabled={disabled} title="Auf native Voreinstellung zurücksetzen" onClick={() => void onChange(reset.value)}>{reset.label}</button>}<output aria-live="off" title={current.description}><span key={current.value}>{current.label}</span></output></div>
+    {levels.length > 1 && <>
+      <AmountSlider min={0} max={levels.length - 1} stops={levels.map((_, i) => i)} value={index} unset={automatic} label="Denkaufwand" valueText={current.label}
         disabled={disabled} reduceMotion={reduceMotion} onValueChange={setPreview} onValueCommit={next => void commit(next)}/>
-      <div className="reasoning-slider-limits" aria-hidden="true"><span>{options[0].label}</span><span>{options.at(-1)?.label}</span></div>
     </>}
   </div>;
 }

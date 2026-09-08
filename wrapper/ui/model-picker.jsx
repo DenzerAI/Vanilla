@@ -1,23 +1,24 @@
 import React, { useEffect, useId, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { Check, ChevronDown } from "./icons.jsx";
+import { Check, ChevronDown, Zap } from "./icons.jsx";
 import { BrandIcon } from "./brand-icon.jsx";
 import { AppLoader } from "./app-loader";
 import { ReasoningSlider } from "./components/ui/amount-slider";
 import { workerName } from "../../system/worker-catalog.mjs";
-import { supportedEffort, visibleModels } from "../worker-models.mjs";
+import { supportedEffort, visibleModels, fastTier } from "../worker-models.mjs";
 import "./model-picker.css";
 
 const modelName = model => (model?.displayName || model?.model || "Modell auswählen")
   .replace(/^(GPT-\d+(?:\.\d+)?)-/, "$1 ").replace(/(?<=\w)-(?=[A-Za-z])/g, " ");
 
-export function ModelPicker({ models = [], model, effort, onChange, context, workerId = "codex", workers = [], onProviderChange, onRefresh, hasConversation = false, disabled = false, providerDisabled = false, reduceMotion = false }) {
+export function ModelPicker({ models = [], model, effort, onChange, context, workerId = "codex", workers = [], onProviderChange, onRefresh, hasConversation = false, disabled = false, providerDisabled = false, running = false, serviceTier = null, onSpeedChange, reduceMotion = false }) {
   const [open, setOpen] = useState(false), [position, setPosition] = useState({});
   const [provider, setProvider] = useState(workerId), [pending, setPending] = useState(false), [error, setError] = useState("");
   const trigger = useRef(null), popup = useRef(null), operation = useRef(false);
   const id = useId();
   const choices = visibleModels(models, workerId);
   const selected = models.find(m => m.model === model);
+  const speed = workerId === "codex" ? fastTier(selected) : null;
   const efforts = selected?.supportedReasoningEfforts || [];
   const effortLabel = efforts.find(e => e.reasoningEffort === effort)?.displayName || effort;
   const providers = ["codex", "claw-code", workerId]
@@ -34,7 +35,10 @@ export function ModelPicker({ models = [], model, effort, onChange, context, wor
     finally {
       operation.current = false; setPending(false);
       requestAnimationFrame(() => {
-        if (popup.current?.contains(focused) && document.activeElement === document.body) focused.focus();
+        if (document.activeElement === document.body) {
+          if (popup.current?.contains(focused)) focused.focus();
+          else popup.current?.querySelector("[aria-pressed=true], input:checked, button")?.focus();
+        }
       });
     }
   };
@@ -72,7 +76,7 @@ export function ModelPicker({ models = [], model, effort, onChange, context, wor
       aria-haspopup="dialog" disabled={disabled} aria-expanded={open} aria-controls={open ? id : undefined}
       onClick={() => { setProvider(workerId); setError(""); setOpen(!open); if (!open) onRefresh?.(); }}>
       <BrandIcon name={workerId}/><span className="model-name">{selected ? modelName(selected) : workerName(workerId)}</span>
-      {!!efforts.length && <span className="model-effort">{effortLabel}</span>}<ChevronDown size={14}/>
+      {!!efforts.length && <span className="model-effort">{effortLabel}</span>}{speed && serviceTier === speed.id && <Zap size={12}/>}<ChevronDown size={14}/>
     </button>
     {open && createPortal(<div ref={popup} id={id} role="dialog" aria-label="Modell und Denkaufwand" aria-busy={pending}
       className="model-popover glass" style={position}
@@ -101,11 +105,14 @@ export function ModelPicker({ models = [], model, effort, onChange, context, wor
             options={efforts.map(e => ({value:e.reasoningEffort,label:e.displayName || e.reasoningEffort,description:e.description}))}
             value={effort} disabled={disabled || pending} reduceMotion={reduceMotion} onChange={next => act(() => onChange(model, next))}/>
         </div>}
+        {speed && onSpeedChange && <div className="model-speed"><span>Geschwindigkeit</span><button type="button"
+          disabled={disabled || pending} aria-pressed={serviceTier === speed.id} title="Fast · höherer Verbrauch. Gilt ab der nächsten Nachricht."
+          onClick={() => void act(() => onSpeedChange(serviceTier === speed.id ? null : speed.id))}><Zap size={14}/>{speed.name || "Fast"}</button></div>}
       </>}
       {!pending && (!sameProvider || !choices.length) && <div className="model-provider-state">
-        <p>{!sameProvider && hasConversation ? "Der Anbieterwechsel öffnet einen neuen Chat." : providerInfo?.installed === false ? `${workerName(provider)} ist noch nicht installiert.` : "Modelle aus der angemeldeten CLI laden."}</p>
+        <p>{!sameProvider && hasConversation ? running ? "Die laufende Antwort wird gestoppt. Dein Verlauf bleibt erhalten." : "Im selben Chat mit dem bisherigen Kontext weiterarbeiten." : providerInfo?.installed === false ? `${workerName(provider)} ist noch nicht installiert.` : "Modelle aus der angemeldeten CLI laden."}</p>
         <button type="button" disabled={disabled || providerInfo?.installed === false} onClick={() => void act(() => onProviderChange?.(provider))}>
-          {error ? "Erneut versuchen" : hasConversation && !sameProvider ? `Neuer Chat mit ${workerName(provider)}` : "Modelle laden"}
+          {error ? "Erneut versuchen" : hasConversation && !sameProvider ? running ? "Stoppen und wechseln" : `Mit ${workerName(provider)} fortsetzen` : "Modelle laden"}
         </button>
         {providerInfo?.installURL && <a href={providerInfo.installURL} target="_blank" rel="noreferrer">{workerName(provider)} einrichten ↗</a>}
       </div>}

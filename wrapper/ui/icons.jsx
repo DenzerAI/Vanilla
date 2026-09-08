@@ -1,4 +1,5 @@
 import React from "react";
+import BoltGlyph from "framework7-icons/react/esm/Bolt.js";
 import MaximizeGlyph from "framework7-icons/react/esm/ArrowUpLeftArrowDownRight.js";
 import MinimizeGlyph from "framework7-icons/react/esm/ArrowDownRightArrowUpLeft.js";
 import BriefcaseGlyph from "framework7-icons/react/esm/Briefcase.js";
@@ -154,3 +155,5 @@ export const PhoneOff = wrap(PhoneDownGlyph);
 export const AudioLines = wrap(WaveformGlyph);
 
 export const Briefcase = wrap(BriefcaseGlyph);
+
+export const Zap = wrap(BoltGlyph);

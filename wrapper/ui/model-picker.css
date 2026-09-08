@@ -1,6 +1,6 @@
 .model-popover.glass {
   background: var(--popover-glass);
-  background-image: var(--popover-glass-sheen);
+  background-image: none;
   border-radius: var(--radius-panel);
   box-shadow: var(--popover-glass-shadow);
   -webkit-backdrop-filter: blur(28px) saturate(180%);
@@ -71,3 +71,8 @@
   .model-popover.glass { border: 1px solid CanvasText; scrollbar-width: auto; }
   .model-popover::-webkit-scrollbar { display: revert; }
 }
+
+.model-speed { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); padding: var(--space-8); color: var(--muted); font-size: var(--text-small); }
+.model-speed button { display: inline-flex; align-items: center; gap: var(--space-4); min-height: var(--control-height); padding: var(--space-4) var(--space-8); border-radius: var(--radius-control); }
+.model-speed button[aria-pressed="true"] { background: var(--hover); color: var(--brand-accent); }
+@media (pointer: coarse) { .model-speed button { min-height: var(--control-touch); } }

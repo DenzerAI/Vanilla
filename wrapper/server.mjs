@@ -1,3 +1,4 @@
+import {saveHandoff, joinHandoff, handoffInstructions} from "./chat-handoff.mjs";
 import { searchConversations } from './search.mjs';
 import {localPath, localPort} from './isolation.mjs';
 import {sharedMemoryCodexConfig} from './shared-memory.mjs';
@@ -84,6 +85,7 @@ await workers.init();
 const clients = new Set(),
   loaded = new ThreadLoading(),
   active = new Map(),
+  finishing = new Map(),
   threadCache = new Map();
 const eventNames = new Set();
 const toolsByThread = new Map(),
@@ -189,12 +191,12 @@ workers.on("notification", (msg) => {
       }
     }
     touch(id);
-    finishThread(id, p.turn).catch((e) =>
-      emit({
-        method: "wrapper/error",
-        params: { message: e.message, threadId: id },
-      }),
-    );
+    const completion = finishThread(id, p.turn).catch((e) => {
+      emit({method:"wrapper/error", params:{message:e.message, threadId:id}});
+      throw e;
+    }).finally(() => { if (finishing.get(id) === completion) finishing.delete(id); });
+    finishing.set(id, completion);
+    void completion.catch(() => {});
   }
   if (msg.method === "serverRequest/resolved") {
     const requestId = p.requestId ?? p.id;
@@ -270,6 +272,7 @@ async function ensure(id) {
 }
 async function newChat({
   model,
+  serviceTier = null,
   title,
   cwd = workspace,
   permission = store.state.settings.permission,
@@ -281,6 +284,10 @@ async function newChat({
 } = {}) {
   const selection = await workers.select(worker, { mode });
   const workerId = selection.id;
+  if (serviceTier) {
+    const models = (await workers.call("model/list", {workerId})).data || [];
+    if (workers.entry(workerId).adapter !== "codex" || !models.find(m => m.model === model)?.serviceTiers?.some(t => t.id === serviceTier)) throw new Error("Der gewählte Fast-Modus wird nicht angeboten.");
+  }
   const r = await workers.call("thread/start", {
     workerId,
     cwd,
@@ -306,6 +313,7 @@ async function newChat({
     mode,
     projectId,
     model: r.model || r.thread.model,
+    serviceTier,
     createdAt: Date.now(),
     updatedAt: Date.now(),
     archived: false,
@@ -418,6 +426,7 @@ async function sendTurnUnlocked(id, b) {
       input,
     });
   }
+  if (workers.entry(workers.owner(id)).adapter === "codex") modelCache = (await workers.call("model/list", {workerId:workers.owner(id)})).data || [];
   if (b.nextSelection) {
     if (!b.nextSelection.model || typeof b.nextSelection.model !== "string" || (b.nextSelection.effort && typeof b.nextSelection.effort !== "string")) throw new Error("Ungültige vorgemerkte Modellwahl.");
     if (workers.entry(workers.owner(id)).adapter === "codex") {
@@ -427,6 +436,7 @@ async function sendTurnUnlocked(id, b) {
     }
   }
   const companyContext = await workerInstructions({ root, workspace, cwd: c.cwd })
+    + await handoffInstructions(store, c)
     + await routedContext({query:b.text || "",projectId:c.projectId || "default",chatId:id})
     + (c.jobId
       ? '\n\nDies ist ein einzelner Lauf eines bereits eingerichteten Jobs. Führe die Aufgabe aus; lege keine neue Routine an. Die Arbeitsanweisung wurde aus SKILL.md im Auftragsordner geladen. Relative Ressourcenpfade beziehen sich auf diesen Ordner. Eingaben liegen in input/, Ergebnisse gehören in output/. Die fertige Antwort wird über die gespeicherte Benachrichtigungsregel zugestellt; versende keine zusätzliche Benachrichtigung selbst.'
@@ -439,6 +449,7 @@ async function sendTurnUnlocked(id, b) {
   c.mode = policy.mode;
   c.model = (workers.entry(workers.owner(id)).adapter === "codex" || c.models?.some(m => m.model === b.model)) ? b.model || c.model : c.model;
   c.effort = b.effort || c.effort || "medium";
+  if (c.serviceTier && !modelCache.find(m => m.model === c.model)?.serviceTiers?.some(t => t.id === c.serviceTier)) c.serviceTier = null;
   if (workers.entry(workers.owner(id)).adapter === "acp") {
     let native = (await workers.call("thread/read", {threadId:id})).thread.workerSession;
     if (b.nextSelection) native = await applySessionSelection(native, b.nextSelection, async change => {
@@ -472,6 +483,7 @@ async function sendTurnUnlocked(id, b) {
     approvalsReviewer: "user",
     sandboxPolicy: legacyJob || c.channelOnly ? sandboxPolicy : policy.sandboxPolicy,
     summary: "auto",
+    ...(workers.entry(workers.owner(id)).adapter === "codex" ? {serviceTierForTurn: c.serviceTier || "default"} : {}),
   };
   if (policy.mode === "plan")
     p.collaborationMode = {
@@ -585,7 +597,7 @@ route("GET", "/api/status", async () => ({
 route("GET", "/api/bootstrap", async () => {
   await store.readIdentity();
   const modelsByWorker = await workers.modelLists();
-  modelCache = modelsByWorker[workers.effectiveWorker] || [];
+  modelCache = modelsByWorker.codex || [];
   const account = workers.connected ? await workers.call("account/read", {}).catch(() => ({})) : {};
   const workerState = await workers.status();
   return {
@@ -619,6 +631,7 @@ route("POST", "/api/chats", async (b) => {
   const projectId = b.projectId || "default";
   return newChat({
     model: b.model,
+    serviceTier: b.serviceTier || null,
     worker: b.worker || "auto",
     title: b.title,
     mode: policy.mode,
@@ -686,6 +699,65 @@ route("GET", "/api/thread", async (b, u) => {
     if (cached) return { thread: cached };
     throw e;
   }
+});
+route("POST", "/api/chat/speed", async b => {
+  const c = store.chat(b.id);
+  if (turnLocks.has(b.id) || restartGate.restarting) throw new Error("Bitte die laufende Übertragung abwarten.");
+  if (workers.entry(workers.owner(b.id)).adapter !== "codex") throw new Error("Dieser Anschluss bietet keinen Fast-Schalter.");
+  turnLocks.add(b.id);
+  try {
+    const models = (await workers.call("model/list", {workerId:workers.owner(b.id)})).data || [];
+    const model = models.find(m => m.model === (b.model || c.model));
+    if (b.serviceTier !== null && !model?.serviceTiers?.some(t => t.id === b.serviceTier)) throw new Error("Dieser Geschwindigkeitsmodus wird nicht angeboten.");
+    c.serviceTier = b.serviceTier; await store.save();
+    emit({method:"wrapper/chats"}); return {serviceTier:c.serviceTier};
+  } finally { turnLocks.delete(b.id); }
+});
+route("POST", "/api/chat/provider", async b => {
+  const id = b.id, c = store.chat(id);
+  if (turnLocks.has(id) || restartGate.restarting) throw new Error("Bitte die laufende Übertragung abwarten.");
+  if (c.jobId || c.channelOnly) throw new Error("Der Anbieter dieses automatischen Laufs bleibt fest zugeordnet.");
+  if (voiceSessions.has(id)) throw new Error("Bitte zuerst die Sprachsession beenden.");
+  if (b.expectedWorker !== workers.owner(id)) throw new Error("Der Anbieter wurde inzwischen geändert. Bitte erneut auswählen.");
+  if (b.workerId === workers.owner(id)) return {thread:(await workers.call("thread/read", {threadId:id, includeTurns:true})).thread, meta:c};
+  if (active.has(id) && b.expectedTurnId !== active.get(id)) throw new Error("Die laufende Antwort wurde inzwischen geändert. Bitte erneut auswählen.");
+  if (active.has(id) && b.stop !== true) throw new Error("Bitte die laufende Antwort zuerst stoppen.");
+  turnLocks.add(id);
+  try {
+    // Prepare/authenticate first. A failed target leaves the current session intact.
+    await workers.connect(b.workerId);
+    const target = workers.entry(b.workerId), capabilities = workers.capability(b.workerId);
+    if (target.adapter === "codex") {
+      const account = await workers.call("account/read", {workerId:b.workerId});
+      if (account.requiresOpenaiAuth === true && !account.account) throw new Error("Codex ist nicht angemeldet. Bitte zuerst in der CLI anmelden.");
+    }
+    const mode = capabilities.plan ? c.mode || "default" : "default";
+    const models = target.adapter === "codex" ? (await workers.call("model/list", {workerId:b.workerId})).data || [] : [];
+    const model = visibleModels(models).find(m => m.isDefault) || visibleModels(models)[0];
+    if (target.adapter === "codex" && !model) throw new Error("Codex meldet keine verfügbaren Modelle der 5.6- oder 6er-Serie.");
+    const r = await workers.call("thread/start", {workerId:b.workerId, cwd:await store.projectRoot(c.projectId || "default"), model:model?.model || null,
+      ...perms(runMode(mode).permission), approvalsReviewer:"user", historyMode:"legacy", experimentalRawEvents:true});
+    if (active.has(id)) {
+      await workers.call("turn/interrupt", {threadId:id, turnId:active.get(id)});
+      const deadline = Date.now() + 30000;
+      while (active.has(id) && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 50));
+      if (active.has(id)) throw new Error("Der bisherige Anbieter hat das Stoppen noch nicht bestätigt. Bitte erneut versuchen.");
+    }
+    await finishing.get(id);
+    const previous = mergeTools((await workers.call("thread/read", {threadId:id, includeTurns:true})).thread, toolsByThread.get(id));
+    const snapshot = await saveHandoff(store, id, previous);
+    const old = {...c}, selection = sessionModelSelection(r.thread.workerSession);
+    Object.assign(c, {workerId:b.workerId, workerThreadId:r.thread.id, handoffSnapshot:snapshot,
+      capabilities, fallbackFrom:null, mode, permission:runMode(mode).permission, model:model?.model || selection.model,
+      effort:model ? supportedEffort(model) : selection.effort, models:model ? models : selection.models, serviceTier:null});
+    try { await store.save(); } catch (error) { Object.assign(c, old); for (const key of Object.keys(c)) if (!(key in old)) delete c[key]; throw error; }
+    loaded.add(id);
+    const thread = joinHandoff(id, previous, r.thread);
+    threadCache.set(id, thread);
+    await store.exportThread(thread);
+    emit({method:"wrapper/chats"}); emit({method:"wrapper/thread", params:{thread}});
+    return {thread, meta:c};
+  } finally { turnLocks.delete(id); }
 });
 route("POST", "/api/worker-session", async b => {
   const id = b.id;
@@ -808,6 +880,7 @@ route("POST", "/api/chat/update", async (b) => {
   return c;
 });
 route("POST", "/api/turn/delete", async (b) => {
+  if (turnLocks.has(b.id)) throw new Error("Bitte die laufende Übertragung abwarten.");
   await ensure(b.id);
   if (active.has(b.id)) throw new Error("Bitte zuerst die laufende Antwort stoppen.");
   const current = await workers.call("thread/read", { threadId: b.id, includeTurns: true });
@@ -833,6 +906,7 @@ route("POST", "/api/turn/delete", async (b) => {
   return result;
 });
 route("POST", "/api/fork", async (b) => {
+  if (turnLocks.has(b.id)) throw new Error("Bitte die laufende Übertragung abwarten.");
   const c = await ensure(b.id);
   if (active.has(b.id))
     throw new Error("Bitte vor dem Verzweigen die Antwort abschließen lassen.");
@@ -846,6 +920,7 @@ route("POST", "/api/fork", async (b) => {
   store.state.chats.unshift({
     ...c,
     id: r.thread.id,
+    workerThreadId: c.workerThreadId ? r.thread.id : undefined,
     title: c.title + " · Kopie",
     createdAt: Date.now(),
     updatedAt: Date.now(),

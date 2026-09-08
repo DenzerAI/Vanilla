@@ -29,8 +29,10 @@
    Anschluss. Verlinke Ergebnisdateien. Behaupte Erfolg erst nach Prüfung.
    Fehlt ein Browser, ein Schlüssel oder eine andere Fähigkeit, benenne das.
 6. Bei Unterbrechung keine externen Aktionen blind wiederholen. Ein laufender
-   Auftrag bleibt bei seinem Worker; die Vertretung übernimmt nur neue Chats
-   und automatische Aufträge vor Beginn der Ausführung.
+   Auftrag bleibt ohne ausdrücklichen Anbieterwechsel bei seinem Worker; eine
+   automatische Vertretung übernimmt nur neue Chats und Aufträge vor Beginn der
+   Ausführung. Eine beauftragte Übergabe im selben Chat bestätigt zuerst den
+   Abbruch und erhält den bisherigen Gesprächskontext für den neuen Worker.
 
 Firmenbasis, Identität, Arbeitsanweisungen und Verlauf bleiben gemeinsame
 Dateien. Kein Worker pflegt dafür eine zusätzliche eigene Kopie. Zugangsdaten

@@ -43,3 +43,5 @@ export async function applySessionSelection(session, requested, change) {
   }
   return session;
 }
+
+export const fastTier = model => model?.serviceTiers?.find(t => t.id === "priority" || t.id === "fast") || null;

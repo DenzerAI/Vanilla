@@ -631,6 +631,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     [model, setModel] = useState(""),
     [draftWorker, setDraftWorker] = useState("auto"),
     [nextSelections, setNextSelections] = useState({}),
+    [draftSpeed, setDraftSpeed] = useState(null),
     [effort, setEffort] = useState("medium"),
     [mode, setMode] = useState("default"),
     [projectId, setProjectId] = useState(initialProject),
@@ -1234,7 +1235,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     } catch (error) { notify(error.message); }
   }
   async function chooseProvider(workerId) {
-    if (busy || running) throw new Error("Bitte die laufende Arbeit abwarten.");
+    if (busy) throw new Error("Bitte die laufende Übertragung abwarten.");
     setBusy(true);
     const sourceChat = chatRef.current, sourceProject = projectRef.current;
     try {
@@ -1244,10 +1245,21 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       const worker = state.workers.find(w => w.id === workerId);
       const nextModel = preferredModel(state.models, workerId, workerId === pickerWorker ? model : "");
       if (worker.adapter === "codex" && !nextModel) throw new Error("Codex meldet noch keine Modelle der 5.6- oder 6er-Serie. Bitte die CLI-Anmeldung prüfen.");
+      if (sourceChat) {
+        const result = await api("/chat/provider", {id:sourceChat, workerId, expectedWorker:pickerWorker, expectedTurnId:active[sourceChat] || null, stop:running});
+        setChats(old => old.map(c => c.id === sourceChat ? result.meta : c));
+        setNextSelections(old => { const next = {...old}; delete next[sourceChat]; return next; });
+        if (chatRef.current === sourceChat) {
+          setThread(result.thread); setModel(result.meta.model); setEffort(result.meta.effort);
+          setMode(result.meta.mode); setDraftWorker(workerId);
+        }
+        return;
+      }
       // ACP negotiates its exact model/effort options when the empty session is opened.
       const result = worker.adapter === "acp" ? await api("/chats", {worker: workerId, mode: "default", projectId: sourceProject, title: !sourceChat ? draftTitle || undefined : undefined}) : null;
       if (chatRef.current !== sourceChat || projectRef.current !== sourceProject) return;
       saveDraft();
+      setDraftSpeed(null);
       setDraftWorker(workerId); setMode(worker.capabilities.plan ? mode : "default");
       if (result) {
         chatRef.current = result.thread.id; setChatId(result.thread.id); setThread(result.thread);
@@ -1261,6 +1273,12 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       if (sourceChat) setDraftTitle("");
       followScroll.current = true;
     } finally { setBusy(false); }
+  }
+  async function changeSpeed(serviceTier) {
+    if (!chatId) { setDraftSpeed(serviceTier); return; }
+    const id = chatId;
+    const result = await api("/chat/speed", {id, model:pickerModel, serviceTier});
+    setChats(old => old.map(c => c.id === id ? {...c, serviceTier:result.serviceTier} : c));
   }
   async function changePickerSelection(nextModel, nextEffort) {
     if (busy) throw new Error("Bitte die Übertragung abwarten.");
@@ -1306,6 +1324,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         const r = await api("/chats", {
           model,
           worker: draftWorker,
+          serviceTier: draftSpeed,
           mode,
           projectId: projectRef.current,
           title: draftTitle || undefined,
@@ -2096,7 +2115,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       <ModelPicker
                         models={pickerModels} model={pickerModel} effort={pickerEffort} reduceMotion={boot.settings.reduceMotion === "on"}
                         workerId={pickerWorker} workers={boot.workers || []}
-                        hasConversation={!!chatId} disabled={busy} providerDisabled={running}
+                        hasConversation={!!chatId} disabled={busy} providerDisabled={!!current?.jobId || !!current?.channelOnly}
+                        running={running} serviceTier={chatId ? current?.serviceTier : draftSpeed} onSpeedChange={changeSpeed}
                         onProviderChange={chooseProvider} onRefresh={refreshPickerWorkers}
                         context={nextSelection ? "Nächste Nachricht" : running ? "Auswahl für die nächste Nachricht" : current?.fallbackFrom ? `${workerName(current.workerId)} übernimmt als Vertretung für ${workerName(current.fallbackFrom)}.` : undefined}
                         onChange={changePickerSelection}
