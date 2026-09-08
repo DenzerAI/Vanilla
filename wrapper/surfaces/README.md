@@ -5,7 +5,7 @@ Diese Dateien sind verbindliche Bauanleitungen, keine Ideensammlung. Vor einer E
 | Bereich | Vertrag | Implementierung |
 | --- | --- | --- |
 | Chat / Projekte | [chat.md](chat.md) | app.jsx, chat-controls.jsx, dictation.jsx |
-| Pipeline | [pipeline.md](pipeline.md) | pipeline.tsx, pipeline.css; bedienbare Designstudie |
+| Heute / Kalender | [today.md](today.md) | planner.tsx, planner.css, planner-dates.mjs |
 | Inbox | [inbox.md](inbox.md) | app.jsx / Inbox-Sidebar, inbox.tsx, inbox.css; Designvorschau |
 | Aufträge | [jobs.md](jobs.md) | app.jsx / JobForm |
 | Verbindungen | [connections.md](connections.md) | app.jsx, connection-catalog.mjs, service-connection.jsx, service-catalog.mjs, brand-icon.jsx |
@@ -18,7 +18,7 @@ Diese Dateien sind verbindliche Bauanleitungen, keine Ideensammlung. Vor einer E
 
 Der gemeinsame Seitenleistenkopf zeigt AgentMenu mit konfiguriertem Avatar, Namen und integriertem Verbindungspunkt. Daneben stehen Suche als IconButton, Benachrichtigungen und Einklappen. Dies gilt auch für Inbox und Einstellungen. Der bisherige Agentenfuß und der separat bedienbare Serverstatus entfallen; Details und Neustart stehen im Agentenmenü. Aufbau und Tastaturbedienung führt chat.md.
 
-Inbox, Pipeline, Aufträge und die verfügbare Bibliothek bilden das Hauptmenü; Die Gruppe „Workspace“ und ihre Chats folgen darunter. Verbindungen und Skills stehen in der vorhandenen Einstellungsnavigation mit ihren bisherigen Symbolen und Katalogansichten. Globale Suche und Querverweise öffnen den jeweiligen Einstellungsbereich direkt. Keine Modul-Platzhalter, zusätzliche Navigationsebene oder neue Seitengestaltung.
+Heute, Inbox, Aufträge und die verfügbare Bibliothek bilden das Hauptmenü; Die Gruppe „Workspace“ und ihre Chats folgen darunter. Verbindungen und Skills stehen in der vorhandenen Einstellungsnavigation mit ihren bisherigen Symbolen und Katalogansichten. Globale Suche und Querverweise öffnen den jeweiligen Einstellungsbereich direkt. Keine Modul-Platzhalter, zusätzliche Navigationsebene oder neue Seitengestaltung.
 
 ## Gemeinsamer Seitenkopf
 

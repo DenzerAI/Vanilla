@@ -2,7 +2,7 @@ import GlassButtonDemo from "./components/ui/glass-button-demo";
 import { AgentMenu } from "./agent-menu";
 import {NotificationRow} from "./job-notifications.jsx";
 import { ChapterScrubber } from "./components/ui/chapter-scrubber";
-import { PipelinePatternPreview } from "./pipeline";
+import { PlannerPatternPreview } from "./planner";
 import { ModelPicker } from "./model-picker.jsx";
 import { InboxPatternPreview } from "./inbox";
 import { WelcomeSuggestions } from "./welcome-suggestions";
@@ -63,7 +63,9 @@ export function DesignReference({ theme, tone, accent }) {
         hasConversation onProviderChange={async () => { throw new Error("Lokale Designvorschau. Anbieter im Chat auswählen."); }}/>
       <p className="page-note">Kompakter Glasregler mit mittiger Stufe und Fast-Blitz. Klick auf die Mitte öffnet Modell- und Anbieterwahl mit Original-Icons. Das Terrakotta-Quadratfeld wird je nativer Stufe dichter, breiter und lebhafter und bleibt bei reduzierter Bewegung statisch. Die Beispieldaten bleiben lokal; im Chat liefert der Anbieter seine verfügbaren Werte.</p>
       <h3 className="section-heading">Inbox · Gesprächszeile</h3>
-      <PipelinePatternPreview/><InboxPatternPreview/>
+      <InboxPatternPreview/>
+      <h3 className="section-heading">Heute · Terminzeile</h3>
+      <PlannerPatternPreview/>
       <h3 className="section-heading">Flächenlicht</h3>
       <div className="panel-light-preview"><PanelLight mode="animated"/><span>Dezente Tiefe mit ruhiger Lichtbewegung</span></div>
       <h3 className="section-heading">Dateivorschau</h3>
