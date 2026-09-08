@@ -92,11 +92,12 @@ nur den Inhaltsbereich; Fehler ersetzen die Platzhalter durch Wiederholen.
 
 
 Der schwebende Neustart-/Aktualisieren-Button verwendet `GlassButton` aus
-`ui/components/ui/glass-button.tsx`: klare Glaspille mit gewölbter Lichtkante, breitem diagonalen Reflex,
-schmalem Glanzlicht und abgesetztem Schatten. 12 px Blur erhalten erkennbaren
-Hintergrund; der Reflex bleibt auch auf ruhiger Fläche sichtbar. Hover verstärkt
-das Licht, Druck gibt unmittelbar nach. Alle Materialwerte liegen zentral in
-den glass-button-Rollen für Hell und Dunkel. Material und Unschärfe
+`ui/components/ui/glass-button.tsx`: flache, minimalistische Glasfläche in der Materialfamilie des Composers.
+Die Tönung verwendet nur 15 % Deckkraft, der Hintergrund bleibt durch 24 px Blur
+weich sichtbar. Eine sehr feine innere Kontur begrenzt die Fläche. Keine
+Verläufe, Glanzstreifen, Wulstkanten oder äußeren Schatten. Hover behält die
+Transparenz; Tastaturfokus bleibt sichtbar. Die Tönung folgt der Farbwelt.
+Material und Unschärfe
 verwenden zentrale Tokens; die feste Mindestbreite erhält den ruhigen Ladezustand.
 Ref, native Buttonattribute und deaktivierter Zustand gelten für den inneren Button;
 `className` gestaltet die Hülle, `contentClassName` den Inhalt. Ohne angegebenen
