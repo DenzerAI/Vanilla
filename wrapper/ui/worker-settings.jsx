@@ -1,4 +1,3 @@
-import {Skeleton} from './skeleton.tsx';
 import React, { useEffect, useState } from "react";
 import { SettingRow } from "./settings-row.jsx";
 import "./worker-settings.css";
@@ -19,7 +18,6 @@ export function WorkerSettings({ api, onChange, onConnections }) {
     catch(e) { setError(e.message); }
     finally { setBusy(""); }
   }
-  if (!data && !error) return <Skeleton variant="settings" label="Anschlüsse werden geprüft …"/>;
   if (!data) return <div className="settings-group"><SettingRow title="Worker" description={error || "Anschlüsse werden geprüft …"} action={error && <button onClick={() => act("reload", "/workers")}>Erneut prüfen</button>} /></div>;
   const choices = data.workers.filter(w => w.configured);
   return <div className="worker-settings">
@@ -47,14 +45,14 @@ export function WorkerSettings({ api, onChange, onConnections }) {
           <button aria-label={`${w.connected ? "Verwalten" : "Einrichten"}: ${w.name}`} aria-expanded={expanded === w.id} aria-controls={`worker-${w.id}`} disabled={!!busy} onClick={() => setExpanded(expanded === w.id ? null : w.id)}>{expanded === w.id ? "Schließen" : w.connected ? "Verwalten" : w.installed ? "Details" : "Einrichten"}</button>
         </div>} />
         {expanded === w.id && <div className="worker-detail" id={`worker-${w.id}`}>
-          <p>{w.error || (w.connected ? "Die Schnittstelle antwortet. Konto, Modelle und Werkzeuge werden im jeweiligen Worker eingerichtet." : "Installiere den Worker und richte dort dein Konto ein. Danach hier verbinden.")}</p>
+          <p>{w.error || (w.connected ? "Die Schnittstelle antwortet und die Anmeldung funktioniert. Modelle und Werkzeuge werden im jeweiligen Worker eingerichtet." : w.login ? `Der Worker nutzt die Anmeldung dieses Rechners: einmal im Terminal „${w.login}“ ausführen, danach hier verbinden.` : "Installiere den Worker und richte dort dein Konto ein. Danach hier verbinden.")}</p>
           <div className="worker-actions">
             {!w.connected && <button disabled={!!busy} onClick={() => act(w.id, "/workers")}>Installation prüfen</button>}
             {w.installURL && <a className="button" href={w.installURL} target="_blank" rel="noreferrer">Einrichtung öffnen ↗</a>}
             {w.connected && <button disabled={!!busy} onClick={() => act(w.id, "/workers/connect", { id: w.id })}>{busy === w.id ? "Verbinde …" : "Neu verbinden"}</button>}
             {w.configured && ![data.settings.defaultWorker, data.settings.fallbackWorker].includes(w.id) && <button disabled={!!busy} onClick={() => act(w.id, "/workers/disconnect", { id: w.id })}>Trennen</button>}
           </div>
-          <details><summary>Technische Details</summary><p>{w.description}. {w.capabilities.plan ? "Geschützter Planmodus verfügbar." : "Geschützter Planmodus hier nicht verfügbar."} Browserzugriff hängt von den Werkzeugen des Workers ab.</p><p>Eigener Programmpfad: <code>{w.env}</code>. {w.version && `Version: ${w.version}`}</p>{!w.command && <p>Für Claude Code wird ein separater ACP-Adapter benötigt.</p>}</details>
+          <details><summary>Technische Details</summary><p>{w.description}. {w.capabilities.plan ? "Geschützter Planmodus verfügbar." : "Geschützter Planmodus hier nicht verfügbar."} Browserzugriff hängt von den Werkzeugen des Workers ab.</p><p>Eigener Programmpfad: <code>{w.env}</code>. {w.version && `Version: ${w.version}`}</p></details>
         </div>}
       </React.Fragment>)}
     </div>

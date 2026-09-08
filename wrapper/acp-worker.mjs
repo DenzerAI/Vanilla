@@ -1,25 +1,20 @@
-import { EventEmitter } from "node:events";
+import { EventEmitter, once } from "node:events";
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { WorkerRPC } from "./worker-rpc.mjs";
+import { loginHint } from "../system/worker-catalog.mjs";
 
+const AUTH_STATUS = "_auth/status_update"; // Pushed by adapters that know their own login identity.
 export class ACPWorker extends EventEmitter {
-  constructor({ id, name, command, args, cwd, contextEnv, readThread, persist, rpc, mcpServers = () => [] }) {
-    super(); Object.assign(this, { id, name, readThread, persist, mcpServers });
+  constructor({ id, name, login = null, command, args, cwd, contextEnv, readThread, persist, rpc, mcpServers = () => [] }) {
+    super(); Object.assign(this, { id, name, login, cwd, readThread, persist, mcpServers });
     this.rpc = rpc || new WorkerRPC({ command, args, cwd, env: contextEnv });
     this.threads = new Map(); this.sessions = new Map(); this.running = new Map(); this.requests = new Map();
-    this.connected = false; this.setupCount = 0; this.earlyUpdates = [];
-    const save = this.persist;
-    let saving = Promise.resolve();
-    this.persist = thread => {
-      const snapshot = structuredClone(thread);
-      saving = saving.catch(() => {}).then(() => save(snapshot));
-      return saving;
-    };
+    this.connected = false; this.loginRequired = false; this.auth = null; this.modelCatalog = [];
     this.rpc.on("message", msg => this.receive(msg));
     this.rpc.on("disconnected", error => {
-      this.connected = false; this.starting = null; this.sessions.clear(); this.earlyUpdates = [];
+      this.connected = false; this.starting = null; this.auth = null; this.sessions.clear();
       for (const [id] of this.running) this.finish(id, "failed", { message: "Verbindung unterbrochen. Ergebnis prüfen, bevor du erneut startest." }).catch(() => {});
       this.requests.clear(); this.emit("disconnected", error);
     });
@@ -31,30 +26,47 @@ export class ACPWorker extends EventEmitter {
       this.rpc.start();
       const r = await this.rpc.call("initialize", { protocolVersion: 1, clientInfo: { name: "agent-control", version: "1.0.0" }, clientCapabilities: { fs: { readTextFile: false, writeTextFile: false }, terminal: false } });
       if (r?.protocolVersion !== 1 || !r.agentCapabilities) throw new Error("Dieser Anschluss spricht kein unterstütztes ACP. Installation prüfen.");
-      this.info = { ...r, userAgent: r.agentInfo?.version || null };
+      this.info = { ...r, userAgent: r.agentInfo?.version || "ACP 1" };
+      // "Verbunden" means the worker can actually answer: wait for the login probe the adapter runs after initialize.
+      if (r.agentCapabilities._meta?.authStatus) await this.awaitAuth();
+      if (this.loginRequired) throw new Error(loginHint(this));
+      // Models are negotiated per session; a closable probe session reveals them before the first chat.
+      if (!this.modelCatalog.length && r.agentCapabilities.sessionCapabilities?.close) await this.probeModels();
       this.connected = true;
       return this.info;
     })().catch(e => { this.rpc.stop(); this.starting = null; throw e; });
     return this.starting;
   }
+  async awaitAuth(ms = 6000) {
+    if (this.auth) return;
+    const ac = new AbortController(), timer = setTimeout(() => ac.abort(), ms);
+    try {
+      await Promise.race([once(this, "auth", { signal: ac.signal }), once(this.rpc, "disconnected", { signal: ac.signal }).then(([e]) => { throw new Error(e?.message || "Worker-Verbindung beendet."); })]);
+    } catch (e) { if (e.name !== "AbortError") throw e; }
+    finally { clearTimeout(timer); ac.abort(); }
+  }
+  async probeModels() {
+    const session = await this.rpc.call("session/new", { cwd: this.cwd, mcpServers: [] }, 30000);
+    this.remember(session);
+    if (session?.sessionId) await this.rpc.call("session/close", { sessionId: session.sessionId }).catch(() => {});
+  }
   get capabilities() {
-    return { chat: true, streaming: true, attachments: !!(this.info?.agentCapabilities?.promptCapabilities?.image || this.info?.agentCapabilities?.promptCapabilities?.audio), approvals: true, plan: false, steer: false, fork: false, archive: true, terminal: false, skills: false };
+    return { chat: true, streaming: true, attachments: true, approvals: true, plan: false, steer: false, fork: false, archive: true, terminal: false, skills: false };
   }
-  models(thread) {
-    return (thread?.workerSession?.models?.availableModels || []).map(m => ({ model: m.modelId, displayName: m.name || m.modelId, isDefault: m.modelId === thread.workerSession.models.currentModelId, supportedReasoningEfforts: [] }));
+  modelList(session) {
+    if (session?.models?.availableModels) return session.models.availableModels.map(m => ({ model: m.modelId, displayName: m.name || m.modelId, isDefault: m.modelId === session.models.currentModelId, supportedReasoningEfforts: [] }));
+    const option = session?.configOptions?.find(o => o.id === "model");
+    return (option?.options || []).flatMap(o => o.options || [o]).map(o => ({ model: o.value, displayName: o.name || o.value, isDefault: o.value === option.currentValue, supportedReasoningEfforts: [] }));
   }
-  async setup(method, params) {
-    this.setupCount++;
-    try { return await this.rpc.call(method, params); }
-    finally { this.setupCount--; }
-  }
-  applyEarly(thread) {
-    const pending = this.earlyUpdates.filter(m => m.params.sessionId === thread.workerSession.sessionId);
-    this.earlyUpdates = this.earlyUpdates.filter(m => m.params.sessionId !== thread.workerSession.sessionId);
-    for (const msg of pending) this.receive(msg);
-  }
-  publishSession(thread) {
-    this.event("worker/session/updated", thread.id, { workerSession: structuredClone(thread.workerSession) });
+  models(thread) { return this.modelList(thread?.workerSession); }
+  remember(session) { const list = this.modelList(session); if (list.length) this.modelCatalog = list; }
+  currentModel(session) { return session?.models?.currentModelId ?? session?.configOptions?.find(o => o.id === "model")?.currentValue ?? null; }
+  async setModel(thread, model) {
+    const session = thread.workerSession;
+    if (!model || model === this.currentModel(session)) return;
+    if (!this.models(thread).some(m => m.model === model)) throw new Error("Modell gehört nicht zu diesem Worker. Bitte dessen Modell auswählen.");
+    if (session.models) { await this.rpc.call("session/set_model", { sessionId: session.sessionId, modelId: model }); session.models.currentModelId = model; }
+    else { await this.rpc.call("session/set_config_option", { sessionId: session.sessionId, configId: "model", value: model }); session.configOptions.find(o => o.id === "model").currentValue = model; }
   }
   async thread(id) {
     if (!this.threads.has(id)) {
@@ -68,17 +80,20 @@ export class ACPWorker extends EventEmitter {
     if (method === "thread/read") return { thread: structuredClone(await this.thread(p.threadId)) };
     if (["thread/archive", "thread/unarchive"].includes(method)) return {};
     await this.start();
-    if (method === "model/list") return { data: [] }; // Models are negotiated per ACP session.
+    if (method === "model/list") return { data: structuredClone(this.modelCatalog) };
     if (method === "account/read") return {};
     if (method === "mcpServerStatus/list") return { data: [] };
     if (method === "thread/start") {
       if (p.sandbox === "read-only") throw new Error(`${this.name} bietet hier keinen geschützten Planmodus.`);
-      const session = await this.setup("session/new", { cwd: p.cwd, mcpServers: this.mcpServers(p.cwd) });
+      const session = await this.rpc.call("session/new", { cwd: p.cwd, mcpServers: this.mcpServers(p.cwd) });
       if (!session?.sessionId) throw new Error("Worker hat keinen Chat angelegt. Anmeldung prüfen.");
+      this.remember(session);
       const thread = { id: `${this.id}-${randomUUID()}`, workerId: this.id, cwd: p.cwd, turns: [], workerSession: session };
-      this.threads.set(thread.id, thread); this.sessions.set(session.sessionId, thread.id); this.applyEarly(thread);
+      this.threads.set(thread.id, thread); this.sessions.set(session.sessionId, thread.id);
+      // A model from another worker's list is ignored; the chat reports what actually runs.
+      if (p.model && this.models(thread).some(m => m.model === p.model)) await this.setModel(thread, p.model);
       await this.persist(thread);
-      return { thread: structuredClone(thread), model: session.models?.currentModelId || null };
+      return { thread: structuredClone(thread), model: this.currentModel(session) };
     }
     const thread = p.threadId && await this.thread(p.threadId);
     if (method === "thread/resume") {
@@ -86,31 +101,11 @@ export class ACPWorker extends EventEmitter {
       if (!this.sessions.has(sid)) {
         if (!this.info.agentCapabilities.loadSession) throw new Error(`${this.name} kann diesen Chat nach Neustart nicht fortsetzen. Verlauf bleibt erhalten; bitte neuen Chat beginnen.`);
         // Ignore replay updates until load finishes: our persisted transcript is the display source.
-        const result = await this.setup("session/load", { sessionId: sid, cwd: p.cwd, mcpServers: this.mcpServers(p.cwd) });
+        const result = await this.rpc.call("session/load", { sessionId: sid, cwd: p.cwd, mcpServers: this.mcpServers(p.cwd) });
         if (!result || (result.sessionId && result.sessionId !== sid)) throw new Error("Worker konnte den vorhandenen Chat nicht wiederherstellen. Bitte einen neuen Chat beginnen.");
-        thread.workerSession = { ...result, sessionId: sid };
-        thread.cwd = p.cwd; this.sessions.set(sid, thread.id); this.applyEarly(thread);
-        await this.persist(thread); this.publishSession(thread);
+        thread.workerSession = { ...thread.workerSession, ...result, sessionId: sid };
+        thread.cwd = p.cwd; this.sessions.set(sid, thread.id); this.remember(thread.workerSession);
       }
-      return { thread: structuredClone(thread) };
-    }
-    if (method === "session/set_config_option" || method === "session/set_mode") {
-      if (this.running.has(thread.id)) throw new Error("Bitte die laufende Antwort abwarten oder stoppen.");
-      if (!this.sessions.has(thread.workerSession.sessionId)) throw new Error("Sitzung zuerst fortsetzen.");
-      const sessionId = thread.workerSession.sessionId;
-      if (method === "session/set_mode") {
-        if (thread.workerSession.configOptions !== undefined || !thread.workerSession.modes?.availableModes?.some(m => m.id === p.modeId)) throw new Error("Sitzungsmodus wird nicht angeboten.");
-        await this.rpc.call(method, { sessionId, modeId: p.modeId });
-        thread.workerSession.modes.currentModeId = p.modeId;
-      } else {
-        const option = thread.workerSession.configOptions?.find(o => o.id === p.configId);
-        const values = option?.options?.flatMap(o => o.options || [o]);
-        if (option?.type !== "select" || !values?.some(o => typeof o.value === "string" && o.value === p.value)) throw new Error("Diese Sitzungseinstellung oder dieser Wert wird nicht angeboten.");
-        const result = await this.rpc.call(method, { sessionId, configId: p.configId, value: p.value });
-        if (!Array.isArray(result?.configOptions)) throw new Error("Worker hat die Sitzungseinstellungen nicht bestätigt. Sitzung neu laden.");
-        thread.workerSession.configOptions = result.configOptions;
-      }
-      await this.persist(thread); this.publishSession(thread);
       return { thread: structuredClone(thread) };
     }
     if (method === "turn/start") {
@@ -126,14 +121,7 @@ export class ACPWorker extends EventEmitter {
           prompt.push({ type: capability, data: (await readFile(input.path)).toString("base64"), mimeType: mime[path.extname(input.path).toLowerCase()] });
         }
       }
-      // Native commands may require exactly one text block (e.g. Claude /usage).
-      // Do not turn shared context into command arguments or dispatch a second prompt.
-      if (p.input[0]?.type === "text" && p.input[0].text.startsWith("/")) prompt.shift();
-      if (p.model && thread.workerSession.configOptions === undefined && p.model !== thread.workerSession.models?.currentModelId) {
-        if (!this.models(thread).some(m => m.model === p.model)) throw new Error("Modell gehört nicht zu diesem Worker. Bitte dessen Modell auswählen.");
-        await this.rpc.call("session/set_model", { sessionId: thread.workerSession.sessionId, modelId: p.model });
-        thread.workerSession.models.currentModelId = p.model;
-      }
+      await this.setModel(thread, p.model);
       const turn = { id: randomUUID(), status: "inProgress", items: [{ id: randomUUID(), type: "userMessage", content: structuredClone(p.input) }] };
       thread.turns.push(turn); this.running.set(thread.id, turn);
       try { await this.persist(thread); } catch(e) { this.running.delete(thread.id); thread.turns.pop(); throw e; }
@@ -143,10 +131,10 @@ export class ACPWorker extends EventEmitter {
         this.event("item/completed", thread.id, { turnId: turn.id, item: turn.items[0] });
         this.rpc.call("session/prompt", { sessionId: thread.workerSession.sessionId, prompt }, 60 * 60 * 1000)
           .then(r => {
-            const status = r?.stopReason === "cancelled" ? "interrupted" : r?.stopReason === "end_turn" ? "completed" : "failed";
+            const status = r?.stopReason === "cancelled" ? "interrupted" : r?.stopReason === "end_turn" && turn.items.some(i => i.type === "agentMessage" && i.text?.trim()) ? "completed" : "failed";
             return this.finish(thread.id, status, status === "failed" ? { message: "Worker hat kein abgeschlossenes Ergebnis geliefert. Verlauf prüfen." } : null);
           })
-          .catch(e => this.finish(thread.id, "failed", { message: e.message })).catch(() => {});
+          .catch(e => this.finish(thread.id, "failed", { message: this.loginFailure(e) ? loginHint(this) : e.message })).catch(() => {});
       });
       return { turn: structuredClone(turn) };
     }
@@ -157,8 +145,19 @@ export class ACPWorker extends EventEmitter {
     }
     throw new Error(`${this.name} unterstützt diese Funktion hier noch nicht (${method}).`);
   }
+  loginFailure(error) {
+    const missing = error?.data?.errorKind === "authentication_failed" || /failed to authenticate|not logged in|run \/login/i.test(error?.message || "");
+    if (missing) this.loginRequired = true;
+    return missing;
+  }
   event(method, threadId, params) { this.emit("notification", { method, params: { threadId, ...params } }); }
   receive(msg) {
+    if (msg.method === AUTH_STATUS) {
+      this.auth = msg.params?.authStatus || null;
+      this.loginRequired = this.auth?.kind === "none";
+      this.emit("auth", this.auth);
+      return;
+    }
     const id = this.sessions.get(msg.params?.sessionId), turn = this.running.get(id);
     if (msg.id !== undefined) {
       if (msg.method === "session/request_permission" && turn) {
@@ -168,41 +167,9 @@ export class ACPWorker extends EventEmitter {
       } else this.rpc.write({ id: msg.id, error: { code: -32601, message: "Diese Client-Funktion ist nicht verfügbar." } });
       return;
     }
-    if (msg.method !== "session/update") return;
+    if (msg.method !== "session/update" || !turn) return;
     const u = msg.params.update;
     if (!u) return;
-    const transcriptUpdate = ["agent_message_chunk", "agent_thought_chunk", "user_message_chunk", "tool_call", "tool_call_update", "plan"].includes(u.sessionUpdate);
-    if (!id) {
-      // session/new may reply and notify in the same stdio chunk, before its promise resumes.
-      // During load, preserve metadata but deliberately ignore transcript replay.
-      if (this.setupCount && !transcriptUpdate) {
-        if (this.earlyUpdates.length < 256) this.earlyUpdates.push(structuredClone(msg));
-        else this.emit("notification", { method: "wrapper/error", params: { message: "Zu viele frühe Worker-Updates; Sitzungseinstellungen möglicherweise unvollständig." } });
-      }
-      return;
-    }
-    const thread = this.threads.get(id);
-    if (!transcriptUpdate && thread) {
-      const session = thread.workerSession;
-      if (u.sessionUpdate === "available_commands_update" && Array.isArray(u.availableCommands)) session.availableCommands = u.availableCommands;
-      else if (u.sessionUpdate === "config_option_update" && Array.isArray(u.configOptions)) session.configOptions = u.configOptions;
-      else if (u.sessionUpdate === "current_mode_update") session.modes = { ...session.modes, currentModeId: u.currentModeId };
-      else {
-        // Preserve the event type, never expose arbitrary private payloads as diagnostics.
-        session.unsupportedUpdates = [...new Set([...(session.unsupportedUpdates || []), String(u.sessionUpdate).slice(0, 120)])].slice(-32);
-      }
-      this.publishSession(thread);
-      this.persist(thread).catch(() => this.event("wrapper/error", id, { message: "Worker-Sitzungseinstellungen konnten nicht gespeichert werden." }));
-      return;
-    }
-    if (!turn) return;
-    const missing = u.sessionUpdate === "user_message_chunk" ? "user_message_chunk"
-      : ["agent_message_chunk", "agent_thought_chunk"].includes(u.sessionUpdate) && u.content?.type !== "text" ? `${u.sessionUpdate}:${u.content?.type}`
-      : ["tool_call", "tool_call_update"].includes(u.sessionUpdate) && u.content?.some(c => c.type !== "content") ? "tool_content:diff/terminal/other" : null;
-    if (missing && thread) {
-      thread.workerSession.unsupportedUpdates = [...new Set([...(thread.workerSession.unsupportedUpdates || []), missing])].slice(-32);
-      this.publishSession(thread);
-    }
     if (["agent_message_chunk", "agent_thought_chunk"].includes(u.sessionUpdate) && u.content?.type === "text") {
       const type = u.sessionUpdate === "agent_message_chunk" ? "agentMessage" : "reasoning";
       let item = turn.items.at(-1);

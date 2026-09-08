@@ -27,7 +27,7 @@ export class WorkerRPC extends EventEmitter {
         if (message.method) this.emit("message", message);
         else if (this.pending.has(message.id)) {
           const p = this.pending.get(message.id); this.pending.delete(message.id); clearTimeout(p.timer);
-          if (message.error) p.reject(new Error(message.error.message || "Worker-Anfrage fehlgeschlagen."));
+          if (message.error) p.reject(Object.assign(new Error(message.error.message || "Worker-Anfrage fehlgeschlagen."), { data: message.error.data }));
           else p.resolve(message.result);
         }
       }

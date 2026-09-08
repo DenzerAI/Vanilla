@@ -1,7 +1,6 @@
-import { searchConversations } from './search.mjs';
 import {localPath, localPort} from './isolation.mjs';
 import {sharedMemoryCodexConfig} from './shared-memory.mjs';
-import { serverFingerprint, createRestartGate } from "./updates.mjs";
+import { fingerprint, createRestartGate } from "./updates.mjs";
 import { coreEnabled, coreRequest, routedContext } from "./core-client.mjs";
 import { createMcpSnapshot } from './integration-snapshot.mjs';
 import {computerToolStatus} from "./ui/tool-content.mjs";
@@ -41,7 +40,11 @@ import { normalizeTool, mergeTools } from "./tool-events.mjs";
 import { runMode, PLAN_INSTRUCTIONS, planApprovalReply } from "./run-mode.mjs";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
-const sourceVersion = () => serverFingerprint(root);
+const sourceVersion = async () => JSON.stringify(await Promise.all([
+  fingerprint(here), fingerprint(path.join(root, "backend")), fingerprint(path.join(root, "system")),
+  fingerprint(path.join(root, "core")),
+  ...["appearance.mjs", "tool-content.mjs"].map(file => readFile(path.join(here,"ui",file),"utf8")),
+]));
 const startedSourceVersion = await sourceVersion();
 const instanceId = randomUUID();
 const voiceSessions = new Set();
@@ -69,11 +72,14 @@ const runtime = await prepareCodexHome({
   sourceHome: codexSourceHome,
   chats: store.state.chats.filter(c => !c.workerId || c.workerId === "codex"),
 });
+const codexEntry = workerCatalog.find(w => w.id === "codex");
 const nativeCodex = new Codex({
   cwd: workspace,
   home: runtime.home,
   config: {...runtime.config,...sharedMemoryCodexConfig()},
-  binary: await findWorkerCommand(workerCatalog.find(w => w.id === "codex")) || "codex",
+  name: codexEntry.name,
+  login: codexEntry.login,
+  binary: await findWorkerCommand(codexEntry) || "codex",
   contextEnv: { COMPANY_BASE: companyRoot(root), SYSTEM_BASE: systemRoot() },
 });
 const workers = new Workers({ store, root, codex: nativeCodex });
@@ -280,12 +286,13 @@ async function newChat({
   const r = await workers.call("thread/start", {
     workerId,
     cwd,
-    model: workers.entry(workerId).adapter === "codex" && !selection.fallbackFrom ? model || null : null,
+    // A stand-in worker starts with its own default; each adapter ignores models from another list.
+    model: selection.fallbackFrom ? null : model || null,
     ...perms(permission),
     ...(mode === "plan" ? { approvalPolicy: "never" } : {}),
     approvalsReviewer: "user",
     historyMode: "legacy",
-    // Fresh shared context is supplied with each turn, including the first.
+    developerInstructions: await workerInstructions({ root, workspace, cwd }),
     experimentalRawEvents: true,
   });
   const c = {
@@ -395,6 +402,8 @@ async function sendTurnUnlocked(id, b) {
   }
   if (!input.length) throw new Error("Nachricht ist leer.");
   // Context belongs to the model instructions, never to the user's visible message.
+  const companyContext = await workerInstructions({ root, workspace, cwd: c.cwd })
+    + await routedContext({query:b.text || "",projectId:c.projectId || "default",chatId:id});
   await recordBoundary("turn", {
     threadId: id,
     textCharacters: b.text?.length || 0,
@@ -412,8 +421,6 @@ async function sendTurnUnlocked(id, b) {
       input,
     });
   }
-  const companyContext = await workerInstructions({ root, workspace, cwd: c.cwd })
-    + await routedContext({query:b.text || "",projectId:c.projectId || "default",chatId:id});
   const policy = runMode(b.mode || c.mode || "default");
   if (policy.mode === "plan" && !workers.capability(workers.owner(id)).plan) throw new Error("Dieser Worker bietet hier keinen geschützten Planmodus.");
   const legacyJob = c.jobId && b.mode === undefined;
@@ -607,10 +614,6 @@ route("POST", "/api/projects/save", async (b) => {
     settings: store.state.settings,
   };
 });
-route("GET", "/api/search", async (b, u) => searchConversations({
-  workspace, chats:store.state.chats, projects:store.state.projects, threadCache,
-  query:u.searchParams.get("q") || "",
-}));
 route("GET", "/api/chats", async () => ({
   chats: store.state.chats.filter(c=>!c.channelOnly),
   active: Object.fromEntries(active),
@@ -657,19 +660,6 @@ route("GET", "/api/thread", async (b, u) => {
     if (cached) return { thread: cached };
     throw e;
   }
-});
-route("POST", "/api/worker-session", async b => {
-  const id = b.id;
-  store.chat(id);
-  if (workers.entry(workers.owner(id)).adapter !== "acp") throw new Error("Dieser Worker verwendet keine ACP-Sitzungseinstellungen.");
-  if (active.has(id) || turnLocks.has(id) || restartGate.restarting) throw new Error("Bitte die laufende Arbeit abwarten.");
-  turnLocks.add(id);
-  try {
-    await ensure(id);
-    return await workers.call(b.configId !== undefined ? "session/set_config_option" : "session/set_mode", {
-      threadId: id, configId: b.configId, value: b.value, modeId: b.modeId,
-    });
-  } finally { turnLocks.delete(id); }
 });
 route("POST", "/api/turn", (b) => sendTurn(b.id, b));
 route("POST", "/api/stop", async (b) => {
@@ -1035,7 +1025,7 @@ async function runJob(id, slot = null, coreRunId = null) {
     await atomic(path.join(runDir, "request.json"), { jobId: id, worker: job.worker, actualWorker: c.workerId, fallbackFrom: c.fallbackFrom, startedAt: new Date().toISOString() });
     await store.save();
     await sendTurn(c.id, {
-      text: `Führe diesen Job aus. Die folgende Anweisung wurde aus SKILL.md im aktuellen Ordner geladen; relative Ressourcenpfade beziehen sich auf diesen Ordner. Lies benötigte Dateien in input/ und speichere Ergebnisse in output/.\n\n${job.instructions}`,
+      text: `Führe diesen Job aus. Lies SKILL.md im aktuellen Ordner und die Dateien in input/. Speichere Ergebnisse in output/.\n\n${job.instructions}`,
     });
     emit({ method: "wrapper/jobs" });
     return { threadId: c.id, runId };

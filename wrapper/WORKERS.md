@@ -10,16 +10,25 @@ Ollama und LM Studio bleiben lokale Modell-Testchats.
 
 | Worker | Anschluss | Voraussetzung |
 | --- | --- | --- |
-| Codex | nativer App-Server | Codex installieren und anmelden |
+| Codex | nativer App-Server | `codex login` auf dem Rechner ausführen |
 | Hermes Agent | `hermes acp` | Hermes mit ACP installieren und dort Modell/Konto einrichten |
 | OpenClaw | `openclaw acp` | OpenClaw installieren und den eigenen Gateway einrichten |
-| Claude Code | mitgelieferter Claude-Agent-ACP-Adapter | Nativen Claude-Zugang gemäß Adapter einrichten; abweichenden Adapter optional hinterlegen |
+| Claude Code | mitgelieferter ACP-Adapter `claude-agent-acp` | `claude login` auf dem Rechner ausführen |
 
 Claude Code bezeichnet den Worker von Anthropic und ist unabhängig von OpenClaw.
 Der gespeicherte Schlüssel `claw-code` und `UWE_CLAW_CODE_BINARY` bleiben aus
-Kompatibilitätsgründen erhalten. Der Anschluss verwendet `@agentclientprotocol/claude-agent-acp` (derzeit im Paket auf 0.75.1 festgelegt). Diese Adapterversion ist nicht die Claude-Code-Version.
+Kompatibilitätsgründen erhalten. Der Adapter `@agentclientprotocol/claude-agent-acp`
+kommt mit dem Wrapper; er nutzt die Anmeldung des angemeldeten Benutzers
+(macOS-Schlüsselbund bzw. `~/.claude`) oder alternativ `CLAUDE_CODE_OAUTH_TOKEN`
+oder `ANTHROPIC_API_KEY` in der Umgebung des Wrappers. Die Modellliste kommt aus
+der ACP-Sitzung des Adapters; beim Verbinden wird sie über eine kurz geöffnete
+Probesitzung ermittelt, damit sie schon vor dem ersten Chat im Composer steht.
 
-Programme werden zuerst in `wrapper/node_modules/.bin`, dann im PATH, in `~/.local/bin` und in `/opt/homebrew/bin` gesucht. Ein explizit gesetzter Programmpfad hat Vorrang und wird nicht still ersetzt.
+Im Composer lässt sich pro neuem Chat der Worker und dessen Modell wählen;
+voreingestellt ist der gespeicherte Standard. Ein bestehender Chat bleibt bei
+seinem Worker.
+
+Programme werden im PATH, in `~/.local/bin` und in `/opt/homebrew/bin` gesucht.
 Codex kann zusätzlich aus der installierten ChatGPT-App stammen. Bei abweichender
 Installation setzt die betreibende Person `UWE_CODEX_BINARY`, `UWE_HERMES_BINARY`,
 `UWE_OPENCLAW_BINARY` oder `UWE_CLAW_CODE_BINARY` auf einen absoluten Programmpfad.
@@ -28,10 +37,12 @@ für eigene Argumente kann ein lokal verwalteter Startpunkt verwendet werden.
 Keine Zugangsdaten in Argumente, Einstellungsdateien oder Browser schreiben.
 Danach den Wrapper neu starten und **Verbinden** wählen.
 
-**Verbunden** bedeutet, dass die native Schnittstelle erfolgreich geantwortet
-hat. Konto, verfügbare Modelle, Werkzeuge und Browserzugriff hängen weiterhin
-von der jeweiligen Installation ab. Ein Fehler beim ersten Auftrag wird als
-Fehler angezeigt. Die Schaltzentrale installiert und authentisiert keine
+**Verbunden** bedeutet, dass die native Schnittstelle geantwortet hat und die
+Anmeldung funktioniert. Fehlt sie, zeigt der Worker **Anmeldung fehlt** mit dem
+passenden Terminalbefehl; Codex prüft dafür `account/read`, der Claude-Adapter
+meldet seinen Login-Status selbst. Verfügbare Modelle, Werkzeuge und
+Browserzugriff hängen weiterhin von der jeweiligen Installation ab. Ein Fehler
+beim ersten Auftrag wird als Fehler angezeigt. Die Schaltzentrale installiert und authentisiert keine
 Drittanbieter stillschweigend.
 
 ## Gemeinsame Ordner
@@ -44,9 +55,9 @@ Drittanbieter stillschweigend.
   keine Schlüssel. Chats tragen ihre Worker-ID. Ältere Chats ohne ID gehören
   weiterhin zu Codex; das ist eine Kompatibilitätsregel, keine Ausweichwahl.
 
-Der gemeinsame Kontext wird vor jedem neuen Turn frisch gelesen. Bei normalen Nachrichten erhält Codex
+Der gemeinsame Kontext wird vor jedem neuen Turn frisch gelesen. Codex erhält
 ihn als Entwickleranweisung, ACP-Worker als vorangestellten Kontextblock. Der
-sichtbare und exportierte Nutzertext bleibt unverändert. ACP-Slash-Eingaben werden ohne zusätzlichen Kontextblock gesendet: Manche nativen Befehle erwarten genau einen Textblock; Firmenkontext darf nicht zu Befehlsargumenten werden. Die gemeinsamen Pfade bleiben im Prozesskontext vorhanden. Die Worker-Prozesse
+sichtbare und exportierte Nutzertext bleibt unverändert. Die Worker-Prozesse
 kennen die gemeinsamen Pfade auch als Umgebungsvariablen. Die zentrale Basis
 wird nicht in engine-eigene Wissensdateien kopiert. Der Order-Bootstrap liefert
 zusätzlich `systemBase` mit denselben technischen Anweisungen.
@@ -87,9 +98,7 @@ Offizielle Schnittstellen: [ACP 1](https://agentclientprotocol.com/protocol/v1/i
 [Hermes](https://hermes-agent.nousresearch.com/docs/developer-guide/programmatic-integration),
 [OpenClaw](https://docs.openclaw.ai/cli/acp).
 
-## Historischer Prüfvermerk vor der Durchlässigkeitsprüfung
-
-Die folgenden Angaben stammen aus der früheren Einführung und sind kein aktueller Gesamtprüfbeleg:
+## Geprüfter Stand vom 7. September 2026
 
 109 automatisierte Tests erfolgreich; Produktionsbuild, Syntaxprüfung und
 Diffprüfung ohne Fehler. Browserprüfung bei Desktopbreite, 390 und 320 Pixeln
@@ -117,50 +126,3 @@ sichtbar. Der Katalog in `local-model-catalog.mjs` enthält eine datierte Auswah
 mit Originalquellen und Downloadgrößen. Hardware-Eignung beruht auf geschätztem
 RAM-Bedarf bei 4K Kontext; tatsächliche Laufzeit und Geschwindigkeit bleiben
 modell- und hardwareabhängig. „Alle Größen“ zeigt auch unpassende Varianten.
-
-## Durchlässigkeitsprüfung vom 7. September 2026
-
-OpenClaw wird ohne den gesperrten globalen Gateway-Konfigurationsaufruf verbunden.
-Es erhält weiterhin keine sitzungsbezogene MCP-Injektion. Das gemeinsame Gedächtnis
-ist dort daher nicht automatisch angeschlossen. Gateway-Konfiguration, Anmeldung
-und native Werkzeuge bleiben beim Betreiber. OpenClaw ist aktuell lokal nicht
-gefunden; ein echter Gateway-Lauf wurde nicht geprüft.
-
-ACP übernimmt `available_commands_update`, `config_option_update` und
-`current_mode_update` auch im Leerlauf und während des Sitzungsaufbaus. Beim
-Laden werden Metadaten übernommen, ohne den gespeicherten Verlauf zu duplizieren.
-Nicht erneut gemeldete Sitzungseinstellungen werden nach erfolgreichem Laden
-nicht aus einem veralteten Snapshot weiter angeboten. Speichervorgänge sind
-geordnet; die Oberfläche erhält Änderungen über den vorhandenen Ereignisstream.
-
-Befehlsauswahl steht in ACP-Chats neben Modus und Modell; vorhandener Entwurfstext
-bleibt als Argument erhalten. Erst Senden führt den Befehl aus. `configOptions`
-haben Vorrang vor den älteren Modus-/Modellfeldern. Unterstützt sind native
-Select-Optionen einschließlich gruppierter Werte und unbekannter Kategorien;
-unbekannte Eingabetypen erscheinen mit einem Hinweis. Änderungen gehen an
-`session/set_config_option`, ältere native Modi an `session/set_mode`. Nur
-gemeldete Werte werden angenommen, Änderungen während laufender Arbeit gesperrt.
-Ein bestätigtes `end_turn` gilt auch ohne Text als nativer Abschluss.
-
-Die statischen Booleans beschreiben weiterhin Wrapper-Bedienfunktionen, keinen
-vollständigen nativen Werkzeugkatalog. ACP-Bild-/Audio-Unterstützung folgt dem
-Handshake; vor der Aushandlung wird sie nicht behauptet. `/api/workers` trennt
-`nativeCapabilities`, `capabilitySource` und Wrapper-`capabilities`. Fehlende
-Agentversionen werden nicht länger durch die Protokollversion ersetzt.
-Unbekannte ACP-Updatearten und nicht dargestellte Diff-/Terminal-Inhalte werden
-im Sitzungs-Hinweismenü kenntlich gemacht; es ist keine vollständige native
-Darstellung zugesagt. Metadaten unbekannter Updatearten enthalten nur deren
-Typnamen, keine beliebigen privaten Rohdaten.
-
-Grenzen: Kein allgemeiner nativer Befehlseditor vor dem ersten Sitzungsaufbau;
-kein nachgebauter Codex-TUI-Befehlskatalog; keine neuen ACP-Client-Datei- oder
-Terminalwerkzeuge; keine automatische Installation, Anmeldung oder Aktualisierung.
-Normale Nachrichten erhalten weiterhin den gemeinsamen Firmen-/Arbeitskontext
-und Wrapper-Gesprächsstil. Ein nativer Modus ist nicht automatisch ein vom
-Wrapper durchgesetzter Schreibschutz.
-
-Prüfbelege und Detailbewertung liegen im Auftrags-Arbeitsbereich unter
-`output/worker-durchlaessigkeit.md`. Produktionsbuild und TypeScript wurden
-geprüft. Die Browserprüfung ist offen: Chrome und Chromium scheitern in dieser
-Ausführungsumgebung beim macOS-Mach-Port-Aufbau mit „Permission denied“. Es gibt
-keinen Live-Nachweis neuer Funktionen gegen angemeldete Anbieter.

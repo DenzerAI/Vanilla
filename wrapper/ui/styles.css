@@ -22,20 +22,12 @@
 }
 :root {
   font-family: var(--font-ui);
-  font-size: var(--font-root-size);
+  font-size: 16px;
   color: var(--text);
   background: var(--bg);
 }
 * {
   box-sizing: border-box;
-}
-/* The viewport stays fixed; only the inner app regions scroll. */
-html,
-body,
-#root {
-  height: 100%;
-  overflow: hidden;
-  overscroll-behavior: none;
 }
 body {
   font-size: var(--text-control);
@@ -79,15 +71,12 @@ button:disabled {
   opacity: 0.4;
   cursor: default;
 }
-:focus:not(:focus-visible) {
-  outline: none;
-}
 button:focus-visible,
 a:focus-visible,
 input:focus-visible,
 textarea:focus-visible,
 select:focus-visible {
-  outline: 1px solid var(--focus-ring);
+  outline: 2px solid var(--blue);
   outline-offset: 3px;
 }
 a {
@@ -150,13 +139,13 @@ p {
 h1 {
   font-weight: var(--weight-medium);
   font-size: var(--text-title);
-  letter-spacing: var(--tracking-title);
+  letter-spacing: -0.65px;
   margin-bottom: var(--space-8);
 }
 h2 {
   font-size: var(--text-section);
   font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-heading);
+  letter-spacing: -0.35px;
 }
 h3 {
   font-size: var(--text-heading);
@@ -250,7 +239,7 @@ kbd {
 .brand-name {
   font-size: var(--text-heading);
   font-weight: var(--weight-semibold);
-  letter-spacing: var(--tracking-heading);
+  letter-spacing: -0.35px;
 }
 .sidebar-topbar .icon-button {
   color: var(--muted);
@@ -622,7 +611,7 @@ nav {
 .conversation {
   flex: 1;
   overflow: auto;
-  scrollbar-gutter: stable both-edges;
+  scrollbar-gutter: stable;
   overscroll-behavior: contain;
 }
 .welcome {
@@ -637,7 +626,7 @@ nav {
 }
 .welcome h1 {
   font-size: var(--text-title);
-  letter-spacing: var(--tracking-welcome);
+  letter-spacing: -0.7px;
   font-weight: var(--weight-medium);
   margin-bottom: var(--space-28);
   text-wrap: balance;
@@ -667,8 +656,9 @@ nav {
   color: var(--text);
 }
 .message-column {
+  max-width: 880px;
   margin: 0 auto;
-  padding-block: var(--space-20) var(--space-24);
+  padding: var(--space-20) var(--space-32) var(--space-24);
 }
 .user-message {
   background: var(--raised);
@@ -828,8 +818,10 @@ nav {
   animation: breathe 1.2s infinite;
 }
 .composer-area {
+  width: 100%;
+  max-width: 880px;
   align-self: center;
-  padding-bottom: var(--space-12);
+  padding: 0 var(--space-28) var(--space-12);
   flex-shrink: 0;
 }
 .composer {
@@ -848,7 +840,7 @@ nav {
   outline: none !important;
   background: transparent;
   width: 100%;
-  padding: var(--space-2) var(--space-2) var(--space-12);
+  padding: var(--space-2) 1px var(--space-12);
   resize: none;
   min-height: 65px;
   max-height: 240px;
@@ -949,7 +941,7 @@ nav {
 }
 .model-option:has(input:focus-visible),
 .effort-option:has(input:focus-visible) {
-  outline: 1px solid var(--focus-ring);
+  outline: 2px solid var(--blue);
   outline-offset: -2px;
 }
 .model-popover .effort-options {
@@ -996,7 +988,7 @@ nav {
 .composer-controls select {
   border: 0;
   background: transparent;
-  padding: var(--space-2) var(--space-2);
+  padding: var(--space-2) 1px;
   font-size: var(--text-small);
   max-width: 160px;
   color: var(--text);
@@ -1243,7 +1235,7 @@ nav {
   width: 100%;
   max-width: 1000px;
   margin: 0 auto;
-  padding: var(--space-64) var(--space-48) var(--space-64);
+  padding: var(--space-64) var(--space-48) 70px;
   overflow: auto;
   flex: 1;
 }
@@ -1268,7 +1260,7 @@ nav {
   .page-heading-title { gap: var(--space-8); }
 }
 .search-box:focus-within {
-  outline: 1px solid var(--focus-ring);
+  outline: 2px solid var(--blue);
   outline-offset: 2px;
 }
 .search-box {
@@ -1360,7 +1352,7 @@ nav {
   padding: 0 var(--space-12);
   color: var(--muted);
   font-size: var(--filter-font-size);
-  line-height: var(--leading-compact);
+  line-height: 20px;
 }
 .skill-filters .search-box input {
   font-size: inherit;
@@ -1384,7 +1376,7 @@ nav {
   background: var(--selected);
 }
 .filter-trigger:focus-visible {
-  outline: 1px solid var(--focus-ring);
+  outline: 2px solid var(--blue);
   outline-offset: 2px;
 }
 .filter-popover {
@@ -1397,7 +1389,7 @@ nav {
   gap: var(--space-12);
   border-radius: var(--radius-control);
   font-size: var(--text-body);
-  line-height: var(--leading-compact);
+  line-height: 20px;
   text-align: left;
   justify-content: flex-start;
 }
@@ -1416,7 +1408,7 @@ nav {
   background: var(--selected);
 }
 .filter-popover > button:focus-visible {
-  outline: 1px solid var(--focus-ring);
+  outline: 2px solid var(--blue);
   outline-offset: -2px;
 }
 .filter-popover > button:hover {
@@ -1624,8 +1616,6 @@ nav {
   margin-top: var(--space-8);
 }
 .job-info {
-  border-radius: var(--radius-control);
-  overflow-wrap: anywhere;
   display: block;
   text-align: left;
   flex: 1;
@@ -1643,8 +1633,6 @@ nav {
   color: var(--faint);
 }
 .settings-page {
-  min-height: 0;
-  overscroll-behavior: none;
   max-width: 1030px;
   padding: var(--space-64) var(--space-64);
 }
@@ -1653,8 +1641,6 @@ nav {
   margin-bottom: var(--space-40);
 }
 .settings-page .section-heading {
-  font-size: var(--text-control);
-  font-weight: var(--weight-semibold);
   border: 0;
   padding: 0;
   margin: var(--space-28) 0 var(--space-16);
@@ -1665,7 +1651,7 @@ nav {
   border-radius: var(--radius-panel);
   padding: 0 var(--space-16);
   margin-bottom: var(--space-28);
-  overflow: visible;
+  overflow: hidden;
 }
 .setting-row {
   display: flex;
@@ -1673,9 +1659,9 @@ nav {
   align-items: center;
   gap: var(--space-24);
   border-bottom: 1px solid var(--border);
-  padding: var(--space-12) 0;
+  padding: var(--space-16) 0;
   font-size: var(--text-control);
-  min-height: var(--control-row-height);
+  min-height: 73px;
 }
 .setting-row:last-child {
   border: 0;
@@ -1708,7 +1694,6 @@ nav {
   display: inline-flex;
   align-items: center;
 }
-.setting-row > * { max-width: 100%; }
 .setting-row input {
   width: 170px;
   font-size: var(--text-small);
@@ -1763,7 +1748,7 @@ nav {
 .notice > svg {
   color: var(--warning);
   flex-shrink: 0;
-  margin-top: var(--space-2);
+  margin-top: 1px;
 }
 .notice strong {
   font-size: var(--text-body);
@@ -1800,7 +1785,7 @@ nav {
   border-radius: var(--radius-panel);
 }
 .theme-choice.active {
-  border-color: var(--focus-ring);
+  border-color: var(--blue);
 }
 .theme-preview {
   height: 135px;
@@ -2018,7 +2003,7 @@ nav {
   font-size: var(--text-control);
 }
 .answer-options button.selected {
-  border-color: var(--focus-ring);
+  border-color: var(--blue);
 }
 .answer-options button small {
   color: var(--faint);
@@ -2140,6 +2125,10 @@ nav {
   .page {
     padding-top: var(--space-64);
   }
+  .message-column,
+  .composer-area {
+    max-width: 970px;
+  }
   .composer-area {
     padding-bottom: var(--space-16);
   }
@@ -2155,10 +2144,10 @@ nav {
     padding: var(--space-48) var(--space-32);
   }
   .composer-area {
-    padding-bottom: var(--space-12);
+    padding: 0 var(--space-20) var(--space-12);
   }
   .message-column {
-    padding-block: var(--space-20);
+    padding: var(--space-20);
   }
 
   .has-panel .composer-controls {
@@ -2256,7 +2245,7 @@ nav {
     padding: var(--space-32) var(--space-20);
   }
   .composer-area {
-    padding-bottom: var(--space-8);
+    padding: 0 var(--space-12) var(--space-8);
   }
   .composer {
     padding: var(--space-8);
@@ -2270,7 +2259,7 @@ nav {
   }
 
   .message-column {
-    padding-block: var(--space-16);
+    padding: var(--space-16);
   }
   .agent-message {
     font-size: var(--text-body);
@@ -2347,7 +2336,7 @@ nav {
 }
 .user-actions {
   justify-content: flex-end;
-  margin: var(--space-4) calc(-1 * var(--space-4)) calc(-1 * var(--space-8)) !important;
+  margin: var(--space-4) -6px -7px !important;
   opacity: 0.35;
 }
 .user-message:hover .user-actions {
@@ -2552,7 +2541,7 @@ time {
   border-radius: var(--radius-small);
 }
 .ci-reference summary:focus-visible {
-  outline: 1px solid var(--focus-ring);
+  outline: 2px solid var(--blue);
   outline-offset: 4px;
 }
 .ci-details {

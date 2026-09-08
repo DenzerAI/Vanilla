@@ -1,6 +1,7 @@
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
 import { EventEmitter } from "node:events";
+import { loginHint } from "../system/worker-catalog.mjs";
 
 export class Codex extends EventEmitter {
   constructor({
@@ -8,6 +9,8 @@ export class Codex extends EventEmitter {
     home,
     config = {},
     contextEnv = {},
+    name = "Codex",
+    login = null,
     binary = process.env.UWE_CODEX_BINARY ||
       "/Applications/ChatGPT.app/Contents/Resources/codex",
   }) {
@@ -16,11 +19,14 @@ export class Codex extends EventEmitter {
     this.home = home;
     this.config = config;
     this.contextEnv = contextEnv;
+    this.name = name;
+    this.login = login;
     this.binary = binary;
     this.nextId = 0;
     this.pending = new Map();
     this.requests = new Map();
     this.connected = false;
+    this.loginRequired = false;
   }
   async start() {
     if (this.starting) return this.starting;
@@ -86,6 +92,14 @@ export class Codex extends EventEmitter {
       capabilities: { experimentalApi: true },
     });
     this.proc.stdin.write(JSON.stringify({ method: "initialized" }) + "\n");
+    // The app-server answers without an account; "Verbunden" must not. Older builds without account/read stay as before.
+    const account = await this.call("account/read", {}).catch(() => null);
+    this.loginRequired = !!(account?.requiresOpenaiAuth && !account.account);
+    if (this.loginRequired) {
+      this.proc = null;
+      proc.kill();
+      throw new Error(loginHint(this));
+    }
     this.info = result;
     this.connected = true;
     this.emit("connected", result);

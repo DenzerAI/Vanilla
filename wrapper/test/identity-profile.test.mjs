@@ -8,9 +8,8 @@ import { readAgentProfile, updateAgentProfile } from "../identity-profile.mjs";
 import {
   DEFAULT_AGENT_PREFERENCES,
   writePreferences,
-  identityInstructions,
 } from "../identity-preferences.mjs";
-import { conversationInstructions } from "../chat-style.mjs";
+import { CHAT_STYLE } from "../chat-style.mjs";
 const original =
   "# Identität\nAnzeigename: Ada\nAvatar: Standard-Symbol (neutral)\n\n## Rolle\nVertraute Arbeitsregeln erhalten.\n";
 
@@ -27,12 +26,7 @@ test("legacy identities display a default without overwriting existing preferenc
       .preferences,
     "Bitte ausführlich erklären.",
   );
-  assert.ok(identityInstructions(original).includes(DEFAULT_AGENT_PREFERENCES));
-  const custom = writePreferences(original, "Bitte ausführlich erklären.");
-  assert.equal(identityInstructions(custom), custom);
-  assert.ok(identityInstructions(writePreferences(original, "")).includes(DEFAULT_AGENT_PREFERENCES));
-  assert.equal(conversationInstructions(), "");
-  assert.equal(conversationInstructions("Planregel"), "Planregel");
+  assert.ok(CHAT_STYLE.includes(DEFAULT_AGENT_PREFERENCES));
 });
 
 test("profile updates preserve role, replace avatar and reject invalid or stale edits", () => {

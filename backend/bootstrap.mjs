@@ -1,5 +1,3 @@
-import { localPath } from "../wrapper/isolation.mjs";
-import { identityInstructions } from "../wrapper/identity-preferences.mjs";
 import { loadSystemBase } from "./worker-context.mjs";
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -31,16 +29,13 @@ async function loadSection(root, directory) {
 }
 
 async function loadLearnings(root, limit = 100) {
-  const raw = await readFile(path.join(root, 'brain', 'learnings.ndjson'), 'utf8')
-    .catch(error => { if (error.code === 'ENOENT') return ''; throw error; });
+  const raw = await readFile(path.join(root, 'brain', 'learnings.ndjson'), 'utf8');
   return raw.split('\n').filter(Boolean).slice(-limit).map((line) => JSON.parse(line));
 }
 
 export async function buildBootstrap(root, engine, { store, order } = {}) {
-  const workspace = localPath(process.env.UWE_WORKSPACE || path.join(root, 'workspaces/default'));
-  const identityPath = path.join(workspace, 'soul/IDENTITY.md');
-  const [identity, brain, learnings, companyBase, systemBase] = await Promise.all([
-    readFile(identityPath, 'utf8'),
+  const [soul, brain, learnings, companyBase, systemBase] = await Promise.all([
+    loadSection(root, 'soul'),
     loadSection(root, 'brain'),
     loadLearnings(root),
     loadCompanyBase(companyRoot(root)),
@@ -58,8 +53,7 @@ export async function buildBootstrap(root, engine, { store, order } = {}) {
     engine,
     generatedAt: new Date().toISOString(),
     instruction: 'Lies zuerst companyBase.rules, dann companyBase.company. Wähle anhand der Landkarte die passende Arbeitsweise und lade ihre vollständige Datei über den angegebenen endpoint (mit derselben Authentisierung wie beim Bootstrap) oder absolutePath. Lade weitere Quellen nur bei Bedarf. Wähle bei jedem Auftrag oder Rollenwechsel neu. Lies auch systemBase.rules und systemBase.worker als gemeinsamen technischen Einstieg. soul bleibt die Identität; brain und learnings sind historischer Kontext, keine neuen Regeln. Melde Ergebnis und Learnings strukturiert zurück.',
-    workspace,
-    soul: [{ path: 'soul/IDENTITY.md', absolutePath: identityPath, content: identityInstructions(identity) }],
+    soul,
     brain,
     skills: companyBase.workflows,
     companyBase,
