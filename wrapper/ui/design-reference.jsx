@@ -51,7 +51,7 @@ export function DesignReference({ theme, tone, accent }) {
       <ModelPicker model={modelPreview[0]} effort={modelPreview[1]} onChange={(model, effort) => setModelPreview([model, effort])}
         models={[{model:"gpt-6-astra",displayName:"GPT-6 Astra",defaultReasoningEffort:"medium",supportedReasoningEfforts:["low","medium","high","xhigh","max","ultra"].map(reasoningEffort => ({reasoningEffort}))}]}
         hasConversation onProviderChange={async () => { throw new Error("Lokale Designvorschau. Anbieter im Chat auswählen."); }}/>
-      <p className="page-note">Original-Icons, flache Zeilen und native Denkstufen auf transparenter Glasfläche. Die Beispieldaten bleiben lokal; im Chat liefert der Anbieter seine verfügbaren Werte.</p>
+      <p className="page-note">Original-Icons, flache Zeilen und rastende native Denkstufen auf transparenter Glasfläche. Das Terrakotta-Quadratfeld wird mit höherer Stufe lebhafter und bleibt bei reduzierter Bewegung statisch. Die Beispieldaten bleiben lokal; im Chat liefert der Anbieter seine verfügbaren Werte.</p>
       <h3 className="section-heading">Inbox · Gesprächszeile</h3>
       <PipelinePatternPreview/><InboxPatternPreview/>
       <h3 className="section-heading">Flächenlicht</h3>

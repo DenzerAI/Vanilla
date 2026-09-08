@@ -629,6 +629,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     [attachments, setAttachments] = useState([]),
     [model, setModel] = useState(""),
     [draftWorker, setDraftWorker] = useState("auto"),
+    [nextSelections, setNextSelections] = useState({}),
     [effort, setEffort] = useState("medium"),
     [mode, setMode] = useState("default"),
     [projectId, setProjectId] = useState(initialProject),
@@ -748,8 +749,9 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const pickerWorker = current?.workerId || (draftWorker === "auto" ? boot?.effectiveWorker || "codex" : draftWorker);
   const nativeSelection = thread?.workerSession ? sessionModelSelection(thread.workerSession) : null;
   const pickerModels = nativeSelection?.models || boot?.modelsByWorker?.[pickerWorker] || current?.models || [];
-  const pickerModel = nativeSelection ? nativeSelection.model : model;
-  const pickerEffort = nativeSelection ? nativeSelection.effort : supportedEffort(pickerModels.find(m => m.model === model), effort);
+  const nextSelection = nextSelections[chatId];
+  const pickerModel = nextSelection?.model ?? (nativeSelection ? nativeSelection.model : model);
+  const pickerEffort = nextSelection?.effort ?? (nativeSelection ? nativeSelection.effort : supportedEffort(pickerModels.find(m => m.model === model), effort));
   const toastTimer = useRef(null);
   const notify = useCallback((msg) => {
     if (embedded) {
@@ -1260,7 +1262,11 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     } finally { setBusy(false); }
   }
   async function changePickerSelection(nextModel, nextEffort) {
-    if (busy || running) throw new Error("Bitte die laufende Arbeit abwarten.");
+    if (busy) throw new Error("Bitte die Übertragung abwarten.");
+    if (running || nextSelection) {
+      setNextSelections(old => ({...old, [chatId]:{model:nextModel, effort:nextEffort}}));
+      return;
+    }
     if (!thread?.workerSession) { setModel(nextModel); setEffort(nextEffort); return; }
     const id = chatId, session = thread.workerSession;
     const option = nextModel !== pickerModel ? modelConfig(session) : effortConfig(session);
@@ -1281,6 +1287,11 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   async function submit(e, voiceText) {
     e?.preventDefault();
     if ((!(voiceText ?? text).trim() && !attachments.length) || busy) { if (voiceText) throw new Error("Chat ist beschäftigt."); return; }
+    if (running && nextSelection) {
+      const message = "Die Modellwahl gilt für die nächste Antwort. Bitte die laufende Antwort abwarten oder stoppen.";
+      if (voiceText) throw new Error(message);
+      notify(message); return;
+    }
     if (uploadCounts.current.get(draftKey())) { notify("Dateien werden noch angeheftet."); return; }
     setBusy(true);
     const originalText = text,
@@ -1338,8 +1349,18 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         attachments: files,
         model: selectedModel,
         effort: pickerEffort || undefined,
+        nextSelection,
         mode,
       });
+      if (nextSelection) {
+        setNextSelections(old => { const next = {...old}; delete next[id]; return next; });
+        setModel(selectedModel); setEffort(pickerEffort);
+        if (thread?.workerSession) {
+          void api("/thread?id=" + encodeURIComponent(id)).then(updated => {
+            if (chatRef.current === id) setThread(old => old ? {...old, workerSession:updated.thread.workerSession} : old);
+          }).catch(() => {});
+        }
+      }
       return { id };
     } catch (e) {
       setThread((previous) =>
@@ -2063,11 +2084,11 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                         {icon(ChevronDown, 14)}
                       </ChatMenu>
                       <ModelPicker
-                        models={pickerModels} model={pickerModel} effort={pickerEffort}
+                        models={pickerModels} model={pickerModel} effort={pickerEffort} reduceMotion={boot.settings.reduceMotion === "on"}
                         workerId={pickerWorker} workers={boot.workers || []}
-                        hasConversation={!!chatId} disabled={running || busy}
+                        hasConversation={!!chatId} disabled={busy} providerDisabled={running}
                         onProviderChange={chooseProvider} onRefresh={refreshPickerWorkers}
-                        context={current?.fallbackFrom ? `${workerName(current.workerId)} übernimmt als Vertretung für ${workerName(current.fallbackFrom)}.` : undefined}
+                        context={nextSelection ? "Nächste Nachricht" : running ? "Auswahl für die nächste Nachricht" : current?.fallbackFrom ? `${workerName(current.workerId)} übernimmt als Vertretung für ${workerName(current.fallbackFrom)}.` : undefined}
                         onChange={changePickerSelection}
                       />
                       {thread?.workerSession && <WorkerSessionControls

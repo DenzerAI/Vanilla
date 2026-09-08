@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { Check, ChevronDown } from "./icons.jsx";
 import { BrandIcon } from "./brand-icon.jsx";
 import { AppLoader } from "./app-loader";
+import { ReasoningSlider } from "./components/ui/amount-slider";
 import { workerName } from "../../system/worker-catalog.mjs";
 import { supportedEffort, visibleModels } from "../worker-models.mjs";
 import "./model-picker.css";
@@ -10,7 +11,7 @@ import "./model-picker.css";
 const modelName = model => (model?.displayName || model?.model || "Modell auswählen")
   .replace(/^(GPT-\d+(?:\.\d+)?)-/, "$1 ").replace(/(?<=\w)-(?=[A-Za-z])/g, " ");
 
-export function ModelPicker({ models = [], model, effort, onChange, context, workerId = "codex", workers = [], onProviderChange, onRefresh, hasConversation = false, disabled = false }) {
+export function ModelPicker({ models = [], model, effort, onChange, context, workerId = "codex", workers = [], onProviderChange, onRefresh, hasConversation = false, disabled = false, providerDisabled = false, reduceMotion = false }) {
   const [open, setOpen] = useState(false), [position, setPosition] = useState({});
   const [provider, setProvider] = useState(workerId), [pending, setPending] = useState(false), [error, setError] = useState("");
   const trigger = useRef(null), popup = useRef(null), operation = useRef(false);
@@ -78,7 +79,7 @@ export function ModelPicker({ models = [], model, effort, onChange, context, wor
       onKeyDown={e => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); close(); } }}
       onBlur={e => { if (e.relatedTarget && !e.currentTarget.contains(e.relatedTarget) && e.relatedTarget !== trigger.current) setOpen(false); }}>
       <div className="model-providers" role="group" aria-label="KI-Anbieter">
-        {providers.map(value => <button key={value} type="button" aria-pressed={provider === value} disabled={pending || disabled}
+        {providers.map(value => <button key={value} type="button" aria-pressed={provider === value} disabled={pending || disabled || providerDisabled}
           onClick={() => { setProvider(value); setError(""); if (value !== workerId && !hasConversation) void act(() => onProviderChange?.(value)); }}>
           <BrandIcon name={value}/><span>{workerName(value)}</span>
         </button>)}
@@ -95,14 +96,11 @@ export function ModelPicker({ models = [], model, effort, onChange, context, wor
             <span>{modelName(m)}</span><Check size={14}/>
           </label>)}
         </fieldset>}
-        {!!efforts.length && <fieldset className="effort-options" disabled={disabled || pending}>
-          <legend>Denkaufwand</legend>
-          <div className="effort-grid">{efforts.map(e => <label className="effort-option" key={e.reasoningEffort} title={e.description} data-selected={effort === e.reasoningEffort}>
-            <input type="radio" name={id + "-effort"} value={e.reasoningEffort} checked={effort === e.reasoningEffort}
-              onChange={() => void act(() => onChange(model, e.reasoningEffort))}/>
-            <span>{e.displayName || e.reasoningEffort}</span>
-          </label>)}</div>
-        </fieldset>}
+        {!!efforts.length && <div className="effort-options">
+          <ReasoningSlider key={`${workerId}:${model}:${efforts.map(e => e.reasoningEffort).join(",")}`}
+            options={efforts.map(e => ({value:e.reasoningEffort,label:e.displayName || e.reasoningEffort,description:e.description}))}
+            value={effort} disabled={disabled || pending} reduceMotion={reduceMotion} onChange={next => act(() => onChange(model, next))}/>
+        </div>}
       </>}
       {!pending && (!sameProvider || !choices.length) && <div className="model-provider-state">
         <p>{!sameProvider && hasConversation ? "Der Anbieterwechsel öffnet einen neuen Chat." : providerInfo?.installed === false ? `${workerName(provider)} ist noch nicht installiert.` : "Modelle aus der angemeldeten CLI laden."}</p>
