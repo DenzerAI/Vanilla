@@ -1,6 +1,8 @@
 import React, { useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Modal } from './modal.jsx';
-import { X, RotateCcw } from './icons.jsx';
+import { X } from './icons.jsx';
+import { RotateCcw } from 'lucide-react';
+import { GlassButton } from './components/ui/glass-button';
 import { reconnectEventStream } from './chat-events.mjs';
 import './system-notice.css';
 import { AppLoader } from './app-loader';
@@ -81,7 +83,7 @@ export function SystemNotice({api, message, onDismiss, ref, onBusyChange}) {
     {visible && <div className={"system-notice" + (updateOnly ? " system-update" : "")} role="status" aria-live="polite">
       {!updateOnly && <span className="system-notice-text">{authRequired ? 'Bitte erneut anmelden.' : error || message}</span>}
       {authRequired && <button onClick={()=>setLoginOpen(true)}>Anmelden</button>}
-      {!authRequired && (busy || restart || reload) && <button disabled={busy} aria-busy={busy} onClick={()=>restart ? restartServer() : reloadPage()}><span className="system-notice-icon" aria-hidden="true">{busy ? <AppLoader size={14} preview /> : <RotateCcw size={14}/>}</span><span>{busy ? 'Neustarten …' : restart ? 'Neustarten' : 'Aktualisieren'}</span></button>}
+      {!authRequired && (busy || restart || reload) && <GlassButton size="sm" disabled={busy} aria-busy={busy} onClick={()=>restart ? restartServer() : reloadPage()}><span className="system-notice-icon" aria-hidden="true">{busy ? <AppLoader size={14} preview /> : <RotateCcw size={14}/>}</span><span>{busy ? 'Neustarten …' : restart ? 'Neustarten' : 'Aktualisieren'}</span></GlassButton>}
       {!authRequired && !restart && !reload && !busy && <button className="system-notice-close" aria-label="Hinweis schließen" onClick={()=>{setError('');onDismiss();}}><X size={16}/></button>}
     </div>}
     {loginOpen && <SessionLogin api={api} onClose={()=>setLoginOpen(false)} onAuthenticated={()=>{

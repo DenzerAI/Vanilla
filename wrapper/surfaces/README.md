@@ -42,7 +42,7 @@ Die Verträge schreiben keine Backend-Technik vor. Gemeinsame Frontend-Komponent
 
 ## Systemhinweise
 
-Auf schmalen Fenstern reserviert ein sichtbarer Update-/Neustarthinweis oberhalb des Agentenkopfes 40 px. Der Hinweis verdeckt weder Agentenbutton noch Suche oder Einklappen; ohne Hinweis entfällt der Abstand.
+Auf schmalen Fenstern reserviert ein sichtbarer Update-/Neustarthinweis oberhalb des Agentenkopfes die Touchhöhe plus 16 px. Der Hinweis verdeckt weder Agentenbutton noch Suche oder Einklappen; ohne Hinweis entfällt der Abstand.
 
 `SystemNotice` zeigt Updates als einzelnen schlichten Button mittig an der oberen Fensterkante. Reine UI-Builds bieten „Aktualisieren“ an und laden ausschließlich die Seite neu. Nur geänderter Laufzeitcode beziehungsweise Laufzeitabhängigkeiten bieten „Neustarten“ an. Buildskript, UI-Quellen, Paketversion und reine Entwicklungsabhängigkeiten lösen keinen Serverneustart aus; serverseitig importierte gemeinsame UI-Module zählen dagegen zum Laufzeitcode. Fehler und Anmeldehinweise behalten ihre erklärende Benachrichtigung. Kein automatisches Neuladen oder Neustarten. Nach einem Neustart bleibt das Neuladen ausdrücklich wählbar, damit Entwürfe nicht unerwartet verloren gehen. Routine-Speicherbestätigungen entfallen; tatsächliche Fehler bleiben erreichbar.
 
@@ -89,3 +89,25 @@ vorhandene Ergebnisse bleiben während Aktualisierungen bedienbar. Die globale
 Suche zeigt Listenformen bis erste Treffer eintreffen; ihre vorhandene
 Statuszeile übernimmt die Ansage. App-Start zeigt auf schmalen Ansichten
 nur den Inhaltsbereich; Fehler ersetzen die Platzhalter durch Wiederholen.
+
+
+Der schwebende Neustart-/Aktualisieren-Button verwendet `GlassButton` aus
+`ui/components/ui/glass-button.tsx`: klare Glaspille mit gewölbter Lichtkante, breitem diagonalen Reflex,
+schmalem Glanzlicht und abgesetztem Schatten. 12 px Blur erhalten erkennbaren
+Hintergrund; der Reflex bleibt auch auf ruhiger Fläche sichtbar. Hover verstärkt
+das Licht, Druck gibt unmittelbar nach. Alle Materialwerte liegen zentral in
+den glass-button-Rollen für Hell und Dunkel. Material und Unschärfe
+verwenden zentrale Tokens; die feste Mindestbreite erhält den ruhigen Ladezustand.
+Ref, native Buttonattribute und deaktivierter Zustand gelten für den inneren Button;
+`className` gestaltet die Hülle, `contentClassName` den Inhalt. Ohne angegebenen
+Typ ist der Button `type="button"`. Tastaturfokus, reduzierte Bewegung,
+reduzierte Transparenz und erzwungener Kontrast sind berücksichtigt.
+Unser Design zeigt die vier Größen und den deaktivierten Zustand ohne Systemaktionen.
+Die bestehende Session-Bestätigung und Wiederanlauferkennung bleiben unverändert.
+
+Die vorhandene shadcn-Konfiguration löst `@/components/ui` nach
+`wrapper/ui/components/ui` auf. Dieser gemeinsame Ordner hält Importe und CLI-Ziele
+konsistent; kein zweiter Komponentenordner an der Repositorywurzel.
+Tailwind 4 liegt in `ui/tailwind.css`, gemeinsame Styles in `ui/styles.css`,
+Buttonstyles in `ui/components/ui/glass-button.css`. TypeScript und Tailwind
+sind bereits eingerichtet; keine erneute CLI-Initialisierung nötig.
