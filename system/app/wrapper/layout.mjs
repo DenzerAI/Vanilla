@@ -7,6 +7,8 @@ export const installationRoot = process.env.VANILLA_ROOT
   ? realpathSync(process.env.VANILLA_ROOT)
   : sourceRoot.endsWith(path.join('system','app')) ? path.resolve(sourceRoot,'../..') : sourceRoot;
 export const modernLayout = process.env.VANILLA_LAYOUT === '2';
+export const orderDataRoot = root => path.join(root, layoutManifest(root) ? 'system/data/order' : 'data');
+export const orderMemoryRoot = root => layoutManifest(root) ? path.join(orderDataRoot(root),'brain') : path.join(root,'brain');
 export function layoutManifest(root = installationRoot) {
   const file = path.join(root, 'system', 'layout.json');
   if (!existsSync(file)) return null;

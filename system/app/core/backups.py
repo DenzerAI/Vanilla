@@ -156,6 +156,8 @@ class Backups:
                 archived = self.config.data / "codex/archived_sessions"
                 if archived.exists():
                     copy_stable(archived, stage / "archived-sessions")
+                native = self.config.data/'native-sessions'
+                if native.exists(): copy_stable(native,stage/'native-sessions')
             # Vectors can be regenerated locally; exclude them from each snapshot.
             with closing(sqlite3.connect(stage / "database.sqlite3")) as cx:
                 cx.execute("PRAGMA journal_mode=DELETE")

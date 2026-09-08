@@ -31,3 +31,6 @@ Identität, Wissen, Workspaces und Betriebsdaten bleiben lokal. Git transportier
 nur neutrale Anwendungsquellen. Der geschützte Austauschweg steht in
 system/app/docs/CODE-SYNC.md. Ordnerumzüge und Umbenennungen erfolgen über
 die gemeinsame Pfadverwaltung, damit bestehende Verweise erhalten bleiben.
+
+Historische Pfade vor Dateizugriffen anhand system/layout.json auflösen.
+Fehlende frühere Ordner nicht neu erzeugen; der benannte Workspace führt.

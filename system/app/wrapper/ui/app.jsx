@@ -1,3 +1,4 @@
+import {useJobNotifications, JobNotifications, NotificationPreference} from "./job-notifications.jsx";
 import { ChapterScrubber } from "./components/ui/chapter-scrubber";
 import { PipelinePage } from "./pipeline";
 import { InboxPage } from "./inbox";
@@ -95,7 +96,7 @@ import {
   Keyboard,
   Image,
   Volume2,
-  Mail,
+  Inbox,
   Calendar,
   MessageCircle,
   Braces,
@@ -619,7 +620,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const systemNoticeRef = useRef(null);
   const [boot, setBoot] = useState(null),
     [audioConnections, setAudioConnections] = useState({Groq:false, ElevenLabs:false}),
-    [view, setView] = useState(() => !embedded && ["inbox", "pipeline"].includes(new URLSearchParams(window.location.search).get("view")) ? new URLSearchParams(window.location.search).get("view") : "chat"),
+    [view, setView] = useState(() => !embedded && ["inbox", "pipeline", "jobs"].includes(new URLSearchParams(window.location.search).get("view")) ? new URLSearchParams(window.location.search).get("view") : "chat"),
     [chatId, setChatId] = useState(null),
     [thread, setThread] = useState(null),
     [chats, setChats] = useState([]),
@@ -629,6 +630,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     [attachments, setAttachments] = useState([]),
     [model, setModel] = useState(""),
     [draftWorker, setDraftWorker] = useState("auto"),
+    [nextSelections, setNextSelections] = useState({}),
+    [draftSpeed, setDraftSpeed] = useState(null),
     [effort, setEffort] = useState("medium"),
     [mode, setMode] = useState("default"),
     [projectId, setProjectId] = useState(initialProject),
@@ -748,8 +751,9 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const pickerWorker = current?.workerId || (draftWorker === "auto" ? boot?.effectiveWorker || "codex" : draftWorker);
   const nativeSelection = thread?.workerSession ? sessionModelSelection(thread.workerSession) : null;
   const pickerModels = nativeSelection?.models || boot?.modelsByWorker?.[pickerWorker] || current?.models || [];
-  const pickerModel = nativeSelection ? nativeSelection.model : model;
-  const pickerEffort = nativeSelection ? nativeSelection.effort : supportedEffort(pickerModels.find(m => m.model === model), effort);
+  const nextSelection = nextSelections[chatId];
+  const pickerModel = nextSelection?.model ?? (nativeSelection ? nativeSelection.model : model);
+  const pickerEffort = nextSelection?.effort ?? (nativeSelection ? nativeSelection.effort : supportedEffort(pickerModels.find(m => m.model === model), effort));
   const toastTimer = useRef(null);
   const notify = useCallback((msg) => {
     if (embedded) {
@@ -1231,7 +1235,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     } catch (error) { notify(error.message); }
   }
   async function chooseProvider(workerId) {
-    if (busy || running) throw new Error("Bitte die laufende Arbeit abwarten.");
+    if (busy) throw new Error("Bitte die laufende Übertragung abwarten.");
     setBusy(true);
     const sourceChat = chatRef.current, sourceProject = projectRef.current;
     try {
@@ -1241,10 +1245,21 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       const worker = state.workers.find(w => w.id === workerId);
       const nextModel = preferredModel(state.models, workerId, workerId === pickerWorker ? model : "");
       if (worker.adapter === "codex" && !nextModel) throw new Error("Codex meldet noch keine Modelle der 5.6- oder 6er-Serie. Bitte die CLI-Anmeldung prüfen.");
+      if (sourceChat) {
+        const result = await api("/chat/provider", {id:sourceChat, workerId, expectedWorker:pickerWorker, expectedTurnId:active[sourceChat] || null, stop:running});
+        setChats(old => old.map(c => c.id === sourceChat ? result.meta : c));
+        setNextSelections(old => { const next = {...old}; delete next[sourceChat]; return next; });
+        if (chatRef.current === sourceChat) {
+          setThread(result.thread); setModel(result.meta.model); setEffort(result.meta.effort);
+          setMode(result.meta.mode); setDraftWorker(workerId);
+        }
+        return;
+      }
       // ACP negotiates its exact model/effort options when the empty session is opened.
       const result = worker.adapter === "acp" ? await api("/chats", {worker: workerId, mode: "default", projectId: sourceProject, title: !sourceChat ? draftTitle || undefined : undefined}) : null;
       if (chatRef.current !== sourceChat || projectRef.current !== sourceProject) return;
       saveDraft();
+      setDraftSpeed(null);
       setDraftWorker(workerId); setMode(worker.capabilities.plan ? mode : "default");
       if (result) {
         chatRef.current = result.thread.id; setChatId(result.thread.id); setThread(result.thread);
@@ -1259,8 +1274,18 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       followScroll.current = true;
     } finally { setBusy(false); }
   }
+  async function changeSpeed(serviceTier) {
+    if (!chatId) { setDraftSpeed(serviceTier); return; }
+    const id = chatId;
+    const result = await api("/chat/speed", {id, model:pickerModel, serviceTier});
+    setChats(old => old.map(c => c.id === id ? {...c, serviceTier:result.serviceTier} : c));
+  }
   async function changePickerSelection(nextModel, nextEffort) {
-    if (busy || running) throw new Error("Bitte die laufende Arbeit abwarten.");
+    if (busy) throw new Error("Bitte die Übertragung abwarten.");
+    if (running || nextSelection) {
+      setNextSelections(old => ({...old, [chatId]:{model:nextModel, effort:nextEffort}}));
+      return;
+    }
     if (!thread?.workerSession) { setModel(nextModel); setEffort(nextEffort); return; }
     const id = chatId, session = thread.workerSession;
     const option = nextModel !== pickerModel ? modelConfig(session) : effortConfig(session);
@@ -1281,6 +1306,11 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   async function submit(e, voiceText) {
     e?.preventDefault();
     if ((!(voiceText ?? text).trim() && !attachments.length) || busy) { if (voiceText) throw new Error("Chat ist beschäftigt."); return; }
+    if (running && nextSelection) {
+      const message = "Die Modellwahl gilt für die nächste Antwort. Bitte die laufende Antwort abwarten oder stoppen.";
+      if (voiceText) throw new Error(message);
+      notify(message); return;
+    }
     if (uploadCounts.current.get(draftKey())) { notify("Dateien werden noch angeheftet."); return; }
     setBusy(true);
     const originalText = text,
@@ -1294,6 +1324,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         const r = await api("/chats", {
           model,
           worker: draftWorker,
+          serviceTier: draftSpeed,
           mode,
           projectId: projectRef.current,
           title: draftTitle || undefined,
@@ -1338,8 +1369,18 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         attachments: files,
         model: selectedModel,
         effort: pickerEffort || undefined,
+        nextSelection,
         mode,
       });
+      if (nextSelection) {
+        setNextSelections(old => { const next = {...old}; delete next[id]; return next; });
+        setModel(selectedModel); setEffort(pickerEffort);
+        if (thread?.workerSession) {
+          void api("/thread?id=" + encodeURIComponent(id)).then(updated => {
+            if (chatRef.current === id) setThread(old => old ? {...old, workerSession:updated.thread.workerSession} : old);
+          }).catch(() => {});
+        }
+      }
       return { id };
     } catch (e) {
       setThread((previous) =>
@@ -1586,7 +1627,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       j.name.toLowerCase().includes(search.toLowerCase()),
   );
   const nav = [
-      ["inbox", Mail, "Inbox"],
+      ["inbox", Inbox, "Inbox"],
       ["pipeline", Workflow, "Pipeline"],
       ["jobs", Clock, "Aufträge"],
       ...(boot?.features?.library?[["library", FileText, "Bibliothek"]]:[]),
@@ -1628,6 +1669,15 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     }, 700);
     return () => clearTimeout(timer);
   }, [foreground, view, readablePane, awayFromBottom, running, thread, chatId, current?.lastCompletedTurnId, current?.readTurnId]);
+  const notificationState = useJobNotifications(api, !!boot?.features?.routines && !embedded, notify);
+  useEffect(()=>{
+    if(embedded)return;
+    const open=()=>setModal('notifications');
+    const notificationId=new URLSearchParams(window.location.search).get('notification');
+    if(notificationId)setModal({type:'notifications',id:notificationId});
+    window.addEventListener('open-job-notifications',open);
+    return()=>window.removeEventListener('open-job-notifications',open);
+  },[]);
   const MainSurface = embedded ? "div" : "main";
   if (!boot)
     return (
@@ -1651,7 +1701,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         <div className="sidebar-resizer"><PaneDivider label="Seitenleistenbreite ändern" value={sidebarWidth} min={220} max={400} onReset={()=>setSidebarWidth(268)} onResize={delta=>setSidebarWidth(width=>Math.max(220,Math.min(400,width+delta)))}/></div>
         {view !== "inbox" && <div className="sidebar-topbar">
           <button className="sidebar-search" aria-label="System durchsuchen" title="System durchsuchen (⌘/Strg K)" onClick={()=>{setSearch("");setModal("search");}}>{icon(Search,18)}<span>Suche</span></button>
-          {requests.length > 0 && <IconButton label="Offene Rückfragen" onClick={()=>setModal("activity")}>{icon(Bell,17)}<i className="notification-dot"/></IconButton>}
+          {boot.features?.routines ? <IconButton label={`Benachrichtigungen${notificationState.data?.unread ? ` · ${notificationState.data.unread} ungelesen` : ''}${requests.length ? ` · ${requests.length} Rückfragen` : ''}`} onClick={()=>setModal("notifications")}>{icon(Bell,17)}{(notificationState.data?.unread>0||requests.length>0)&&<i className="notification-dot"/>}</IconButton> : requests.length > 0 && <IconButton label="Offene Rückfragen" onClick={()=>setModal("activity")}>{icon(Bell,17)}<i className="notification-dot"/></IconButton>}
           <IconButton
             label="Seitenleiste ausblenden"
             onClick={() => setSidebar(false)}
@@ -2063,11 +2113,12 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                         {icon(ChevronDown, 14)}
                       </ChatMenu>
                       <ModelPicker
-                        models={pickerModels} model={pickerModel} effort={pickerEffort}
+                        models={pickerModels} model={pickerModel} effort={pickerEffort} reduceMotion={boot.settings.reduceMotion === "on"}
                         workerId={pickerWorker} workers={boot.workers || []}
-                        hasConversation={!!chatId} disabled={running || busy}
+                        hasConversation={!!chatId} disabled={busy} providerDisabled={!!current?.jobId || !!current?.channelOnly}
+                        running={running} serviceTier={chatId ? current?.serviceTier : draftSpeed} onSpeedChange={changeSpeed}
                         onProviderChange={chooseProvider} onRefresh={refreshPickerWorkers}
-                        context={current?.fallbackFrom ? `${workerName(current.workerId)} übernimmt als Vertretung für ${workerName(current.fallbackFrom)}.` : undefined}
+                        context={nextSelection ? "Nächste Nachricht" : running ? "Auswahl für die nächste Nachricht" : current?.fallbackFrom ? `${workerName(current.workerId)} übernimmt als Vertretung für ${workerName(current.fallbackFrom)}.` : undefined}
                         onChange={changePickerSelection}
                       />
                       {thread?.workerSession && <WorkerSessionControls
@@ -2221,10 +2272,11 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         ) : view === "jobs" ? (
           <div className="page">
             <PageHeading title="Aufträge" onShowSidebar={!sidebar ? () => setSidebar(true) : undefined}>
+              {boot.features?.routines&&<IconButton label="Benachrichtigungen öffnen" onClick={()=>setModal("notifications")}>{icon(Bell,17)}{notificationState.data?.unread>0&&<i className="notification-dot"/>}</IconButton>}
               <button className="primary small-button" onClick={() => setModal({ type: "job" })}>{icon(Plus, 16)}Erstellen</button>
             </PageHeading>
             <p className="section-intro">
-              Aufgaben starten, Routinen planen und Ausführungen nachvollziehen.
+              Im Chat beauftragen. Hier Routinen ändern, pausieren und Ergebnisse öffnen.
             </p>
             <SearchBox
               value={search}
@@ -2236,7 +2288,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 ["all", "Alle"],
                 ["manual", "Manuell"],
                 ["scheduled", "Routinen"],
-                ["attention", "Probleme"],
+                ["attention", "Braucht Aufmerksamkeit"],
                 ["templates", "Vorlagen"],
               ].map(([id, label]) => (
                 <button
@@ -2274,6 +2326,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       ? "Auftrag nicht lesbar"
                       : j.schedule?.type === "interval" ? `Alle ${j.schedule.minutes} Minuten`
                       : j.schedule?.type === "event" ? `Bei ${j.schedule.event}`
+                      : j.schedule?.type === "once" ? `Einmal am ${new Date(j.schedule.at).toLocaleString("de-DE")}`
+                      : j.schedule?.type === "weekly" ? `${j.schedule.days.map(d=>["Mo","Di","Mi","Do","Fr","Sa","So"][d]).join(", ")} um ${j.schedule.time}`
                       : j.schedule?.type === "manual"
                         ? "Manuell"
                         : (j.schedule?.type === "weekdays"
@@ -2896,12 +2950,17 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               {projectColors.map(([value, label]) => <label key={value} title={label}><input type="radio" name="color" value={value} checked={value === (modal.color ?? modal.project?.color ?? "default")} onChange={()=>setModal(previous=>({...previous,color:value}))} /><span><span className="project-color-swatch" style={{backgroundColor:projectColor(value)}} aria-hidden="true">{icon(Check, 14)}</span><span>{label}</span></span></label>)}
             </fieldset>
             {boot.layoutVersion >= 2 && <div className="settings-group">
-              <SettingRow title="Firmenwissen" description="Gemeinsame geschäftliche Unterlagen verwenden.">
-                <label className="switch"><input type="checkbox" aria-label="Firmenwissen verwenden" name="knowledge" value="company" defaultChecked={modal.project?.knowledge?.includes('company') || false}/><span/></label>
-              </SettingRow>
-              <SettingRow title="Persönliches Wissen" description="Persönliche Unterlagen für diesen Workspace freigeben.">
-                <label className="switch"><input type="checkbox" aria-label="Persönliches Wissen verwenden" name="knowledge" value="personal" defaultChecked={modal.project?.knowledge?.includes('personal') || false}/><span/></label>
-              </SettingRow>
+              {[
+                ['company','Firmenwissen','Gemeinsame geschäftliche Unterlagen verwenden.'],
+                ['personal','Persönliches Wissen','Persönliche Unterlagen für diesen Workspace freigeben.'],
+              ].map(([scope,title,description]) => {
+                const values = modal.knowledge ?? modal.project?.knowledge ?? [];
+                const enabled = values.includes(scope);
+                return <SettingRow key={scope} title={title} description={description}>
+                  <button type="button" role="switch" className="apple-switch" aria-label={title+' verwenden'} aria-checked={enabled} onClick={()=>setModal(previous=>({...previous,knowledge:enabled ? values.filter(value=>value!==scope) : [...values,scope]}))}><span/></button>
+                  <input type="hidden" name="knowledge" value={scope} disabled={!enabled}/>
+                </SettingRow>;
+              })}
             </div>}
             </div>
             <div className="row end project-editor-actions">
@@ -3114,6 +3173,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       {modal?.type==='skill-hub'&&<Modal title="Skill hinzufügen" onClose={()=>setModal(null)}><SkillHub api={api} Field={Field} onSelect={skill=>setModal({type:'skill',skill})} onCreated={()=>setModal({type:'skill-create'})}/></Modal>}
       {modal?.type==='skill-create'&&<Modal title="Eigenen Skill erstellen" onClose={()=>setModal(null)}><CreateSkillForm api={api} Field={Field} onCreated={async()=>{await loadSkills();setModal(null);}}/></Modal>}
       {modal?.type==='tailscale'&&<Modal title="Tailscale" onClose={()=>setModal(null)}><TailscaleConnection api={api}/></Modal>}
+      {(modal === 'notifications'||modal?.type==='notifications') && <Modal title="Benachrichtigungen" onClose={()=>setModal(null)}><JobNotifications initialId={modal?.id} api={api} state={notificationState} Field={Field} requests={requests.length} onRequests={()=>setModal('activity')} onChat={async id=>{setModal(null);await openChat(id);}} onRun={item=>setModal({type:'job-run',job:{name:item.title,lastRun:{coreRunId:item.id.replace(/^attention-/,'')}}})}/></Modal>}
       {modal?.type === "job-run" && (
         <Modal title={modal.job.name} onClose={() => setModal(null)}>
           {modal.job.lastRun.coreRunId ? <CoreRunDetails api={api} id={modal.job.lastRun.coreRunId}/> : <>
@@ -3195,6 +3255,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
           onClose={() => setModal(null)}
         >
           <JobForm
+            routines={!!boot.features?.routines}
             initialTemplate={modal.template}
             workers={boot.workers || []}
             job={modal.job}
@@ -3235,7 +3296,7 @@ function SearchBox({ value, onChange, placeholder, autoFocus }) {
     </div>
   );
 }
-function JobForm({ job, initialTemplate, connections, workers, onSave }) {
+function JobForm({ job, initialTemplate, connections, workers, onSave, routines }) {
   const [templateId, setTemplateId] = useState(initialTemplate?.id || "");
   const template = jobTemplates.find(t => t.id === templateId);
   const [draft, setDraft] = useState(() => job || (initialTemplate ? jobFromTemplate(initialTemplate.id) : {}));
@@ -3254,11 +3315,16 @@ function JobForm({ job, initialTemplate, connections, workers, onSave }) {
           worker,
           connectionId: f.get("connectionId"),
           ...(worker==='python'?{python:{handler:'script',script:f.get('script'),timeout:Number(f.get('timeout')),input:JSON.parse(String(f.get('pythonInput')||'{}'))},retry:{count:Number(f.get('retries')||0),idempotent:f.get('idempotent')==='on'}}:{}),
+          ...(f.get('notificationTarget') ? {notification:{target:f.get('notificationTarget'),when:f.get('notificationWhen')||'always'}} : {}),
           schedule: {
+            ...(job?.schedule?.timezone ? {timezone:job.schedule.timezone} : {}),
+            ...(job?.schedule?.startAt ? {startAt:job.schedule.startAt} : {}),
             type: schedule,
-            ...(['daily','weekdays'].includes(schedule) ? { time: f.get("time") } : {}),
+            ...(['daily','weekdays','weekly'].includes(schedule) ? { time: f.get("time") } : {}),
             ...(schedule==='interval'?{minutes:Number(f.get('minutes'))}:{}),
-            ...(schedule==='event'?{event:f.get('event')}:{})
+            ...(schedule==='event'?{event:f.get('event')}:{}),
+            ...(schedule==='weekly'?{days:f.getAll('days').map(Number)}:{}),
+            ...(schedule==='once'?{at:new Date(String(f.get('at'))).toISOString()}:{})
           },
           status: schedule !== "manual" && active ? "active" : "paused",
         });
@@ -3319,6 +3385,7 @@ function JobForm({ job, initialTemplate, connections, workers, onSave }) {
             <option value="manual">Nur manuell</option>
             <option value="daily">Täglich</option>
             <option value="weekdays">Werktags</option>
+            {routines&&<><option value="weekly">Wöchentlich</option><option value="once">Einmal</option></>}
             <option value="interval">Intervall</option>
             <option value="event">Bei Ereignis</option>
           </select>
@@ -3352,8 +3419,8 @@ function JobForm({ job, initialTemplate, connections, workers, onSave }) {
           </select>
         </Field>
       )}
-      {["daily","weekdays"].includes(schedule) && (
-        <Field label="Uhrzeit · lokale Zeitzone des Macs">
+      {["daily","weekdays","weekly"].includes(schedule) && (
+        <Field label={`Uhrzeit · ${job?.schedule?.timezone || "Zeitzone der Schaltzentrale"}`}>
           <input
             name="time"
             type="time"
@@ -3363,6 +3430,9 @@ function JobForm({ job, initialTemplate, connections, workers, onSave }) {
           />
         </Field>
       )}
+      {schedule==='weekly'&&<Field label="Wochentage"><div className="row job-weekdays">{['Mo','Di','Mi','Do','Fr','Sa','So'].map((label,day)=><label key={day} className="checkbox-label"><input type="checkbox" name="days" value={day} defaultChecked={(job?.schedule?.days||[0]).includes(day)}/>{label}</label>)}</div></Field>}
+      {schedule==='once'&&<Field label="Termin · Zeitzone dieses Geräts"><input type="datetime-local" name="at" required defaultValue={job?.schedule?.at ? new Date(new Date(job.schedule.at).getTime()-new Date(job.schedule.at).getTimezoneOffset()*60000).toISOString().slice(0,16) : ''}/></Field>}
+      {routines&&<NotificationPreference api={api} Field={Field} job={job} form/>}
       <div className="row between">
         {schedule !== "manual" ? (
           <label className="checkbox-label">

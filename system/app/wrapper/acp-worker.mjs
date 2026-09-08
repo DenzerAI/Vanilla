@@ -84,7 +84,7 @@ export class ACPWorker extends EventEmitter {
     if (method === "mcpServerStatus/list") return { data: [] };
     if (method === "thread/start") {
       if (p.sandbox === "read-only") throw new Error(`${this.name} bietet hier keinen geschützten Planmodus.`);
-      const session = await this.setup("session/new", { cwd: p.cwd, mcpServers: this.mcpServers(p.cwd) });
+      const session = await this.setup("session/new", { cwd: p.cwd, mcpServers: await this.mcpServers(p.cwd) });
       if (!session?.sessionId) throw new Error("Worker hat keinen Chat angelegt. Anmeldung prüfen.");
       // A CLI can advertise models while logged out. Use its reported auth state,
       // without reading credentials or persisting account identity in the wrapper.
@@ -106,7 +106,7 @@ export class ACPWorker extends EventEmitter {
         if (!this.info.agentCapabilities.loadSession) throw new Error(`${this.name} kann diesen Chat nach Neustart nicht fortsetzen. Verlauf bleibt erhalten; bitte neuen Chat beginnen.`);
         // Ignore replay updates until load finishes: our persisted transcript is the display source.
         this.sessions.delete(sid);
-        const result = await this.setup("session/load", { sessionId: sid, cwd: p.cwd, mcpServers: this.mcpServers(p.cwd) });
+        const result = await this.setup("session/load", { sessionId: sid, cwd: p.cwd, mcpServers: await this.mcpServers(p.cwd) });
         if (!result || (result.sessionId && result.sessionId !== sid)) throw new Error("Worker konnte den vorhandenen Chat nicht wiederherstellen. Bitte einen neuen Chat beginnen.");
         thread.workerSession = { ...result, sessionId: sid };
         thread.cwd = p.cwd; this.sessions.set(sid, thread.id); this.applyEarly(thread);

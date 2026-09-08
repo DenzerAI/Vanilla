@@ -15,6 +15,15 @@ DEFINITIONS = [
     ('memory_write', 'Save a concise, sourced Markdown note. Never store secrets. Use the version from memory_read; null creates a new note. Preserves local Git history.', {'path':{'type':'string'},'text':{'type':'string','maxLength':1000000},'version':{'type':['string','null']}}, ['path','text','version']),
 ]
 
+SCHEDULE = {'type':'object','properties':{'type':{'type':'string','enum':['once','daily','weekdays','weekly','interval']},'time':{'type':'string','description':'HH:MM'},'at':{'type':'string','description':'ISO date/time with UTC offset for once'},'days':{'type':'array','items':{'type':'integer','minimum':0,'maximum':6},'description':'Monday=0, Sunday=6'},'minutes':{'type':'integer','minimum':1},'timezone':{'type':'string'}},'required':['type'],'additionalProperties':False}
+ROUTINE_FIELDS = {'name':{'type':'string','maxLength':200},'instructions':{'type':'string','maxLength':30000,'description':'Self-contained task, data sources and desired result. Runs have no implicit access to this chat history.'},'schedule':SCHEDULE,'notification':{'type':'object','properties':{'target':{'type':'string','description':'app or an exact ready target ID from routine_capabilities; external delivery only on explicit user request'},'when':{'type':'string','enum':['always','errors']}},'required':['target','when'],'additionalProperties':False},'status':{'type':'string','enum':['active','paused']}}
+DEFINITIONS += [
+    ('routine_capabilities','Check supported schedules, timezone, current time and real notification targets before creating a routine. No sending.',{},[]),
+    ('routine_list','Read routines in the current project, their revisions and next execution. Use before editing or pausing.',{},[]),
+    ('routine_create','Create and activate a routine requested by the user in chat. Check required data/tools first; ask only for missing essentials. Use the user-saved notification preference from routine_capabilities, otherwise App. Never claim creation without this tool succeeding. Reuse requestKey on retry.',{**ROUTINE_FIELDS,'requestKey':{'type':'string','minLength':8,'maxLength':150}},['name','instructions','schedule','requestKey']),
+    ('routine_update','Change or pause an existing routine on user request. Use the revision from routine_list. Never silently create a replacement.',{**ROUTINE_FIELDS,'id':{'type':'string'},'revision':{'type':'string'}},['id','revision']),
+]
+
 
 # CRM shares the workspace, independently of project memory. No approval tool is exposed.
 CRM_DEFINITIONS = [
@@ -26,17 +35,17 @@ CRM_DEFINITIONS = [
     ('crm_propose', 'Propose typed CRM changes with evidence. Does not create facts; a separate owner decision is required. Missing fields are not written to notes.', {'signal_id':{'type':'string'},'entity_id':{'type':['string','null']},'kind':{'enum':['person','organization','case']},'base_revision':{'type':'integer','minimum':0},'changes':{'type':'array','minItems':1,'maxItems':100,'items':{'type':'object','properties':{'field':{'type':'string'},'slot':{'type':'string'},'value':{}},'required':['field','value'],'additionalProperties':False}},'confidence':{'enum':['uncertain','likely','explicit']},'reason':{'type':'string'}}, ['signal_id','kind','base_revision','changes','reason']),
 ]
 DEFINITIONS += CRM_DEFINITIONS
-WRITE_TOOLS = {'memory_write','crm_capture','crm_propose'}
+WRITE_TOOLS = {'memory_write','crm_capture','crm_propose','routine_create','routine_update'}
 
 
 def tools():
-    return [{'name':name,'description':description,'inputSchema':{'type':'object','properties':{'projectId':{'type':'string','description':'ID of the current project, default for Allgemein. Never choose another project without user intent.'},**properties},'required':['projectId',*required],'additionalProperties':False},'annotations':{'readOnlyHint':name not in WRITE_TOOLS,'destructiveHint':name in WRITE_TOOLS,'openWorldHint':False}} for name,description,properties,required in DEFINITIONS]
+    return [{'name':name,'description':description,'inputSchema':{'type':'object','properties':{'projectId':{'type':'string','description':'ID of the current project, default for Allgemein. Never choose another project without user intent.'},**properties},'required':['projectId',*required],'additionalProperties':False},'annotations':{'readOnlyHint':name not in WRITE_TOOLS,'destructiveHint':name in WRITE_TOOLS and name!='routine_create','openWorldHint':name.startswith('routine_')}} for name,description,properties,required in DEFINITIONS]
 
 
 def call_core(args, name, arguments):
     if args.project and arguments.get('projectId') != args.project:
         raise ValueError('This memory connection belongs to another project.')
-    family = 'crm' if name.startswith('crm_') else 'memory'
+    family = 'routines' if name.startswith('routine_') else 'crm' if name.startswith('crm_') else 'memory'
     headers={'Content-Type':'application/json'}
     token=os.environ.get('AGENT_INTERNAL_TOKEN')
     if token:

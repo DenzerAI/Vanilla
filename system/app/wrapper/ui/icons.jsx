@@ -1,4 +1,5 @@
 import React from "react";
+import BoltGlyph from "framework7-icons/react/esm/Bolt.js";
 import MaximizeGlyph from "framework7-icons/react/esm/ArrowUpLeftArrowDownRight.js";
 import MinimizeGlyph from "framework7-icons/react/esm/ArrowDownRightArrowUpLeft.js";
 import BriefcaseGlyph from "framework7-icons/react/esm/Briefcase.js";
@@ -63,6 +64,7 @@ import SquarePencilGlyph from "framework7-icons/react/esm/SquarePencil.js";
 import StopFillGlyph from "framework7-icons/react/esm/StopFill.js";
 import SunMaxGlyph from "framework7-icons/react/esm/SunMax.js";
 import TrashGlyph from "framework7-icons/react/esm/Trash.js";
+import TrayGlyph from "framework7-icons/react/esm/Tray.js";
 import Tray2Glyph from "framework7-icons/react/esm/Tray2.js";
 import WandStarsGlyph from "framework7-icons/react/esm/WandStars.js";
 import WaveformGlyph from "framework7-icons/react/esm/Waveform.js";
@@ -144,6 +146,7 @@ export const RefreshCw = wrap(ArrowClockwiseGlyph);
 export const Keyboard = wrap(KeyboardGlyph);
 export const Image = wrap(PhotoGlyph);
 export const Volume2 = wrap(Speaker2Glyph);
+export const Inbox = wrap(TrayGlyph);
 export const Mail = wrap(EnvelopeGlyph);
 export const Calendar = wrap(CalendarGlyph);
 export const MessageCircle = wrap(ChatBubbleGlyph);
@@ -158,3 +161,5 @@ export const PhoneOff = wrap(PhoneDownGlyph);
 export const AudioLines = wrap(WaveformGlyph);
 
 export const Briefcase = wrap(BriefcaseGlyph);
+
+export const Zap = wrap(BoltGlyph);

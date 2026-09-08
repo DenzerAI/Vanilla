@@ -11,8 +11,9 @@ import { companyRoot, readCompanyFile, ensureCompanyBase } from './company-base.
 import { HeroApiError, HeroClient } from './hero-client.mjs';
 import { Store } from './store.mjs';
 import { WhatsAppBridge } from './whatsapp-bridge.mjs';
+import {installationRoot,sourceRoot} from '../wrapper/layout.mjs';
 
-const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+const root = installationRoot;
 await loadEnv(path.join(root, '.env'));
 await ensureCompanyBase(root);
 
@@ -120,7 +121,7 @@ async function loadEnv(file) {
 async function serveFrontend(response, pathname) {
   const relative = pathname === '/' ? 'index.html' : pathname.slice(1);
   if (!['index.html', 'app.js', 'styles.css'].includes(relative)) return false;
-  const content = await readFile(path.join(root, 'frontend', relative));
+  const content = await readFile(path.join(sourceRoot, 'frontend', relative));
   response.writeHead(200, { 'content-type': mime[path.extname(relative)] || 'application/octet-stream' });
   response.end(content);
   return true;

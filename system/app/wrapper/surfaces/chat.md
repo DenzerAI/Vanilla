@@ -39,7 +39,7 @@ Die gemeinsame Darstellung verarbeitet normalisierte öffentliche Werkzeugdaten.
 ## Austauschbare Worker
 
 Der Composer zeigt die Modelle und unterstützten Funktionen des tatsächlichen Workers. Eine Übernahme wird innerhalb der Modellwahl mit dem tatsächlichen Worker und „Vertretung“ erklärt. Eine zusätzliche dauerhafte Worker-Beschriftung unter der Eingabe entfällt. Ein
-Planmodus ohne wirksamen Schreibschutz wird nicht angeboten. Die gemeinsame Modellwahl bietet Codex und Claude Code immer als anklickbare Bereiche mit Original-Icons aus `BrandIcon`. Andere bestehende Worker erscheinen dort, wenn sie das aktuelle Gespräch führen. Standard und Vertretung bleiben unter Einstellungen → Worker. Ein Anbieterwechsel aus einem bestehenden Chat öffnet über die ausdrücklich beschriftete Aktion einen neuen Chat; der ursprüngliche Verlauf bleibt beim bisherigen Worker. Entwurf und Anhänge werden übernommen. Die Anbieterwahl im Chat verändert den globalen Standard nicht.
+Planmodus ohne wirksamen Schreibschutz wird nicht angeboten. Die gemeinsame Modellwahl bietet Codex und Claude Code immer als anklickbare Bereiche mit Original-Icons aus `BrandIcon`. Andere bestehende Worker erscheinen dort, wenn sie das aktuelle Gespräch führen. Standard und Vertretung bleiben unter Einstellungen → Worker. Ein ausdrücklicher Anbieterwechsel setzt denselben sichtbaren Chat fort. Chat-ID, Titel, Projekt, Entwurf, Anhänge und Verlauf bleiben erhalten. Im Leerlauf heißt die Aktion „Mit … fortsetzen“, während einer Antwort „Stoppen und wechseln“. Erst wird die Zielanmeldung geprüft, dann gegebenenfalls die bisherige Antwort gestoppt und deren Abschluss bestätigt. Der neue Worker erhält eine eigene native Sitzung und den bisherigen Gesprächskontext. Fehler vor der Übernahme verändern die bisherige Zuordnung nicht. Automatische Jobs und Kanalgespräche bleiben fest zugeordnet. Die Anbieterwahl im Chat verändert den globalen Standard nicht.
 
 
 ## Dateien anheften
@@ -237,7 +237,9 @@ Gesprächs-Skeletons verwenden user-message-row/user-message und agent-message/m
 
 ## Kompakte Modellwahl
 
-`ModelPicker` nutzt die gemeinsame `sheet-glass`-Fläche mit 40 px Blur, flachen 32-px-Zeilen und einer kompakten umbrechenden Effort-Auswahl. Auf Touch sind Ziele mindestens 44 px hoch. Kein Fertig-Button und keine dauerhaften Effort-Kacheln. Escape, Außenklick und Verlassen schließen; Tastaturfokus bleibt sichtbar. Fenster, Bildschirmtastatur und vergrößerte Schrift begrenzen Position und Scrollhöhe. Ohne Transparenz oder Blur wird die Fläche deckend.
+`ModelPicker` nutzt die gemeinsame `popover-glass`-Fläche mit 28 px Blur, stärkerer Transparenz, feinen Lichtkanten und flachen 32-px-Zeilen. Unter einer Trennlinie steht `ReasoningSlider`: native Stufen, Glasgriff und Terrakotta-Quadrate mit steigender Intensität. Die aktuelle Beschriftung wechselt darüber. Auf Touch sind Ziele mindestens 44 px hoch. Kein Fertig-Button und keine dauerhaften Effort-Kacheln. Escape, Außenklick und Verlassen schließen; Tastaturfokus bleibt sichtbar. Fenster, Bildschirmtastatur und vergrößerte Schrift begrenzen Position und Scrollhöhe. Ohne Transparenz oder Blur wird die Fläche deckend. Animationen folgen der App-/Systemvorgabe für reduzierte Bewegung und pausieren außerhalb der sichtbaren Fläche.
+
+Während einer laufenden Antwort bleiben Modell und Denkaufwand auswählbar. Die Wahl wird pro Chat für die nächste Nachricht vorgemerkt; der Hinweis im geöffneten Menü benennt dies. Die laufende Antwort bleibt unverändert, ein Anbieterwechsel verwendet die ausdrücklich beschriftete Stoppen-und-Wechseln-Aktion. Die Vormerkung bleibt beim Wechsel zwischen Chats in der geöffneten App erhalten. Erst das nächste Senden übergibt sie unter derselben serverseitigen Turnsperre wie den Prompt. Eine noch laufende Antwort nimmt die Vormerkung nicht als Steuerungsnachricht entgegen. ACP bestätigt Modell und anschließend die zugehörigen Denkstufen nativ; unbekannte Werte stoppen das Senden und erhalten den Entwurf. Bei einem vorgemerkten anderen ACP-Modell erscheinen dessen noch nicht gemeldete Denkstufen nicht vorab.
 
 Codex zeigt ausschließlich gemeldete, sichtbare Modelle der GPT-5.6- und GPT-6-Serie. Bereits vorhandene Gespräche mit älteren Modellen behalten ihren tatsächlichen Modellnamen. Die Stufen kommen exakt aus `supportedReasoningEfforts`, mit den nativen Werten statt Übersetzungen. Beim Modellwechsel bleibt eine Stufe nur erhalten, wenn das neue Modell sie anbietet.
 
@@ -248,3 +250,23 @@ Die Eingabenavigation verwendet `ChapterScrubber` unter `ui/components/ui`. Posi
 
 
 Workspace-Namen entsprechen den Ordnernamen direkt unter workspaces/. Die stabile Kennung bleibt bei einer Umbenennung erhalten. Der gemeinsame Dialog ergänzt zwei SettingRow-Zeilen mit den vorhandenen Schaltern für Firmenwissen und persönliches Wissen; die Freigaben sind unabhängig und bei neuen Workspaces aus. Ein belegter Name oder laufende Arbeit verhindert den Ordnerumzug mit einer verständlichen Meldung. Farben, Symbole und bestehende Dialogstruktur bleiben gemeinsam. Details und Migrationsvertrag stehen in docs/WORKSPACES.md des technischen Einstiegs.
+## Routinen beauftragen
+
+Der Chat verwendet die gemeinsamen Routine-MCP-Werkzeuge. Die aktuelle Projekt-ID
+wird frisch mitgegeben. Bei wiederkehrenden Aufgaben zuerst Fähigkeiten,
+Datenquellen, Termin und Benachrichtigungsziel klären; nur entscheidende Lücken
+nachfragen. Eine eindeutige Beauftragung genügt zum Aktivieren. Nach erfolgreichem
+Speichern nennt die Antwort den nächsten Termin, Zeitzone und Zustellweg.
+Eine spätere Änderung oder Pause liest erst den aktuellen Stand mit Revision.
+Kein eigenes Cron-Skript und keine bloße Zusage bei fehlendem Werkzeug.
+Benachrichtigung und Ergebnis öffnen den tatsächlichen Lauf beziehungsweise
+seinen Chat; der Ursprungschat wird nicht mit künstlichen Turns beschrieben.
+Der verbindliche Ablauf steht unter [Aufträge](jobs.md#routinen-aus-dem-chat-und-benachrichtigungen).
+
+Der ReasoningSlider bewegt sich zwischen den Punkten frei, zieht nahe Punkte magnetisch an und übernimmt beim Loslassen genau eine native Stufe. Keine unteren Low-/Ultra-Labels und kein diagonaler Popover-Verlauf. Native Default-/Auto-Werte erscheinen separat als Rücksetzen, nicht als zusätzliche Denkstufe. Anzahl und Namen bleiben modellspezifisch.
+
+Codex bietet einen flachen Blitz-Button „Fast“, sofern `model/list.serviceTiers` eine passende Option meldet. Native IDs werden unverändert verwendet. Die Wahl gilt erst für die nächste Nachricht, bleibt pro bestehendem Chat gespeichert und wird über `serviceTierForTurn` übertragen; Standard wird ausdrücklich mit `default` gesendet. Ein nicht mehr unterstützter Tier wird nicht an das neue Modell übertragen. Der Tooltip nennt den höheren Verbrauch. Claude behält seine nativ angebotenen übrigen Sitzungseinstellungen.
+
+Anbieterübernahmen speichern einen unveränderlichen Verlaufsschnappschuss. Neue native Ereignisse werden auf die sichtbare Chat-ID zugeordnet; verspätete Ereignisse der alten Sitzung verändern den neuen Verlauf nicht. Die Kontextübergabe enthält einen begrenzten Gesprächsauszug und den vollständigen lesbaren Export, ohne private Reasoning-Inhalte. Neustart und erneutes Öffnen behalten Zuordnung und Verlauf. Verzweigen bleibt nach dem Übergabepunkt möglich; Löschen über die Anbietergrenze hinweg wird vor nativen Änderungen abgewiesen.
+
+Die Modellwahl behält während einer Öffnung ihre horizontale Ausrichtung unabhängig von wechselnden Modell-, Denkaufwand- und Fast-Beschriftungen. Die beim Öffnen gemessene Triggerbreite bleibt der Anker; tatsächliche Layoutänderungen und Viewportgrenzen werden weiterhin berücksichtigt. Erneutes Öffnen richtet das Menü frisch aus.

@@ -1,9 +1,10 @@
 .model-popover.glass {
-  background: var(--sheet-glass);
-  border-radius: var(--radius-control);
-  box-shadow: none;
-  -webkit-backdrop-filter: blur(40px) saturate(180%);
-  backdrop-filter: blur(40px) saturate(180%);
+  background: var(--popover-glass);
+  background-image: none;
+  border-radius: var(--radius-panel);
+  box-shadow: var(--popover-glass-shadow);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(180%);
   scrollbar-width: none;
 }
 .model-popover::-webkit-scrollbar { display: none; }
@@ -50,16 +51,7 @@
 .model-popover .model-option[data-selected="false"] svg { visibility: hidden; }
 .model-popover .model-option[data-selected="true"] svg { visibility: visible; }
 .model-popover legend { font-size: var(--text-caption); padding-top: var(--space-4); }
-.model-popover .effort-grid { display: flex; flex-wrap: wrap; gap: var(--space-2); padding: var(--space-4) 0 0; }
-.model-popover .effort-option { flex: 1 0 auto; }
-.model-popover .effort-option span {
-  min-height: var(--control-height);
-  padding: var(--space-4) var(--space-8);
-  background: transparent;
-  border-radius: var(--radius-button);
-}
-.model-popover .effort-option[data-selected="false"] span { background: transparent; color: var(--muted); font-weight: var(--weight-regular); }
-.model-popover .effort-option[data-selected="true"] span { background: var(--selected); color: var(--text); font-weight: var(--weight-semibold); }
+.model-popover .effort-options { margin: var(--space-12) var(--space-8) var(--space-8); padding-top: var(--space-12); border-top: 1px solid var(--border); }
 .model-status, .model-provider-state { padding: var(--space-8); font-size: var(--text-small); color: var(--muted); }
 .model-status { display: flex; align-items: center; gap: var(--space-8); margin: 0; overflow-wrap: anywhere; }
 .model-provider-state { display: grid; gap: var(--space-8); }
@@ -67,7 +59,7 @@
 .model-provider-state button { justify-self: start; }
 .model-provider-state a { color: var(--muted); font-size: var(--text-caption); }
 @media (pointer: coarse), (max-width: 650px) {
-  .model-providers button, .model-popover .model-option, .model-popover .effort-option span, .model-provider-state button { min-height: var(--control-touch); }
+  .model-providers button, .model-popover .model-option, .model-provider-state button { min-height: var(--control-touch); }
 }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .model-popover.glass { background: var(--glass); }
@@ -79,3 +71,8 @@
   .model-popover.glass { border: 1px solid CanvasText; scrollbar-width: auto; }
   .model-popover::-webkit-scrollbar { display: revert; }
 }
+
+.model-speed { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); padding: var(--space-8); color: var(--muted); font-size: var(--text-small); }
+.model-speed button { display: inline-flex; align-items: center; gap: var(--space-4); min-height: var(--control-height); padding: var(--space-4) var(--space-8); border-radius: var(--radius-control); }
+.model-speed button[aria-pressed="true"] { background: var(--hover); color: var(--brand-accent); }
+@media (pointer: coarse) { .model-speed button { min-height: var(--control-touch); } }

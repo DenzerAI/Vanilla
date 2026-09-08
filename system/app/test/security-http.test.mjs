@@ -14,7 +14,7 @@ test('actual order HTTP routes protect data and downloads; legitimate synthetic 
   for (const name of ['server','security','artifacts','store','bootstrap','company-base','worker-context','hero-client','whatsapp-bridge'])
     await copyFile(new URL(`../backend/${name}.mjs`, import.meta.url),path.join(root,'backend',`${name}.mjs`));
   await mkdir(path.join(root, 'wrapper'));
-  for (const name of ['isolation', 'identity-preferences'])
+  for (const name of ['isolation', 'identity-preferences', 'layout'])
     await copyFile(new URL(`../wrapper/${name}.mjs`, import.meta.url), path.join(root, 'wrapper', `${name}.mjs`));
   await mkdir(path.join(root, 'workspaces/default/soul'), {recursive:true});
   await writeFile(path.join(root, 'workspaces/default/soul/IDENTITY.md'), 'Anzeigename: Synthetic');

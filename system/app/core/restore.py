@@ -49,7 +49,7 @@ def migrate_legacy_restore(base, config):
     with closing(sqlite3.connect(migrated.data/'agent.sqlite3')) as source, closing(sqlite3.connect(result/'database.sqlite3')) as target:
         source.backup(target)
         target.execute('PRAGMA journal_mode=DELETE')
-    for name in ['vault.git','worker-sessions','archived-sessions']:
+    for name in ['vault.git','worker-sessions','archived-sessions','native-sessions']:
         if (base/name).exists():shutil.copytree(base/name,result/name)
     files={p.relative_to(result).as_posix():sha256(p) for p in result.rglob('*') if p.is_file()}
     atomic_write(result/'manifest.json',json.dumps({'format':'agent-backup-v2','installation':str(config.root),'files':files,'convertedFrom':'agent-backup-v1'}))
@@ -73,7 +73,7 @@ def recover(config, journal):
         journal.unlink()
         return
     content = {config.root/name for name in ['workspaces','knowledge','IDENTITY.md','system/layout.json']} if config.layout else {config.workspace}
-    allowed = {*content, config.data/'agent.sqlite3', config.data/'vault.git', config.data/'codex/sessions', config.data/'codex/archived_sessions', *[Path(str(config.data/'agent.sqlite3')+s) for s in ('-wal','-shm')]}
+    allowed = {*content, config.data/'agent.sqlite3', config.data/'vault.git', config.data/'native-sessions', config.data/'codex/sessions', config.data/'codex/archived_sessions', *[Path(str(config.data/'agent.sqlite3')+s) for s in ('-wal','-shm')]}
     for step in reversed(state['steps']):
         target, old, prepared = (Path(step[k]) if step.get(k) else None for k in ('target','old','prepared'))
         if target not in allowed or old.parent != target.parent or not old.name.startswith('.agent-restore-'):
@@ -117,6 +117,7 @@ def apply_pending(config):
         sources=[(None,Path(str(config.data/'agent.sqlite3')+suffix)) for suffix in ('-wal','-shm')]
         sources += [(base/'workspace'/name,config.root/name) for name in ['workspaces','knowledge','IDENTITY.md','system/layout.json']] if config.layout else [(base/'workspace',config.workspace)]
         sources += [(base/'database.sqlite3',config.data/'agent.sqlite3'),(base/'vault.git',config.data/'vault.git'),(base/'worker-sessions',config.data/'codex/sessions'),(base/'archived-sessions',config.data/'codex/archived_sessions')]
+        sources += [(base/'native-sessions',config.data/'native-sessions')]
         record={'steps':steps,'snapshot':state['snapshot'],'created_at':time()}
         # Prepare every copy before modifying the live workspace or database.
         for source,target in sources:

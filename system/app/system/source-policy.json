@@ -3,7 +3,9 @@
   "neutralTemplates": {
     "templates/firmenbasis/AGENTS.md": "da3e9026478f541627621afe7e01202e513b83a982bb67a1cbc49b3c2ba1ce08",
     "templates/firmenbasis/FIRMA.md": "095d8035c761525936fd479fca089504e5f2a5a60bd308296ba6c496f179a942",
-    "templates/firmenbasis/report-result/SKILL.md": "278588c135dbd74b88b798dec01d911ec1f36e4d000982a2364a0e95c47cd077"
+    "templates/firmenbasis/report-result/SKILL.md": "278588c135dbd74b88b798dec01d911ec1f36e4d000982a2364a0e95c47cd077",
+    "templates/IDENTITY.md": "0dc218767d43c4a2b156ea728916ff4ed545bde6f316df28a3840e863403fa3b",
+    "templates/personal/README.md": "401e35797ef182abd556f68bd864dd39c8a6269f8dc5e86b03d96571516adea3"
   },
   "legacyNeutralTemplates": {
     "firmenbasis/AGENTS.md": [

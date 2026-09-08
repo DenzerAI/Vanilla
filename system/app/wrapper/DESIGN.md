@@ -426,6 +426,8 @@ Avatar und Bearbeitungssymbol teilen eine feste senkrechte Mittelachse: Die Sign
 
 ## Inbox
 
+Inbox verwendet das offene Ablagefach `Tray` aus Framework7 Icons über den gemeinsamen `Inbox`-Export in `ui/icons.jsx`, sowohl im Hauptmenü als auch im Leerzustand.
+
 Die Inbox übernimmt wie Einstellungen die bestehende linke Seitenleiste mit Zurück-Einstieg, Suche und kompakter Gesprächsliste. Kanal-Icon, Name, Uhrzeit und Ungelesen-Punkt genügen; Betreff-/Vorschauunterzeilen entfallen. Die volle Hauptfläche zeigt Verlauf und eine automatisch wachsende, ausschließlich vertikal scrollende Antwortzeile. Bis 650 px Fensterbreite wechseln Liste und Verlauf in voller Breite. Beispiele und Speichergrenzen werden ausschließlich im Konzeptdialog erklärt. PageHeading, FilterPicker, BrandIcon, Modal und zentrale Tokens bleiben gemeinsam; InboxConversationRow steht unter Unser Design. Aufbau und Verhalten führt [surfaces/inbox.md](surfaces/inbox.md).
 
 Bibliotheks-Quick-Look bleibt eine reine Großansicht ohne doppelte Dateiverwaltung. Dateiaktionen stehen im rechten Workspace. Markdown nutzt dort den bestehenden bereinigten Renderer mit kompakten Dokumentrollen statt Editorfläche. Der Liste/Raster-Umschalter verwendet Symbolbetonung ohne rechteckige Auswahlfüllung; sämtliche Iconbuttons bleiben rund.
@@ -443,8 +445,11 @@ Skeletons übernehmen die produktiven Layoutklassen: integration-grid/-item für
 
 ## Modellwahl mit Anbieterbereichen
 
-Die gemeinsame `ModelPicker`-Komponente bietet kompakte anklickbare Codex- und Claude-Code-Bereiche mit vorhandenen Original-Markenassets aus `BrandIcon`. Eine höchstens 300 px breite, rand- und schattenlose `sheet-glass`-Fläche mit 40 px Blur und verstärkter Sättigung folgt dem flachen macOS-Stil. Gemeinsame Rundung, Schriftrollen und Abstände bleiben tokenbasiert. Modellzeilen haben 32 px Mindesthöhe; Denkstufen bilden eine schmale umbrechende Reihe ohne ungefüllte Kachelhintergründe. Nur die Auswahl ist neutral hervorgehoben. Touchziele haben mindestens 44 px. Kein zusätzlicher Fertig-Fuß.
+Die gemeinsame `ModelPicker`-Komponente bietet kompakte anklickbare Codex- und Claude-Code-Bereiche mit vorhandenen Original-Markenassets aus `BrandIcon`. Die höchstens 300 px breite `popover-glass`-Fläche ist stärker transparent als ein Dialog, mit 28 px Hintergrundunschärfe, verstärkter Sättigung, feinen Lichtkanten und dezentem Schatten. `popover-glass` und `popover-glass-shadow` führen die hellen und dunklen Materialwerte zentral. Die Fläche hat keinen diagonalen Verlauf. Modellzeilen bleiben flach und mindestens 32 px hoch; Touchziele mindestens 44 px. Kein zusätzlicher Fertig-Fuß.
 
+Denkaufwand steht unter einer feinen Trennlinie mit eigenem Innenabstand. Der gemeinsame `AmountSlider` unter `ui/components/ui/amount-slider.tsx` adaptiert ausschließlich den vom Nutzer gelieferten Regler. Radix liefert die zugängliche Bedienung, `ReasoningSlider` die native Beschriftung und Übernahme. Das Terrakotta-Quadratfeld folgt `brand-accent`; Länge und Tempo steigen mit der Stufe. Die Geometrie und Bewegungswerte stehen in `amountSliderGeometry` und `amountSliderMotion`. Der Glasknopf folgt beim Ziehen flüssig, wird in der Nähe der vorhandenen Stufen magnetisch und rastet beim Loslassen auf der nächsten Stufe ein; darüber wechselt deren Originalname ohne Layoutsprung. Ziehen zeigt eine Vorschau, Loslassen übernimmt genau einmal. Untere Endbeschriftungen entfallen. Native Default-/Auto-Optionen sind Rücksetzaktionen neben der Überschrift, keine zusätzlichen Sliderstufen. Solange die Voreinstellung gilt, zeigen weder Griff noch Quadratfeld einen erfundenen Zahlenwert. Der Codex-Fast-Schalter sitzt als flacher Blitz-Button im selben Popover; gedrückter Zustand, zugänglicher Name und Hinweis auf höheren Verbrauch gehören dazu. Er erscheint nur bei nativ gemeldeter Fast-Service-Tier. Pfeiltasten, Home/End und PageUp/PageDown bleiben bedienbar. Native Ablehnung stellt die bestätigte Auswahl wieder her. Ohne Denkstufen entfällt der Regler; bei genau einer Stufe bleibt deren Name stehen.
+
+Die Animation läuft nur im sichtbaren geöffneten Menü. Verdeckte Tabs, nicht sichtbare Regler und Übertragungen pausieren; App-Einstellung „Bewegung reduzieren“ und die Systemeinstellung zeigen ein statisches Quadratfeld. Themes werden auch im Canvas sofort übernommen. Erzwungener Kontrast zeigt reine Systemkonturen. Keine Geldanzeige, Beispielbuttons oder Bildassets aus dem Demo.
 Originalstufen und Verfügbarkeit stammen aus dem jeweiligen nativen Anschluss, niemals aus einer anbieterübergreifenden Übersetzungstabelle. Laden, fehlende Anmeldung, Fehler und erneuter Versuch bleiben im Popover sichtbar. Reduzierte Transparenz und fehlende Blur-Unterstützung erhalten `glass` als deckende Fläche. Escape und Außenklick schließen; Fokus, Browserzoom und Bildschirmtastatur bleiben berücksichtigt. Aussehen → Unser Design zeigt denselben Baustein mit als Beispiel gekennzeichneten lokalen Daten. Ablauf und Anbieterwechsel führt `surfaces/chat.md`.
 
 
@@ -457,3 +462,15 @@ Die Eingabenavigation verwendet `ChapterScrubber` unter `ui/components/ui`. Posi
 
 
 Workspace-Namen entsprechen den Ordnernamen direkt unter workspaces/. Die stabile Kennung bleibt bei einer Umbenennung erhalten. Der gemeinsame Dialog ergänzt zwei SettingRow-Zeilen mit den vorhandenen Schaltern für Firmenwissen und persönliches Wissen; die Freigaben sind unabhängig und bei neuen Workspaces aus. Ein belegter Name oder laufende Arbeit verhindert den Ordnerumzug mit einer verständlichen Meldung. Farben, Symbole und bestehende Dialogstruktur bleiben gemeinsam. Details und Migrationsvertrag stehen in docs/WORKSPACES.md des technischen Einstiegs.
+## Routine-Ergebnisse
+
+Die Glocke öffnet ein gemeinsames Benachrichtigungsmodal. `NotificationRow`
+erweitert die vorhandene `SettingsNavigationRow` mit Neu/Gelesen und Datum;
+Unser Design zeigt denselben Baustein. Ergebnistext nutzt den gemeinsamen
+Markdown-Renderer, Aktionen führen zur Ausführung oder ihrem Chat. Zielauswahl,
+Wochen-/Einmalpläne und Fehler bleiben im vorhandenen Field-/JobForm-Muster.
+Der Punkt signalisiert ungelesene Ergebnisse oder Rückfragen, kein bloßes
+Speicherereignis. Lesestatus bleibt dauerhaft gespeichert. Aufbau und Grenzen
+stehen in `surfaces/jobs.md`; keine weitere Hauptseite wird eingeführt.
+
+Die Modellwahl behält während einer Öffnung ihre horizontale Ausrichtung unabhängig von wechselnden Modell-, Denkaufwand- und Fast-Beschriftungen. Die beim Öffnen gemessene Triggerbreite bleibt der Anker; tatsächliche Layoutänderungen und Viewportgrenzen werden weiterhin berücksichtigt. Erneutes Öffnen richtet das Menü frisch aus.

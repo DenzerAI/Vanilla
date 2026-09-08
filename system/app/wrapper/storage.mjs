@@ -208,6 +208,9 @@ export class Storage {
     const project = this.modern ? this.project(this.chat(id).projectId || 'default').path : '';
     return path.join(this.root, project, 'chats', safeName(id), ...parts);
   }
+  nativeThreadFile(id) {
+    return this.modern ? path.join(this.dataRoot,'native-sessions',safeName(id)+'.json') : path.join(this.root,'chats',safeName(id),'native-session.json');
+  }
   defaultFile(...parts) {
     return path.join(this.root, this.modern ? this.project('default').path : '', ...parts);
   }
@@ -345,7 +348,25 @@ export class Storage {
     }
     return jobs;
   }
-  async saveJob(job) {
+  async saveJobRun(id, patch) {
+    return this.saveJob({id}, patch);
+  }
+  async saveJob(job, runPatch) {
+    const id = safeName(job.id || "job-" + randomUUID().slice(0, 8));
+    this.jobWrites ||= new Map();
+    const previous=this.jobWrites.get(id) || Promise.resolve();
+    const write=previous.catch(()=>{}).then(async()=>{
+      if(runPatch) {
+        const current=(await this.jobs()).find(j=>j.id===id);
+        if(!current || current.status==='invalid') throw Error('Auftrag nicht lesbar.');
+        job={...current,...runPatch};
+      }
+      return this.writeJob({...job,id});
+    });
+    this.jobWrites.set(id,write);
+    try{return await write;}finally{if(this.jobWrites.get(id)===write)this.jobWrites.delete(id);}
+  }
+  async writeJob(job) {
     const id = safeName(job.id || "job-" + randomUUID().slice(0, 8));
     const existing = this.modern ? (await this.jobs()).find(j=>j.id===id) : null;
     const projectId = existing?.projectId || job.projectId || 'default';
@@ -367,6 +388,9 @@ export class Storage {
       name: job.name.trim(),
       worker: job.worker || "auto",
       connectionId: job.connectionId || null,
+      projectId: job.projectId || 'default',
+      ...(job.requestKey ? {requestKey:job.requestKey} : {}),
+      ...(job.notification ? {notification:job.notification} : {}),
       schedule: job.schedule || { type: "manual" },
       status: job.status || "paused",
       lastRun: job.lastRun || null,
@@ -375,15 +399,20 @@ export class Storage {
     };
     if (!validJobWorker(manifest.worker))
       throw new Error("Dieser Worker ist noch nicht angeschlossen.");
-    if (!["manual", "daily", "weekdays", "interval", "event"].includes(manifest.schedule.type))
+    if (!["manual", "daily", "weekdays", "weekly", "once", "interval", "event"].includes(manifest.schedule.type))
       throw new Error("Unbekannter Zeitplan.");
     if (
-      ["daily","weekdays"].includes(manifest.schedule.type) &&
+      ["daily","weekdays","weekly"].includes(manifest.schedule.type) &&
       !/^([01]\d|2[0-3]):[0-5]\d$/.test(manifest.schedule.time || "")
     )
       throw new Error("Uhrzeit ungültig.");
     if(manifest.schedule.type === 'interval' && (!Number.isInteger(manifest.schedule.minutes) || manifest.schedule.minutes < 1 || manifest.schedule.minutes > 525600)) throw new Error('Intervall ungültig.');
     if(manifest.schedule.type === 'event' && !['memory.captured','memory.changed','job.finished'].includes(manifest.schedule.event)) throw new Error('Ereignis ungültig.');
+    if(manifest.schedule.timezone) new Intl.DateTimeFormat('de',{timeZone:manifest.schedule.timezone});
+    if(manifest.schedule.type==='weekly' && (!Array.isArray(manifest.schedule.days) || !manifest.schedule.days.length || manifest.schedule.days.some(d=>!Number.isInteger(d)||d<0||d>6))) throw Error('Wochentage ungültig.');
+    if(manifest.schedule.type==='once' && (!/(Z|[+-]\d{2}:\d{2})$/.test(manifest.schedule.at||'') || !Number.isFinite(Date.parse(manifest.schedule.at)))) throw Error('Zeitpunkt mit Zeitzone angeben.');
+    if(manifest.notification && (!['always','errors'].includes(manifest.notification.when) || typeof manifest.notification.target!=='string')) throw Error('Benachrichtigung ungültig.');
+    if(!['active','paused'].includes(manifest.status)) throw Error('Status ungültig.');
     if(manifest.python) {
       const p=manifest.python;
       if(!['script','health','index','memory','backup','cleanup'].includes(p.handler||'script') || !Number.isInteger(p.timeout) || p.timeout<1 || p.timeout>3600 || !p.input || typeof p.input!=='object' || Array.isArray(p.input)) throw new Error('Python-Konfiguration ungültig.');

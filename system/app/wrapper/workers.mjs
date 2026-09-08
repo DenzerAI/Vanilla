@@ -9,6 +9,7 @@ import { workerCatalog, workerName } from "../system/worker-catalog.mjs";
 import { companyRoot } from "../backend/company-base.mjs";
 import { systemRoot } from "../backend/worker-context.mjs";
 import { atomic, jsonFile, safeName } from "./storage.mjs";
+import {handoffSnapshot, joinHandoff} from "./chat-handoff.mjs";
 import { ACPWorker } from "./acp-worker.mjs";
 
 export async function findWorkerCommand(entry, env = process.env) {
@@ -42,6 +43,8 @@ export class Workers extends EventEmitter {
   attach(id, adapter) {
     this.adapters.set(id, adapter);
     adapter.on("notification", msg => {
+      msg = this.publicEvent(id, msg);
+      if (!msg) return;
       if (msg.method === "serverRequest/resolved") {
         const key = String(msg.params?.requestId ?? msg.params?.id);
         this.requests.delete(key); adapter.requests?.delete(key);
@@ -56,7 +59,7 @@ export class Workers extends EventEmitter {
       }
       this.emit("notification", { ...msg, workerId: id });
     });
-    adapter.on("request", msg => { this.requests.set(String(msg.id), { ...msg, workerId: id }); this.emit("request", { ...msg, workerId: id }); });
+    adapter.on("request", msg => { msg = this.publicEvent(id, msg); if (!msg) return; this.requests.set(String(msg.id), { ...msg, workerId: id }); this.emit("request", { ...msg, workerId: id }); });
     adapter.on("disconnected", error => {
       const intentional = this.stopping.has(id);
       if (!intentional) this.errors.set(id, error.message);
@@ -64,6 +67,17 @@ export class Workers extends EventEmitter {
       this.emit("disconnected", { ...error, workerId: id, intentional });
     });
     return adapter;
+  }
+  publicEvent(workerId, msg) {
+    const nativeId = msg.params?.threadId || msg.params?.thread?.id;
+    if (!nativeId) return msg;
+    const chat = this.store.state.chats.find(c => (c.workerThreadId || c.id) === nativeId && (c.workerId || "codex") === workerId);
+    // Retired sessions cannot write into the current visible conversation.
+    if (!chat) return null;
+    const params = {...msg.params};
+    if (params.threadId) params.threadId = chat.id;
+    if (params.thread) params.thread = {...params.thread, id:chat.id};
+    return {...msg, params};
   }
   routingOrder() {
     const { defaultWorker, fallbackWorker, enabled } = this.settings;
@@ -91,11 +105,14 @@ export class Workers extends EventEmitter {
     if (entry.adapter !== "acp") throw new Error("Worker-Adapter fehlt.");
     return this.attach(id, this.makeACP({ id, name: entry.name, command, args: entry.args, cwd: this.store.root,
       contextEnv: { COMPANY_BASE: companyRoot(this.root), SYSTEM_BASE: systemRoot(), UWE_WORKSPACE: this.store.root },
-      readThread: threadId => jsonFile(this.store.chatFile(threadId,"transcript.json"), null),
-      persist: thread => this.store.exportThread(thread),
-      mcpServers: cwd => {
+      readThread: async threadId => await jsonFile(this.store.nativeThreadFile(threadId), null)
+        || await jsonFile(this.store.defaultFile('chats', safeName(threadId), 'native-session.json'), null)
+        || await jsonFile(this.store.chatFile(this.store.state.chats.find(c => (c.workerThreadId || c.id) === threadId)?.id || threadId, 'transcript.json'), null),
+      persist: thread => atomic(this.store.nativeThreadFile(thread.id), thread),
+      mcpServers: async cwd => {
         const project=this.store.state.projects.find(p=>p.path && path.resolve(this.store.root,p.path)===path.resolve(cwd||this.store.root));
-        return sharedMemoryACPServers(id,project?.id||'default');
+        const job=(await this.store.jobs()).find(j=>path.resolve(this.store.root,j.path || path.join('jobs',j.id))===path.resolve(cwd||this.store.root));
+        return sharedMemoryACPServers(id,project?.id||job?.projectId||'default');
       },
     }));
   }
@@ -128,7 +145,20 @@ export class Workers extends EventEmitter {
     // Reading/exporting ACP history does not need a live connection.
     const adapter = method === "thread/read" && this.entry(id).adapter === "acp" ? await this.adapter(id) : await this.start(id);
     const { workerId, ...nativeParams } = params;
-    return adapter.call(method, nativeParams, timeout);
+    const chat = params.threadId && this.store.chat(params.threadId);
+    const generation = chat && (chat.workerThreadId || chat.id);
+    const snapshot = chat && await handoffSnapshot(this.store, chat);
+    if (chat?.workerThreadId) nativeParams.threadId = chat.workerThreadId;
+    if (snapshot && method === "thread/rollback") {
+      const native = await adapter.call("thread/read", {threadId:nativeParams.threadId, includeTurns:true});
+      if (params.numTurns > native.thread.turns.length) throw new Error("Nachrichten vor dem Anbieterwechsel bleiben im Übergabeverlauf erhalten.");
+    }
+    if (snapshot && method === "thread/fork" && snapshot.turns.some(t => t.id === params.beforeTurnId)) throw new Error("Bitte einen Verzweigungspunkt nach dem Anbieterwechsel wählen.");
+    const result = await adapter.call(method, nativeParams, timeout);
+    if (chat && ((chat.workerThreadId || chat.id) !== generation || (chat.workerId || "codex") !== id)) throw new Error("Der Anbieter wurde inzwischen gewechselt. Bitte erneut laden.");
+    if (result.thread && chat && method !== "thread/fork") result.thread = joinHandoff(chat.id, snapshot, result.thread);
+    if (result.thread && snapshot && method === "thread/fork") result.thread = joinHandoff(result.thread.id, snapshot, result.thread);
+    return result;
   }
   respond(id, result) {
     const request = this.requests.get(String(id));

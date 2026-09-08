@@ -61,6 +61,7 @@ def source_path(name):
     p = PurePosixPath(name)
     if p.is_absolute() or '..' in p.parts or '\\' in name or any(ord(c) < 32 for c in name):
         return False
+    if name in {'templates/IDENTITY.md','templates/personal/README.md'}: return True
     if name.startswith('templates/firmenbasis/'):
         return name in {'templates/firmenbasis/AGENTS.md', 'templates/firmenbasis/FIRMA.md',
                         'templates/firmenbasis/report-result/SKILL.md'}
@@ -101,7 +102,7 @@ class Scanner:
         neutral = set()
         for name in self.policy['neutralTemplates']:
             p = ROOT / name
-            if p.is_file():
+            if p.is_file() and hashlib.sha256(p.read_bytes()).hexdigest() == self.policy['neutralTemplates'][name]:
                 neutral.update(line.strip().lower() for line in p.read_bytes().splitlines())
         bases = {self.root / 'firmenbasis',self.root/'knowledge/company',self.root/'knowledge/personal'}
         if os.getenv('COMPANY_BASE'):

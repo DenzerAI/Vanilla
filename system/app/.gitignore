@@ -221,3 +221,7 @@ cache/
 !/requirements-speech.lock
 
 !/wrapper/ui/assets/21st.png
+
+!/templates/IDENTITY.md
+!/templates/personal/
+!/templates/personal/README.md

@@ -1,3 +1,4 @@
+import {orderMemoryRoot,layoutManifest} from '../wrapper/layout.mjs';
 import {identityPath as commonIdentityPath, modernLayout} from '../wrapper/layout.mjs';
 import { localPath } from "../wrapper/isolation.mjs";
 import { identityInstructions } from "../wrapper/identity-preferences.mjs";
@@ -32,17 +33,17 @@ async function loadSection(root, directory) {
 }
 
 async function loadLearnings(root, limit = 100) {
-  const raw = await readFile(path.join(root, 'brain', 'learnings.ndjson'), 'utf8')
+  const raw = await readFile(path.join(orderMemoryRoot(root), 'learnings.ndjson'), 'utf8')
     .catch(error => { if (error.code === 'ENOENT') return ''; throw error; });
   return raw.split('\n').filter(Boolean).slice(-limit).map((line) => JSON.parse(line));
 }
 
 export async function buildBootstrap(root, engine, { store, order } = {}) {
-  const workspace = modernLayout ? root : localPath(process.env.UWE_WORKSPACE || path.join(root, 'workspaces/default'), root);
+  const workspace = modernLayout || layoutManifest(root) ? root : localPath(process.env.UWE_WORKSPACE || path.join(root, 'workspaces/default'), root);
   const identityPath = commonIdentityPath(root,workspace);
   const [identity, brain, learnings, companyBase, systemBase] = await Promise.all([
     readFile(identityPath, 'utf8'),
-    loadSection(root, 'brain'),
+    loadSection(root, path.relative(root,orderMemoryRoot(root))),
     loadLearnings(root),
     loadCompanyBase(companyRoot(root)),
     loadSystemBase(),

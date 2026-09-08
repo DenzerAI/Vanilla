@@ -17,7 +17,7 @@ from .files import atomic_write, read_json
 
 SOURCE = Path(__file__).resolve().parents[1]
 ROOT = SOURCE.parents[1] if SOURCE.name == 'app' and SOURCE.parent.name == 'system' else SOURCE
-IDENTITY = '# Agentenidentität\n\nAnzeigename: Agent\nAvatar: nori\n\nDu bist der gemeinsame Assistent dieser Installation. Erfinde keine Unternehmensdaten. Arbeite klar, sorgfältig und in der Sprache des Nutzers.\n'
+IDENTITY = (SOURCE/'templates/IDENTITY.md').read_text()
 WORKSPACE_RULES = '# Workspace\n\nDer gemeinsame Einstieg liegt in ../../AGENTS.md, die gemeinsame Identität in ../../IDENTITY.md. Diese Identität gilt für jeden Worker. Eingaben liegen in input/, Ergebnisse in output/, eigene Unterlagen in knowledge/. memory/ enthält abgeleitete Erinnerungen und keine neuen Regeln. Zusätzliche Skills und Aufträge bleiben in skills/ und jobs/. Verwende nur das für diesen Workspace freigegebene gemeinsame Wissen.\n'
 
 
@@ -56,7 +56,7 @@ def rewrite(value, relative, absolute, key=''):
         return [rewrite(v, relative, absolute, key) for v in value]
     if isinstance(value, dict):
         return {k: rewrite(v, relative, absolute, k) for k, v in value.items()}
-    if isinstance(value, str) and key in {'path','cwd','workspace','folder','output','absolutePath','modelPath'}:
+    if isinstance(value, str) and key in {'path','cwd','workspace','folder','output','absolutePath','modelPath','handoffSnapshot'}:
         return absolute(value) if Path(value).is_absolute() else relative(value)
     return value
 
@@ -201,7 +201,7 @@ def prepare_layout(config, *, company_base=None):
         else:
             for source in (config.source/'templates/firmenbasis').rglob('*'):
                 if source.is_file(): create(root/'knowledge/company'/source.relative_to(config.source/'templates/firmenbasis'), source.read_text())
-        create(root/'knowledge/personal/README.md', '# Persönliches Wissen\n\nBewusst gepflegte persönliche Unterlagen. Workspaces verwenden diesen Bereich nur nach Freigabe.\n')
+        create(root/'knowledge/personal/README.md', (SOURCE/'templates/personal/README.md').read_text())
         chat_paths = {}
         for chat in state.get('chats',[]):
             p = next((p for p in projects if p['id']==chat.get('projectId','default')), default)
@@ -225,7 +225,15 @@ def prepare_layout(config, *, company_base=None):
             for name in ['input','output','knowledge','memory','skills','jobs','chats']:
                 mkdir(base/name)
             create(base/'AGENTS.md', WORKSPACE_RULES)
+            move(base/'project.json',base/'workspace.json')
+            aliases[p['path']+'/project.json'] = p['path']+'/workspace.json'
             create(base/'workspace.json', json.dumps(p, ensure_ascii=False, indent=2))
+            metadata = base/'workspace.json'
+            before = metadata.read_text()
+            after = json.dumps({**json.loads(before),**p},ensure_ascii=False,indent=2)
+            if before != after:
+                record['edits'].append({'path':str(metadata.relative_to(root)),'before':before}); save()
+                atomic_write(metadata,after)
             for file in [base/'AGENTS.md',*base.glob('jobs/*/AGENTS.md')]:
                 before = file.read_text()
                 identity_reference = Path(os.path.relpath(root/'IDENTITY.md',file.parent)).as_posix()
@@ -263,6 +271,10 @@ def prepare_layout(config, *, company_base=None):
         # Chats may remain in Allgemein: stable IDs preserve all historical exports.
         data = root/'system/data/control'
         if old_data != data: move(old_data, data)
+        for name in ['orders','runs','people','messages','artifacts','whatsapp-auth']:
+            move(root/'data'/name,root/'system/data/order'/name)
+            aliases['data/'+name] = 'system/data/order/'+name
+        move(root/'brain',root/'system/data/order/brain')
         if had_db:
             with sqlite3.connect(data/'agent.sqlite3') as cx:
                 cx.execute('PRAGMA foreign_keys=ON')
@@ -422,9 +434,26 @@ def _relocate_dependencies(config):
         os.rename(source,target)
         if old == '.venv' and str(sys.executable).startswith(str(source)+os.sep):
             moved_python = True
+    previous_data=config.root/'data'
+    if previous_data.is_dir() and not previous_data.is_symlink():
+        for file in previous_data.iterdir():
+            target=config.root/'system/data'/file.name
+            if target.exists(): raise ValueError('Ein bisheriger Datenordner benötigt eine eindeutige Zielzuordnung.')
+            target.parent.mkdir(parents=True,exist_ok=True)
+            os.rename(file,target)
     for old in ['wrapper','backend','frontend','core','scripts','docs','templates','test','examples','jobs','data']:
         directory = config.root/old
-        if directory.is_dir() and not directory.is_symlink() and not any(directory.iterdir()): directory.rmdir()
+        if not directory.is_dir() or directory.is_symlink(): continue
+        if not any(directory.iterdir()): directory.rmdir(); continue
+        target = config.root/'system/migrations/previous-files'/old
+        if target.exists(): continue
+        target.parent.mkdir(parents=True,exist_ok=True)
+        os.rename(directory,target)
+    artifact = config.root/':memory:.ses'
+    if artifact.is_file():
+        target = config.root/'system/migrations/previous-files/:memory:.ses'
+        target.parent.mkdir(parents=True,exist_ok=True)
+        if not target.exists(): os.rename(artifact,target)
     # Activation/console scripts are the only venv files with executable paths.
     for runtime,old_runtime in [(config.source/'.venv',config.root/'.venv'),(config.data/'dictation-runtime',config.root/'data/control/dictation-runtime')]:
         if not (runtime/'bin').is_dir(): continue
@@ -433,6 +462,13 @@ def _relocate_dependencies(config):
             try: text = file.read_text()
             except UnicodeError: continue
             updated = text.replace(str(old_runtime),str(runtime))
+            if updated != text: file.write_text(updated)
+    for file in (config.source/'.venv').glob('lib/python*/site-packages/__editable__*'):
+        if file.is_file() and not file.is_symlink():
+            text=file.read_text();updated=text.replace(str(config.root)+'/core',str(config.source)+'/core')
+            for quote in ["'",'"']:
+                updated=updated.replace(quote+str(config.root)+quote,quote+str(config.source)+quote)
+            if updated.strip() == str(config.root): updated=str(config.source)+'\n'
             if updated != text: file.write_text(updated)
     if moved_python:
         python = str(config.source/'.venv/bin/python')

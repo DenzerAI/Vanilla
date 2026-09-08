@@ -4,11 +4,11 @@ import {inside} from './storage.mjs';
 import {resolveAlias} from './layout.mjs';
 export async function agentFilePath(root, relative='') {
   relative = resolveAlias(root,relative);
-  if (String(relative).split(/[\\/]/).some(part=>/^(data|secrets)$/i.test(part))) throw new Error('Geschützter Pfad.');
+  if (String(relative).split(/[\\/]/).some(part=>/^(data|secrets|migrations|backups)$/i.test(part))) throw new Error('Geschützter Pfad.');
   const resolved = await inside(root,relative);
   const canonicalRoot = await realpath(root);
   const parts = path.relative(canonicalRoot,resolved).split(path.sep);
-  if (parts.some(part=>part.startsWith('.') || /^(data|secrets|node_modules)$/i.test(part))) throw new Error('Geschützter Pfad.');
+  if (parts.some(part=>part.startsWith('.') || /^(data|secrets|node_modules|migrations|backups)$/i.test(part))) throw new Error('Geschützter Pfad.');
   return resolved;
 }
 export async function agentFiles(root, relative='') {

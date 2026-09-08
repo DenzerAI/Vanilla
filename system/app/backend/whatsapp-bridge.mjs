@@ -1,3 +1,4 @@
+import {orderDataRoot} from '../wrapper/layout.mjs';
 import { mkdir } from 'node:fs/promises';
 import path from 'node:path';
 import makeWASocket, {
@@ -63,7 +64,7 @@ export class WhatsAppBridge {
   constructor({ root, store, env = process.env, logger = console }) {
     this.store = store;
     this.logger = logger;
-    this.authDirectory = path.join(root, 'data', 'whatsapp-auth');
+    this.authDirectory = path.join(orderDataRoot(root), 'whatsapp-auth');
     this.prefix = env.WHATSAPP_COMMAND_PREFIX ?? '!';
     this.engine = (env.WHATSAPP_ENGINE || 'any').trim().toLowerCase();
     this.allowGroups = truthy(env.WHATSAPP_ALLOW_GROUPS);

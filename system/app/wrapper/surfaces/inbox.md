@@ -6,6 +6,8 @@ Lokale Designvorschau mit erfundenen Beispielen aus Outlook, Gmail und WhatsApp.
 
 ## Navigation und Flächen
 
+Inbox verwendet das offene Ablagefach `Tray` aus Framework7 Icons über den gemeinsamen `Inbox`-Export in `ui/icons.jsx`, sowohl im Hauptmenü als auch im Leerzustand.
+
 Der Hauptpunkt Inbox steht direkt über Aufträge; `?view=inbox` öffnet ihn direkt. Die Inbox übernimmt wie Einstellungen die vorhandene linke Seitenleiste. Oben steht der bestehende Zurück-Button, danach der gemeinsame PageHeading „Inbox“ mit Konzept-Icon, Suche, Status-/Kanalfilter und Gespräche. Allgemeine Navigation, Projekte und globale Suchzeile werden hier durch die Inbox-Liste ersetzt. Der Profilfuß bleibt erhalten. Zurück führt zum bestehenden Agentenchat und stellt dessen vorherige Seitenleistensichtbarkeit wieder her; laufende Chats bleiben gemountet.
 
 Die Hauptfläche enthält ausschließlich Gesprächskopf, Verlauf und Antwortzeile. Kein zweiter Listenbereich, kein eingerahmter Workspace, keine große äußere Seitenpolsterung. Auf Desktop teilen sich die vorhandene verstellbare Seitenleiste und der Verlauf den Platz. Bis 650 px Fensterbreite steht beim Einstieg nur die Liste in voller Breite. Gespräch öffnen zeigt nur den Verlauf; dessen Zurück-Pfeil öffnet wieder die Liste. Filter, lokale Entwürfe und Listenposition bleiben dabei erhalten. Der Profilfuß gehört zur Liste, nicht zusätzlich zum mobilen Verlauf.

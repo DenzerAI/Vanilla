@@ -1,3 +1,4 @@
+import {NotificationRow} from "./job-notifications.jsx";
 import { ChapterScrubber } from "./components/ui/chapter-scrubber";
 import { PipelinePatternPreview } from "./pipeline";
 import { ModelPicker } from "./model-picker.jsx";
@@ -40,6 +41,8 @@ export function DesignReference({ theme, tone, accent }) {
       {section === 'components' && <>
       <h3 className="section-heading">Bedienelemente & Seitenaufbau</h3>
       <SettingsPatterns/>
+      <h3 className="section-heading">Benachrichtigung · Beispiel</h3>
+      <div className="settings-group"><NotificationRow item={{title:'Tagesüberblick · Fertig',created_at:1788854400,read_at:null}} onClick={()=>{}}/></div>
       <h3 className="section-heading">Startvorschläge · Glaspillen</h3>
       <WelcomeSuggestions onSelect={setSuggestionDraft}/>
       <p className="page-note">Flache, vollständig runde Vorschläge mit transparenter Glasfläche. Auf schmalen Ansichten kleiner und ohne Pfeile; die Trefferfläche bleibt auf Touchgeräten gut erreichbar. Die Auswahl füllt die Vorschau darunter.</p>
@@ -48,10 +51,10 @@ export function DesignReference({ theme, tone, accent }) {
       <p className="page-note">Einzeilige Pille mit gedämpftem Platzhalter, transparenter Tönung, Hintergrundunschärfe und feiner innerer Glaskante. Mehrzeiliger Text erweitert die Schreibfläche; reduzierte Transparenz erhält einen deckenden Hintergrund.</p>
       <h3 className="section-heading">Modellwahl · Anbieter und Denkaufwand</h3>
       <ChapterScrubber chapters={[{id:"example-one",title:"Erste Eingabe",description:"Eine Frage im Gespräch",meta:"Beispiel"},{id:"example-two",title:"Zweite Eingabe",description:"Eine weitere Nachricht",meta:"Beispiel"}]} />
-      <ModelPicker model={modelPreview[0]} effort={modelPreview[1]} onChange={(model, effort) => setModelPreview([model, effort])}
-        models={[{model:"gpt-6-astra",displayName:"GPT-6 Astra",defaultReasoningEffort:"medium",supportedReasoningEfforts:["low","medium","high","xhigh","max","ultra"].map(reasoningEffort => ({reasoningEffort}))}]}
+      <ModelPicker serviceTier={modelPreview[2]} onSpeedChange={tier => setModelPreview(old => [old[0], old[1], tier])} model={modelPreview[0]} effort={modelPreview[1]} onChange={(model, effort) => setModelPreview(old => [model, effort, old[2]])}
+        models={[{model:"gpt-6-astra",displayName:"GPT-6 Astra",serviceTiers:[{id:"priority",name:"Fast"}],defaultReasoningEffort:"medium",supportedReasoningEfforts:["low","medium","high","xhigh","max","ultra"].map(reasoningEffort => ({reasoningEffort}))}]}
         hasConversation onProviderChange={async () => { throw new Error("Lokale Designvorschau. Anbieter im Chat auswählen."); }}/>
-      <p className="page-note">Original-Icons, flache Zeilen und native Denkstufen auf transparenter Glasfläche. Die Beispieldaten bleiben lokal; im Chat liefert der Anbieter seine verfügbaren Werte.</p>
+      <p className="page-note">Original-Icons, flache Zeilen und rastende native Denkstufen auf transparenter Glasfläche. Das Terrakotta-Quadratfeld wird mit höherer Stufe lebhafter und bleibt bei reduzierter Bewegung statisch. Die Beispieldaten bleiben lokal; im Chat liefert der Anbieter seine verfügbaren Werte.</p>
       <h3 className="section-heading">Inbox · Gesprächszeile</h3>
       <PipelinePatternPreview/><InboxPatternPreview/>
       <h3 className="section-heading">Flächenlicht</h3>

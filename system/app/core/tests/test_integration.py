@@ -13,6 +13,7 @@ from pathlib import Path
 import httpx
 import pytest
 import tempfile
+from datetime import datetime, timedelta, timezone
 
 
 def free_port():
@@ -183,9 +184,26 @@ def test_existing_workers_stream_persist_and_resume_through_python(integration_r
             time.sleep(0.1)
         assert runs[0]["status"] == "completed", runs
         assert runs[0]["thread_id"]
+        receipt=next(n for n in call('/notifications')['items'] if n['id']==runs[0]['id'])
+        assert receipt['body']=='Testantwort aus dem Worker'
+        call('/notifications/read',{'id':receipt['id']})
+        capability=call('/routines/tool',{'name':'routine_capabilities','arguments':{'projectId':'default'}})
+        assert 'once' in capability['schedules']
+        args={'projectId':'default','requestKey':'integration-chat-routine','name':'Fiktive Erinnerung','instructions':'Prüfnotiz lesen und kurz zusammenfassen.','schedule':{'type':'once','at':(datetime.now(timezone.utc)+timedelta(seconds=4)).isoformat()}}
+        routine=call('/routines/tool',{'name':'routine_create','arguments':args})
+        assert routine['created'] and routine['job']['status']=='active'
+        assert not call('/routines/tool',{'name':'routine_create','arguments':args})['created']
+        for _ in range(150):
+            matching=[n for n in call('/notifications')['items'] if n['job_id']==routine['job']['id']]
+            if matching:break
+            time.sleep(0.1)
+        assert len(matching)==1 and matching[0]['status']=='completed', matching
+        assert matching[0]['body']=='Testantwort aus dem Worker'
         child.terminate()
         child.wait(timeout=15)
         start()
+        assert next(n for n in call('/notifications')['items'] if n['id']==receipt['id'])['read_at']
+        assert len([n for n in call('/notifications')['items'] if n['job_id']==routine['job']['id']])==1
         assert call("/workers")["settings"]["defaultWorker"] == "hermes"
         call(
             "/turn",

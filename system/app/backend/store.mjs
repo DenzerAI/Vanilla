@@ -1,3 +1,4 @@
+import {orderDataRoot,orderMemoryRoot} from '../wrapper/layout.mjs';
 import { appendFile, mkdir, readFile, readdir, rename, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
@@ -7,11 +8,11 @@ const now = () => new Date().toISOString();
 export class Store {
   constructor(root) {
     this.root = root;
-    this.ordersDir = path.join(root, 'data', 'orders');
-    this.runsDir = path.join(root, 'data', 'runs');
-    this.peopleDir = path.join(root, 'data', 'people');
-    this.messagesDir = path.join(root, 'data', 'messages');
-    this.learningFile = path.join(root, 'brain', 'learnings.ndjson');
+    this.ordersDir = path.join(orderDataRoot(root), 'orders');
+    this.runsDir = path.join(orderDataRoot(root), 'runs');
+    this.peopleDir = path.join(orderDataRoot(root), 'people');
+    this.messagesDir = path.join(orderDataRoot(root), 'messages');
+    this.learningFile = path.join(orderMemoryRoot(root), 'learnings.ndjson');
     this.mutation = Promise.resolve();
   }
 

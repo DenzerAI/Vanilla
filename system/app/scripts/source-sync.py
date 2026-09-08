@@ -125,8 +125,9 @@ def merge(root, target, check_only=False):
         staged.index()
         if staged.findings:
             raise ValueError('Merged index did not pass the source check.')
-        run(root, 'node', 'scripts/install-git-hooks.mjs')
-        run(root, 'node', 'scripts/init-company.mjs')
+        source = root/'system/app' if (root/'system/app/core').is_dir() else root
+        run(root, 'node', str(source/'scripts/install-git-hooks.mjs'))
+        run(root, 'node', str(source/'scripts/init-company.mjs'))
         run(root, 'git', 'commit', '-m', 'Merge verified application source')
         if fast_forward:
             # Hooks have checked this exact tree. Keep the incoming revision for

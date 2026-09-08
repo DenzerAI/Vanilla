@@ -181,6 +181,7 @@ def test_mcp_routes_share_versions_and_enforce_projects(config):
         assert client.post('/internal/memory/tool',json=body).status_code==403
         listing=handle({'jsonrpc':'2.0','id':1,'method':'tools/list'},SimpleNamespace())
         assert {t['name'] for t in listing['result']['tools'] if t['name'].startswith('memory_')}=={'memory_read','memory_write','memory_search','memory_context'}
+        assert {t['name'] for t in listing['result']['tools'] if t['name'].startswith('routine_')}=={'routine_capabilities','routine_list','routine_create','routine_update'}
 
 
 @pytest.mark.parametrize('interrupt',[False,True])

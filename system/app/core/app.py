@@ -5,6 +5,7 @@ import hashlib
 import hmac
 import json
 import secrets
+from datetime import datetime, timezone
 from contextlib import asynccontextmanager
 from time import time
 from urllib.parse import urlsplit
@@ -34,6 +35,7 @@ from .settings import Settings
 from .memory import Memory
 from .operations import Operations
 from .api import routes as operations_routes
+from .routines import Routines, validate_schedule, instant
 
 
 class NoteInput(BaseModel):
@@ -65,6 +67,7 @@ def create_app(config=None):
     storage.system_jobs = operations.managed_jobs
     queue = JobQueue(db, storage, config.timezone)
     runtime = Runtime(config, queue, knowledge, operations)
+    routines = Routines(storage, runtime, memory)
     local_csrf = secrets.token_urlsafe(32)
     login_attempts = {}
 
@@ -305,6 +308,46 @@ def create_app(config=None):
                 return result
             finally:
                 runtime.frozen = False
+    @app.post('/internal/routines/tool')
+    @app.post('/api/routines/tool')
+    async def routine_tool(request: Request):
+        b = await request.json()
+        if not isinstance(b, dict) or not isinstance(b.get('arguments'), dict):
+            raise ValueError('Werkzeugargumente fehlen.')
+        try:
+            return await routines.tool(b.get('name'), b['arguments'])
+        except (RuntimeError, httpx.HTTPError):
+            return JSONResponse({'error': 'Worker-Anschluss ist nicht erreichbar. Verbindung prüfen und erneut versuchen; dieselbe requestKey beibehalten.'}, status_code=503)
+
+    @app.get('/api/notifications')
+    async def notifications(before: float | None = None):
+        return runtime.notifications.list(before)
+
+    @app.get('/api/notifications/preference')
+    async def notification_preference():
+        return db.get('notifications/preference')['value'] or {'target': 'app', 'when': 'always'}
+
+    @app.post('/api/notifications/preference')
+    async def save_notification_preference(request: Request):
+        value = await routines.validate_notification(await request.json())
+        return db.put('notifications/preference', value)
+
+    @app.post('/api/notifications/read')
+    async def notification_read(request: Request):
+        return runtime.notifications.read((await request.json()).get('id', ''))
+
+    @app.get('/api/notifications/item')
+    async def notification_item(id: str):
+        return runtime.notifications.get(id)
+
+    @app.post('/internal/jobs/attention')
+    async def job_attention(request: Request):
+        b = await request.json()
+        return runtime.notifications.attention(queue.get(b['id']))
+
+    @app.post('/api/jobs/notify')
+    async def private_notification_delivery():
+        return JSONResponse({'error': 'Versand erfolgt ausschließlich durch den Zeitplaner.'}, status_code=403)
 
     @app.post("/internal/context")
     @app.post("/api/knowledge/context")
@@ -391,6 +434,9 @@ def create_app(config=None):
     @app.post("/api/jobs/save")
     async def save_job(request: Request):
         body = await request.json()
+        validate_schedule(body.get('schedule') or {'type': 'manual'})
+        if 'notification' in body:
+            body['notification'] = await routines.validate_notification(body['notification'], check_ready=body.get('status')=='active')
         id = body.get("id", "")
         if id in {j["id"] for j in operations.managed_jobs()}:
             enabled = body.get("status") == "active"
@@ -402,6 +448,16 @@ def create_app(config=None):
                 raise ValueError("Diesen Systemauftrag über die Systemeinstellungen bedienen.")
             storage.sync_jobs()
             return storage.job(id)
+        previous = next((j for j in storage.sync_jobs() if j['id']==id), None)
+        schedule = body.get('schedule') or {'type':'manual'}
+        if schedule['type'] != 'manual' and (not previous or previous.get('schedule') != schedule or (previous.get('status') != 'active' and body.get('status') == 'active')):
+            schedule['startAt'] = datetime.now(timezone.utc).isoformat()
+            schedule.setdefault('timezone', config.timezone)
+            body['schedule'] = schedule
+        if schedule['type']=='once' and body.get('status')=='active' and instant(schedule['at'])<=datetime.now(timezone.utc):
+            raise ValueError('Der einmalige Termin muss in der Zukunft liegen.')
+        if not previous and 'notification' not in body:
+            body['notification'] = await routines.validate_notification(db.get('notifications/preference')['value'] or {'target':'app','when':'always'})
         result = await runtime.request("POST", "/api/jobs/save", json=body)
         storage.sync_jobs()
         db.event("job.changed", result.get("id"), {})
@@ -463,6 +519,7 @@ def create_app(config=None):
                 "sqlite": True,
                 "crmCore": True,
                 "operations": True,
+                "routines": True,
             }
             return JSONResponse(payload)
         forwarded = {

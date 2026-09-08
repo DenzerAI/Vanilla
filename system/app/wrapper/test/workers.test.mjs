@@ -118,7 +118,7 @@ readline.createInterface({input:process.stdin}).on('line', line => {
   setTimeout(()=>send({method:'turn/completed',params:{threadId:p.threadId,turn}}),30);return;
  }
  if(m.method==='initialize')return reply({userAgent:'Fixture 1',protocolVersion:1,agentCapabilities:{loadSession:true,promptCapabilities:{image:true}},agentInfo:{name:'fixture',version:'1'}});
- if(m.method==='model/list')return reply({data:[{model:'fixture-model',displayName:'Fixture',isDefault:true}]});
+ if(m.method==='model/list')return reply({data:[{model:'fixture-model',displayName:'Fixture',isDefault:true},{model:'gpt-5.6-sol',displayName:'GPT-5.6 Sol',supportedReasoningEfforts:[{reasoningEffort:'low'}],serviceTiers:[{id:'priority',name:'Fast'}]}]});
  if(m.method==='account/read')return reply({});
  if(m.method==='mcpServerStatus/list')return reply({data:[]});
  if(m.method==='session/new') { reply({sessionId:'native-session',models:{currentModelId:'fixture-model',availableModels:[{modelId:'fixture-model',name:'Fixture'}]}});
@@ -232,7 +232,7 @@ test("actual HTTP server routes ACP chats and jobs, protects mutations and survi
   assert.notEqual(invalid.status,200);
   await call('/turn',{id:created.thread.id,text:'Fiktiver Test',mode:'default'});
   async function finished(id) {
-    for(let i=0;i<100;i++) { const r=await call('/thread?id='+id); if(r.thread.turns.at(-1)?.status==='completed')return r; await new Promise(r=>setTimeout(r,20)); }
+    for(let i=0;i<100;i++) { const r=await call('/thread?id='+id); if(r.thread.turns.at(-1)?.status==='completed' && !(await call('/chats')).active[id])return r; await new Promise(r=>setTimeout(r,20)); }
     throw new Error('Testauftrag nicht abgeschlossen');
   }
   assert.equal((await finished(created.thread.id)).thread.turns[0].items.at(-1).text,'Ergebnis: Kontext erhalten');
@@ -260,15 +260,39 @@ test("actual HTTP server routes ACP chats and jobs, protects mutations and survi
     assert.equal(prompt[0].text.split('Nur mein eigener Stil.').length-1,1);
     assert.doesNotMatch(prompt[0].text,/Sei mein persönlicher Assistent/);
   }
-  const jobPrompt=prompts.find(p=>p[1].text.startsWith('Führe diesen Job aus.'));
-  assert.ok(jobPrompt);assert.match(jobPrompt[1].text,/aus SKILL.md.*geladen/);
-  assert.doesNotMatch(jobPrompt[1].text,/Lies SKILL.md/);
+  const jobPrompt=prompts.find(p=>p[0].text.includes('jobs/'+job.id));
+  assert.ok(jobPrompt);assert.match(jobPrompt[0].text,/aus SKILL.md.*geladen/);
+  assert.equal(jobPrompt[1].text,'Fiktiver Test');
   assert.equal(jobPrompt[1].text.split('Fiktiver Test').length-1,1);
   assert.match(jobPrompt[0].text,new RegExp('jobs/'+job.id));
   assert.equal(wire.find(m=>m.method==='thread/start').params.developerInstructions,undefined);
   const codexContext=wire.find(m=>m.method==='turn/start').params.collaborationMode.settings.developer_instructions;
   assert.match(codexContext,/Anzeigename: Ada/);assert.match(codexContext,/FIRMA: Aktueller Betrieb/);
   assert.equal(codexContext.split('Nur mein eigener Stil.').length-1,1);
+  // Explicit handoff keeps the existing visible chat, independent of native IDs.
+  const handoff = await call('/chat/provider', {id:codexChat.thread.id, expectedWorker:'codex', workerId:'hermes'});
+  assert.equal(handoff.thread.id, codexChat.thread.id);
+  assert.notEqual(handoff.meta.workerThreadId, codexChat.thread.id);
+  assert.equal(handoff.thread.turns.length, 1);
+  await call('/turn', {id:codexChat.thread.id,text:'Nach Übernahme fortsetzen'});
+  const continued = await finished(codexChat.thread.id);
+  assert.equal(continued.thread.turns.length,2);
+  const handoffWire=(await readFile(path.join(dir,'wire.ndjson'),'utf8')).trim().split('\n').map(JSON.parse);
+  assert.match(handoffWire.findLast(m=>m.method==='session/prompt').params.prompt[0].text,/Codex Kontextprobe/);
+  child.kill();await exited;await start();
+  await call('/turn', {id:codexChat.thread.id,text:'Übernahme nach Neustart fortsetzen'});
+  assert.equal((await finished(codexChat.thread.id)).thread.turns.length,3);
+  const returned = await call('/chat/provider', {id:codexChat.thread.id,expectedWorker:'hermes',workerId:'codex'});
+  assert.equal(returned.thread.id,codexChat.thread.id);assert.equal(returned.thread.turns.length,3);
+  await call('/chat/speed',{id:codexChat.thread.id,model:'gpt-5.6-sol',serviceTier:'priority'});
+  await call('/turn',{id:codexChat.thread.id,model:'gpt-5.6-sol',text:'Zurück bei Codex'});
+  assert.equal((await finished(codexChat.thread.id)).thread.turns.length,4);
+  const finalWire=(await readFile(path.join(dir,'wire.ndjson'),'utf8')).trim().split('\n').map(JSON.parse);
+  const dispatched=finalWire.findLast(m=>m.method==='turn/start'&&m.params.input?.some(i=>i.text==='Zurück bei Codex'));
+  assert.equal(dispatched.params.serviceTierForTurn,'priority');
+  assert.match(dispatched.params.collaborationMode.settings.developer_instructions,/Übernahme nach Neustart/);
+  assert.equal((await call('/chats')).chats.filter(c=>c.id===codexChat.thread.id).length,1);
+
 
 });
 

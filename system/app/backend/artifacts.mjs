@@ -1,3 +1,4 @@
+import {orderDataRoot} from '../wrapper/layout.mjs';
 import { mkdir, writeFile, realpath, lstat } from 'node:fs/promises';
 import { execFile } from 'node:child_process';
 import path from 'node:path';
@@ -77,7 +78,7 @@ export function formatResultWithArtifacts(result, artifacts = []) {
 
 export class ArtifactStore {
   constructor(root, { baseUrl } = {}) {
-    this.directory = path.join(root, 'data', 'artifacts');
+    this.directory = path.join(orderDataRoot(root), 'artifacts');
     this.baseUrl = cleanBaseUrl(baseUrl);
   }
 
