@@ -47,10 +47,12 @@ gebundene Außenaktionsfreigaben erforderlich.
 - `npm test`: synthetische Unit- und HTTP-Integrationstests.
 - `npm run check` und `npm --prefix wrapper run build`.
 - `python3 -m unittest discover -s jobs/briefings -p 'test_*.py'`.
-- `python3 scripts/security-scan.py`: lokaler Musterscanner, nur Fundort/Typ/Zeile.
-  Keine Vollständigkeitsgarantie; verschlüsselte Inhalte, Archive und Symlink-Ziele
-  werden nicht untersucht. Die zwei expliziten externen Secret-Dateien werden nur
-  lokal gelesen. Werte werden nicht ausgegeben oder kopiert.
+- `python3 scripts/security-scan.py --index`: tatsächliche vorgemerkte Git-Blobs,
+  zulässige Quellpfade, neutrale Vorlagen, geprüfte Assets, Geheimnismuster und
+  lokale Firmeninhalte. Nur Fundort/Typ/Zeile, niemals gefundene Werte.
+  `--revision HEAD` prüft zusätzlich sämtliche erreichbaren Commits. Keine
+  fremden Secret-Dateien, externen Dienste oder KI-Aufrufe. Ablauf und Grenzen:
+  [CODE-SYNC.md](docs/CODE-SYNC.md).
 - `npm audit --ignore-scripts`: sendet Paketmetadaten an die npm-Registry, keine
   Quelldateien oder Kundendaten. Null Advisories beweisen keine sichere Laufzeit.
 

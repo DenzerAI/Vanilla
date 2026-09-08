@@ -37,7 +37,7 @@ async function loadLearnings(root, limit = 100) {
 }
 
 export async function buildBootstrap(root, engine, { store, order } = {}) {
-  const workspace = localPath(process.env.UWE_WORKSPACE || path.join(root, 'workspaces/default'));
+  const workspace = localPath(process.env.UWE_WORKSPACE || path.join(root, 'workspaces/default'), root);
   const identityPath = path.join(workspace, 'soul/IDENTITY.md');
   const [identity, brain, learnings, companyBase, systemBase] = await Promise.all([
     readFile(identityPath, 'utf8'),

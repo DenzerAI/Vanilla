@@ -6,6 +6,7 @@ export const capabilities = {
   schemaVersion: 1,
   availability: 'Query the referenced status endpoint at runtime; source presence is not readiness.',
   domains: [
+    {id:'source-privacy', sources:['scripts/security-scan.py','scripts/source-sync.py','scripts/verify-source-adoption.mjs','scripts/install-git-hooks.mjs','backend/company-base.mjs','system/source-policy.json'], contract:'docs/CODE-SYNC.md', status:'npm run source:check; local hooks require source:setup', backend:'local Git CLI', surface:null},
     {id:'inbox', sources:['wrapper/ui/inbox.tsx','wrapper/ui/inbox.css'], contract:'wrapper/surfaces/inbox.md', status:'design-preview-only', backend:null},
     {id:'chat', sources:['wrapper/ui/app.jsx','wrapper/server.mjs'], contract:'wrapper/surfaces/chat.md'},
     {id:'speech', sources:['wrapper/ui/message-speech.tsx','wrapper/ui/speech-playback.mjs','wrapper/speech.mjs','system/runtime-assets.mjs','requirements-speech.lock','scripts/setup-system.mjs'], contract:'wrapper/VOICE.md', status:'/api/speech/status'},

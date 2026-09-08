@@ -16,6 +16,13 @@ Bei gesetztem COMPANY_BASE verwende stattdessen diesen ausdrücklich
 konfigurierten Ordner. Ausgabedateien bleiben im Arbeitsbereich des Auftrags.
 Bestehende Identitäts- und technische Projektregeln bleiben gültig.
 
+`firmenbasis/` ist lokaler Inhalt und wird niemals versioniert. Die neutralen
+Einrichtungsvorlagen liegen unter `templates/firmenbasis/`; sie sind keine
+aktive Firmenbasis. Ein neuer Clone richtet seine lokale Basis mit
+`npm run source:setup` ein. Vor Übernahme fremden Codes gilt
+[docs/CODE-SYNC.md](docs/CODE-SYNC.md). Firmenwissen, Arbeitsweisen, Chats,
+Identität und Zugänge niemals in Code, Dokumentation oder Beispiele kopieren.
+
 Der gemeinsame technische Einstieg liegt in system/AGENTS.md und
 system/WORKER.md. Bei gesetztem SYSTEM_BASE gilt dieser konfigurierte Ordner.
 Er beschreibt Arbeitsbereiche und Rückmeldungen unabhängig vom Worker.

@@ -42,6 +42,16 @@ Die führende Quelle ist jetzt ein eigenständiger Entwicklungsclone von **Denze
 
 Änderungen entstehen in einem Feature-Branch, werden gebaut und geprüft, anschließend per Commit und normalem Push gesichert. Die Runtime übernimmt den geprüften Commit ohne eigene Quellcodeänderungen. Neue Instanzen klonen dasselbe Repository und erhalten eigene Daten, Identität und Zugänge. Betriebsdaten, Dependencies und Secrets bleiben außerhalb von Git; neue Dateitypen müssen bewusst in `.gitignore` aufgenommen werden.
 
+Der verbindliche Ablauf steht in [Code zwischen Installationen austauschen](docs/CODE-SYNC.md).
+`npm run source:setup` aktiviert Datenschutz- und Design-Hooks und richtet einmalig
+die lokale, ausgeschlossene `firmenbasis/` aus neutralen Vorlagen ein. `npm ci`
+aktiviert die Git-Hooks ebenfalls. Commit und Push prüfen die tatsächlichen
+Git-Inhalte; Push prüft auch alle erreichbaren früheren Commits. Fremden Code nach
+`git fetch origin` mit `npm run source:merge -- origin/main` übernehmen. Der Befehl
+prüft vor dem Merge und erhält die lokalen Firmeninhalte auch beim Erstwechsel
+von früher versionierten Firmenvorlagen. Dies geschieht im Entwicklungsclone;
+die Aktivierung der laufenden Anwendung bleibt ein eigener Schritt.
+
 ## Alternative macOS-Installation aus stabilem Clone
 
 Die folgenden `host-service.py`-Befehle beschreiben den launchd-Installationsweg auf einem entsprechend berechtigten Zielhost. Sie sind nicht der aktuelle Supervisor-Betriebsweg der Entwicklungsvorschau auf 21989. Sie setzen freie Ports 1989/1990 und die funktionierende native Tailscale-CLI voraus.
@@ -94,7 +104,8 @@ Für ein Update dieser alternativen launchd-Installation erst den geprüften Com
 
 ```sh
 .venv/bin/python scripts/host-service.py stop
-git pull --ff-only
+git fetch origin
+npm run source:merge -- origin/main
 .venv/bin/python -m pip install --no-cache-dir -r requirements.lock
 npm ci --ignore-scripts --cache .cache/npm --no-audit --no-fund
 npm --prefix wrapper ci --ignore-scripts --cache .cache/npm --no-audit --no-fund

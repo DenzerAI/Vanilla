@@ -19,7 +19,7 @@ test('actual order HTTP routes protect data and downloads; legitimate synthetic 
   await mkdir(path.join(root, 'workspaces/default/soul'), {recursive:true});
   await writeFile(path.join(root, 'workspaces/default/soul/IDENTITY.md'), 'Anzeigename: Synthetic');
   await cp(new URL('../system', import.meta.url), path.join(root, 'system'), {recursive:true});
-  await cp(new URL('../firmenbasis', import.meta.url), path.join(root, 'firmenbasis'), {recursive:true});
+  await cp(new URL('../templates/firmenbasis', import.meta.url), path.join(root, 'firmenbasis'), {recursive:true});
   await symlink(new URL('../node_modules',import.meta.url).pathname,path.join(root,'node_modules'));
   await writeFile(path.join(root,'brain/learnings.ndjson'),'');
   await writeFile(path.join(root,'frontend/index.html'),'synthetic UI');
