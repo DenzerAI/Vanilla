@@ -1,3 +1,4 @@
+import { avatarMotion } from "./design-system.mjs";
 // One visibility observer for all avatars, including long conversation histories.
 const avatars = new Map();
 let observer;
@@ -30,9 +31,9 @@ export function observeAvatarMotion(element) {
 
 export function avatarMotionTiming() {
   return {
-    "--avatar-blink-cycle": `${22 + Math.random() * 8}s`,
-    "--avatar-gaze-cycle": `${36 + Math.random() * 12}s`,
-    "--avatar-blink-delay": `${1 + Math.random() * 3}s`,
-    "--avatar-gaze-delay": `${2 + Math.random() * 4}s`,
+    "--avatar-blink-cycle": `${avatarMotion.blink + Math.random() * avatarMotion.blinkVariance}s`,
+    "--avatar-gaze-cycle": `${avatarMotion.gaze + Math.random() * avatarMotion.gazeVariance}s`,
+    "--avatar-expression-cycle": `${avatarMotion.expression + Math.random() * avatarMotion.expressionVariance}s`,
+    "--avatar-delay": `${avatarMotion.delay + Math.random() * avatarMotion.delayVariance}s`,
   };
 }

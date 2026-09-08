@@ -86,5 +86,37 @@
   "public/app-icon.svg": {
     "sha256": "f7049982cc53fec15ad6770985701f6f7d27eb4dc9e0f2e6bbb1b2088f8d8760",
     "reason": "Installable application icon artwork; reviewed independently from CSS control styling."
+  },
+  "ui/assets/avatars/faces/pad.svg": {
+    "sha256": "bf6168860bf60121bb23d490f34c755d28e1bb4eb8586f7bfe7a252f1fce3f51",
+    "reason": "Original monochrome face artwork. No feet; Pixel and Pad use continuous grid silhouettes. Independent SVG expression layers, no masks or external content."
+  },
+  "ui/assets/avatars/faces/pixel.svg": {
+    "sha256": "40ae3690daef965711b77717c15c993c41fcc2643414cae1992f3eab466cfc4f",
+    "reason": "Original monochrome face artwork. No feet; Pixel and Pad use continuous grid silhouettes. Independent SVG expression layers, no masks or external content."
+  },
+  "ui/assets/avatars/faces/miko.svg": {
+    "sha256": "56fb1e94dad6062594cc7556afe9d612ebf4f68c3487864dbe812ff455c334ff",
+    "reason": "Original monochrome face artwork. No feet; Pixel and Pad use continuous grid silhouettes. Independent SVG expression layers, no masks or external content."
+  },
+  "ui/assets/avatars/faces/orbit.svg": {
+    "sha256": "35a15ab59829d5234dd854ff53da66b9e2b31f51ce00a5351dffafcbdeb4c39e",
+    "reason": "Original monochrome face artwork. No feet; Pixel and Pad use continuous grid silhouettes. Independent SVG expression layers, no masks or external content."
+  },
+  "ui/assets/avatars/faces/pebble.svg": {
+    "sha256": "3e7d4f9950659a1b0d577cc55d86fb0974d218988312d0b2cbe3af677b373895",
+    "reason": "Original monochrome face artwork. No feet; Pixel and Pad use continuous grid silhouettes. Independent SVG expression layers, no masks or external content."
+  },
+  "ui/assets/avatars/faces/kibo.svg": {
+    "sha256": "c14b1d81ec9c12f2d6c0c165c1fd8ba36f3d49f555c6e010a136f77e97b8a1cb",
+    "reason": "Original monochrome face artwork. No feet; Pixel and Pad use continuous grid silhouettes. Independent SVG expression layers, no masks or external content."
+  },
+  "ui/assets/avatars/faces/lumi.svg": {
+    "sha256": "d8202f35cb7c518742b2a79f84a632764d1b72b0358bea22e990652aa3959336",
+    "reason": "Original monochrome face artwork. No feet; Pixel and Pad use continuous grid silhouettes. Independent SVG expression layers, no masks or external content."
+  },
+  "ui/assets/avatars/faces/nori.svg": {
+    "sha256": "7f717f3518b5e60aa56ce3c8359d20ca035b044dba717fc2fc29f2daa62f44d9",
+    "reason": "Original monochrome face artwork. No feet; Pixel and Pad use continuous grid silhouettes. Independent SVG expression layers, no masks or external content."
   }
 }

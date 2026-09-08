@@ -9,32 +9,101 @@
   height: 100%;
 }
 
-/* Only the eyes move. Most of each cycle is a quiet, forward-facing rest. */
-.avatar-gaze {
-  animation: avatar-look var(--avatar-gaze-cycle, 42s) cubic-bezier(.4, 0, .2, 1) var(--avatar-gaze-delay, 3s) infinite;
+/* Inherited choices keep every instance in sync, including local design previews. */
+:root, [data-avatar-style] {
+  --avatar-face-animation: avatar-face-look;
+  --avatar-gaze-animation: avatar-look;
+  --avatar-blink-animation: avatar-blink;
+  --avatar-head-animation: none;
+  --avatar-detail-animation: none;
+  --avatar-wink-animation: none;
+  --avatar-neutral-animation: none;
+  --avatar-happy-animation: none;
+  --avatar-grumpy-animation: none;
 }
-.avatar-eyelids {
-  transform-box: fill-box;
-  transform-origin: center;
-  animation: avatar-blink var(--avatar-blink-cycle, 26s) ease-in-out var(--avatar-blink-delay, 2s) infinite;
+[data-avatar-style="off"] {
+  --avatar-face-animation: none;
+  --avatar-gaze-animation: none;
+  --avatar-blink-animation: none;
 }
-.avatar-gaze, .avatar-eyelids { animation-play-state: paused; }
-[data-avatar-motion="running"] :is(.avatar-gaze, .avatar-eyelids) { animation-play-state: running; }
+[data-avatar-style="eyes"] { --avatar-face-animation: none; }
+[data-avatar-style="gestures"], [data-avatar-style="mixed"] {
+  --avatar-head-animation: avatar-nod;
+  --avatar-detail-animation: avatar-detail;
+}
+[data-avatar-style="wink"] { --avatar-wink-animation: avatar-wink; }
+[data-avatar-style="happy"] {
+  --avatar-neutral-animation: avatar-neutral-expression;
+  --avatar-happy-animation: avatar-expression;
+}
+[data-avatar-style="grumpy"] {
+  --avatar-neutral-animation: avatar-neutral-expression;
+  --avatar-grumpy-animation: avatar-expression;
+}
+[data-avatar-style="mixed"] {
+  --avatar-wink-animation: avatar-wink;
+  --avatar-neutral-animation: avatar-neutral-mixed;
+  --avatar-happy-animation: avatar-expression;
+  --avatar-grumpy-animation: avatar-grumpy-mixed;
+}
+.avatar-screen { fill: var(--surface); }
+.avatar-head, .avatar-face, .avatar-gaze, .avatar-detail {
+  transform-box: view-box;
+  transform-origin: 32px 34px;
+}
+.avatar-head { animation: var(--avatar-head-animation) var(--motion-avatar-gesture-duration) var(--motion-avatar-easing) var(--avatar-delay, 2s) infinite; }
+.avatar-detail { transform-origin: 32px 21px; animation: var(--avatar-detail-animation) var(--motion-avatar-gesture-duration) var(--motion-avatar-easing) var(--avatar-delay, 2s) infinite; }
+.avatar-face { animation: var(--avatar-face-animation) var(--avatar-gaze-cycle, var(--motion-avatar-gaze-duration)) var(--motion-avatar-easing) var(--avatar-delay, 2s) infinite; }
+.avatar-gaze { animation: var(--avatar-gaze-animation) var(--avatar-gaze-cycle, var(--motion-avatar-gaze-duration)) var(--motion-avatar-easing) var(--avatar-delay, 2s) infinite; }
+.avatar-eyelids, .avatar-eye { transform-box: fill-box; transform-origin: center; }
+.avatar-eyelids { animation: var(--avatar-blink-animation) var(--avatar-blink-cycle, var(--motion-avatar-blink-duration)) var(--motion-avatar-easing) var(--avatar-delay, 2s) infinite; }
+.avatar-eye-left { animation: var(--avatar-wink-animation) var(--avatar-expression-cycle, var(--motion-avatar-expression-duration)) var(--motion-avatar-easing) var(--avatar-delay, 2s) infinite; }
+.avatar-neutral { animation: var(--avatar-neutral-animation) var(--avatar-expression-cycle, var(--motion-avatar-expression-duration)) steps(1, end) var(--avatar-delay, 2s) infinite; }
+.avatar-happy, .avatar-grumpy { opacity: 0; }
+.avatar-happy { animation: var(--avatar-happy-animation) var(--avatar-expression-cycle, var(--motion-avatar-expression-duration)) steps(1, end) var(--avatar-delay, 2s) infinite; }
+.avatar-grumpy { animation: var(--avatar-grumpy-animation) var(--avatar-expression-cycle, var(--motion-avatar-expression-duration)) steps(1, end) var(--avatar-delay, 2s) infinite; }
+[data-avatar="pixel"] .avatar-face, [data-avatar="pad"] .avatar-face { animation-timing-function: steps(2, end); }
+.agent-avatar-art :is(.avatar-head, .avatar-detail, .avatar-face, .avatar-gaze, .avatar-eyelids, .avatar-eye-left, .avatar-neutral, .avatar-happy, .avatar-grumpy) { animation-play-state: paused; }
+[data-avatar-motion="running"] .agent-avatar-art * { animation-play-state: running; }
 @keyframes avatar-blink {
   0%, 18%, 19.2%, 53%, 54.2%, 84%, 87%, 100% { transform: scaleY(1); }
   18.5%, 53.5%, 84.7%, 86% { transform: scaleY(.12); }
 }
 @keyframes avatar-look {
-  0%, 12%, 22%, 44%, 54%, 70%, 79%, 88%, 97%, 100% { transform: translate(0, 0); }
-  14%, 20% { transform: translate(-1.5px, 0); }
-  46%, 52% { transform: translate(1.5px, 0); }
-  72%, 77% { transform: translate(0, -1px); }
-  90%, 95% { transform: translate(0, 1px); }
+  0%, 12%, 22%, 54%, 66%, 100% { transform: translate(0, 0); }
+  14%, 20% { transform: translate(1px, -.3px); }
+  56%, 64% { transform: translate(-1px, .3px); }
 }
-:root[data-reduce-motion="on"] :is(.avatar-gaze, .avatar-eyelids) { animation: none; transform: none; }
+@keyframes avatar-face-look {
+  0%, 12%, 22%, 54%, 66%, 100% { transform: translate(0, 0); }
+  14%, 20% { transform: translate(1.2px, -.5px); }
+  56%, 64% { transform: translate(-1.2px, .5px); }
+}
+@keyframes avatar-nod {
+  0%, 34%, 44%, 100% { transform: rotate(0) translateY(0); }
+  38%, 40% { transform: rotate(-2deg) translateY(.6px); }
+}
+@keyframes avatar-detail {
+  0%, 34%, 44%, 100% { transform: rotate(0); }
+  38% { transform: rotate(5deg); }
+  41% { transform: rotate(-2deg); }
+}
+@keyframes avatar-wink {
+  0%, 40%, 43%, 100% { transform: scaleY(1); }
+  40.8%, 42% { transform: scaleY(.12); }
+}
+@keyframes avatar-expression { 0%, 14%, 100% { opacity: 0; } 8% { opacity: 1; } }
+@keyframes avatar-neutral-expression { 0%, 14%, 100% { opacity: 1; } 8% { opacity: 0; } }
+@keyframes avatar-grumpy-mixed { 0%, 77%, 100% { opacity: 0; } 72% { opacity: 1; } }
+@keyframes avatar-neutral-mixed { 0%, 14%, 77%, 100% { opacity: 1; } 8%, 72% { opacity: 0; } }
+:root[data-reduce-motion="on"] .agent-avatar-art * { animation: none; transform: none; }
 @media (prefers-reduced-motion: reduce) {
-  .avatar-gaze, .avatar-eyelids { animation: none; transform: none; }
+  .agent-avatar-art * { animation: none; transform: none; }
 }
+.avatar-motion-control { display: flex; align-items: center; gap: var(--space-12); min-width: 0; }
+.avatar-motion-control select { min-width: 0; max-width: 100%; }
+.avatar-motion-control .avatar { flex-shrink: 0; }
+
 .agent-preferences {
   max-width: none;
 }
@@ -142,7 +211,7 @@
 }
 .avatar-choices {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: var(--space-12);
   padding: 0;
   margin: 0;
@@ -223,6 +292,7 @@
   height: 24px;
 }
 @media (max-width: 600px) {
+  .avatar-choices { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .agent-profile-row {
     display: grid;
     grid-template-columns: 64px minmax(0, 1fr);

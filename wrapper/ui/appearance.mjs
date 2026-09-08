@@ -2,6 +2,7 @@ import { designTones, designAccents } from './design-system.mjs';
 import { loaderOptions } from './loader-options.mjs';
 export const appearanceOptions = {
   ...loaderOptions,
+  avatarMotion: { default: "face", options: [["off", "Still"], ["eyes", "Nur Augen"], ["face", "Sanftes Gesicht"], ["gestures", "Kleine Gesten"], ["wink", "Zwinkern"], ["happy", "Fröhlich"], ["grumpy", "Grimmig"], ["mixed", "Abwechslungsreich"]] },
   designTone: {default:'balanced', options:designTones.map(({id,label})=>[id,label])},
   highlightColor: {default:'terracotta', options:designAccents.map(({id,label})=>[id,label])},
   panelLight: { default: 'animated', options: [['off', 'Aus'], ['static', 'Ruhend'], ['animated', 'Sanft bewegt']] },

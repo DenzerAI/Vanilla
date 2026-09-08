@@ -20,27 +20,31 @@ arbeiten?** mit editierbarer Vorgabe → **Arbeitsgrundlage** mit den
 direkt sichtbaren Zeilen für Identität und gemeinsame Arbeitsregeln. Kein
 „Erweitert“-Aufklappen. Die Gruppen verwenden die vorhandenen Einstellungszeilen.
 
-Sechs eigene einfarbige SVG-Bots stehen im gemeinsamen Auswahlfenster zur Wahl:
-Nori (Standard), Orbit, Miko, Pixel, Lumi und Kibo. „Bild ändern …“ oder Klick auf
+Acht eigene einfarbige SVG-Gesichter stehen im gemeinsamen Auswahlfenster zur Wahl:
+Nori (Standard), Orbit, Miko, Pixel, Lumi, Kibo, Pebble und Pad. „Bild ändern …“ oder Klick auf
 den Avatar öffnet den Dialog. Vorschau und Auswahlmarkierung reagieren sofort;
 Abbrechen verwirft die Dialogauswahl, Übernehmen ändert den Formularentwurf,
 Speichern übernimmt das gesamte Profil. Die Radioauswahl unterstützt Pfeiltasten.
-Die Bots verwenden die Farbrollen des aktuellen Themes. Nur ihre Augen bewegen
-sich: gelegentliches Blinzeln, selten ein längerer Lidschluss und kleine Blicke
-nach links, rechts, oben und unten. Lange Ruhephasen und leicht unterschiedliche
-Zeiten pro Avatar verhindern einen gleichförmigen Takt. Kopf und Hintergrund
-bleiben still. Die Bewegung erfolgt direkt im SVG, ohne GIF-Dateien oder Masken.
-Nicht sichtbare Avatare und versteckte Tabs pausieren. Bei „Bewegung reduzieren“
-in den Einstellungen oder im Betriebssystem bleiben die Augen ruhig geöffnet.
+Die Bots verwenden die Farbrollen des aktuellen Themes. Die Motive haben keine Füße; Nori und Lumi behalten einen kurzen Halsansatz.
+Pixel und Pad bestehen aus einer zusammenhängenden Pixelkontur ohne Antenne.
+Die gemeinsame Agent-Animation unter Aussehen bietet Still, Nur Augen,
+Sanftes Gesicht (Standard), Kleine Gesten, Zwinkern, Fröhlich, Grimmig und
+Abwechslungsreich. Die Auswahl wird sofort über die bestehende Darstellungseinstellung
+validiert und gespeichert und gilt auch in offenen Chats. Das dunkle Visier folgt
+dem Blick minimal; seltenes Nicken, Blattwippen und kurze Ausdrücke lassen lange
+Ruhephasen. Ausdrücke zeigen keinen gemessenen Status. Alle Ebenen pausieren
+außerhalb des sichtbaren Bereichs und in versteckten Tabs. Reduzierte Bewegung
+in App oder System zeigt neutrale offene Augen. `AvatarMotionSetting` und die
+bestehenden `AvatarChoices` stehen auch in Unser Design mit lokalem Vorschauzustand.
 Der Kreis um den Avatar hat keinen Rand. Im selben Dialog folgt eine kompakte
 Radioauswahl für den Hintergrund: Ohne Farbe, Sand, Terrakotta, Salbei, Himmel
 und Lavendel. Hintergrund und Motiv werden gemeinsam in der Vorschau gezeigt,
 übernommen oder verworfen. „Ohne Farbe“ bleibt die neutrale Voreinstellung.
-Die sechs mitgelieferten SVGs werden direkt gerendert, ohne CSS-Maskierung oder
+Die acht mitgelieferten SVGs werden direkt gerendert, ohne CSS-Maskierung oder
 kreisförmiges Abschneiden der Motive. So entstehen keine Eck-Artefakte in WebViews.
 
 Ohne bereits gewählten Avatar wird beim ersten Öffnen ein überspringbarer
-Einrichtungsdialog mit denselben sechs Bildern und Namensfeld angeboten. Ein
+Einrichtungsdialog mit denselben acht Bildern und Namensfeld angeboten. Ein
 vorhandener Name bleibt vorgegeben. Nach „Später“ gilt weiterhin Nori; innerhalb
 der Browsersitzung erscheint der Dialog nicht erneut. Nach Speicherung bleibt die
 Auswahl über Neustarts erhalten.

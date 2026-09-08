@@ -103,3 +103,13 @@ test("profile saves persist across restarts; concurrent stale saves cannot overw
   );
   assert.equal(await readFile(file, "utf8"), before);
 });
+
+test('all eight face choices survive identity serialization', async () => {
+  const {agentAvatars} = await import('../ui/agent-avatars.mjs');
+  assert.equal(agentAvatars.length, 8);
+  for (const {id} of agentAvatars) {
+    const next = updateAgentProfile(original, {...readAgentProfile(original), avatar: id});
+    assert.equal(readAgentProfile(next).avatar, id);
+    assert.ok(next.includes('Vertraute Arbeitsregeln erhalten.'));
+  }
+});

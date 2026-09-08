@@ -44,7 +44,7 @@ export function updateAgentProfile(source, input) {
     );
   const avatar = input.avatar ?? readAgentProfile(source).avatar;
   if (!validAgentAvatar(avatar))
-    throw new Error("Bitte eines der sechs Profilbilder auswählen.");
+    throw new Error("Bitte eines der vorhandenen Profilbilder auswählen.");
   const color = input.avatarColor ?? readAgentProfile(source).avatarColor;
   if (!validAvatarColor(color))
     throw new Error("Bitte eine der vorhandenen Hintergrundfarben auswählen.");

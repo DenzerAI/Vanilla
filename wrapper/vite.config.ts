@@ -8,7 +8,7 @@ export default defineConfig({
   resolve: { alias: { '@': new URL('./ui', import.meta.url).pathname } },
   plugins: [
     { name: 'local-raw-assets', enforce: 'pre', async load(id) {
-      if (/\/assets\/avatars\/[a-z]+\.svg$/.test(id) || /-LICENSE\.txt$/.test(id))
+      if (/\/assets\/avatars\/(?:faces\/)?[a-z]+\.svg$/.test(id) || /-LICENSE\.txt$/.test(id))
         return 'export default ' + JSON.stringify(await readFile(id, 'utf8'));
     } },
     react(), tailwindcss(),
