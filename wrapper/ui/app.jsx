@@ -1,6 +1,6 @@
 import {useJobNotifications, JobNotifications, NotificationPreference} from "./job-notifications.jsx";
 import { ChapterScrubber } from "./components/ui/chapter-scrubber";
-import { PipelinePage } from "./pipeline";
+import { PlannerPage } from "./planner";
 import { InboxPage } from "./inbox";
 import { WelcomeSuggestions } from "./welcome-suggestions";
 import { PanelLight } from "./panel-light";
@@ -80,7 +80,6 @@ import {
   Download,
   Play,
   Pause,
-  Workflow,
   Blocks,
   Link,
   ExternalLink,
@@ -622,7 +621,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const systemNoticeRef = useRef(null);
   const [boot, setBoot] = useState(null),
     [audioConnections, setAudioConnections] = useState({Groq:false, ElevenLabs:false}),
-    [view, setView] = useState(() => !embedded && ["inbox", "pipeline", "jobs"].includes(new URLSearchParams(window.location.search).get("view")) ? new URLSearchParams(window.location.search).get("view") : "chat"),
+    [view, setView] = useState(() => !embedded && ["inbox", "today", "calendar", "pipeline", "jobs"].includes(new URLSearchParams(window.location.search).get("view")) ? (new URLSearchParams(window.location.search).get("view") === "pipeline" ? "today" : new URLSearchParams(window.location.search).get("view")) : (embedded || new URLSearchParams(window.location.search).has("chat") ? "chat" : "today")),
     [chatId, setChatId] = useState(null),
     [thread, setThread] = useState(null),
     [chats, setChats] = useState([]),
@@ -1626,8 +1625,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       j.name.toLowerCase().includes(search.toLowerCase()),
   );
   const nav = [
+      ["today", Sun, "Heute"],
       ["inbox", Inbox, "Inbox"],
-      ["pipeline", Workflow, "Pipeline"],
       ["jobs", Clock, "Aufträge"],
       ...(boot?.features?.library?[["library", FileText, "Bibliothek"]]:[]),
     ];
@@ -1740,7 +1739,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                   key={id}
                   className={
                     "nav-item " +
-                    (view === id && id !== "chat" ? "selected" : "")
+                    ((view === id || (id === "today" && view === "calendar")) && id !== "chat" ? "selected" : "")
                   }
                   onClick={() => (id === "chat" ? newDraft() : setView(id))}
                 >
@@ -2208,8 +2207,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         )}
         {view === "chat" ? null : view === "inbox" ? (
           <InboxPage PageHeading={PageHeading} sidebarHost={inboxSidebarHost} sidebarVisible={sidebar} onShowSidebar={() => setSidebar(true)} onHideSidebar={() => setSidebar(false)} onBack={() => setView("chat")}/>
-        ) : view === "pipeline" ? (
-          <PipelinePage PageHeading={PageHeading} onShowSidebar={!sidebar ? () => setSidebar(true) : undefined}/>
+        ) : view === "today" || view === "calendar" ? (
+          <PlannerPage PageHeading={PageHeading} section={view} onSection={setView} onShowSidebar={!sidebar ? () => setSidebar(true) : undefined} api={api} crmEnabled={!!boot.features?.crmCore} notifications={notificationState} notificationsEnabled={!!boot.features?.routines} requests={requests.length} onRequests={()=>setModal("activity")} onNotifications={id=>setModal(id?{type:"notifications",id}:"notifications")} onConnections={()=>{setSettingsTab("connections");setView("settings");}} onJobs={()=>setView("jobs")}/>
         ) : view === "jobs" ? (
           <div className="page">
             <PageHeading title="Aufträge" onShowSidebar={!sidebar ? () => setSidebar(true) : undefined}>
@@ -2805,6 +2804,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         <Modal title="Suche" className="system-search-dialog" onClose={() => setModal(null)}>
           <SystemSearch api={api} pages={[
             ...nav.map(([id, , title]) => ({kind:"page", id, title, detail:"Bereich"})),
+            {kind:"page", id:"calendar", title:"Kalender", detail:"Heute · Tag, Woche, Monat"},
             ...settingNav.map(([id, , title]) => ({kind:"setting", id, title:`Einstellungen · ${title}`, detail:"Einstellungen"})),
           ]} onOpen={guard(async result => {
             setModal(null);

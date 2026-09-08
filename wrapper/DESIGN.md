@@ -293,7 +293,7 @@ Wertetabelle.
 
 ## Kompakte Navigation und Suche
 
-Das Hauptmenü zeigt Inbox, Pipeline, Aufträge und die verfügbare Bibliothek in dieser Reihenfolge, darunter Projekte und Chats. Skills und Verbindungen sind eigene Einträge der vorhandenen Einstellungsnavigation. Der Einstieg bleibt im Agentenmenü. Bestehende Icons, Textkanten, Abstände und Inhaltsansichten bleiben erhalten; keine Platzhalter oder reservierten Leerzeilen für künftige Module. Suche und Querverweise öffnen beide Kataloge direkt mit ausgewähltem Einstellungsbereich. Die Einstellungsnavigation scrollt bei Platzmangel innerhalb der Seitenleiste; Zurück-Einstieg und Agentenzeile bleiben erreichbar.
+Das Hauptmenü zeigt Heute, Inbox, Aufträge und die verfügbare Bibliothek in dieser Reihenfolge, darunter Projekte und Chats. Skills und Verbindungen sind eigene Einträge der vorhandenen Einstellungsnavigation. Der Einstieg bleibt im Agentenmenü. Bestehende Icons, Textkanten, Abstände und Inhaltsansichten bleiben erhalten; keine Platzhalter oder reservierten Leerzeilen für künftige Module. Suche und Querverweise öffnen beide Kataloge direkt mit ausgewähltem Einstellungsbereich. Die Einstellungsnavigation scrollt bei Platzmangel innerhalb der Seitenleiste; Zurück-Einstieg und Agentenzeile bleiben erreichbar.
 
 Oben in der Seitenleiste steht der konfigurierte Agent: 32-px-Avatar mittig in der 18-px-Symbolspalte der Navigation, Name auf derselben Textkante mit reading (16 px), semibold und bestehender UI-Schrift. Daneben stehen Suche als kreisrunder Iconbutton, bei Bedarf Benachrichtigungen sowie Einklappen. Der Agentenbutton nutzt die bestehende Hoverfläche und das gemeinsame ChatMenu mit Fokusführung, Pfeiltasten, Escape und Außenklick; das Portal hält das Menü im Viewport. Auch Inbox und Einstellungen behalten diesen Einstieg. Der Such-Iconbutton öffnet den Suchdialog mit fokussierter Eingabe und nennt Cmd/Ctrl+K im Tooltip und zugänglichen Tastaturhinweis. Suche umfasst Gesprächstitel, lokal gespeicherte Nutzer- und Agententexte einschließlich archivierter Chats über alle Projekte, Projektnamen und Navigation/Einstellungen. Treffer zeigen Kontext und Textausschnitt; moderate Tippfehler, Buchstabendreher und Akzente werden toleriert. Werkzeugausgaben, interne Überlegungen und reine Kanalgespräche sind ausgeschlossen. Fehlende lokale Exporte werden als eingeschränkte Inhaltssuche kenntlich gemacht; es wird kein Worker für die Suche gestartet.
 
@@ -473,12 +473,16 @@ Die Animation läuft nur im sichtbaren geöffneten Menü. Verdeckte Tabs, nicht 
 Originalstufen und Verfügbarkeit stammen aus dem jeweiligen nativen Anschluss, niemals aus einer anbieterübergreifenden Übersetzungstabelle. Laden, fehlende Anmeldung, Fehler und erneuter Versuch bleiben im Popover sichtbar. Reduzierte Transparenz und fehlende Blur-Unterstützung erhalten `glass` als deckende Fläche. Escape und Außenklick schließen; Fokus, Browserzoom und Bildschirmtastatur bleiben berücksichtigt. Aussehen → Unser Design zeigt denselben Baustein mit als Beispiel gekennzeichneten lokalen Daten. Ablauf und Anbieterwechsel führt `surfaces/chat.md`.
 
 
-## Pipeline
+## Heute und Kalender
 
-Die Pipeline ist eine ausdrücklich beauftragte bedienbare Designstudie im Hauptmenü. Data bleibt als gemeinsamer Datenkern im Hintergrund. Vier Phasen mit ruhigen Karten, gemeinsamer PageHeading, Suche und Modal folgen [surfaces/pipeline.md](surfaces/pipeline.md). PipelineCard zeigt Kunde, Vorgang, Wert und datierten nächsten Schritt und wird unter Unser Design wiederverwendet. Vier, zwei oder eine Spalte folgen der verfügbaren Fensterbreite. Beispiele sind sichtbar bezeichnet; offene Vorgänge verlangen Aktion und Datum. Keine zweite Palette, kein externer Abgleich in der Designstudie.
-
-
-Die Eingabenavigation verwendet `ChapterScrubber` unter `ui/components/ui`. Position links bei 20 % und maximale Höhe 45 % bleiben erhalten. Eine gemeinsame Federbewegung erzeugt eine Kosinuswelle über benachbarte Striche; die einzelne Glasvorschau folgt innerhalb des Panels. Die Werte stehen in `scrubberSprings`. Klick und Enter springen weiterhin zur Nutzernachricht; Pfeiltasten, Home und End steuern den einzigen Tabstopp. App- und Systemvorgaben für reduzierte Bewegung zeigen die Welle ohne zeitliche Animation. Keine dauerhafte Dekoration.
+Heute ist der Start ohne Chat-Direktlink und bündelt Morgenbriefing, Tagesplan und
+„Braucht dich“. Kalender ist über denselben Seitenkopfbereich und die Suche
+zugänglich: Tag, Woche und Monatsliste mit ISO-Kalenderwochen, optional Mo–Fr.
+Die Pipeline-Designstudie entfällt; der gemeinsame CRM-Kern bleibt bestehen.
+AgendaRow ist der flache gemeinsame Terminbaustein und steht unter Unser Design.
+PageHeading, Modal, SettingRow, Tabs, Schalter und zentrale Tokens werden
+wiederverwendet. Beispielansicht und echte Hinweise sind sichtbar getrennt.
+Aufbau, Zustände, Quellen und Grenzen führt [surfaces/today.md](surfaces/today.md).
 
 ## Routine-Ergebnisse
 

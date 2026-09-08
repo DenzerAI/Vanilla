@@ -1,0 +1,1257 @@
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Modal } from "./modal.jsx";
+import { SettingRow } from "./settings-row.jsx";
+import { Skeleton } from "./skeleton";
+import {
+  Calendar,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Sun,
+  Bell,
+  RefreshCw,
+  User,
+  Inbox,
+  Link,
+} from "./icons.jsx";
+import {
+  dateKey,
+  parseDay,
+  addDays,
+  monday,
+  monthWeeks,
+  isoWeek,
+  shiftMonth,
+  eventOnDay,
+  sortEvents,
+} from "./planner-dates.mjs";
+import { demoContact, demoEvents, type PlannerEvent } from "./planner-demo";
+import "./planner.css";
+import { dueCases } from "./planner-data.mjs";
+type Fact = {
+  value: any;
+  status: string;
+  source_time: string;
+  decided_at: string;
+  signal_id: string;
+};
+type Entity = {
+  id: string;
+  kind: string;
+  revision: number;
+  fields: Record<string, Fact[]>;
+  freshness: { ready: boolean };
+};
+type Api = (url: string, data?: unknown) => Promise<any>;
+type Props = {
+  PageHeading: React.ComponentType<any>;
+  section: "today" | "calendar";
+  onSection: (s: "today" | "calendar") => void;
+  onShowSidebar?: () => void;
+  api: Api;
+  crmEnabled: boolean;
+  notifications: { data: any; error: string; refresh: () => unknown };
+  notificationsEnabled: boolean;
+  requests: number;
+  onRequests: () => void;
+  onNotifications: (id?: string) => void;
+  onConnections: () => void;
+  onJobs: () => void;
+};
+const formatDay = (
+  key: string,
+  options: Intl.DateTimeFormatOptions = {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+  },
+) => parseDay(key).toLocaleDateString("de-DE", options);
+const field = (e: Entity, key: string) => e.fields[key]?.[0]?.value;
+const entityName = (e: Entity) =>
+  field(e, "display_name") ||
+  field(e, "name") ||
+  field(e, "title") ||
+  [field(e, "given_name"), field(e, "family_name")].filter(Boolean).join(" ") ||
+  "Ohne Namen";
+function preference(key: string, fallback: string) {
+  try {
+    return localStorage.getItem(key) ?? fallback;
+  } catch {
+    return fallback;
+  }
+}
+function storePreference(key: string, value: string) {
+  try {
+    localStorage.setItem(key, value);
+  } catch {
+    /* Browser preferences are optional; never store customer data here. */
+  }
+}
+export function AgendaRow({
+  event,
+  onOpen,
+}: {
+  event: PlannerEvent;
+  onOpen: () => void;
+}) {
+  return (
+    <button type="button" className="planner-agenda-row" onClick={onOpen}>
+      <span className="planner-time">
+        {event.allDay ? "Ganztägig" : event.start}
+        <small>{!event.allDay && event.end}</small>
+      </span>
+      <span className="planner-row-copy">
+        <strong>{event.title}</strong>
+        <span>
+          {[
+            event.location,
+            event.contactId === demoContact.id ? demoContact.name : "",
+          ]
+            .filter(Boolean)
+            .join(" · ") || event.source}
+        </span>
+      </span>
+      <ChevronRight size={16} strokeWidth={undefined} />
+    </button>
+  );
+}
+export function PlannerPatternPreview() {
+  return (
+    <AgendaRow event={demoEvents(dateKey(new Date()))[0]} onOpen={() => {}} />
+  );
+}
+export function PlannerPage(props: Props) {
+  const { PageHeading, section, onSection, onShowSidebar, api } = props;
+  const [today, setToday] = useState(() => dateKey(new Date()));
+  const [date, setDate] = useState(today);
+  const [mode, setMode] = useState(() => {
+    const m = preference("planner.view", "month");
+    return ["day", "week", "month"].includes(m) ? m : "month";
+  });
+  const [workweek, setWorkweek] = useState(
+    () => preference("planner.workweek", "false") === "true",
+  );
+  const [demo, setDemo] = useState(
+    () => preference("planner.demo", "true") === "true",
+  );
+  const [events, setEvents] = useState<PlannerEvent[]>(() => demoEvents(today));
+  const [detail, setDetail] = useState<PlannerEvent | null>(null),
+    [draft, setDraft] = useState<PlannerEvent | null>(null),
+    [modal, setModal] = useState<
+      "concept" | "contact" | "message" | "briefing" | null
+    >(null);
+  const [workflows, setWorkflows] = useState<any[]>([]);
+  const [entities, setEntities] = useState<Entity[]>([]),
+    [loaded, setLoaded] = useState(false),
+    [error, setError] = useState(""),
+    [refreshing, setRefreshing] = useState(false),
+    [partial, setPartial] = useState(false),
+    [selectedEntity, setSelectedEntity] = useState<Entity | null>(null),
+    [entityError, setEntityError] = useState("");
+  const [demoResolved, setDemoResolved] = useState(false),
+    [formError, setFormError] = useState("");
+  const generation = useRef(0),
+    detailGeneration = useRef(0),
+    swipe = useRef<{ x: number; y: number } | null>(null);
+  const reload = useCallback(async () => {
+    const id = ++generation.current;
+    if (!props.crmEnabled) {
+      setEntities([]);
+      setLoaded(true);
+      setError("");
+      return;
+    }
+    setRefreshing(true);
+    try {
+      const [result, schema] = await Promise.all([
+        api("/crm/query", { kind: "case", limit: 100, offset: 0 }),
+        api("/crm/schema"),
+      ]);
+      if (id !== generation.current) return;
+      setEntities(result.results);
+      setWorkflows(schema.workflows);
+      setPartial(result.has_more);
+      setLoaded(true);
+      setError("");
+    } catch (e) {
+      if (id === generation.current) {
+        setError((e as Error).message);
+        setLoaded(true);
+      }
+    } finally {
+      if (id === generation.current) setRefreshing(false);
+    }
+  }, [api, props.crmEnabled]);
+  useEffect(() => {
+    reload();
+    const update = () => {
+      if (document.visibilityState === "visible") {
+        setToday(dateKey(new Date()));
+        reload();
+      }
+    };
+    const changed = (e: Event) => {
+      if ((e as CustomEvent).detail?.kind?.startsWith("crm.")) update();
+    };
+    window.addEventListener("focus", update);
+    document.addEventListener("visibilitychange", update);
+    window.addEventListener("core/event", changed);
+    const timer = setInterval(update, 30000);
+    return () => {
+      generation.current++;
+      detailGeneration.current++;
+      clearInterval(timer);
+      window.removeEventListener("focus", update);
+      document.removeEventListener("visibilitychange", update);
+      window.removeEventListener("core/event", changed);
+    };
+  }, [reload]);
+  const chooseMode = (value: string) => {
+    setMode(value);
+    storePreference("planner.view", value);
+  };
+  const toggleDemo = () => {
+    setDemo(!demo);
+    storePreference("planner.demo", String(!demo));
+    setDetail(null);
+    setDraft(null);
+    setModal(null);
+  };
+  const visibleEvents = demo ? sortEvents(events) : [];
+  const onDay = (key: string) =>
+    visibleEvents.filter((event: PlannerEvent) => eventOnDay(event, key));
+  const due: Entity[] = dueCases(entities, workflows, today);
+  const openEntity = async (e: Entity) => {
+    const id = ++detailGeneration.current;
+    setSelectedEntity(e);
+    setEntityError("");
+    try {
+      const fresh = await api("/crm/entities/" + encodeURIComponent(e.id));
+      if (id === detailGeneration.current) setSelectedEntity(fresh);
+    } catch (err) {
+      if (id === detailGeneration.current)
+        setEntityError((err as Error).message);
+    }
+  };
+  const create = (key = date) => {
+    setDetail(null);
+    setFormError("");
+    setDraft({
+      id: crypto.randomUUID(),
+      title: "",
+      date: key,
+      start: "09:00",
+      end: "10:00",
+      allDay: false,
+      location: "",
+      source: "Eigener Kalender · Beispiel",
+    });
+  };
+  const save = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!draft) return;
+    try {
+      parseDay(draft.date);
+    } catch {
+      setFormError("Bitte ein gültiges Datum wählen.");
+      return;
+    }
+    if (
+      !draft.title.trim() ||
+      (!draft.allDay &&
+        (!draft.start || !draft.end || draft.end <= draft.start))
+    ) {
+      setFormError("Bitte Titel und eine Endzeit nach dem Beginn angeben.");
+      return;
+    }
+    setEvents((old) => [
+      ...old.filter((item) => item.id !== draft.id),
+      { ...draft, title: draft.title.trim() },
+    ]);
+    setDate(draft.date);
+    setDraft(null);
+  };
+  const move = (direction: number) =>
+    setDate((old) =>
+      mode === "month"
+        ? shiftMonth(old, direction)
+        : addDays(old, direction * (mode === "week" ? 7 : 1)),
+    );
+  const days =
+    mode === "day"
+      ? [date]
+      : Array.from({ length: workweek ? 5 : 7 }, (_, i) =>
+          addDays(monday(date), i),
+        );
+  const dayView = (key: string, compact = false) => (
+    <section
+      className={"planner-day " + (key === today ? "planner-current-day" : "")}
+      key={key}
+      aria-label={formatDay(key)}
+    >
+      <header>
+        <button
+          type="button"
+          onClick={() => {
+            setDate(key);
+            chooseMode("day");
+          }}
+          aria-label={formatDay(key) + " öffnen"}
+          aria-current={key === today ? "date" : undefined}
+        >
+          <span>{formatDay(key, { weekday: "short" })}</span>
+          <strong>
+            {formatDay(key, {
+              day: "numeric",
+              month: compact ? "short" : undefined,
+            })}
+          </strong>
+        </button>
+        {demo && (
+          <button
+            type="button"
+            className="icon-button"
+            aria-label={"Beispieltermin am " + formatDay(key) + " hinzufügen"}
+            onClick={() => create(key)}
+          >
+            <Plus size={14} strokeWidth={undefined} />
+          </button>
+        )}
+      </header>
+      <div className="planner-day-items">
+        {onDay(key).map((event: PlannerEvent) => (
+          <AgendaRow
+            key={event.id}
+            event={event}
+            onOpen={() => setDetail(event)}
+          />
+        ))}
+        {!onDay(key).length && (
+          <p className="planner-empty">
+            {demo ? "Keine Termine" : "Keine synchronisierten Termine"}
+          </p>
+        )}
+      </div>
+    </section>
+  );
+  const unread =
+    props.notifications.data?.items?.filter((item: any) => !item.read_at) || [];
+  return (
+    <div
+      className="page planner-page"
+      data-capability="planner.overview"
+      onTouchStart={(e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest("button,input,select,textarea,a")) return;
+        swipe.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }}
+      onTouchEnd={(e) => {
+        const start = swipe.current;
+        swipe.current = null;
+        if (!start) return;
+        const dx = e.changedTouches[0].clientX - start.x,
+          dy = e.changedTouches[0].clientY - start.y;
+        if (Math.abs(dx) > 90 && Math.abs(dx) > Math.abs(dy) * 2)
+          onSection(dx < 0 ? "calendar" : "today");
+      }}
+    >
+      <PageHeading
+        title={section === "today" ? "Heute" : "Kalender"}
+        onShowSidebar={onShowSidebar}
+      >
+        <button
+          type="button"
+          className="small-button"
+          onClick={() => setModal("concept")}
+        >
+          Verknüpfungen
+        </button>
+        {section === "calendar" && (
+          <button
+            type="button"
+            className="small-button primary"
+            onClick={() => (demo ? create() : props.onConnections())}
+          >
+            <Plus size={16} strokeWidth={undefined} />
+            {demo ? "Beispieltermin" : "Kalender verbinden"}
+          </button>
+        )}
+      </PageHeading>
+      <div className="planner-topline">
+        <div className="tabs" aria-label="Tagesübersicht">
+          <button
+            type="button"
+            aria-pressed={section === "today"}
+            className={section === "today" ? "selected" : ""}
+            onClick={() => onSection("today")}
+          >
+            Heute
+          </button>
+          <button
+            type="button"
+            aria-pressed={section === "calendar"}
+            className={section === "calendar" ? "selected" : ""}
+            onClick={() => onSection("calendar")}
+          >
+            Kalender
+          </button>
+        </div>
+        <button
+          type="button"
+          className="small-button"
+          aria-pressed={demo}
+          onClick={toggleDemo}
+        >
+          {demo ? "Beispielansicht an" : "Beispielansicht aus"}
+        </button>
+      </div>
+      {demo && (
+        <p className="planner-demo-note">
+          Beispielansicht · Termine, Kontakt, Wetter und Briefing sind fiktiv.
+          Bearbeitungen gelten bis zum Verlassen von Heute und Kalender.
+        </p>
+      )}
+      {section === "today" ? (
+        <>
+          <div className="planner-dateline">
+            <span>
+              {formatDay(today)} · KW {isoWeek(today).week}
+            </span>
+            {demo ? (
+              <span>
+                <Sun size={16} strokeWidth={undefined} />
+                20° · Beispielort
+              </span>
+            ) : (
+              <button
+                type="button"
+                className="small-button"
+                onClick={() => setModal("concept")}
+              >
+                Standort & Wetter einrichten
+              </button>
+            )}
+          </div>
+          <section
+            className="planner-briefing"
+            aria-labelledby="planner-briefing-title"
+          >
+            <div className="planner-section-heading">
+              <h2 id="planner-briefing-title">Dein Morgenbriefing</h2>
+              {demo && (
+                <span className="planner-meta">Heute, 07:00 · Beispiel</span>
+              )}
+            </div>
+            {demo ? (
+              <>
+                <p>
+                  Heute geht es um das neue Projekt: Um 10 Uhr steht die
+                  Abstimmung an. Alex hat vorab eine Terminänderung geschickt.
+                  Prüfe sie, bevor du das Angebot am Nachmittag vorbereitest.
+                </p>
+                {demoResolved && (
+                  <p className="planner-meta">
+                    Seit dem Briefing: Terminänderung auf 11 Uhr bestätigt. Dein
+                    Tagesplan ist aktualisiert.
+                  </p>
+                )}
+                <button
+                  type="button"
+                  className="small-button"
+                  onClick={() => setModal("briefing")}
+                >
+                  Briefing & Quellen öffnen
+                </button>
+              </>
+            ) : (
+              <>
+                <p>
+                  Hier beginnt dein Tag mit Terminen, wichtigen Änderungen und
+                  nächsten Schritten.
+                </p>
+                <button
+                  type="button"
+                  className="small-button"
+                  onClick={props.onJobs}
+                >
+                  Morgenbriefing als Routine planen
+                </button>
+              </>
+            )}
+          </section>
+          <section className="planner-section">
+            <div className="planner-section-heading">
+              <h2>Dein Tag</h2>
+              <button
+                type="button"
+                className="small-button"
+                onClick={() => {
+                  setDate(today);
+                  onSection("calendar");
+                }}
+              >
+                Kalender öffnen
+              </button>
+            </div>
+            {onDay(today).map((event: PlannerEvent) => (
+              <AgendaRow
+                key={event.id}
+                event={event}
+                onOpen={() => setDetail(event)}
+              />
+            ))}
+            {!demo && (
+              <p className="planner-empty">
+                Noch kein Kalender synchronisiert. Microsoft und weitere Quellen
+                werden über Verbindungen angeschlossen.
+              </p>
+            )}
+            {demo && !onDay(today).length && (
+              <p className="planner-empty">
+                Heute sind keine Beispieltermine geplant.
+              </p>
+            )}
+            {!loaded ? (
+              <Skeleton rows={2} label="Nächste Schritte werden geladen …" />
+            ) : (
+              <>
+                {error && (
+                  <p role="alert" className="planner-error">
+                    Kundenschritte konnten nicht aktualisiert werden.{" "}
+                    <button type="button" onClick={reload}>
+                      Erneut laden
+                    </button>
+                  </p>
+                )}
+                {demo && due.length > 0 && (
+                  <p className="planner-meta">
+                    Aus deinem Arbeitsbereich · echte CRM-Schritte
+                  </p>
+                )}
+                {due.map((e) => (
+                  <button
+                    type="button"
+                    key={e.id}
+                    className="planner-action-row"
+                    onClick={() => openEntity(e)}
+                  >
+                    <User size={18} strokeWidth={undefined} />
+                    <span className="planner-row-copy">
+                      <strong>{field(e, "process").next_step}</strong>
+                      <span>
+                        {entityName(e)} ·{" "}
+                        {formatDay(field(e, "process").due_date, {
+                          day: "numeric",
+                          month: "short",
+                        })}
+                        {field(e, "process").due_date < today
+                          ? " · Überfällig"
+                          : ""}
+                      </span>
+                    </span>
+                    <span className="planner-meta">
+                      {!e.freshness.ready || error ? "Stand prüfen" : "CRM"}
+                    </span>
+                    <ChevronRight size={16} strokeWidth={undefined} />
+                  </button>
+                ))}
+                {partial && (
+                  <p className="planner-empty">
+                    Nächste Schritte aus den ersten 100 Vorgängen. Weitere
+                    Vorgänge sind hier noch nicht enthalten.
+                  </p>
+                )}
+              </>
+            )}
+          </section>
+          <section className="planner-section">
+            <div className="planner-section-heading">
+              <h2>Braucht dich</h2>
+              <button
+                type="button"
+                className="icon-button"
+                aria-label="Aktualisieren"
+                disabled={refreshing}
+                onClick={() => {
+                  reload();
+                  props.notifications.refresh();
+                }}
+              >
+                <RefreshCw size={16} strokeWidth={undefined} />
+              </button>
+            </div>
+            {demo && !demoResolved && (
+              <button
+                type="button"
+                className="planner-action-row"
+                onClick={() => setModal("message")}
+              >
+                <Inbox size={18} strokeWidth={undefined} />
+                <span className="planner-row-copy">
+                  <strong>Terminänderung von Alex prüfen</strong>
+                  <span>Inbox → Kontakt → Kalender · Beispiel</span>
+                </span>
+                <ChevronRight size={16} strokeWidth={undefined} />
+              </button>
+            )}
+            {(props.requests > 0 || unread.length > 0) && demo && (
+              <p className="planner-meta">
+                Aus deinem Arbeitsbereich · echte Hinweise
+              </p>
+            )}
+            {props.requests > 0 && (
+              <button
+                type="button"
+                className="planner-action-row"
+                onClick={props.onRequests}
+              >
+                <Bell size={18} strokeWidth={undefined} />
+                <span className="planner-row-copy">
+                  <strong>
+                    {props.requests} offene{" "}
+                    {props.requests === 1 ? "Rückfrage" : "Rückfragen"}
+                  </strong>
+                  <span>Dein Agent braucht eine Entscheidung.</span>
+                </span>
+                <ChevronRight size={16} strokeWidth={undefined} />
+              </button>
+            )}
+            {props.notificationsEnabled &&
+              !props.notifications.data &&
+              !props.notifications.error && (
+                <Skeleton
+                  rows={2}
+                  label="Benachrichtigungen werden geladen …"
+                />
+              )}
+            {props.notifications.error && (
+              <p role="alert" className="planner-error">
+                Benachrichtigungen konnten nicht aktualisiert werden.{" "}
+                <button
+                  type="button"
+                  onClick={() => props.notifications.refresh()}
+                >
+                  Erneut laden
+                </button>
+              </p>
+            )}
+            {unread.slice(0, 5).map((item: any) => (
+              <button
+                type="button"
+                className="planner-action-row"
+                key={item.id}
+                onClick={() => props.onNotifications(item.id)}
+              >
+                <Bell size={18} strokeWidth={undefined} />
+                <span className="planner-row-copy">
+                  <strong>{item.title}</strong>
+                  <span>
+                    {new Date(item.created_at * 1000).toLocaleString("de-DE")}
+                  </span>
+                </span>
+                <ChevronRight size={16} strokeWidth={undefined} />
+              </button>
+            ))}
+            {!demo &&
+              (props.notifications.data || !props.notificationsEnabled) &&
+              !props.requests &&
+              !unread.length &&
+              !props.notifications.error && (
+                <p className="planner-empty">
+                  Keine offenen Rückfragen oder geladenen ungelesenen Hinweise.
+                  Inbox-Triage folgt mit der Nachrichtenanbindung.
+                </p>
+              )}
+            <button
+              type="button"
+              className="small-button"
+              disabled={!props.notificationsEnabled}
+              onClick={() => props.onNotifications()}
+            >
+              Alle Benachrichtigungen
+            </button>
+          </section>
+        </>
+      ) : (
+        <>
+          <div className="planner-calendar-toolbar">
+            <div className="planner-period">
+              <button
+                type="button"
+                className="icon-button"
+                aria-label="Vorheriger Zeitraum"
+                onClick={() => move(-1)}
+              >
+                <ChevronLeft size={18} strokeWidth={undefined} />
+              </button>
+              <h2 aria-live="polite">
+                {mode === "day"
+                  ? formatDay(date)
+                  : mode === "week"
+                    ? `KW ${isoWeek(date).week} · ${formatDay(monday(date), { day: "numeric", month: "short" })}`
+                    : formatDay(date, { month: "long", year: "numeric" })}
+              </h2>
+              <button
+                type="button"
+                className="icon-button"
+                aria-label="Nächster Zeitraum"
+                onClick={() => move(1)}
+              >
+                <ChevronRight size={18} strokeWidth={undefined} />
+              </button>
+            </div>
+            <button
+              type="button"
+              className="small-button"
+              onClick={() => setDate(today)}
+            >
+              Heute
+            </button>
+            <label className="planner-date-jump">
+              <span>Datum</span>
+              <input
+                type="date"
+                aria-label="Zu Datum springen"
+                value={date}
+                onChange={(e) => {
+                  try {
+                    parseDay(e.target.value);
+                    setDate(e.target.value);
+                  } catch {
+                    /* Keep the last complete valid date while typing. */
+                  }
+                }}
+              />
+            </label>
+          </div>
+          <div className="planner-view-toolbar">
+            <div className="tabs" aria-label="Kalenderansicht">
+              {[
+                ["day", "Tag"],
+                ["week", "Woche"],
+                ["month", "Monat"],
+              ].map(([value, label]) => (
+                <button
+                  type="button"
+                  key={value}
+                  aria-pressed={mode === value}
+                  className={mode === value ? "selected" : ""}
+                  onClick={() => chooseMode(value)}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+            <div className="planner-workweek">
+              <span>Nur Mo–Fr</span>
+              <button
+                type="button"
+                role="switch"
+                className="apple-switch"
+                aria-label="Nur Montag bis Freitag anzeigen"
+                aria-checked={workweek}
+                onClick={() => {
+                  setWorkweek(!workweek);
+                  storePreference("planner.workweek", String(!workweek));
+                }}
+              >
+                <span />
+              </button>
+            </div>
+          </div>
+          {!demo && (
+            <p className="planner-empty">
+              Kalenderansicht bereit. Termine erscheinen nach der Anbindung; ein
+              gespeicherter Zugang allein startet noch keinen Abgleich.
+            </p>
+          )}
+          {workweek && (
+            <p className="planner-meta">
+              Wochenenden werden in Woche und Monat ausgeblendet. Ihre Termine
+              bleiben erhalten und sind in der Tagesansicht erreichbar.
+            </p>
+          )}
+          {mode === "month" ? (
+            <div className="planner-month">
+              {monthWeeks(date, workweek).map(
+                (week: {
+                  start: string;
+                  year: number;
+                  week: number;
+                  days: string[];
+                }) => (
+                  <section className="planner-month-week" key={week.start}>
+                    <h3>KW {week.week}</h3>
+                    <div>{week.days.map((key) => dayView(key, true))}</div>
+                  </section>
+                ),
+              )}
+            </div>
+          ) : (
+            <div
+              className={
+                "planner-calendar-days " +
+                (mode === "week" ? "planner-week " : "") +
+                (workweek ? "planner-five" : "")
+              }
+            >
+              {days.map((key) => dayView(key))}
+            </div>
+          )}
+        </>
+      )}
+      {detail && (
+        <Modal
+          wide={false}
+          title={detail.title}
+          onClose={() => setDetail(null)}
+        >
+          <p className="planner-meta">{detail.source}</p>
+          <div className="settings-group">
+            <SettingRow
+              title="Termin"
+              description={`${formatDay(detail.date)} · ${detail.allDay ? "Ganztägig" : detail.start + "–" + detail.end}`}
+            />
+            {detail.location && (
+              <SettingRow title="Ort" description={detail.location} />
+            )}
+            <SettingRow
+              title="Kontakt"
+              description={
+                detail.contactId === demoContact.id
+                  ? demoContact.name + " · " + demoContact.company
+                  : "Kein Kontakt zugeordnet"
+              }
+            >
+              {detail.contactId && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDetail(null);
+                    setModal("contact");
+                  }}
+                >
+                  Kontakt öffnen
+                </button>
+              )}
+            </SettingRow>
+            {detail.sourceId && (
+              <SettingRow
+                title="Anlass aus der Inbox"
+                description="Terminabstimmung zum Projekt"
+              >
+                <button
+                  type="button"
+                  onClick={() => {
+                    setDetail(null);
+                    setModal("message");
+                  }}
+                >
+                  Nachricht öffnen
+                </button>
+              </SettingRow>
+            )}
+          </div>
+          <p className="planner-demo-note">
+            Beispieltermin. Änderungen werden weder gespeichert noch an einen
+            Kalender gesendet.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              setDraft({ ...detail });
+              setDetail(null);
+              setFormError("");
+            }}
+          >
+            Beispiel bearbeiten
+          </button>
+        </Modal>
+      )}
+      {draft && (
+        <Modal
+          wide={false}
+          title="Beispieltermin bearbeiten"
+          onClose={() => setDraft(null)}
+        >
+          <form className="planner-form" onSubmit={save}>
+            <label>
+              Titel
+              <input
+                required
+                maxLength={160}
+                value={draft.title}
+                onChange={(e) => setDraft({ ...draft, title: e.target.value })}
+              />
+            </label>
+            <label>
+              Datum
+              <input
+                type="date"
+                required
+                value={draft.date}
+                onChange={(e) => setDraft({ ...draft, date: e.target.value })}
+              />
+            </label>
+            <SettingRow title="Ganztägig">
+              <button
+                type="button"
+                role="switch"
+                className="apple-switch"
+                aria-label="Ganztägiger Termin"
+                aria-checked={draft.allDay}
+                onClick={() =>
+                  setDraft({
+                    ...draft,
+                    allDay: !draft.allDay,
+                    start: draft.start || "09:00",
+                    end: draft.end || "10:00",
+                  })
+                }
+              >
+                <span />
+              </button>
+            </SettingRow>
+            {!draft.allDay && (
+              <div className="planner-form-pair">
+                <label>
+                  Beginn
+                  <input
+                    type="time"
+                    required
+                    value={draft.start}
+                    onChange={(e) =>
+                      setDraft({ ...draft, start: e.target.value })
+                    }
+                  />
+                </label>
+                <label>
+                  Ende
+                  <input
+                    type="time"
+                    required
+                    value={draft.end}
+                    onChange={(e) =>
+                      setDraft({ ...draft, end: e.target.value })
+                    }
+                  />
+                </label>
+              </div>
+            )}
+            <label>
+              Ort
+              <input
+                maxLength={160}
+                value={draft.location}
+                onChange={(e) =>
+                  setDraft({ ...draft, location: e.target.value })
+                }
+              />
+            </label>
+            <label>
+              Kontakt
+              <select
+                value={draft.contactId || ""}
+                onChange={(e) =>
+                  setDraft({ ...draft, contactId: e.target.value || undefined })
+                }
+              >
+                <option value="">Kein Kontakt</option>
+                <option value={demoContact.id}>
+                  {demoContact.name} · Beispiel
+                </option>
+              </select>
+            </label>
+            <p className="planner-demo-note">
+              Nur für diesen Entwurf. Beim Verlassen von Heute und Kalender
+              werden Bearbeitungen verworfen.
+            </p>
+            {formError && (
+              <p role="alert" className="planner-error">
+                {formError}
+              </p>
+            )}
+            <div className="row">
+              <button type="button" onClick={() => setDraft(null)}>
+                Abbrechen
+              </button>
+              <button type="submit" className="primary">
+                Im Beispiel übernehmen
+              </button>
+            </div>
+          </form>
+        </Modal>
+      )}
+      {modal === "contact" && (
+        <Modal
+          wide={false}
+          title={demoContact.name}
+          onClose={() => setModal(null)}
+        >
+          <p className="planner-meta">Kontaktakte · Fiktives Beispiel</p>
+          <div className="settings-group">
+            <SettingRow title="Firma" description={demoContact.company} />
+            <SettingRow title="Rolle" description={demoContact.role} />
+            <SettingRow title="E-Mail" description={demoContact.email} />
+            <SettingRow
+              title="Telefon & Adresse"
+              description="Noch nicht vorhanden"
+            />
+            <SettingRow
+              title="Aktueller Stand"
+              description={
+                demoResolved
+                  ? "Terminänderung im Beispiel geprüft."
+                  : "Neue Terminänderung eingegangen. Bisherige Uhrzeit muss geprüft werden."
+              }
+            />
+            <SettingRow
+              title="Herkunft"
+              description="Kontakt aus CRM, Nachricht aus Outlook, Termin aus Kalender. Die gemeinsame interne Kontakt-ID verbindet sie."
+            />
+          </div>
+          <div className="row">
+            <button type="button" onClick={() => setModal("message")}>
+              Zugehörige Nachricht
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setModal(null);
+                onSection("calendar");
+                setDate(today);
+                chooseMode("day");
+              }}
+            >
+              Termine ansehen
+            </button>
+          </div>
+        </Modal>
+      )}
+      {modal === "message" && (
+        <Modal
+          wide={false}
+          title="Terminänderung prüfen"
+          onClose={() => setModal(null)}
+        >
+          <p className="planner-meta">
+            Inbox · Outlook · Beispielnachricht von {demoContact.name}
+          </p>
+          <blockquote>
+            Können wir unsere Projektabstimmung heute von 10 auf 11 Uhr
+            verschieben? Die besprochenen Anforderungen bleiben gleich.
+          </blockquote>
+          <div className="settings-group">
+            <SettingRow
+              title="Bisheriger Termin"
+              description="10:00–10:45 Uhr"
+            />
+            <SettingRow
+              title="Vorschlag aus der Nachricht"
+              description="11:00–11:45 Uhr. Erst die Bestätigung ändert den Beispieltermin."
+            />
+            <SettingRow
+              title="Zugeordneter Kontakt"
+              description={demoContact.name + " · " + demoContact.company}
+            >
+              <button type="button" onClick={() => setModal("contact")}>
+                Kontakt öffnen
+              </button>
+            </SettingRow>
+          </div>
+          <p className="planner-demo-note">
+            Rohsignal → Vorschlag → Bestätigung. Hier nur im Beispiel, ohne
+            Versand oder Änderung echter Daten.
+          </p>
+          <div className="row">
+            <button type="button" onClick={() => setModal(null)}>
+              Später prüfen
+            </button>
+            <button
+              type="button"
+              disabled={
+                demoResolved || !events.some((e) => e.id === "demo-meeting")
+              }
+              className="primary"
+              onClick={() => {
+                setEvents((old) =>
+                  old.map((e) =>
+                    e.id === "demo-meeting"
+                      ? { ...e, date: today, start: "11:00", end: "11:45" }
+                      : e,
+                  ),
+                );
+                setDemoResolved(true);
+                setModal(null);
+              }}
+            >
+              {demoResolved
+                ? "Im Beispiel bestätigt"
+                : "Im Beispiel auf 11 Uhr ändern"}
+            </button>
+          </div>
+        </Modal>
+      )}
+      {modal === "briefing" && (
+        <Modal
+          wide={false}
+          title="Morgenbriefing"
+          onClose={() => setModal(null)}
+        >
+          <p className="planner-meta">
+            {formatDay(today)} · 07:00 · Beispielbericht
+          </p>
+          <p>
+            Die Projektabstimmung ist für 10 Uhr geplant. Bereite am Nachmittag
+            das Angebot vor.
+          </p>
+          <div className="settings-group">
+            <SettingRow
+              title="Nach dem Briefing eingegangen"
+              description={
+                demoResolved
+                  ? "Die Terminänderung auf 11 Uhr wurde inzwischen im Beispiel bestätigt. Der Tagesplan ist aktualisiert."
+                  : "Alex bittet um 11 Uhr. Der Tagesplan weist auf die nötige Prüfung hin."
+              }
+            />
+            <SettingRow
+              title="Quellen"
+              description="Kalendertermin, verknüpfter Kontakt und zugehörige Inbox-Nachricht."
+            >
+              <button type="button" onClick={() => setModal("message")}>
+                Änderung ansehen
+              </button>
+            </SettingRow>
+          </div>
+          <p className="planner-demo-note">
+            Ein Briefing bleibt ein datierter Bericht. Der aktuelle Tagesplan
+            und neue Hinweise entwickeln sich weiter.
+          </p>
+        </Modal>
+      )}
+      {modal === "concept" && (
+        <Modal
+          wide={false}
+          title="So hängt dein Tag zusammen"
+          onClose={() => setModal(null)}
+        >
+          <div className="settings-group">
+            <SettingRow
+              icon={<Calendar size={20} strokeWidth={undefined} />}
+              title="Kalender"
+              description="Ein Termin verknüpft Zeitpunkt, Kontakt, Projekt und Anlass. Tag, Woche und Monatsliste zeigen dieselben Termine. Microsoft und weitere Kalender werden über Verbindungen eingerichtet."
+            />
+            <SettingRow
+              icon={<User size={20} strokeWidth={undefined} />}
+              title="Kontakte & CRM"
+              description="Eine interne Identität, mehrere Quellen. Echte fällige CRM-Schritte werden bereits gelesen; ungeprüfte Änderungen sind erkennbar. Kontakte werden aus dem jeweiligen Anlass geöffnet."
+            />
+            <SettingRow
+              icon={<Inbox size={20} strokeWidth={undefined} />}
+              title="Inbox & Entscheidungen"
+              description="Neue Nachrichten liefern Vorschläge. Erst deine Bestätigung oder eine eindeutige Regel verändert einen Fakt. Die Terminänderung im Beispiel zeigt diesen Ablauf."
+            />
+            <SettingRow
+              icon={<Sun size={20} strokeWidth={undefined} />}
+              title="Standort & Wetter"
+              description="Geplant: ein selbst gewählter Ort oder Standortfreigabe und eine Wetterquelle mit Aktualisierungszeit. Es wird noch kein Standort abgefragt."
+            />
+            <SettingRow
+              icon={<Bell size={20} strokeWidth={undefined} />}
+              title="Briefing & Hinweise"
+              description="Morgenbriefings sollen als datierte Ergebnisse einer Routine hier landen. Echte Benachrichtigungen und Agentenrückfragen sind bereits angeschlossen."
+            />
+            <SettingRow
+              icon={<Link size={20} strokeWidth={undefined} />}
+              title="Aktueller Ausbaustand"
+              description="Die Kalender-, Kontakt- und Inbox-Verknüpfung ist ein bedienbarer Entwurf. Externe Kalendersynchronisation, Wetterabruf und automatische Briefing-Zuordnung folgen. Beispieldaten werden niemals in das CRM geschrieben."
+            />
+          </div>
+          <div className="row">
+            <button
+              type="button"
+              onClick={() => {
+                setModal(null);
+                props.onConnections();
+              }}
+            >
+              Verbindungen öffnen
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setModal(null);
+                props.onJobs();
+              }}
+            >
+              Routinen öffnen
+            </button>
+          </div>
+        </Modal>
+      )}
+      {selectedEntity && (
+        <Modal
+          wide={false}
+          title={entityName(selectedEntity)}
+          onClose={() => {
+            detailGeneration.current++;
+            setSelectedEntity(null);
+          }}
+        >
+          <p className="planner-meta">
+            Echter CRM-Vorgang · Stand {selectedEntity.revision}
+          </p>
+          {entityError && (
+            <p role="alert" className="planner-error">
+              Die Akte konnte nicht neu geladen werden. Angezeigter Stand kann
+              veraltet sein.{" "}
+              <button type="button" onClick={() => openEntity(selectedEntity)}>
+                Erneut laden
+              </button>
+            </p>
+          )}
+          {!selectedEntity.freshness.ready && (
+            <p className="planner-error">
+              Neue Informationen sind noch zu prüfen. Dieser Stand ist nicht für
+              weitere Entscheidungen freigegeben.
+            </p>
+          )}
+          <div className="settings-group">
+            {["title", "process", "amount"]
+              .filter((key) => field(selectedEntity, key) != null)
+              .map((key) => (
+                <SettingRow
+                  key={key}
+                  title={
+                    (
+                      {
+                        title: "Vorgang",
+                        process: "Nächster Schritt",
+                        amount: "Wert",
+                      } as Record<string, string>
+                    )[key]
+                  }
+                  description={
+                    key === "process"
+                      ? `${field(selectedEntity, key).next_step || "Kein offener Schritt"}${field(selectedEntity, key).due_date ? " · " + formatDay(field(selectedEntity, key).due_date) : ""}`
+                      : key === "amount"
+                        ? new Intl.NumberFormat("de-DE", {
+                            style: "currency",
+                            currency: field(selectedEntity, key).currency,
+                          }).format(
+                            field(selectedEntity, key).minor_units / 100,
+                          )
+                        : String(field(selectedEntity, key))
+                  }
+                />
+              ))}
+          </div>
+          <p className="planner-meta">
+            Gelesen aus der gemeinsamen CRM-Datenbasis. Hier werden keine Fakten
+            verändert.
+          </p>
+        </Modal>
+      )}
+    </div>
+  );
+}
