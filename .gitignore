@@ -31,6 +31,23 @@
 !/wrapper/ui/*.css
 !/wrapper/ui/index.html
 
+# Nested UI components and helpers are application source, including future subfolders.
+!/wrapper/components.json
+!/wrapper/ui/components/
+!/wrapper/ui/components/**/
+!/wrapper/ui/components/**/*.ts
+!/wrapper/ui/components/**/*.tsx
+!/wrapper/ui/components/**/*.js
+!/wrapper/ui/components/**/*.jsx
+!/wrapper/ui/components/**/*.mjs
+!/wrapper/ui/components/**/*.css
+!/wrapper/ui/lib/
+!/wrapper/ui/lib/**/
+!/wrapper/ui/lib/**/*.ts
+!/wrapper/ui/lib/**/*.tsx
+!/wrapper/ui/lib/**/*.js
+!/wrapper/ui/lib/**/*.mjs
+
 # Verbindliche Ausschluesse, auch innerhalb freigegebener Verzeichnisse.
 .env
 .env.*
