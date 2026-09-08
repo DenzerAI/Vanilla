@@ -4,7 +4,7 @@ Diese Dateien sind verbindliche Bauanleitungen, keine Ideensammlung. Vor einer E
 
 | Bereich | Vertrag | Implementierung |
 | --- | --- | --- |
-| Chat / Projekte | [chat.md](chat.md) | app.jsx, chat-controls.jsx, dictation.jsx |
+| Chat / Workspaces | [chat.md](chat.md) | app.jsx, chat-controls.jsx, dictation.jsx |
 | Pipeline | [pipeline.md](pipeline.md) | pipeline.tsx, pipeline.css; bedienbare Designstudie |
 | Inbox | [inbox.md](inbox.md) | app.jsx / Inbox-Sidebar, inbox.tsx, inbox.css; Designvorschau |
 | Aufträge | [jobs.md](jobs.md) | app.jsx / JobForm |
@@ -16,7 +16,9 @@ Diese Dateien sind verbindliche Bauanleitungen, keine Ideensammlung. Vor einer E
 
 ## Navigation
 
-Inbox, Pipeline, Aufträge und die verfügbare Bibliothek bilden das Hauptmenü; Projekte und Chats folgen darunter. Verbindungen und Skills stehen in der vorhandenen Einstellungsnavigation mit ihren bisherigen Symbolen und Katalogansichten. Globale Suche und Querverweise öffnen den jeweiligen Einstellungsbereich direkt. Keine Modul-Platzhalter, zusätzliche Navigationsebene oder neue Seitengestaltung.
+Der gemeinsame Seitenleistenkopf zeigt AgentMenu mit konfiguriertem Avatar, Namen und integriertem Verbindungspunkt. Daneben stehen Suche als IconButton, Benachrichtigungen und Einklappen. Dies gilt auch für Inbox und Einstellungen. Der bisherige Agentenfuß und der separat bedienbare Serverstatus entfallen; Details und Neustart stehen im Agentenmenü. Aufbau und Tastaturbedienung führt chat.md.
+
+Inbox, Pipeline, Aufträge und die verfügbare Bibliothek bilden das Hauptmenü; Workspaces und Chats folgen darunter. Verbindungen und Skills stehen in der vorhandenen Einstellungsnavigation mit ihren bisherigen Symbolen und Katalogansichten. Globale Suche und Querverweise öffnen den jeweiligen Einstellungsbereich direkt. Keine Modul-Platzhalter, zusätzliche Navigationsebene oder neue Seitengestaltung.
 
 ## Gemeinsamer Seitenkopf
 
@@ -40,6 +42,8 @@ Die Verträge schreiben keine Backend-Technik vor. Gemeinsame Frontend-Komponent
 
 ## Systemhinweise
 
+Auf schmalen Fenstern reserviert ein sichtbarer Update-/Neustarthinweis oberhalb des Agentenkopfes 40 px. Der Hinweis verdeckt weder Agentenbutton noch Suche oder Einklappen; ohne Hinweis entfällt der Abstand.
+
 `SystemNotice` zeigt Updates als einzelnen schlichten Button mittig an der oberen Fensterkante. Reine UI-Builds bieten „Aktualisieren“ an und laden ausschließlich die Seite neu. Nur geänderter Laufzeitcode beziehungsweise Laufzeitabhängigkeiten bieten „Neustarten“ an. Buildskript, UI-Quellen, Paketversion und reine Entwicklungsabhängigkeiten lösen keinen Serverneustart aus; serverseitig importierte gemeinsame UI-Module zählen dagegen zum Laufzeitcode. Fehler und Anmeldehinweise behalten ihre erklärende Benachrichtigung. Kein automatisches Neuladen oder Neustarten. Nach einem Neustart bleibt das Neuladen ausdrücklich wählbar, damit Entwürfe nicht unerwartet verloren gehen. Routine-Speicherbestätigungen entfallen; tatsächliche Fehler bleiben erreichbar.
 
 Bei einer fehlenden oder abgelaufenen Anmeldung hat „Bitte erneut anmelden“ Vorrang
@@ -52,9 +56,9 @@ Der Neustart prüft alle laufenden Turns, Übergaben und Sprachsessions serverse
 
 ## Globale Suche
 
-Der Einstieg in der Seitenleiste und Cmd/Ctrl+K öffnen denselben nativen Suchdialog. Er verwendet die randlose transparente gemeinsame Glasfläche mit Hintergrundunschärfe und eine zusätzlich um 8 px weichgezeichnete, über `overlay` abgedunkelte Kulisse. Das kompakte Suchfeld nutzt dieselbe dunkle Fläche wie die Seitenleistensuche (`workspace-backdrop`) ohne nativen Suchfeldrahmen. Schreibmarke und hervorgehobene Lupe zeigen Eingabefokus, Ergebniszeilen behalten sichtbaren Tastaturfokus. Nur die Trefferliste scrollt; ScrollEdgeFade mildert überlaufende Kanten über 8 px. Bei reduzierter Transparenz oder fehlender Blur-Unterstützung bleibt die Fläche deckend.
+Der Einstieg in der Seitenleiste und Cmd/Ctrl+K öffnen denselben nativen Suchdialog. Er verwendet die randlose transparente gemeinsame Glasfläche mit Hintergrundunschärfe und eine zusätzlich um 8 px weichgezeichnete, über `overlay` abgedunkelte Kulisse. Das kompakte Suchfeld nutzt dieselbe dunkle Fläche auf `workspace-backdrop` ohne nativen Suchfeldrahmen. Schreibmarke und hervorgehobene Lupe zeigen Eingabefokus, Ergebniszeilen behalten sichtbaren Tastaturfokus. Nur die Trefferliste scrollt; ScrollEdgeFade mildert überlaufende Kanten über 8 px. Bei reduzierter Transparenz oder fehlender Blur-Unterstützung bleibt die Fläche deckend.
 
-Chats erscheinen zuerst, danach Bibliotheksdateien/Artefakte, Wissen und Notizen, Aufträge, Skills, Projekte und Navigation. Leere Eingabe zeigt letzte Gespräche. Titel und lokale Gesprächsinhalte, Dateinamen/Pfade/Herkunft, indexierte Wissenstexte, Auftragsanweisungen sowie Skillnamen/-beschreibungen werden über die vorhandenen Quellen durchsucht; binäre Dateien erhalten keine erfundene Volltextsuche. Bibliotheks-, Skill- und Auftragskataloge werden pro Dialog geladen und bei Ladefehler erneut angefragt. Einzelne Ausfälle verdecken die übrigen Treffer nicht und werden benannt. Ergebnisse erscheinen bereits während weitere Quellen laden. Die Anzeige begrenzt auf 80 Datentreffer und nennt die gelieferte Trefferzahl.
+Chats erscheinen zuerst, danach Bibliotheksdateien/Artefakte, Wissen und Notizen, Aufträge, Skills, Workspaces und Navigation. Leere Eingabe zeigt letzte Gespräche. Titel und lokale Gesprächsinhalte, Dateinamen/Pfade/Herkunft, indexierte Wissenstexte, Auftragsanweisungen sowie Skillnamen/-beschreibungen werden über die vorhandenen Quellen durchsucht; binäre Dateien erhalten keine erfundene Volltextsuche. Bibliotheks-, Skill- und Auftragskataloge werden pro Dialog geladen und bei Ladefehler erneut angefragt. Einzelne Ausfälle verdecken die übrigen Treffer nicht und werden benannt. Ergebnisse erscheinen bereits während weitere Quellen laden. Die Anzeige begrenzt auf 80 Datentreffer und nennt die gelieferte Trefferzahl.
 
 Pfeiltasten navigieren, Enter öffnet, Escape schließt. Dateien, Notizen, Skills und Aufträge öffnen ihre vorhandenen Detailansichten, verwaltete Systemaufträge ihre Einstellungen. Eine Auswahl startet keinen Auftrag und führt keinen Skill aus.
 

@@ -15,6 +15,8 @@ export function ChatMenu({
   className = "",
   selected,
   footer,
+  header = /** @type {React.ReactNode} */ (null),
+  menuClassName = "",
   disabled = false,
   placement = "auto",
 }) {
@@ -53,11 +55,19 @@ export function ChatMenu({
       )
         close(false);
     };
+    const shortcut = (e) => {
+      if ((e.metaKey || e.ctrlKey) && ["k", "n", ","].includes(e.key.toLowerCase())) close(false);
+    };
+    const observer = new ResizeObserver(place);
+    observer.observe(popup.current);
     document.addEventListener("pointerdown", outside);
+    window.addEventListener("keydown", shortcut);
     window.addEventListener("resize", place);
     window.addEventListener("scroll", place, true);
     return () => {
       document.removeEventListener("pointerdown", outside);
+      window.removeEventListener("keydown", shortcut);
+      observer.disconnect();
       window.removeEventListener("resize", place);
       window.removeEventListener("scroll", place, true);
     };
@@ -91,7 +101,7 @@ export function ChatMenu({
             id={id}
             role="menu"
             aria-label={label}
-            className="chat-dropdown"
+            className={`chat-dropdown ${menuClassName}`}
             style={position}
             onKeyDown={(e) => {
               if (e.key === "Escape") {
@@ -119,6 +129,7 @@ export function ChatMenu({
               }
             }}
           >
+            {header}
             {items.map((item) => (
               <button
                 type="button"
@@ -197,126 +208,6 @@ export function ChatTitle({ session, compact = false, extraItems = [] }) {
       <span className="title-text">{session.title}</span>
       <ChevronDown size={14} /></>}
     </ChatMenu>
-  );
-}
-export function ConnectionStatus({ connectionState }) {
-  const [status, setStatus] = useState(null),
-    [open, setOpen] = useState(false);
-  const id = useId(),
-    trigger = useRef(null),
-    popup = useRef(null);
-  useEffect(() => {
-    let disposed = false,
-      controller;
-    const measure = async () => {
-      controller?.abort();
-      controller = new AbortController();
-      const timeout = setTimeout(() => controller.abort(), 8000),
-        start = performance.now();
-      try {
-        const response = await fetch("/api/status", {
-          cache: "no-store",
-          signal: controller.signal,
-        });
-        if (!response.ok) throw Error();
-        const data = await response.json();
-        if (!disposed)
-          setStatus({
-            ...data,
-            latency: Math.round(performance.now() - start),
-            online: true,
-          });
-      } catch {
-        if (!disposed) setStatus({ online: false });
-      } finally {
-        clearTimeout(timeout);
-      }
-    };
-    measure();
-    const interval = setInterval(measure, 30000);
-    return () => {
-      disposed = true;
-      controller?.abort();
-      clearInterval(interval);
-    };
-  }, [open]);
-  useEffect(() => {
-    if (!open) return;
-    const outside = (e) => {
-      if (
-        !trigger.current?.contains(e.target) &&
-        !popup.current?.contains(e.target)
-      )
-        setOpen(false);
-    };
-    document.addEventListener("pointerdown", outside);
-    return () => document.removeEventListener("pointerdown", outside);
-  }, [open]);
-  const online = connectionState === "online" && status?.online !== false;
-  const rect = open ? trigger.current?.getBoundingClientRect() : null;
-  return (
-    <>
-      <button
-        ref={trigger}
-        type="button"
-        className="connection-status-button"
-        aria-label={`Serverstatus: ${online ? "verbunden" : "Verbindung unterbrochen"}`}
-        aria-describedby={open ? id : undefined}
-        onMouseEnter={() => setOpen(true)}
-        onMouseLeave={() => setOpen(false)}
-        onFocus={() => setOpen(true)}
-        onBlur={() => setOpen(false)}
-        onClick={() => setOpen(true)}
-        onKeyDown={(e) => {
-          if (e.key === "Escape") setOpen(false);
-        }}
-      >
-        <span className={`status-dot ${online ? "online" : "offline"}`} />
-      </button>
-      {open &&
-        rect &&
-        createPortal(
-          <div
-            ref={popup}
-            id={id}
-            role="tooltip"
-            className="connection-tooltip"
-            style={{
-              left: Math.max(
-                12,
-                Math.min(rect.right - 280, window.innerWidth - 292),
-              ),
-              bottom: window.innerHeight - rect.top + 8,
-            }}
-          >
-            <strong>
-              {status?.online === false
-                ? "Server nicht erreichbar"
-                : status
-                  ? "Server aktiv"
-                  : "Server wird geprüft …"}
-            </strong>
-            <dl>
-              <dt>Server</dt>
-              <dd>{window.location.host}</dd>
-              <dt>Engine</dt>
-              <dd>
-                {status?.engine?.name || "Codex"} ·{" "}
-                {online && status?.engine?.connected !== false
-                  ? "verbunden"
-                  : connectionState === "reconnecting"
-                    ? "verbindet …"
-                    : "offline"}
-              </dd>
-              <dt>Server-Antwortzeit</dt>
-              <dd>
-                {status?.online ? `${status.latency} ms` : "Nicht verfügbar"}
-              </dd>
-            </dl>
-          </div>,
-          document.body,
-        )}
-    </>
   );
 }
 export function PaneDivider({ onResize, value = 50, label = "Chat-Breite ändern", min = 0, max = 100, onReset }) {
