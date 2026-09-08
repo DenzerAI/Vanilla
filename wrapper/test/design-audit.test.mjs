@@ -79,15 +79,18 @@ test('a real production build refuses a new bad stylesheet before replacing dist
 test('adoption gate rejects a different working copy instead of approving the staged UI',async()=>{
  const {spawnSync}=await import('node:child_process');
  const {fileURLToPath}=await import('node:url');
+ // A pre-commit hook exports its real worktree/index. The fixture must own its Git state.
+ const env=Object.fromEntries(Object.entries(process.env).filter(([key])=>!key.startsWith('GIT_')));
  const root=await mkdtemp(path.join(os.tmpdir(),'design-adoption-'));
  try{
   await mkdir(path.join(root,'wrapper/ui'),{recursive:true});
-  spawnSync('git',['init','-q'],{cwd:root});
+  const initialized=spawnSync('git',['init','-q'],{cwd:root,env});
+  assert.equal(initialized.status,0);
   const file=path.join(root,'wrapper/ui/new.css');await writeFile(file,'.a{padding:0}');
-  assert.equal(spawnSync('git',['add','.'],{cwd:root}).status,0);
+  assert.equal(spawnSync('git',['add','.'],{cwd:root,env}).status,0);
   await writeFile(file,'.a{padding:13px}');
   const script=fileURLToPath(new URL('../../scripts/verify-design-adoption.mjs',import.meta.url));
-  const result=spawnSync(process.execPath,[script,'commit'],{cwd:root,encoding:'utf8'});
+  const result=spawnSync(process.execPath,[script,'commit'],{cwd:root,env,encoding:'utf8'});
   assert.notEqual(result.status,0);assert.match(result.stderr,/staged and working UI differ/);
  }finally{await rm(root,{recursive:true,force:true});}
 });

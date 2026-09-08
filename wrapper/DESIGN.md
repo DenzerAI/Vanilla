@@ -198,6 +198,19 @@ an Schriftgröße oder Panelbreite wird die Höhe neu gemessen.
 
 ## Schwebende Chatnavigation und Eingabe
 
+Die Startvorschläge verwenden `WelcomeSuggestions`: flache, vollständig runde
+Pillen mit `control-height` (32 px) und der transparenten Rolle
+`suggestion-glass`, 40 px Hintergrundunschärfe und ohne Rahmen oder Schatten.
+Hover und Tastaturfokus nutzen `suggestion-glass-hover`; der sichtbare Fokus
+bleibt erhalten. Die Farbrollen folgen der aktiven Farbwelt. In schmalen
+Vorschlagsgruppen bis 620 px wechseln sie von small zu caption und blenden die
+dekorativen Pfeile aus. Die Gruppe bricht nach verfügbarem Platz um, statt
+alle Vorschläge in volle Zeilen zu zwingen. Auf Touch bleibt die äußere
+Trefferfläche mindestens 44 px hoch, während die sichtbare Pille flach bleibt.
+Lange Texte dürfen wachsen und umbrechen. Ohne Blur oder bei reduzierter
+Transparenz gelten surface/raised als deckende Ersatzflächen. Unser Design
+verwendet denselben Baustein mit einer lokalen Entwurfsvorschau.
+
 Die Seitenleiste ist eine nach innen versetzte Fläche mit großen Rundungen und Abstand zum Fensterrand. Der Composer verwendet die getönte Farbrolle `composer-blur` mit 40 px Hintergrundunschärfe, verstärkter Sättigung und einer dezenten inneren Glaskante aus `composer-glass-shadow`. Bei reduzierter Transparenz oder fehlender Blur-Unterstützung bleibt die Fläche deckend. Der Verlauf läuft dahinter weiter; sein Endabstand passt sich der Eingabehöhe an. Der Reiseeffekt ist unter Aussehen für neue oder alle Chats wählbar.
 
 Die Einzelansicht zeigt oben nur schwebende Kopfaktionen einschließlich kompaktem Chatmenü. Der Verlauf fadet oben und unter der Schreibfläche aus; Modus und Modell stehen frei auf der Grundfarbe. ScrollEdgeFade blendet scrollende Chat- und Suchlisten ausschließlich an überlaufenden Kanten über den bestehenden 8-px-Abstand aus. Auswahlfläche und Fokus bleiben außerhalb dieses schmalen Randes klar; im erzwungenen Kontrastmodus entfällt die Maske. Lange Seitenleistennamen verwenden am rechten Textrand einen Fade statt Auslassungspunkten, die Ziehkante bleibt im Ruhezustand unsichtbar. Mikrofon und Senden teilen kreisrunde Bedienflächen.
@@ -208,7 +221,7 @@ Die vom Nutzer gelieferten Finder- und Systemeinstellungsbilder bestimmen die
 Formensprache: flache Gruppen, dünne eingerückte Trennlinien, links klare Labels,
 rechts kompakte Steuerungen. Begriffe und Funktionen bleiben produktspezifisch.
 Aktionsbuttons sind horizontal mit 6-px-Rundung; Vollrundung gehört zu Schaltern,
-Iconflächen und dem Composer, niemals zu mehrzeiligen Listeninhalten.
+Iconflächen, den kompakten Startvorschlägen und dem Composer, niemals zu mehrzeiligen Listeninhalten.
 Schalter zeigen eine 36 × 20 px neutrale Spur mit vollständig innenliegendem
 16-px-Griff. Die Trefferfläche ist unabhängig davon 40 px, bei Touch 44 px.
 Die Griffposition ist absolut und darf nicht durch Button-Flexregeln verschoben

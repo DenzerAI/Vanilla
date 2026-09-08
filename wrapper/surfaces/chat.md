@@ -94,6 +94,21 @@ Nachrichtenanschlüsse verwenden normale Worker-Sessions mit persistenter connec
 
 Chats stehen je Projekt nach letzter Aktivität absteigend. Angeheftete Chats bilden eine eigene Gruppe; danach gliedern dezente beschriftete Linien die sichtbaren Chats in Heute, Gestern, Letzte 7 Tage, Letzte 30 Tage und Älter. Leere Gruppen entfallen. Es gelten lokale Kalendertage; standardmäßig sind alle Chats im Scrollbereich sichtbar. „Weniger anzeigen“ begrenzt bei Bedarf auf fünf aktuelle Chats plus angepinnte Gespräche. Chatzeilen sind am Desktop mindestens 32 px hoch, bei größerer Schrift dürfen sie wachsen; Touch-Zeilen bleiben mindestens 44 px hoch. Gruppentitel und Chatnamen teilen die Textkante der Navigation, Status und Chataktionen eine gemeinsame linke Symbolspalte vor dem Chatnamen.
 
+## Startvorschläge
+
+Die drei Startvorschläge stehen als `WelcomeSuggestions` unter der Begrüßung.
+Ihre sichtbare Glasfläche ist mindestens 32 px hoch, vollständig abgerundet,
+stark transparent und mit 40 px Blur, ohne Rahmen oder Schatten. Abstände,
+Schrift und transparente Farbrollen kommen aus der zentralen Designquelle.
+Bis 620 px Gruppenbreite verwenden sie caption statt small und verzichten auf
+die dekorativen Pfeile. Die vollständigen Beschriftungen bleiben erhalten;
+Pillen umbrechen nach verfügbarem Platz und werden nicht auf gleiche Breite
+gestreckt. Touchziele sind unabhängig von der sichtbaren Fläche mindestens
+44 px hoch. Große Schrift und lange Texte dürfen die Pillen vergrößern.
+Hover, Fokus, deaktivierter Zustand und deckende Ersatzflächen bei reduzierter
+Transparenz beziehungsweise fehlendem Blur bleiben unterstützt. Eine Auswahl
+füllt wie bisher nur den Entwurf und fokussiert die Eingabe; sie sendet nichts.
+
 ## Reiseeffekt im Chat
 
 Neue Chats ohne Gespräch zeigen standardmäßig dezente Lichtpunkte in drei Tiefenebenen, die langsam aus der Mitte nach außen wandern und sanft pulsieren. Inhalt und Layout bleiben unverändert. Unter Aussehen → Visuell → Reiseeffekt stehen „Aus“, „Nur neue Chats“ (Standard) und „Alle Chats“ dauerhaft zur Auswahl. „Alle Chats“ zeigt den Effekt auch hinter bestehenden Gesprächen in jedem sichtbaren Panel. Reduzierte Bewegung in App oder System zeigt ruhende Punkte; unsichtbare Ansichten pausieren.

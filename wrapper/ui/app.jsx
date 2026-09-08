@@ -1,4 +1,5 @@
 import { InboxPage } from "./inbox";
+import { WelcomeSuggestions } from "./welcome-suggestions";
 import { PanelLight } from "./panel-light";
 import {Skeleton} from './skeleton.tsx';
 import { MessageSpeech } from "./message-speech";
@@ -1853,37 +1854,10 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                   <div className="welcome agent-chat-welcome">
                     <Avatar avatar={boot.settings.avatar} color={boot.settings.avatarColor} large />
                     <h1>{greeting}</h1>
-                    <div className="suggestions">
-                      {[
-                        [
-                          FileText,
-                          "Datei zusammenfassen",
-                          "Lies input/beispiel.md und fasse die nächsten Schritte kurz zusammen.",
-                        ],
-                        [
-                          BrainCircuit,
-                          "Gemeinsam planen",
-                          "Lass uns einen Arbeitsablauf planen. Stelle mir zuerst eine gezielte Frage.",
-                        ],
-                        [
-                          FolderOpen,
-                          "Projekt erkunden",
-                          "Zeige mir die Ordnerstruktur dieses Projekts und erkläre sie kurz.",
-                        ],
-                      ].map(([I, label, prompt]) => (
-                        <button
-                          key={label}
-                          onClick={() => {
-                            setText(prompt);
-                            inputRef.current.focus();
-                          }}
-                        >
-                          {icon(I, 17)}
-                          {label}
-                          {icon(ArrowUpRight, 14)}
-                        </button>
-                      ))}
-                    </div>
+                    <WelcomeSuggestions onSelect={prompt => {
+                      setText(prompt);
+                      inputRef.current.focus();
+                    }} />
                   </div>
                 ) : (
                   <div className="message-column">
