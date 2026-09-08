@@ -202,3 +202,48 @@ lokaler Agent und Start vor FileVault-Anmeldung sind kein Teil dieser Stufe.
 WebSockets sind für das bestehende Server-Streaming nicht erforderlich. Für eine
 vollständig netzfreie Neuinstallation müssen Modell- und Laufzeitarchive separat
 bereitgehalten werden; das bereinigte Git-Repository enthält keine Modellgewichte.
+
+## Chat-Routinen und Ergebniszustellung
+
+`core/routines.py` erweitert den bestehenden stdio-MCP-Anschluss um vier
+Routine-Werkzeuge. Die Laufzeit erhält dieselben Job-Manifeste wie das Formular.
+Create verwendet einen stabilen requestKey pro Beauftragung, Update eine Revision;
+Projekt-ID und Worker-Bereitschaft werden geprüft. Neue Wochen-/Einmalpläne
+werden in beiden Manifestlesern validiert. Zeitzonen sind IANA-Namen, einmalige
+Zeitpunkte enthalten einen UTC-Offset. Einmalige verpasste Termine werden einmal
+nachgeholt; tägliche Pläne höchstens für den heutigen Tag. Intervalle neuer
+Routinen beginnen nach einem vollen Intervall ab Aktivierung. Ein belegter
+Zeitpunkt wird nicht erneut ausgeführt; ein aktiver Lauf bleibt exklusiv.
+
+`job_snapshot` in executions hält die Benachrichtigungsregel des angenommenen
+Laufs fest. `job_notifications` speichert Abschluss und Ergebnistext in derselben
+Transaktion wie den Laufabschluss, mit Ausführungs-ID als eindeutiger Kennung.
+Systemerfolge bleiben standardmäßig still; Rückfragen bekommen pro Lauf eine
+separate, deduplizierte Attention-Meldung. Lesemarker werden nicht durch Polling
+oder einen Browserneustart zurückgesetzt. Die bestehenden SSE-Ereignisse melden
+Änderungen; HTTP lädt auch nach Verbindungsunterbrechung dauerhaft gespeicherte
+Meldungen nach. Ausführungsresultate enthalten die öffentliche finale Antwort.
+
+Externe Meldungen verwenden die vorhandenen ChannelRuntime-Sender. Ziele werden
+aus erlaubten Nutzern vorhandener Telegram-/WhatsApp-Verbindungen abgeleitet;
+willkürliche Empfänger, WhatsApp Business und Mail sind kein Zustellziel dieser
+Stufe. Ein einmal gewählter Standard gilt für neu erstellte Routinen; bestehende
+Jobs behalten ihren gespeicherten Weg. Keine Schlüsselkopie, kein automatischer
+Start von Empfängern. Vor jedem Versand werden Verbindung und Freigabe erneut
+geprüft. Der Adapter-Versand ist am öffentlichen Kernendpunkt gesperrt.
+
+Versandzustände: pending, sending, sent, failed, unknown. Vor dem Netzwerkaufruf
+wird sending persistiert. Nach Timeout oder Neustart während sending bleibt die
+Zustellung unknown und wird nicht automatisch wiederholt. App-Ergebnis und
+Versandstatus sind unabhängig; sent bedeutet Anbieterannahme, nicht gelesen.
+App-Hinweise funktionieren bei geöffnetem Browser, externe Meldungen ohne ihn.
+Der Host muss eingeschaltet, wach und der Dienst aktiv sein. Der Browser fragt
+Gerätehinweise ausschließlich nach Nutzeraktion an; kein Hintergrund-Web-Push.
+Referenz: [Notifications API](https://developer.mozilla.org/en-US/docs/Web/API/Notifications_API/Using_the_Notifications_API).
+
+Prüfung: `core/tests/test_routines.py` für Zeitpläne, Idempotenz, Projekte,
+Rückfragen, Wiederanlauf und unklare Zustellung; `test_integration.py` führt
+Routine-Werkzeug → echten Python-/Node-Anschluss → simulierten Worker →
+Benachrichtigung einschließlich Neustart aus. `job-notifications.test.mjs`
+prüft erlaubte Ziele und dass Laufabschluss keine aktuelle Bearbeitung oder
+Pause überschreibt. Diese Prüfungen versenden keine echten Nachrichten.

@@ -247,3 +247,16 @@ Claude Code lädt seine echten Modelle beim Öffnen einer leeren nativen Sitzung
 
 
 Die Eingabenavigation verwendet `ChapterScrubber` unter `ui/components/ui`. Position links bei 20 % und maximale Höhe 45 % bleiben erhalten. Eine gemeinsame Federbewegung erzeugt eine Kosinuswelle über benachbarte Striche; die einzelne Glasvorschau folgt innerhalb des Panels. Die Werte stehen in `scrubberSprings`. Klick und Enter springen weiterhin zur Nutzernachricht; Pfeiltasten, Home und End steuern den einzigen Tabstopp. App- und Systemvorgaben für reduzierte Bewegung zeigen die Welle ohne zeitliche Animation. Keine dauerhafte Dekoration.
+
+## Routinen beauftragen
+
+Der Chat verwendet die gemeinsamen Routine-MCP-Werkzeuge. Die aktuelle Projekt-ID
+wird frisch mitgegeben. Bei wiederkehrenden Aufgaben zuerst Fähigkeiten,
+Datenquellen, Termin und Benachrichtigungsziel klären; nur entscheidende Lücken
+nachfragen. Eine eindeutige Beauftragung genügt zum Aktivieren. Nach erfolgreichem
+Speichern nennt die Antwort den nächsten Termin, Zeitzone und Zustellweg.
+Eine spätere Änderung oder Pause liest erst den aktuellen Stand mit Revision.
+Kein eigenes Cron-Skript und keine bloße Zusage bei fehlendem Werkzeug.
+Benachrichtigung und Ergebnis öffnen den tatsächlichen Lauf beziehungsweise
+seinen Chat; der Ursprungschat wird nicht mit künstlichen Turns beschrieben.
+Der verbindliche Ablauf steht unter [Aufträge](jobs.md#routinen-aus-dem-chat-und-benachrichtigungen).

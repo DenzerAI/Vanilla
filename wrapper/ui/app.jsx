@@ -1,3 +1,4 @@
+import {useJobNotifications, JobNotifications, NotificationPreference} from "./job-notifications.jsx";
 import { ChapterScrubber } from "./components/ui/chapter-scrubber";
 import { PipelinePage } from "./pipeline";
 import { InboxPage } from "./inbox";
@@ -619,7 +620,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const systemNoticeRef = useRef(null);
   const [boot, setBoot] = useState(null),
     [audioConnections, setAudioConnections] = useState({Groq:false, ElevenLabs:false}),
-    [view, setView] = useState(() => !embedded && ["inbox", "pipeline"].includes(new URLSearchParams(window.location.search).get("view")) ? new URLSearchParams(window.location.search).get("view") : "chat"),
+    [view, setView] = useState(() => !embedded && ["inbox", "pipeline", "jobs"].includes(new URLSearchParams(window.location.search).get("view")) ? new URLSearchParams(window.location.search).get("view") : "chat"),
     [chatId, setChatId] = useState(null),
     [thread, setThread] = useState(null),
     [chats, setChats] = useState([]),
@@ -1649,6 +1650,14 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     }, 700);
     return () => clearTimeout(timer);
   }, [foreground, view, readablePane, awayFromBottom, running, thread, chatId, current?.lastCompletedTurnId, current?.readTurnId]);
+  const notificationState = useJobNotifications(api, !!boot?.features?.routines && !embedded, notify);
+  useEffect(()=>{
+    const open=()=>setModal('notifications');
+    const notificationId=new URLSearchParams(window.location.search).get('notification');
+    if(notificationId)setModal({type:'notifications',id:notificationId});
+    window.addEventListener('open-job-notifications',open);
+    return()=>window.removeEventListener('open-job-notifications',open);
+  },[]);
   const MainSurface = embedded ? "div" : "main";
   if (!boot)
     return (
@@ -1672,7 +1681,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         <div className="sidebar-resizer"><PaneDivider label="Seitenleistenbreite ändern" value={sidebarWidth} min={220} max={400} onReset={()=>setSidebarWidth(268)} onResize={delta=>setSidebarWidth(width=>Math.max(220,Math.min(400,width+delta)))}/></div>
         {view !== "inbox" && <div className="sidebar-topbar">
           <button className="sidebar-search" aria-label="System durchsuchen" title="System durchsuchen (⌘/Strg K)" onClick={()=>{setSearch("");setModal("search");}}>{icon(Search,18)}<span>Suche</span></button>
-          {requests.length > 0 && <IconButton label="Offene Rückfragen" onClick={()=>setModal("activity")}>{icon(Bell,17)}<i className="notification-dot"/></IconButton>}
+          {boot.features?.routines ? <IconButton label={`Benachrichtigungen${notificationState.data?.unread ? ` · ${notificationState.data.unread} ungelesen` : ''}${requests.length ? ` · ${requests.length} Rückfragen` : ''}`} onClick={()=>setModal("notifications")}>{icon(Bell,17)}{(notificationState.data?.unread>0||requests.length>0)&&<i className="notification-dot"/>}</IconButton> : requests.length > 0 && <IconButton label="Offene Rückfragen" onClick={()=>setModal("activity")}>{icon(Bell,17)}<i className="notification-dot"/></IconButton>}
           <IconButton
             label="Seitenleiste ausblenden"
             onClick={() => setSidebar(false)}
@@ -2242,10 +2251,11 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         ) : view === "jobs" ? (
           <div className="page">
             <PageHeading title="Aufträge" onShowSidebar={!sidebar ? () => setSidebar(true) : undefined}>
+              {boot.features?.routines&&<IconButton label="Benachrichtigungen öffnen" onClick={()=>setModal("notifications")}>{icon(Bell,17)}{notificationState.data?.unread>0&&<i className="notification-dot"/>}</IconButton>}
               <button className="primary small-button" onClick={() => setModal({ type: "job" })}>{icon(Plus, 16)}Erstellen</button>
             </PageHeading>
             <p className="section-intro">
-              Aufgaben starten, Routinen planen und Ausführungen nachvollziehen.
+              Im Chat beauftragen. Hier Routinen ändern, pausieren und Ergebnisse öffnen.
             </p>
             <SearchBox
               value={search}
@@ -2257,7 +2267,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 ["all", "Alle"],
                 ["manual", "Manuell"],
                 ["scheduled", "Routinen"],
-                ["attention", "Probleme"],
+                ["attention", "Braucht Aufmerksamkeit"],
                 ["templates", "Vorlagen"],
               ].map(([id, label]) => (
                 <button
@@ -2295,6 +2305,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       ? "Auftrag nicht lesbar"
                       : j.schedule?.type === "interval" ? `Alle ${j.schedule.minutes} Minuten`
                       : j.schedule?.type === "event" ? `Bei ${j.schedule.event}`
+                      : j.schedule?.type === "once" ? `Einmal am ${new Date(j.schedule.at).toLocaleString("de-DE")}`
+                      : j.schedule?.type === "weekly" ? `${j.schedule.days.map(d=>["Mo","Di","Mi","Do","Fr","Sa","So"][d]).join(", ")} um ${j.schedule.time}`
                       : j.schedule?.type === "manual"
                         ? "Manuell"
                         : (j.schedule?.type === "weekdays"
@@ -3127,6 +3139,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       {modal?.type==='skill-hub'&&<Modal title="Skill hinzufügen" onClose={()=>setModal(null)}><SkillHub api={api} Field={Field} onSelect={skill=>setModal({type:'skill',skill})} onCreated={()=>setModal({type:'skill-create'})}/></Modal>}
       {modal?.type==='skill-create'&&<Modal title="Eigenen Skill erstellen" onClose={()=>setModal(null)}><CreateSkillForm api={api} Field={Field} onCreated={async()=>{await loadSkills();setModal(null);}}/></Modal>}
       {modal?.type==='tailscale'&&<Modal title="Tailscale" onClose={()=>setModal(null)}><TailscaleConnection api={api}/></Modal>}
+      {(modal === 'notifications'||modal?.type==='notifications') && <Modal title="Benachrichtigungen" onClose={()=>setModal(null)}><JobNotifications initialId={modal?.id} api={api} state={notificationState} Field={Field} requests={requests.length} onRequests={()=>setModal('activity')} onChat={async id=>{setModal(null);await openChat(id);}} onRun={item=>setModal({type:'job-run',job:{name:item.title,lastRun:{coreRunId:item.id.replace(/^attention-/,'')}}})}/></Modal>}
       {modal?.type === "job-run" && (
         <Modal title={modal.job.name} onClose={() => setModal(null)}>
           {modal.job.lastRun.coreRunId ? <CoreRunDetails api={api} id={modal.job.lastRun.coreRunId}/> : <>
@@ -3208,6 +3221,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
           onClose={() => setModal(null)}
         >
           <JobForm
+            routines={!!boot.features?.routines}
             initialTemplate={modal.template}
             workers={boot.workers || []}
             job={modal.job}
@@ -3248,7 +3262,7 @@ function SearchBox({ value, onChange, placeholder, autoFocus }) {
     </div>
   );
 }
-function JobForm({ job, initialTemplate, connections, workers, onSave }) {
+function JobForm({ job, initialTemplate, connections, workers, onSave, routines }) {
   const [templateId, setTemplateId] = useState(initialTemplate?.id || "");
   const template = jobTemplates.find(t => t.id === templateId);
   const [draft, setDraft] = useState(() => job || (initialTemplate ? jobFromTemplate(initialTemplate.id) : {}));
@@ -3267,11 +3281,16 @@ function JobForm({ job, initialTemplate, connections, workers, onSave }) {
           worker,
           connectionId: f.get("connectionId"),
           ...(worker==='python'?{python:{handler:'script',script:f.get('script'),timeout:Number(f.get('timeout')),input:JSON.parse(String(f.get('pythonInput')||'{}'))},retry:{count:Number(f.get('retries')||0),idempotent:f.get('idempotent')==='on'}}:{}),
+          ...(f.get('notificationTarget') ? {notification:{target:f.get('notificationTarget'),when:f.get('notificationWhen')||'always'}} : {}),
           schedule: {
+            ...(job?.schedule?.timezone ? {timezone:job.schedule.timezone} : {}),
+            ...(job?.schedule?.startAt ? {startAt:job.schedule.startAt} : {}),
             type: schedule,
-            ...(['daily','weekdays'].includes(schedule) ? { time: f.get("time") } : {}),
+            ...(['daily','weekdays','weekly'].includes(schedule) ? { time: f.get("time") } : {}),
             ...(schedule==='interval'?{minutes:Number(f.get('minutes'))}:{}),
-            ...(schedule==='event'?{event:f.get('event')}:{})
+            ...(schedule==='event'?{event:f.get('event')}:{}),
+            ...(schedule==='weekly'?{days:f.getAll('days').map(Number)}:{}),
+            ...(schedule==='once'?{at:new Date(String(f.get('at'))).toISOString()}:{})
           },
           status: schedule !== "manual" && active ? "active" : "paused",
         });
@@ -3332,6 +3351,7 @@ function JobForm({ job, initialTemplate, connections, workers, onSave }) {
             <option value="manual">Nur manuell</option>
             <option value="daily">Täglich</option>
             <option value="weekdays">Werktags</option>
+            {routines&&<><option value="weekly">Wöchentlich</option><option value="once">Einmal</option></>}
             <option value="interval">Intervall</option>
             <option value="event">Bei Ereignis</option>
           </select>
@@ -3365,8 +3385,8 @@ function JobForm({ job, initialTemplate, connections, workers, onSave }) {
           </select>
         </Field>
       )}
-      {["daily","weekdays"].includes(schedule) && (
-        <Field label="Uhrzeit · lokale Zeitzone des Macs">
+      {["daily","weekdays","weekly"].includes(schedule) && (
+        <Field label={`Uhrzeit · ${job?.schedule?.timezone || "Zeitzone der Schaltzentrale"}`}>
           <input
             name="time"
             type="time"
@@ -3376,6 +3396,9 @@ function JobForm({ job, initialTemplate, connections, workers, onSave }) {
           />
         </Field>
       )}
+      {schedule==='weekly'&&<Field label="Wochentage"><div className="row job-weekdays">{['Mo','Di','Mi','Do','Fr','Sa','So'].map((label,day)=><label key={day} className="checkbox-label"><input type="checkbox" name="days" value={day} defaultChecked={(job?.schedule?.days||[0]).includes(day)}/>{label}</label>)}</div></Field>}
+      {schedule==='once'&&<Field label="Termin · Zeitzone dieses Geräts"><input type="datetime-local" name="at" required defaultValue={job?.schedule?.at ? new Date(new Date(job.schedule.at).getTime()-new Date(job.schedule.at).getTimezoneOffset()*60000).toISOString().slice(0,16) : ''}/></Field>}
+      {routines&&<NotificationPreference api={api} Field={Field} job={job} form/>}
       <div className="row between">
         {schedule !== "manual" ? (
           <label className="checkbox-label">

@@ -13,6 +13,7 @@ import httpx
 from .files import atomic_write
 from .storage import safe_path
 from .streaming import StreamHub
+from .notifications import Notifications
 
 
 class Runtime:
@@ -36,6 +37,7 @@ class Runtime:
         self.maintenance_lock = asyncio.Lock()
         self.client = httpx.AsyncClient(timeout=httpx.Timeout(60, connect=3), trust_env=False)
         self.stream = StreamHub(self, queue.db)
+        self.notifications = Notifications(queue.db)
         if operations:
             operations.runtime = self
 
@@ -67,12 +69,24 @@ class Runtime:
         self.last_adapter_check = 0
 
     async def start(self):
+        self.notifications.recover()
         if self.config.start_adapter:
             await self.spawn_adapter()
         await self.stream.start()
         if self.operations:
             self.operations.update_monitor()
-        self.tasks = [asyncio.create_task(self.run_jobs()), asyncio.create_task(self.index_files()), asyncio.create_task(self.maintain())]
+        self.tasks = [asyncio.create_task(self.run_jobs()), asyncio.create_task(self.deliver_notifications()), asyncio.create_task(self.index_files()), asyncio.create_task(self.maintain())]
+
+    async def deliver_notifications(self):
+        while True:
+            try:
+                if self.config.start_adapter:
+                    await self.notifications.deliver_next(self)
+            except asyncio.CancelledError:
+                raise
+            except Exception:
+                self.queue.db.event('notification.error', None, {'error': 'Benachrichtigungsdienst wird erneut geprüft.'})
+            await asyncio.sleep(3)
 
     async def supervise(self):
         if not self.config.start_adapter:
