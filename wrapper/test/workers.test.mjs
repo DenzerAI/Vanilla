@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { EventEmitter, once } from "node:events";
-import { mkdtemp, rm, writeFile, mkdir, readFile } from "node:fs/promises";
+import { mkdtemp, rm, writeFile, mkdir, readFile, stat } from "node:fs/promises";
 import path from "node:path";
 import { Workers, findWorkerCommand, installWorkerRoutes } from "../workers.mjs";
 import { ACPWorker } from "../acp-worker.mjs";
@@ -64,6 +64,17 @@ test("concurrent connections share one adapter and one initialization", async t 
   const workers = new Workers({store, root: store.root, codex: new Adapter(), resolveCommand: async () => process.execPath, makeACP: () => { created++; return worker; }}); await workers.init();
   await Promise.all([workers.connect("hermes"), workers.connect("hermes")]);
   assert.equal(created, 1); assert.equal(starts, 1); assert.equal(workers.settings.enabled.filter(id => id === "hermes").length, 1);
+});
+test("Claude native state uses the installation data directory without changing other workers", async t => {
+  const {store}=await fixture(t), options=[];
+  const workers=new Workers({store,root:store.root,codex:new Adapter(),resolveCommand:async()=>process.execPath,makeACP:opts=>{options.push(opts);return new Adapter();}});
+  await workers.init();await workers.connect('claw-code');await workers.connect('hermes');
+  const claude=options.find(o=>o.id==='claw-code'),hermes=options.find(o=>o.id==='hermes');
+  assert.equal(claude.contextEnv.CLAUDE_CONFIG_DIR,path.join(store.dataRoot,'claude'));
+  assert.equal((await stat(claude.contextEnv.CLAUDE_CONFIG_DIR)).isDirectory(),true);
+  assert.equal(hermes.contextEnv.CLAUDE_CONFIG_DIR,undefined);
+  assert.equal(claude.contextEnv.UWE_WORKSPACE,store.root);
+  assert.ok(!Object.keys(claude.contextEnv).some(k=>/TOKEN|KEY|SECRET/.test(k)));
 });
 test("each job can use the catalog and legacy worker values stay pinned", async t => {
   const {store} = await fixture(t);

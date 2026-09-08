@@ -192,10 +192,17 @@ kein Prompt gesendet. Bereits angenommene Turns, auch fehlgeschlagene oder
 unterbrochene, werden niemals auf diesem Weg wiederholt oder ersetzt. Andere
 Ladefehler und nicht mehr verfügbare Einstellungen bleiben sichtbare Fehler.
 
-Die native Claude-Verlaufsspeicherung muss für den ausführenden Prozess
-beschreibbar sein. Der Wrapper-Export ersetzt sie nicht. Ein isolierter Prüflauf
-kann dafür `CLAUDE_CONFIG_DIR` in seinem eigenen Prüfverzeichnis verwenden;
-das verändert weder die Konfiguration noch den Zugang laufender Worker.
+Die native Claude-Verlaufsspeicherung verwendet wie Codex einen eigenen
+Installationsordner: standardmäßig `UWE_DATA_ROOT/claude`, übergeben als
+`CLAUDE_CONFIG_DIR`. Ein ausdrücklich konfigurierter absoluter
+`CLAUDE_CONFIG_DIR` hat Vorrang. Der Ordner wird vor dem Workerstart angelegt;
+ein Schreibfehler verhindert den Start. Der Wrapper-Export ersetzt den nativen
+Verlauf nicht. Anmeldung und Schlüsselverwaltung bleiben nativ, auch ein
+bereits im Prozess bereitgestellter OAuth-Zugang. Es werden keine globalen
+Claude-Konfigurationen oder Zugangsdaten kopiert. Wenn keine native Anmeldung
+für diesen Ordner vorliegt, die Claude-CLI mit demselben `CLAUDE_CONFIG_DIR`
+anmelden. Bestehende angenommene Sitzungen werden bei fehlendem nativen Verlauf
+nicht automatisch neu ausgeführt.
 
 Vorgemerkte Modellwahl: `/api/turn` akzeptiert `nextSelection: {model, effort}` für die nächste Antwort. Während eines aktiven Turns wird dieser Request abgewiesen, bevor `turn/steer` möglich ist. Im Leerlauf prüft Codex gegen den gemeldeten Katalog; ACP übernimmt Modell und Effort anhand aufeinanderfolgender nativer Antworten. Auswahl und Prompt bleiben unter derselben `turnLocks`-Sperre. Fehler verhindern die Promptübergabe.
 
