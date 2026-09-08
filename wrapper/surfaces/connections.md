@@ -58,3 +58,6 @@ Fehlen beim ersten Abruf eingerichtete Einträge, zeigt dieser Listenbereich
 den gemeinsamen List-Skeleton. Der lokal verfügbare Dienstekatalog und
 bereits geladene Verbindungen bleiben bedienbar. Fehler ersetzen den
 Platzhalter und behalten „Erneut laden“.
+
+
+Verbindungs-Skeletons verwenden integration-grid und integration-item mit originalem Iconplatz, Textzeilen und rechter Aktionsform; Desktop-/Mobile-Spalten entsprechen dem Katalog.

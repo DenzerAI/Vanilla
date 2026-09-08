@@ -48,7 +48,15 @@ export function DesignReference({ theme, tone, accent }) {
       {preview&&<LibraryPreview entry={{id:'example',name:'Dateivorschau',path:'output/beispiel',origin:'Designbeispiel'}} onClose={()=>setPreview(false)}><div className="library-preview"><p>Hier steht das Bild oder Dokument. Dateiaktionen bleiben im rechten Workspace; diese Großansicht zeigt ausschließlich den Inhalt.</p></div></LibraryPreview>}
       <h3 className="section-heading">Inhalte laden</h3>
       <p className="page-note">Platzhalter für Listen, Einstellungen, Gesprächsverläufe und Vorschauen. Vorhandene Inhalte bleiben beim Aktualisieren sichtbar. Reduzierte Bewegung zeigt ruhende Formen.</p>
-      <Skeleton variant="list" rows={2} announce={false}/>
+      <p className="page-note">Dateiliste: Name, Art und Datum</p>
+      <Skeleton layout="library-list" rows={3} announce={false}/>
+      <p className="page-note">Bildraster</p>
+      <Skeleton layout="library-grid" rows={3} announce={false}/>
+      <p className="page-note">Verbindungen und Skills</p>
+      <Skeleton layout="connections" rows={2} announce={false}/>
+      <Skeleton layout="skills" rows={2} announce={false}/>
+      <p className="page-note">Aufträge</p>
+      <Skeleton layout="jobs" rows={2} announce={false}/>
       <Skeleton variant="settings" rows={2} announce={false}/>
       <Skeleton variant="chat" announce={false}/>
       <Skeleton variant="document" rows={2} announce={false}/>

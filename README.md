@@ -1,12 +1,12 @@
-# Vanilla · Agent von Denzer AI
+# Vanilla
 
 Neutrale, weiterentwickelbare Basis mit Python/FastAPI, SQLite, React, dateibasiertem Wissen, Memory, Jobs und einem privaten Node-Adapter. Firmenwissen, Identität und Anbieterzugänge werden erst bei der Einrichtung ergänzt. Keine persönlichen Worker-Anmeldungen, Kundendaten oder Host-Datenbanken werden importiert.
 
-Öffentlicher Quellcode: [DenzerAI/Vanilla](https://github.com/DenzerAI/Vanilla). Dieser Entwicklungsstand enthält ausschließlich Anwendungsquellen, keine privaten Git-Verläufe oder Installationsdaten.
+Öffentlicher Quellcode: [DenzerAI/Vanilla](https://github.com/DenzerAI/Vanilla). Dieses Projekt heißt Vanilla. Das Repository enthält die Anwendungsquellen; Installationsdaten und Zugangsdaten bleiben lokal.
 
 ## Aktueller Abnahmestand, 07.09.2026
 
-Die neutrale Entwicklungsvorschau läuft auf Port **21989**, der private Adapter auf **21990**. Die gebaute Oberfläche und ihre Assets sind über Tailscale-HTTPS erreichbar. Ein eigener Supervisor startet den Dienst nach einem Prozessende erneut; der geregelte App-Neustart wurde geprüft. Automatischer Start nach einem Host-Neustart ist noch nicht abgenommen. Hostadressen und Zugangsdaten werden je Installation eingerichtet.
+Die neutrale Entwicklungsvorschau läuft auf Port **21989**, der private Adapter auf **21990**. Die gebaute Oberfläche und ihre Assets sind über Tailscale-HTTPS erreichbar. Ein eigener Supervisor startet den Dienst nach einem Prozessende erneut; der geregelte App-Neustart wurde geprüft. Automatischer Start nach einem Host-Neustart ist noch nicht abgenommen. Konkrete Hostadressen und Betriebswege stehen in der zentralen privaten Infrastrukturakte.
 
 Entwicklung und Runtime sind eigenständige Clones dieses Repositories. Sie verwenden eigene Datenordner und importieren keine Kundendaten. Das ist eine Trennung der Anwendung und Daten, keine harte Betriebssystem-Sandbox. Eigene KI-Zugänge und eine zusätzliche App-Anmeldung sind noch nicht eingerichtet.
 
@@ -51,7 +51,7 @@ Dieser Abschnitt ist ein Operator-Ablauf für einen regulär berechtigten Host-P
 Einmalig einen **stabilen eigenen Clone außerhalb der Werkbank und temporärer Verzeichnisse** anlegen:
 
 ```sh
-VANILLA_RUNTIME="$HOME/vanilla-agent-runtime"
+VANILLA_RUNTIME="$HOME/vanilla-runtime"
 gh repo clone DenzerAI/Vanilla "$VANILLA_RUNTIME"
 cd "$VANILLA_RUNTIME"
 ```
@@ -125,12 +125,3 @@ Der getrennte Skilltree ist fertig gebaut und wird bereits über die bestehende 
 - Die vorhandenen Memory-Verlustfälle des Quellaudits sind nicht vollständig behoben oder abgenommen.
 - Restic ist optional; lokales Backup ist noch kein vollständiges ausfallsicheres Wiederherstellungskonzept. Vollständiger Betriebsumfang, eigene Zugänge und echter Restore-Test bleiben offen.
 - Der Scanner erkennt bekannte Muster; er beweist nicht die Abwesenheit unbekannter Namen oder kodierter Geheimnisse.
-
-
-## Öffentlicher Arbeitsstand
-
-Stand: 8. September 2026. `main` enthält den eingefrorenen Quellstand der aktuellen
-App. Separate Entwicklungsarbeiten sind als `work/…`-Zweige gesichert; ihre Übersicht
-steht in [docs/WORKING-STATES.md](docs/WORKING-STATES.md). Sie sind nicht automatisch
-zusammengeführt oder als produktionsfertig abgenommen. Anbieter und Gateways sind
-nicht vorkonfiguriert. Diese Veröffentlichung aktiviert keine Verbindung.

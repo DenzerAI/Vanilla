@@ -40,8 +40,9 @@ export function LibraryPage({api,notify,onOpen,onReuse,onSource,projects,PageHea
     <div className="library-browser-body">
       <div className="library-files">
         {layout==='list'&&<div className="library-columns" aria-hidden="true"><span>Name</span><span>Art</span><span>Geändert ↓</span></div>}
-        {busy&&!data.entries.length&&!error&&<Skeleton label="Dateien werden geladen …" announce={false}/>}
-        <div ref={listRef} className={'library-entries library-entries-'+layout} aria-label="Dateien" aria-busy={busy}>
+        <div ref={listRef} className={'library-entries'+(busy&&!data.entries.length&&!error?'':' library-entries-'+layout)} aria-label="Dateien" aria-busy={busy}>
+        {busy&&!data.entries.length&&!error&&<Skeleton layout={"library-"+layout} rows={layout==='grid'?6:8} label="Dateien werden geladen …" announce={false}/>}
+
           {entries.map((e,index)=><button className="library-entry" key={e.id} aria-pressed={selected?.id===e.id} tabIndex={index===(selected?entries.indexOf(selected):0)?0:-1} title={e.name} onClick={()=>setSelection(e.id)} onDoubleClick={()=>onOpen(e,entries)} onKeyDown={event=>fileKey(event,index)}>
             <span className="library-entry-name"><LibraryThumbnail key={e.scope+e.path+e.modifiedAt} entry={e}/><span>{e.name}</span></span><span className="library-entry-kind">{e.missing?'Fehlt':kindLabels[e.kind]||'Datei'}</span><time className="library-entry-date">{libraryDate(e)}</time>
           </button>)}

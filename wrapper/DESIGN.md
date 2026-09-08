@@ -422,3 +422,6 @@ Dateiminiaturen verwenden LibraryThumbnail: echte erste PDF-Seite, Textausschnit
 
 
 Erneut ausführen sendet die ursprüngliche Nachricht samt Anhängen als neuen Turn in derselben Session. Chat-ID, Titel, bisheriger Verlauf und Composer-Entwurf bleiben erhalten; es entsteht kein Seitenleistenduplikat. Während Übertragung und laufender Antwort ist die Aktion gesperrt. Kopieren schreibt ausschließlich in die Zwischenablage. Verzweigen ist eine separate Aktion an der Antwort und übernimmt den Verlauf bis einschließlich des gewählten Turns. Bearbeiten und Verzweigen bleibt ausdrücklich beschriftet.
+
+
+Skeletons übernehmen die produktiven Layoutklassen: integration-grid/-item für Verbindungen und Skills, library-entries-list/-grid und library-entry für Dateien, job-row/-info für Aufträge sowie SettingRow für Einstellungen. Die Suche teilt ihre Zeilengeometrie mit system-search-placeholder. Textformen reservieren echte Schriftzeilen (lh/em); Chatblasen, Absätze und Signatur folgen dem Gesprächslayout. Keine allgemeine Kartenhöhe über alle Bereiche. Layoutwechsel und mobile Spalten folgen denselben Regeln wie geladene Inhalte.

@@ -49,3 +49,6 @@ Beim ersten Abruf zeigt der Listenbereich gemeinsame List-Skeletons.
 Fehler bieten „Erneut laden“; vorhandene Aufträge bleiben beim Nachladen
 sichtbar. Der lokale Vorlagenkatalog braucht keinen künstlichen Ladezustand.
 Ausführungsdetails verwenden den gemeinsamen Settings-Skeleton.
+
+
+Auftrags-Skeletons verwenden job-row und job-info, mit kleinem Statussymbol sowie Aktions- und Schalterplätzen an den originalen Kanten.

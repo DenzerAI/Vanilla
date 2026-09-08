@@ -33,3 +33,6 @@ Aktualisieren sichtbar; Fehler und echte leere Ergebnisse ersetzen den
 Platzhalter. Suchfeld und Filter bleiben an ihren vorgesehenen Stellen.
 
 Aufgeklappte Anweisungen zeigen bis zum Abruf einen Document-Skeleton; Ladefehler beenden ihn.
+
+
+Skill-Skeletons verwenden integration-grid und integration-item samt 44-px-Iconplatz, Titel, Beschreibung, Herkunftszeile und rechtem Statusplatz.

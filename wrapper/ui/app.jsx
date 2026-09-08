@@ -2205,7 +2205,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               ))}
             </div>
             {jobFilter === "templates" && <JobTemplateList query={search} onChoose={template => setModal({type: "job", template})} />}
-            {jobFilter !== "templates" && jobsLoading && !jobs.length && !jobsError && <Skeleton label="Aufträge werden geladen …"/>}
+            {jobFilter !== "templates" && jobsLoading && !jobs.length && !jobsError && <Skeleton layout="jobs" label="Aufträge werden geladen …"/>}
             {jobFilter !== "templates" && jobsError && <p role="alert">{jobsError} <button onClick={loadJobs}>Erneut laden</button></p>}
             {visibleJobs.map((j) => (
               <div className="job-row" key={j.id}>
@@ -2439,7 +2439,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               </Empty>
             )}
             {!skills.length && skillsLoading && (
-              <Skeleton label="Skills werden geladen …"/>
+              <Skeleton layout="skills" label="Skills werden geladen …"/>
             )}
             {!skills.length && !skillsLoading && skillsError && (
               <Empty

@@ -51,3 +51,6 @@ Der Ansichtswechsel verwendet eine Pille mit runden Iconbuttons und betont das a
 ## Vorschau nach Dateityp
 
 LibraryThumbnail lädt nur sichtbare beziehungsweise unmittelbar benachbarte Einträge. Textminiaturen zeigen maximal 1.400 echte Zeichen, keine erfundenen Zeilen. Textdateien über 2 MB und PDFs über 24 MB erhalten Formatsymbole. PDF.js wird einschließlich Worker lokal ausgeliefert und erst bei Bedarf importiert; keine externen Dokumentdienste. PdfPreview rendert die erste Seite als Miniatur und stellt im Lesemodus eine Seitensteuerung bereit. Canvas bleibt außerhalb von Formular-/Editorlogik. Verschlüsselte, fehlerhafte oder nicht darstellbare PDFs behalten Wiederholen und Download. Audio wird nicht automatisch abgespielt; seine Kachel trägt ein Lautsprechersymbol statt einer erfundenen Wellenform.
+
+
+Der Datei-Skeleton folgt der aktiven Listen-/Rasterwahl innerhalb des scrollenden Ergebnisbereichs. Die Liste besitzt dieselben Spalten Name/Art/Datum, 32-px-Zeilen und Touchhöhen. Das Raster verwendet dieselben 128-px-Mindestspalten und 112-px-Vorschauplätze. Mobile Spalten werden gemeinsam mit den echten Einträgen ausgeblendet.

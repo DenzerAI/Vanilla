@@ -56,7 +56,7 @@ export function SystemSearch({api, pages, onOpen}: Props) {
       const next = event.key === 'Home' ? 0 : event.key === 'End' ? buttons.length - 1 : Math.max(0, Math.min(buttons.length - 1, index + (event.key === 'ArrowDown' ? 1 : -1)));
       buttons[next]?.focus();
     }}>
-      {loading&&!results.length&&!error&&<Skeleton rows={3} announce={false}/>}
+      {loading&&!results.length&&!error&&<Skeleton layout="search" rows={3} announce={false}/>}
       {results.map((result,index) => <React.Fragment key={result.kind + result.id}>{query.trim() && (index === 0 || results[index-1].kind !== result.kind) && <h3 className="system-search-group">{labels[result.kind] || result.kind}</h3>}<button key={result.kind + result.id} onClick={() => void onOpen(result)}>
         {result.kind === 'chat' ? <MessageCircle size={18} strokeWidth={1.55}/> : ['file','knowledge','job'].includes(result.kind) ? <FileText size={18} strokeWidth={1.55}/> : result.kind === 'project' ? <Folder size={18} strokeWidth={1.55}/> : <Search size={18} strokeWidth={1.55}/>}
         <span><strong>{result.title}</strong>{result.detail && <small>{result.detail}</small>}{result.snippet && <span className="system-search-excerpt">{result.snippet}</span>}</span>

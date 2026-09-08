@@ -218,3 +218,6 @@ Der leere Composer zeigt auf Desktop und Handy nur „Nachricht“ in der zurüc
 
 
 Erneut ausführen sendet die ursprüngliche Nachricht samt Anhängen als neuen Turn in derselben Session. Chat-ID, Titel, bisheriger Verlauf und Composer-Entwurf bleiben erhalten; es entsteht kein Seitenleistenduplikat. Während Übertragung und laufender Antwort ist die Aktion gesperrt. Kopieren schreibt ausschließlich in die Zwischenablage. Verzweigen ist eine separate Aktion an der Antwort und übernimmt den Verlauf bis einschließlich des gewählten Turns. Bearbeiten und Verzweigen bleibt ausdrücklich beschriftet.
+
+
+Gesprächs-Skeletons verwenden user-message-row/user-message und agent-message/markdown. Blasenrundung, Absatzabstand und Schriftzeilenhöhe folgen damit den echten Nachrichten; die Signatur reserviert einen kleinen runden Avatarplatz.

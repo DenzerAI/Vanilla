@@ -197,12 +197,3 @@ cache/
 
 # Reproducible local speech installation.
 !/requirements-speech.lock
-
-# Nested UI source belongs to the application.
-!/wrapper/ui/components/
-!/wrapper/ui/components/ui/
-!/wrapper/ui/components/ui/*.tsx
-!/wrapper/ui/components/ui/loader-utils/
-!/wrapper/ui/components/ui/loader-utils/*.ts
-!/wrapper/ui/lib/
-!/wrapper/ui/lib/*.ts
