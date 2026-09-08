@@ -7,7 +7,7 @@ import {FileText,Search,RefreshCw,Image,ChevronLeft,ChevronRight,Blocks,Maximize
 import {libraryDate,sortLibraryEntries} from './library-order.mjs';
 import {Modal} from './modal.jsx';
 import {FileContent} from './file-content.jsx';
-const kindLabels={image:'Bild',pdf:'PDF',text:'Text / Code',audio:'Audio',video:'Video',download:'Datei'};
+const kindLabels={html:'HTML',image:'Bild',pdf:'PDF',text:'Text / Code',audio:'Audio',video:'Video',download:'Datei'};
 function rawUrl(entry){return '/api/file/raw?path='+encodeURIComponent(entry.path)+'&scope='+encodeURIComponent(entry.scope||'workspace');}
 export function LibraryPage({api,notify,onOpen,onReuse,onSource,projects,PageHeading,onShowSidebar,revision}) {
   const [layout,setLayout]=useState(()=>{try{return localStorage.getItem('library-view')==='grid'?'grid':'list';}catch{return 'list';}});
@@ -35,7 +35,7 @@ export function LibraryPage({api,notify,onOpen,onReuse,onSource,projects,PageHea
       <div className="library-view-switch" role="group" aria-label="Dateiansicht"><button className="icon-button" title="Liste" aria-label="Liste" aria-pressed={layout==='list'} onClick={()=>changeLayout('list')}><FileText size={18}/></button><button className="icon-button" title="Bildraster" aria-label="Bildraster" aria-pressed={layout==='grid'} onClick={()=>changeLayout('grid')}><Blocks size={18}/></button></div>
       <button className="icon-button" aria-label="Bibliothek aktualisieren" title="Aktualisieren" disabled={busy} onClick={refresh}><RefreshCw size={18}/></button>
     </PageHeading>
-    <div className="library-controls"><div className="search-box"><Search size={16}/><input aria-label="Dateien suchen" placeholder="Suchen" value={query} onChange={e=>{setQuery(e.target.value);setSelection(null);}}/></div><FilterPicker label="Dateityp" value={kind} onChange={value=>{setKind(value);setSelection(null);}} options={['all','favorite','image','pdf','text','audio','video','download'].map((v,i)=>({value:v,label:['Alle Dateien','Favoriten','Bilder','PDFs','Text und Code','Audio','Video','Weitere Dateien'][i]}))}/><FilterPicker label="Arbeitsbereich" value={project} onChange={value=>{setProject(value);setSelection(null);}} options={[{value:'all',label:'Alle Arbeitsbereiche'},...projects.map(p=>({value:p.id,label:p.name}))]}/></div>
+    <div className="library-controls"><div className="search-box"><Search size={16}/><input aria-label="Dateien suchen" placeholder="Suchen" value={query} onChange={e=>{setQuery(e.target.value);setSelection(null);}}/></div><FilterPicker label="Dateityp" value={kind} onChange={value=>{setKind(value);setSelection(null);}} options={['all','favorite','image','pdf','html','text','audio','video','download'].map((v,i)=>({value:v,label:['Alle Dateien','Favoriten','Bilder','PDFs','HTML-Seiten','Text und Code','Audio','Video','Weitere Dateien'][i]}))}/><FilterPicker label="Arbeitsbereich" value={project} onChange={value=>{setProject(value);setSelection(null);}} options={[{value:'all',label:'Alle Arbeitsbereiche'},...projects.map(p=>({value:p.id,label:p.name}))]}/></div>
     {error&&<p role="alert">{error}</p>}{data.truncated&&<p className="page-note">Die Erfassung ist auf 5.000 Dateien begrenzt.</p>}{data.warnings?.map(w=><p className="page-note" key={w}>{w}</p>)}
     <div className="library-browser-body">
       <div className="library-files">
@@ -75,7 +75,7 @@ export function LibraryPreview({entry,entries=[],onNavigate,onClose,children}) {
     document.addEventListener('keydown',keydown);
     return()=>document.removeEventListener('keydown',keydown);
   },[entry.id,entries]);
-  return <Modal wide className="library-quicklook" title={entry.name} onClose={onClose}>
+  return <Modal wide className={'library-quicklook'+(fileKind(entry.path)==='html'?' html-quicklook':'')} title={entry.name} onClose={onClose}>
     <div className="library-preview-toolbar"><span/>{index>=0&&<div className="row"><button className="icon-button" aria-label="Vorherige Datei" disabled={index===0} onClick={()=>navigate(-1)}><ChevronLeft size={18}/></button><span>{index+1} / {entries.length}</span><button className="icon-button" aria-label="Nächste Datei" disabled={index===entries.length-1} onClick={()=>navigate(1)}><ChevronRight size={18}/></button></div>}</div>
     {children}
   </Modal>;

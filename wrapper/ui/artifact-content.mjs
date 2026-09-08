@@ -19,6 +19,7 @@ export function localFilePath(value, workspace = '', directory = workspace) {
 }
 
 export function fileKind(path = '') {
+  if (/\.html?$/i.test(path)) return 'html';
   if (/\.(png|jpe?g|webp|gif|avif|bmp)$/i.test(path)) return 'image';
   if (/\.pdf$/i.test(path)) return 'pdf';
   if (/\.(mp3|wav|m4a|ogg|flac|aac)$/i.test(path)) return 'audio';
