@@ -443,6 +443,17 @@ Erneut ausführen sendet die ursprüngliche Nachricht samt Anhängen als neuen T
 
 Skeletons übernehmen die produktiven Layoutklassen: integration-grid/-item für Verbindungen und Skills, library-entries-list/-grid und library-entry für Dateien, job-row/-info für Aufträge sowie SettingRow für Einstellungen. Die Suche teilt ihre Zeilengeometrie mit system-search-placeholder. Textformen reservieren echte Schriftzeilen (lh/em); Chatblasen, Absätze und Signatur folgen dem Gesprächslayout. Keine allgemeine Kartenhöhe über alle Bereiche. Layoutwechsel und mobile Spalten folgen denselben Regeln wie geladene Inhalte.
 
+
+## Adaptive HTML-Vorschau
+
+HTML-Links öffnen FileContent im kompakten Workspace als gerenderte Seite.
+Die verfügbare iframe-Breite bestimmt den responsiven Dokumentaufbau. „Vollbild“
+vergrößert denselben Workspace, ohne den iframe neu zu laden. Die vorhandene
+Kopfaktion führt zur kompakten Breite zurück. Bearbeiten ist eine getrennte Aktion.
+Die Bibliothek nutzt denselben HtmlPreview-Baustein und ihre bestehende Großansicht.
+Darstellung, Bearbeitung und Isolation führt [der Bibliotheksvertrag](surfaces/library.md#html-dokumente-im-workspace-und-in-der-großansicht).
+
+
 ## Modellwahl mit Anbieterbereichen
 
 Die gemeinsame `ModelPicker`-Komponente bietet kompakte anklickbare Codex- und Claude-Code-Bereiche mit vorhandenen Original-Markenassets aus `BrandIcon`. Die höchstens 300 px breite `popover-glass`-Fläche ist stärker transparent als ein Dialog, mit 28 px Hintergrundunschärfe, verstärkter Sättigung, feinen Lichtkanten und dezentem Schatten. `popover-glass` und `popover-glass-shadow` führen die hellen und dunklen Materialwerte zentral. Die Fläche hat keinen diagonalen Verlauf. Modellzeilen bleiben flach und mindestens 32 px hoch; Touchziele mindestens 44 px. Kein zusätzlicher Fertig-Fuß.
@@ -474,13 +485,3 @@ stehen in `surfaces/jobs.md`; keine weitere Hauptseite wird eingeführt.
 Die Modellwahl behält während einer Öffnung ihre horizontale Ausrichtung unabhängig von wechselnden Modell-, Denkaufwand- und Fast-Beschriftungen. Die beim Öffnen gemessene Triggerbreite bleibt der Anker; tatsächliche Layoutänderungen und Viewportgrenzen werden weiterhin berücksichtigt. Erneutes Öffnen richtet das Menü frisch aus.
 
 Die Reasoning-Spur ist eine horizontale Pille, ihr stärker mattierter Glasgriff eine vertikale Pille mit 16 px Blur. Bereits erreichte Punkte verschwinden; nur die noch vorausliegenden Rastpunkte bleiben neutral sichtbar. Die native Stufe Ultra verstärkt Terrakotta-Sättigung, Schweiflänge und Tempo zusätzlich, mit weichem Übergang beim Ziehen. Andere höchste Stufen werden nicht als Ultra behandelt. Die Werte liegen in amountSliderMotion und den slider-Glas-/Akzentrollen; reduzierte Bewegung bleibt statisch.
-
-
-## Adaptive HTML-Vorschau
-
-HTML-Links öffnen FileContent im kompakten Workspace als gerenderte Seite.
-Die verfügbare iframe-Breite bestimmt den responsiven Dokumentaufbau. „Vollbild“
-vergrößert denselben Workspace, ohne den iframe neu zu laden. Die vorhandene
-Kopfaktion führt zur kompakten Breite zurück. Bearbeiten ist eine getrennte Aktion.
-Die Bibliothek nutzt denselben HtmlPreview-Baustein und ihre bestehende Großansicht.
-Darstellung, Bearbeitung und Isolation führt [der Bibliotheksvertrag](surfaces/library.md#html-dokumente-im-workspace-und-in-der-großansicht).
