@@ -45,13 +45,15 @@ export function ModelPicker({ models = [], model, effort, onChange, context, wor
   useEffect(() => { setProvider(workerId); setError(""); }, [workerId]);
   useEffect(() => {
     if (!open) return;
+    // Keep the opening alignment while labels change; still follow layout and viewport changes.
+    const anchorWidth = trigger.current?.getBoundingClientRect().width || 0;
     const place = () => {
       const rect = trigger.current?.getBoundingClientRect();
       if (!rect) return;
       const viewport = window.visualViewport;
       const left = viewport?.offsetLeft || 0, top = viewport?.offsetTop || 0;
       const width = Math.min(300, (viewport?.width || window.innerWidth) - 24);
-      setPosition({ width, left: Math.max(left + 12, Math.min(rect.right - width, left + (viewport?.width || window.innerWidth) - width - 12)),
+      setPosition({ width, left: Math.max(left + 12, Math.min(rect.left + anchorWidth - width, left + (viewport?.width || window.innerWidth) - width - 12)),
         bottom: window.innerHeight - rect.top + 8, maxHeight: Math.max(80, rect.top - top - 20) });
     };
     place();

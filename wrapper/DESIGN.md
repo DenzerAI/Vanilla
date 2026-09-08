@@ -470,3 +470,5 @@ Wochen-/Einmalpläne und Fehler bleiben im vorhandenen Field-/JobForm-Muster.
 Der Punkt signalisiert ungelesene Ergebnisse oder Rückfragen, kein bloßes
 Speicherereignis. Lesestatus bleibt dauerhaft gespeichert. Aufbau und Grenzen
 stehen in `surfaces/jobs.md`; keine weitere Hauptseite wird eingeführt.
+
+Die Modellwahl behält während einer Öffnung ihre horizontale Ausrichtung unabhängig von wechselnden Modell-, Denkaufwand- und Fast-Beschriftungen. Die beim Öffnen gemessene Triggerbreite bleibt der Anker; tatsächliche Layoutänderungen und Viewportgrenzen werden weiterhin berücksichtigt. Erneutes Öffnen richtet das Menü frisch aus.
