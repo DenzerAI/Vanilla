@@ -12,7 +12,7 @@ jobs:
         with:
           node-version: 22
           cache: npm
-          cache-dependency-path: wrapper/package-lock.json
-      - run: npm ci --prefix wrapper
-      - run: npm --prefix wrapper run design:verify
-      - run: npm --prefix wrapper run build
+          cache-dependency-path: system/app/wrapper/package-lock.json
+      - run: npm ci --prefix system/app/wrapper
+      - run: npm --prefix system/app/wrapper run design:verify
+      - run: npm --prefix system/app/wrapper run build

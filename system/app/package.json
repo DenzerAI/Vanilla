@@ -1,0 +1,32 @@
+{
+  "name": "order-system",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "control": "npm --prefix wrapper start",
+    "control:build": "npm --prefix wrapper run build",
+    "control:test": "npm --prefix wrapper test",
+    "start": "node scripts/start-core.mjs",
+    "hero:verify-keys": "node scripts/verify-hero-keys.mjs",
+    "check": "node --check backend/server.mjs && node --check backend/store.mjs && node --check backend/bootstrap.mjs && node --check backend/artifacts.mjs && node --check backend/hero-client.mjs && node --check backend/hero-key-diagnostics.mjs && node --check backend/whatsapp-bridge.mjs && node --check scripts/verify-hero-keys.mjs && node --check frontend/app.js",
+    "test": "node --test",
+    "start:order": "node backend/server.mjs",
+    "test:core": ".venv/bin/python -m pytest",
+    "setup:core": "python3 -m venv .venv && .venv/bin/python -m pip install -e .",
+    "typecheck": "npm --prefix wrapper run typecheck",
+    "setup:system": "node scripts/setup-system.mjs",
+    "service:install": ".venv/bin/python -m core.service install",
+    "prepare": "node scripts/install-git-hooks.mjs",
+    "source:setup": "node scripts/install-git-hooks.mjs && node scripts/init-company.mjs",
+    "source:check": "python3 scripts/security-scan.py --index",
+    "source:merge": "python3 scripts/source-sync.py"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.7.24",
+    "qrcode": "^1.5.4"
+  }
+}

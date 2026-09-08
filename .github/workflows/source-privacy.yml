@@ -12,9 +12,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: python3 scripts/security-scan.py --revision HEAD
+      - run: python3 system/app/scripts/security-scan.py --revision HEAD
       - uses: actions/setup-node@v4
         with:
           node-version: 22
       - run: python3 -m pip install pytest
-      - run: python3 -m pytest core/tests/test_source_privacy.py -q
+      - run: python3 -m pytest system/app/core/tests/test_source_privacy.py -q
