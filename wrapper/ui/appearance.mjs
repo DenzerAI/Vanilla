@@ -4,7 +4,6 @@ export const appearanceOptions = {
   ...loaderOptions,
   designTone: {default:'balanced', options:designTones.map(({id,label})=>[id,label])},
   highlightColor: {default:'terracotta', options:designAccents.map(({id,label})=>[id,label])},
-  panelLight: { default: 'animated', options: [['off', 'Aus'], ['static', 'Ruhend'], ['animated', 'Sanft bewegt']] },
   welcomeParticles: { default: 'on', options: [['off', 'Aus'], ['on', 'Nur neue Chats'], ['all', 'Alle Chats']] },
   uiFont: { default: 'inter', options: [['inter', 'Inter'], ['system', 'Systemschrift']] },
   textSize: { default: 'standard', options: [['small', 'Klein'], ['standard', 'Standard'], ['large', 'Groß']] },

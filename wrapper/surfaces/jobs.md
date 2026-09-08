@@ -41,11 +41,3 @@ erhalten. Zeitpläne verwenden die konfigurierte Zeitzone und holen höchstens
 den heutigen verpassten Termin nach.
 
 Python-Aufträge verwenden das vorhandene Formular: lokaler Skriptpfad, JSON-Eingabe, Zeitlimit und ausdrücklich idempotente Wiederholungen. Intervall- und Ereignispläne ergänzen täglich/werktäglich. Systemaufträge erscheinen in derselben Liste; Bearbeiten führt zu ihren Systemeinstellungen. Laufdetails lesen den echten SQLite-Lauf einschließlich Ergebnis, Fehler, Protokoll und Abbruch.
-
-## Laden der Liste
-
-Beim ersten Abruf zeigt der Listenbereich gemeinsame List-Skeletons.
-„Dein erster Auftrag“ erscheint erst nach erfolgreichem leerem Ergebnis.
-Fehler bieten „Erneut laden“; vorhandene Aufträge bleiben beim Nachladen
-sichtbar. Der lokale Vorlagenkatalog braucht keinen künstlichen Ladezustand.
-Ausführungsdetails verwenden den gemeinsamen Settings-Skeleton.

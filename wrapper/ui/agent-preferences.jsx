@@ -1,4 +1,3 @@
-import {Skeleton} from './skeleton.tsx';
 import React, { useState, useEffect } from "react";
 import { DEFAULT_AGENT_PREFERENCES } from "../identity-preferences.mjs";
 import { Avatar } from "./avatar.jsx";
@@ -29,7 +28,11 @@ export function AgentPreferences({ api, onSaved }) {
     };
   }, [api]);
   if (!data)
-    return error ? <p role="alert">{error}</p> : <Skeleton variant="settings" label="Dein Agent wird geladen …"/>;
+    return (
+      <p role={error ? "alert" : "status"}>
+        {error || "Dein Agent wird geladen …"}
+      </p>
+    );
   const dirty =
     data.name !== saved.name ||
     data.avatar !== saved.avatar ||

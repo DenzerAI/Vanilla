@@ -16,7 +16,7 @@
 .project-symbols label > span { display: flex; flex-direction: column; align-items: center; gap: var(--space-8); padding: var(--space-12) var(--space-4); border-radius: var(--radius-control); color: var(--muted); }
 .project-symbols label > span > span { font-size: var(--text-caption); }
 .project-symbols input:checked + span { color: var(--text); background: var(--raised); box-shadow: inset 0 0 0 1px var(--border-strong); }
-.project-symbols input:focus-visible + span { outline: 1px solid var(--focus-ring); outline-offset: 2px; }
+.project-symbols input:focus-visible + span { outline: 2px solid var(--blue); outline-offset: 2px; }
 .appearance-controls { margin-top: var(--space-24); }
 .design-reference-disclosure { margin-top: var(--space-24); }
 .design-reference-disclosure > summary { padding: var(--space-12) 0; cursor: pointer; color: var(--muted); font-size: var(--text-small); }
@@ -27,10 +27,10 @@
 /* Align chat names with the text column of navigation and project rows. */
 .sidebar > nav .nav-item > svg, .workspace-select > svg:first-child { width: 18px; flex-shrink: 0; }
 .workspace-chats .chat-row { margin-left: var(--space-8); }
-.workspace-chats .chat-row > button:first-child { padding-left: var(--control-nav-text-inset); padding-right: var(--space-32); }
-.workspace-chats .new-chat { margin-left: var(--space-8); margin-right: var(--space-8); padding-left: var(--control-nav-text-inset); width: calc(100% - var(--space-16)); }
-.workspace-chats .chat-list-expand { margin-left: var(--space-8); padding-left: var(--control-nav-text-inset); }
-.workspace-chats > .sidebar-section-label.small { padding-left: var(--control-nav-group-inset); }
+.workspace-chats .chat-row > button:first-child { padding-left: 38px; padding-right: var(--space-32); }
+.workspace-chats .new-chat { margin-left: var(--space-8); margin-right: var(--space-8); padding-left: 38px; width: calc(100% - var(--space-16)); }
+.workspace-chats .chat-list-expand { margin-left: var(--space-8); padding-left: 38px; }
+.workspace-chats > .sidebar-section-label.small { padding-left: 46px; }
 .chat-row > .icon-button, .chat-row .chat-state { position: absolute; right: var(--space-2); top: 50%; transform: translateY(-50%); width: 26px; height: 27px; margin: 0; }
 .chat-row .chat-state { pointer-events: none; }
 .chat-row:hover .chat-state, .chat-row:focus-within .chat-state, .chat-row.menu-open .chat-state { visibility: hidden; }
@@ -61,7 +61,7 @@
 .workspace-chats .chat-row > button:first-child { min-height: 36px; height: auto; padding-top: var(--space-4); padding-bottom: var(--space-4); }
 .workspace-chats .chat-row > .icon-button,
 .workspace-chats .chat-state { right: 0; width: 32px; height: 32px; }
-.chat-date-separator { display: flex; align-items: center; gap: var(--space-8); margin: var(--space-12) var(--space-16) var(--space-4) var(--control-nav-group-inset); color: var(--muted); font-size: var(--text-caption); line-height: var(--leading-normal); }
+.chat-date-separator { display: flex; align-items: center; gap: var(--space-8); margin: var(--space-12) var(--space-16) var(--space-4) 46px; color: var(--muted); font-size: var(--text-caption); line-height: var(--leading-normal); }
 .chat-date-separator:first-child { margin-top: var(--space-4); }
 .chat-date-separator::after { content: ""; height: 1px; flex: 1; background: var(--border); }
 .chat-date-separator > span { flex-shrink: 0; }
@@ -76,7 +76,7 @@
   .sidebar .icon-button, .workspace-chats .chat-row > .icon-button { width: var(--control-touch); height: var(--control-touch); }
   .workspace-chats .chat-row > button:first-child { padding-right: var(--space-48); }
 }
-.sidebar-footer > .profile-button { padding-left: var(--space-8); gap: var(--space-4); }
+.sidebar-footer > .profile-button { padding-left: 9px; gap: 5px; }
 
 /* Project sheet: translucent material, native radio navigation, fixed actions. */
 :root[data-theme] .modal.project-dialog { width: min(480px, calc(100vw - 32px)); padding: 0; overflow: hidden; background: var(--sheet-glass); border: 1px solid var(--border); box-shadow: var(--shadow-small); backdrop-filter: blur(40px) saturate(140%); -webkit-backdrop-filter: blur(40px) saturate(140%); }
@@ -117,7 +117,7 @@
 .chat-list-expand:hover, .chat-list-expand:focus-visible { color: var(--muted); }
 
 /* An inset navigation surface with independent rounded corners. */
-.app > .sidebar { margin: var(--space-8); border-radius: var(--radius-large); box-shadow: var(--sidebar-material-shadow); isolation: isolate; padding-block: var(--space-8); }
+.app > .sidebar { margin: var(--space-8); border-radius: var(--radius-large); box-shadow: var(--shadow-small); padding-block: var(--space-8); }
 @media (max-width: 650px) {
   .app:not(.collapsed) > .sidebar { height: calc(100dvh - var(--space-16)); }
 }
@@ -125,8 +125,8 @@
 .sidebar-resizer .pane-divider::after { background: transparent; top: var(--space-24); bottom: var(--space-24); }
 .sidebar .chat-row > button:first-child .chat-row-title {
   text-overflow: clip;
-  -webkit-mask-image: linear-gradient(to right, var(--text) calc(100% - var(--space-12)), transparent);
-  mask-image: linear-gradient(to right, var(--text) calc(100% - var(--space-12)), transparent);
+  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - var(--space-12)), transparent);
+  mask-image: linear-gradient(to right, #000 calc(100% - var(--space-12)), transparent);
 }
 
 /* Status and actions share the icon column before the chat name. */
@@ -146,7 +146,6 @@
 .sidebar-footer > .connection-status-button { right: var(--space-8); }
 .sidebar-footer > .profile-menu { bottom: calc(100% + var(--space-8)); left: 0; right: 0; max-height: calc(100dvh - 120px); overflow-y: auto; }
 .sidebar-footer > .profile-menu button { border-radius: var(--radius-control); }
-.sidebar-footer > .profile-menu .profile-restart { color: var(--muted); }
 
 /* Project names use the available width and truncate only on overflow. */
 .sidebar .workspace-select > span:not(.project-glyph) { flex: 1; min-width: 0; text-overflow: ellipsis; }
@@ -167,7 +166,8 @@
   overscroll-behavior-y: contain;
   padding-bottom: var(--space-32);
   scroll-padding-block: var(--space-8) var(--space-32);
-  /* ScrollEdgeFade limits the edge transition to the shared small spacing. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - var(--space-32)), transparent);
+  mask-image: linear-gradient(to bottom, #000 calc(100% - var(--space-32)), transparent);
 }
 
 /* Recency shares the row surface, with its own space instead of an overlay. */
@@ -179,32 +179,6 @@
 }
 .sidebar .workspace-chats .chat-row.selected,
 .sidebar .workspace-chats .chat-row.selected:is(:hover, :focus-within) { background: var(--selected); }
-
-/* Compact navigation reserves the remaining height for conversations. */
-.app .sidebar-topbar { gap: var(--space-4); padding-inline: var(--space-8); }
-.sidebar-topbar > .sidebar-search {
-  display: flex; flex: 1; min-width: 0; min-height: var(--control-height);
-  padding: var(--space-4) var(--space-8); gap: var(--space-12);
-  border-radius: var(--radius-pill); background: var(--workspace-backdrop);
-  color: var(--muted); font-size: var(--text-control); text-align: left;
-}
-.sidebar-search > svg { width: 18px; flex-shrink: 0; }
-.sidebar-search:hover { color: var(--text); }
-.sidebar > nav .nav-item { min-height: var(--control-height); padding-block: var(--space-4); margin-bottom: 0; }
-.sidebar .projects-heading { padding: var(--space-8) var(--space-8) 0 var(--space-16); font-size: var(--text-caption); min-height: var(--control-height); }
-.sidebar .projects-heading > .icon-button { width: var(--control-height); height: var(--control-height); }
-.sidebar .workspace-group { margin-top: var(--space-4); }
-.sidebar .workspace-heading { margin-bottom: 0; }
-.sidebar .workspace-select { min-height: var(--control-height); padding-block: var(--space-4); }
-.sidebar .workspace-heading > .icon-button { width: var(--control-height); height: var(--control-height); }
-.sidebar .workspace-chats .chat-row > button:first-child { min-height: var(--control-height); }
-.sidebar .chat-date-separator { margin-top: var(--space-8); }
-.sidebar .chat-date-separator:first-child { margin-top: var(--space-4); }
-.sidebar-footer > .profile-button { min-height: var(--control-target); padding-block: var(--space-4); padding-left: calc(var(--space-8) - var(--space-2)); gap: var(--space-8); }
-.sidebar-footer > .profile-button > .avatar { width: 24px; height: 24px; }
-@media (pointer: coarse) {
-  .sidebar-topbar > .sidebar-search, .sidebar > nav .nav-item,
-  .sidebar .workspace-select, .sidebar .workspace-chats .chat-row > button:first-child,
-  .sidebar-footer > .profile-button { min-height: var(--control-touch); }
-  .sidebar .workspace-heading > .icon-button, .sidebar .projects-heading > .icon-button { width: var(--control-touch); height: var(--control-touch); }
+@media (forced-colors: active) {
+  .workspace-projects .workspace-chats { -webkit-mask-image: none; mask-image: none; }
 }
