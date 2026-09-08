@@ -1,5 +1,6 @@
 # Verbindungen
 
+Der Bereich liegt unter **Einstellungen → Verbindungen** und verwendet deren Seitenleiste mit ausgewähltem Verbindungen-Eintrag und „Zurück zur App“. Querverweise und die globale Suche öffnen ihn direkt. Die bisherige Kataloggestaltung bleibt erhalten.
 
 Der gemeinsame `PageHeading` zeigt den einzigen Seitentitel. Die zusätzliche Verbindungen-/Skills-Tabzeile und die globale Hinzufügen-Aktion entfallen; neue Dienste werden über das Plus im Katalog eingerichtet.
 
