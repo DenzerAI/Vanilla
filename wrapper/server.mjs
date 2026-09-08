@@ -1,4 +1,3 @@
-import { searchConversations } from './search.mjs';
 import {localPath, localPort} from './isolation.mjs';
 import {sharedMemoryCodexConfig} from './shared-memory.mjs';
 import { serverFingerprint, createRestartGate } from "./updates.mjs";
@@ -607,10 +606,6 @@ route("POST", "/api/projects/save", async (b) => {
     settings: store.state.settings,
   };
 });
-route("GET", "/api/search", async (b, u) => searchConversations({
-  workspace, chats:store.state.chats, projects:store.state.projects, threadCache,
-  query:u.searchParams.get("q") || "",
-}));
 route("GET", "/api/chats", async () => ({
   chats: store.state.chats.filter(c=>!c.channelOnly),
   active: Object.fromEntries(active),

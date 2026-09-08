@@ -1,15 +1,3 @@
-import { InboxPage } from "./inbox";
-import { PanelLight } from "./panel-light";
-import {Skeleton} from './skeleton.tsx';
-import { MessageSpeech } from "./message-speech";
-import { ScrollEdgeFade } from "./scroll-edge-fade.tsx";
-import { NoteEditor } from "./knowledge.tsx";
-import { SystemSearch } from "./system-search.tsx";
-import { AppearanceDesign } from "./appearance-design.jsx";
-import { designVariables, identity as designIdentity } from "./design-system.mjs";
-import { SettingsNavigationRow } from "./settings-patterns.jsx";
-import { AppLoader, LoaderProvider } from './app-loader';
-import { LoaderSettings } from './loader-settings';
 import { SystemNotice } from "./system-notice.jsx";
 import { JobTemplateList } from "./job-template-list.jsx";
 import { jobTemplates, jobCategories, jobFromTemplate } from "../job-templates.mjs";
@@ -23,7 +11,7 @@ import { createChatScroll } from "./chat-scroll.mjs";
 import { connectionCategories, connectionCategory } from "./connection-catalog.mjs";
 import { CrmConnectionForm } from './crm-connection.jsx';
 import { ServiceConnectionForm } from './service-connection.jsx';
-import { LibraryPage, LibraryPreview, ImageForm } from './library.jsx';
+import { LibraryPage, ImageForm } from './library.jsx';
 import { SkillDetails, SkillHub, CreateSkillForm } from './skill-details.jsx';
 import './library-connections.css';
 import { hasUnreadReply } from "../chat-read-state.mjs";
@@ -116,7 +104,7 @@ import { Modal } from "./modal.jsx";
 import "./sidebar-refinement.css";
 import { appearanceOptions, projectIcons, projectColors, projectColor, relativeTime, projectChatList, chatDateGroup } from "./appearance.mjs";
 import { fonts, typography } from "./design-system.mjs";
-import { timestamp, relativeTimeLabel, dayLabel, durationLabel, activityLabel, groupItems } from "./chat-presentation.mjs";
+import { timestamp, dayLabel, durationLabel, activityLabel, groupItems } from "./chat-presentation.mjs";
 import { DesignReference } from "./design-reference.jsx";
 import { LocalWorkers } from "./local-workers.jsx";
 import { WorkerSettings } from "./worker-settings.jsx";
@@ -355,56 +343,28 @@ function MessageTime({ value }) {
     {new Date(ms).toLocaleTimeString("de-DE", {hour: "2-digit", minute: "2-digit"})}
   </time>;
 }
-function RelativeMessageTime({value, visible = true}) {
-  const [now, setNow] = useState(Date.now());
-  useEffect(() => {
-    if (!visible) return;
-    const update = () => { if (!document.hidden) setNow(Date.now()); };
-    update();
-    const timer = setInterval(update, 60000);
-    document.addEventListener('visibilitychange', update);
-    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', update); };
-  }, [visible, value]);
-  const ms = timestamp(value);
-  return ms == null ? null : <time dateTime={new Date(ms).toISOString()} title={new Date(ms).toLocaleString('de-DE')}>{relativeTimeLabel(value, now)}</time>;
-}
 function ChatTurn({ turn, running, waiting, visible, actionsDisabled, paneNumber = 0, workerId, ...actions }) {
   const finalMessage = (turn.items || []).filter(i => i.type === "agentMessage" && i.phase !== "commentary").at(-1);
   const groups = groupItems(turn.items);
-  const activity = groups.filter(group => group.type === "activity").flatMap(group => group.items);
-  const collapseCommentary = !running && !!finalMessage;
-  const isCommentary = item => item.type === "agentMessage" && item.phase === "commentary";
-  const history = (turn.items || []).filter(item => !['userMessage', 'plan'].includes(item.type) && (item.type !== 'agentMessage' || isCommentary(item)));
-  const messages = groups.filter(group => group.type === "message" && !(collapseCommentary && isCommentary(group.item)));
-  const firstReply = messages.findIndex(group => group.item.type !== "userMessage");
-  const lastReply = messages.findLastIndex(group => group.item.type !== "userMessage");
-  const header = <div className="turn-response-header">
-    <div className="turn-author">
-      <span className="agent-signature" aria-hidden="true"><Avatar avatar={actions.agentProfile?.avatar} color={actions.agentProfile?.avatarColor} /></span>
-      <span className="turn-author-meta">
-        <span className="turn-author-name">{actions.agentProfile?.name || "Agent"}</span>
-        <RelativeMessageTime value={turn.startedAt ?? turn.completedAt} visible={visible}/>
-      </span>
-    </div>
-  </div>;
-  const progress = <div className="turn-response-progress">
-    {(activity.length || collapseCommentary && history.length) ? <ActivityGroup items={activity} running={running} turn={turn} waiting={waiting} visible={visible}>
-      {(collapseCommentary ? history : activity).map(item => <Item key={item.id} item={item} workerId={workerId} {...actions} running={running} />)}
-    </ActivityGroup> : <TurnStatus turn={turn} running={running} waiting={waiting} visible={visible} />}
-  </div>;
+  const firstActivity = groups.findIndex(g => g.type !== "message" || g.item.type !== "userMessage");
 
   return <section className="chat-turn" id={`pane-${paneNumber}-turn-${turn.id}`} tabIndex={-1} aria-label="Nachricht und Antwort">
-    {messages.map((group, index) => <React.Fragment key={group.id}>
-      {index === firstReply && header}
-      <Item item={group.item} beforeActions={index === lastReply ? progress : null} workerId={workerId} {...actions} running={actionsDisabled} sentAt={turn.startedAt} completedAt={!running && group.item.id === finalMessage?.id ? turn.completedAt : null} />
+    {groups.map((group, index) => <React.Fragment key={group.id}>
+      {index === firstActivity && <TurnStatus turn={turn} running={running} waiting={waiting} visible={visible} hasAnswer={!!finalMessage} />}
+      {group.type === "message" ?
+        <Item item={group.item} workerId={workerId} {...actions} running={actionsDisabled} sentAt={turn.startedAt} completedAt={!running && group.item.id === finalMessage?.id ? turn.completedAt : null} /> :
+        <ActivityGroup items={group.items} running={running} workerId={workerId}>
+          {group.items.map(i => <Item key={i.id} item={i} workerId={workerId} {...actions} running={running} />)}
+        </ActivityGroup>}
     </React.Fragment>)}
-    {firstReply === -1 && <>{header}{progress}</>}
+    {firstActivity === -1 && <TurnStatus turn={turn} running={running} waiting={waiting} visible={visible} hasAnswer={!!finalMessage} />}
     <ChatArtifacts items={turn.items} workspace={actions.workspace} directory={actions.directory} onFile={actions.onFile} api={api} />
     {turn.error && <div className="inline-error">{icon(AlertCircle)}{turn.error.message}</div>}
   </section>;
 }
-function Item({ item, beforeActions, agentProfile, workerId, onFork, onEdit, onRetry, onDelete, onFile, running, sentAt, completedAt, workspace, directory }) {
+function Item({ item, agentProfile, workerId, onFork, onEdit, onRetry, onDelete, onFile, running, sentAt, completedAt, workspace, directory }) {
   const [copied, setCopied] = useState(false);
+  const [more, setMore] = useState(false);
   async function copy(t) {
     await navigator.clipboard.writeText(t);
     setCopied(true);
@@ -431,7 +391,7 @@ function Item({ item, beforeActions, agentProfile, workerId, onFork, onEdit, onR
         )}
         </div>}
         <div className="message-actions user-actions">
-          <IconButton label="Nachricht erneut ausführen" disabled={running} onClick={onRetry}>{icon(RotateCcw, 14)}</IconButton>
+          <IconButton label="Nachricht in einer Kopie erneut ausführen" disabled={running} onClick={onRetry}>{icon(RotateCcw, 14)}</IconButton>
 
           <IconButton
             label="Nachricht bearbeiten und verzweigen"
@@ -453,7 +413,10 @@ function Item({ item, beforeActions, agentProfile, workerId, onFork, onEdit, onR
           >
             {icon(copied ? Check : Copy, 14)}
           </IconButton>
-          <IconButton label="Nachricht löschen" disabled={running} onClick={onDelete}>{icon(Trash2,14)}</IconButton>
+          <div className="message-more" onBlur={e=>{if(!e.currentTarget.contains(e.relatedTarget))setMore(false)}} onKeyDown={e=>{if(e.key === "Escape") {setMore(false);e.currentTarget.querySelector("button")?.focus()}}}>
+            <IconButton label="Weitere Nachrichtenaktionen" aria-expanded={more} onClick={()=>setMore(!more)}>{icon(MoreHorizontal,14)}</IconButton>
+            {more && <div className="context-menu"><button disabled={running} onClick={()=>{setMore(false);onDelete()}}>{icon(Trash2,14)}Nachricht löschen</button></div>}
+          </div>
           <MessageTime value={sentAt} />
         </div>
       </div>
@@ -468,17 +431,17 @@ function Item({ item, beforeActions, agentProfile, workerId, onFork, onEdit, onR
       >
         {i.type === "plan" && <span className="eyebrow">Plan</span>}
         <Markdown text={i.text} onFile={onFile} workspace={workspace} directory={directory} />
-        {beforeActions}
         <div className="message-actions agent-actions">
-          {i.type === "agentMessage" && i.phase !== "commentary" && <MessageSpeech text={i.text} disabled={running} api={api} Button={IconButton} />}
+          <span className="agent-signature" aria-label={agentProfile?.name || "Agent"}><Avatar avatar={agentProfile?.avatar} color={agentProfile?.avatarColor} /></span>
+          <MessageTime value={completedAt} />
           <IconButton label="Antwort kopieren" onClick={() => copy(i.text)}>
             {icon(copied ? Check : Copy, 15)}
           </IconButton>
-          <IconButton label="Ab dieser Antwort verzweigen" disabled={running} onClick={onFork}>
+          <IconButton label="Gespräch verzweigen" onClick={onFork}>
             {icon(GitBranch, 15)}
           </IconButton>
           <IconButton
-            label="Nachricht erneut ausführen"
+            label="Antwort in einer Kopie neu erzeugen"
             disabled={running}
             onClick={onRetry}
           >
@@ -555,12 +518,9 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   });
   const workspacePanelRef = useRef(null);
   const [agentFolderTarget, setAgentFolderTarget] = useState(null);
+  const [filePreview, setFilePreview] = useState(false);
   const [workspaceWidth, setWorkspaceWidth] = useState(null);
   const [workspaceExpanded, setWorkspaceExpanded] = useState(false);
-  function setPanel(next) {
-    if (next && !panel) { setWorkspaceWidth(null); setWorkspaceExpanded(false); }
-    setWorkspacePanel(next);
-  }
   useEffect(() => { if (!embedded) { try { localStorage.setItem("sidebar-width", sidebarWidth); } catch {} } }, [sidebarWidth, embedded]);
   const [paneOrder, setPaneOrder] = useState([0]);
   const [mountedPanes, setMountedPanes] = useState([0]);
@@ -612,10 +572,9 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const [connectionsLoaded, setConnectionsLoaded] = useState(false);
   const [connectionsError, setConnectionsError] = useState('');
   const connectionsRefresh = useRef({pending:null,at:0});
-  const systemNoticeRef = useRef(null);
   const [boot, setBoot] = useState(null),
     [audioConnections, setAudioConnections] = useState({Groq:false, ElevenLabs:false}),
-    [view, setView] = useState(() => !embedded && new URLSearchParams(window.location.search).get("view") === "inbox" ? "inbox" : "chat"),
+    [view, setView] = useState("chat"),
     [chatId, setChatId] = useState(null),
     [thread, setThread] = useState(null),
     [chats, setChats] = useState([]),
@@ -629,7 +588,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     [projectId, setProjectId] = useState(initialProject),
     [expandedProject, setExpandedProject] = useState("default"),
     [workspaceMenu, setWorkspaceMenu] = useState(null),
-    [panel, setWorkspacePanel] = useState(null),
+    [panel, setPanel] = useState(null),
     [sidebar, setSidebar] = useState(() => window.innerWidth > 650),
     [busy, setBusy] = useState(false),
     [loading, setLoading] = useState(false),
@@ -640,8 +599,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     [settingsTab, setSettingsTab] = useState("general"),
     [selectedFile, setSelectedFile] = useState(null),
     [jobs, setJobs] = useState([]),
-    [jobsLoading, setJobsLoading] = useState(true),
-    [jobsError, setJobsError] = useState(""),
     [integrations, setIntegrations] = useState({
       connections: [],
       secrets: [],
@@ -656,21 +613,10 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     [terminalOutput, setTerminalOutput] = useState(""),
     [terminalBusy, setTerminalBusy] = useState(false),
     [usage, setUsage] = useState(null),
-    [usageError, setUsageError] = useState(""),
     [jobFilter, setJobFilter] = useState("all"),
     [profileMenu, setProfileMenu] = useState(false),
-    [serverRestartBusy, setServerRestartBusy] = useState(false),
     [chatMenu, setChatMenu] = useState(null),
     [connectionState, setConnectionState] = useState("connecting");
-  const [inboxSidebarHost, setInboxSidebarHost] = useState(null);
-  const inboxActiveRef = useRef(view === "inbox");
-  inboxActiveRef.current = view === "inbox";
-  useEffect(() => {
-    if (embedded || view !== "inbox") return;
-    const previousSidebar = sidebar;
-    setSidebar(true);
-    return () => setSidebar(previousSidebar);
-  }, [view, embedded]);
   const projectRef = useRef(initialProject),
     chatRef = useRef(null),
     scrollRef = useRef(null),
@@ -692,9 +638,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       field.style.height = `${Math.min(contentHeight, limit)}px`;
       field.style.overflowY = contentHeight > limit ? "auto" : "hidden";
       const entry = field.closest(".composer-entry");
-      const verticalPadding = parseFloat(style.paddingTop) + parseFloat(style.paddingBottom);
-      const singleLineHeight = Math.max(parseFloat(style.minHeight), parseFloat(style.lineHeight) + verticalPadding);
-      if (entry) entry.dataset.multiline = String(!!field.value && contentHeight > singleLineHeight + 1);
+      const singleLineHeight = Math.max(parseFloat(style.minHeight), parseFloat(style.lineHeight));
+      if (entry) entry.dataset.multiline = String(contentHeight > singleLineHeight + 1);
     };
     resize();
     const frame = requestAnimationFrame(resize);
@@ -773,19 +718,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     for (const role of typography) root.style.setProperty(`--text-${role.id}`, `${role.size * scale / 16}rem`);
     root.style.setProperty("--font-ui", settings.uiFont === "system" ? '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' : fonts.find(font => font.token === "font-ui").value);
     root.dataset.reduceMotion = settings.reduceMotion || "system";
-    for (const [key, value] of Object.entries(designVariables(settings.theme, settings.designTone, settings.highlightColor))) root.style.setProperty(key, value);
   }, [boot?.settings]);
-  async function loadUsage() {
-    setUsageError("");
-    try { setUsage(await api("/usage")); } catch(error) { setUsageError(error.message); }
-  }
-  async function loadJobs() {
-    setJobsLoading(true); setJobsError("");
-    try { setJobs(await api("/jobs")); }
-    catch (error) { setJobsError(error.message); }
-    finally { setJobsLoading(false); }
-    try { setIntegrations(await api("/integrations")); } catch (error) { notify(error.message); }
-  }
   async function refresh() {
     const b = await api("/bootstrap");
     csrf = b.token;
@@ -1032,8 +965,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   useEffect(() => {
     const narrow = window.matchMedia("(max-width: 650px)");
     const adaptSidebar = () => {
-      if (inboxActiveRef.current) setSidebar(true);
-      else if (narrow.matches) setSidebar(false);
+      if (narrow.matches) setSidebar(false);
     };
     adaptSidebar();
     narrow.addEventListener("change", adaptSidebar);
@@ -1042,7 +974,11 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   useEffect(() => {
     setSearch("");
     setSkillFilter("all");
-    if (view === "jobs") void loadJobs();
+    if (view === "jobs")
+      guard(async () => {
+        setJobs(await api("/jobs"));
+        setIntegrations(await api("/integrations"));
+      })();
     if (
       (view === "settings" && settingsTab === "engines") ||
       (view === "settings" && settingsTab === "secrets")
@@ -1050,7 +986,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       guard(async () => setIntegrations(await api("/integrations")))();
     if (view === "skills") void loadSkills();
     if (view === "settings" && settingsTab === "usage")
-      void loadUsage();
+      guard(async () => setUsage(await api("/usage")))();
   }, [view, settingsTab]);
 
   useEffect(() => {
@@ -1342,17 +1278,13 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     setChatMenu(null);
     if (change.archived && chatId === c.id) newDraft();
   }
-  async function fork(turn) {
-    const index = turn ? thread.turns.findIndex(t => t.id === turn.id) : -1;
-    const nextTurn = index >= 0 ? thread.turns[index + 1] : null;
-    const r = await api("/fork", { id: chatId, ...(nextTurn ? {beforeTurnId: nextTurn.id} : {}) });
+  async function fork() {
+    const r = await api("/fork", { id: chatId });
     await refreshChats();
     await openChatHere(r.thread.id);
     notify("Gespräch wurde verzweigt.");
   }
-  const retryPending = useRef(false);
   async function revise(turn, retry = false) {
-    if (retryPending.current || busy || running) return;
     const message = turn.items.find((i) => i.type === "userMessage");
     if (!message)
       throw new Error("Die ursprüngliche Nachricht ist nicht verfügbar.");
@@ -1363,34 +1295,27 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     const messageFiles = message.content
       .filter((c) => c.type === "localImage" || c.type === "localAudio")
       .map((c) => ({ path: c.path, name: c.path.split("/").pop() }));
-    if (retry) {
-      retryPending.current = true;
-      setBusy(true);
-      try {
-        followScroll.current = true;
-        await api("/turn", {
-          id: chatId,
-          text: messageText,
-          attachments: messageFiles,
-          model,
-          effort,
-          mode,
-        });
-      } finally {
-        retryPending.current = false;
-        setBusy(false);
-      }
-      return;
-    }
     const r = await api("/fork", { id: chatId, beforeTurnId: turn.id });
     await refreshChats();
     await openChatHere(r.thread.id);
-    setText(messageText);
-    setAttachments(messageFiles);
-    inputRef.current?.focus();
-    notify("Nachricht zum Bearbeiten geöffnet. Das ursprüngliche Gespräch bleibt erhalten.");
+    if (retry)
+      await api("/turn", {
+        id: r.thread.id,
+        text: messageText,
+        attachments: messageFiles,
+        model,
+        effort,
+        mode,
+      });
+    else {
+      setText(messageText);
+      setAttachments(messageFiles);
+      inputRef.current?.focus();
+      notify(
+        "Nachricht zum Bearbeiten geöffnet. Das ursprüngliche Gespräch bleibt erhalten.",
+      );
+    }
   }
-
   async function saveSettings(change) {
     if (change.name !== undefined && !serverOwnsIdentity) {
       const name = String(change.name).replace(/[\r\n]+/g, " ").trim().slice(0, 100) || "Agent";
@@ -1404,10 +1329,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       change = { ...change, name };
     }
     const settings = await api("/settings", change);
-    if (Object.entries(change).some(([key,value]) => key.startsWith("loader") && settings[key] !== value)) throw new Error("Bitte die App nach Abschluss laufender Chats neu starten, um die Ladeanzeige zu speichern.");
-    if (Object.entries(change).some(([key,value]) => ["designTone", "highlightColor"].includes(key) && settings[key] !== value)) throw new Error("Bitte die App nach Abschluss laufender Chats neu starten, um Farbwelten zu speichern.");
     setBoot((b) => ({ ...b, settings }));
-    window.dispatchEvent(new CustomEvent("wrapper/appearance", {detail:settings}));
     if (change.theme) document.documentElement.dataset.theme = change.theme;
 
   }
@@ -1517,7 +1439,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       j.name.toLowerCase().includes(search.toLowerCase()),
   );
   const nav = [
-      ["inbox", Mail, "Inbox"],
       ["jobs", Clock, "Aufträge"],
       ["connections", Plug, "Verbindungen"],
       ["skills", Sparkles, "Skills"],
@@ -1542,11 +1463,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     window.addEventListener("focus", update); window.addEventListener("blur", update); document.addEventListener("visibilitychange", update);
     return () => { window.removeEventListener("focus", update); window.removeEventListener("blur", update); document.removeEventListener("visibilitychange", update); };
   }, []);
-  useEffect(() => {
-    const receive = event => setBoot(old => old ? {...old, settings:{...old.settings,...event.detail}} : old);
-    window.addEventListener("wrapper/appearance", receive);
-    return () => window.removeEventListener("wrapper/appearance", receive);
-  }, []);
   const readablePane = embedded ? paneVisible : visible.includes(0);
   useEffect(() => {
     const last = thread?.turns?.at(-1);
@@ -1561,26 +1477,26 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const MainSurface = embedded ? "div" : "main";
   if (!boot)
     return (
-      <div>
-        {toast ? <div className="boot-screen"><p role="alert">{toast}</p><button onClick={guard(refresh)}>Erneut versuchen</button></div> : <Skeleton variant="shell" label="Schaltzentrale wird geöffnet …"/>}
-        {!embedded && <SystemNotice ref={systemNoticeRef} onBusyChange={setServerRestartBusy} api={api} message={toast} onDismiss={()=>setToast("")} />}
+      <div className="boot-screen">
+        <div className="brand-mark">u</div>
+        <p>Schaltzentrale wird geöffnet …</p>
+        {toast && <p>{toast}</p>}
+        {!embedded && <SystemNotice api={api} message={toast} onDismiss={()=>setToast("")} />}
       </div>
     );
   return (
-    <LoaderProvider settings={boot.settings}><div
-      style={{"--sidebar-width": `${sidebarWidth}px`, "--workspace-width": `${workspaceWidth || 280}px`}}
+    <div
+      style={{"--sidebar-width": `${sidebarWidth}px`, "--workspace-width": `${workspaceWidth || (panel === "review" || selectedFile || filePreview ? 600 : panel === "terminal" ? 520 : 340)}px`}}
       className={
         (embedded ? "app embedded-chat " : "app ") +
-        (view === "inbox" ? "inbox-mode " : "") +
         (!sidebar ? "collapsed " : "") +
         (panel && view === "chat" ? "has-panel" : "")
       }
     >
       {!embedded && <aside className="sidebar">
-        <PanelLight mode={boot.settings.panelLight || "animated"} active={sidebar} />
         <div className="sidebar-resizer"><PaneDivider label="Seitenleistenbreite ändern" value={sidebarWidth} min={220} max={400} onReset={()=>setSidebarWidth(268)} onResize={delta=>setSidebarWidth(width=>Math.max(220,Math.min(400,width+delta)))}/></div>
-        {view !== "inbox" && <div className="sidebar-topbar">
-          <button className="sidebar-search" aria-label="System durchsuchen" title="System durchsuchen (⌘/Strg K)" onClick={()=>{setSearch("");setModal("search");}}>{icon(Search,18)}<span>Suche</span></button>
+        <div className="sidebar-topbar">
+          <span className="brand-name">AGENT</span>
           {requests.length > 0 && <IconButton label="Offene Rückfragen" onClick={()=>setModal("activity")}>{icon(Bell,17)}<i className="notification-dot"/></IconButton>}
           <IconButton
             label="Seitenleiste ausblenden"
@@ -1588,10 +1504,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
           >
             {icon(PanelLeft, 16)}
           </IconButton>
-        </div>}
-        {view === "inbox" ? (
-          <div className="inbox-sidebar-slot" ref={setInboxSidebarHost}/>
-        ) : view === "settings" ? (
+        </div>
+        {view === "settings" ? (
           <>
             <button className="back-to-app" onClick={() => setView("chat")}>
               {icon(ArrowLeft)}Zurück zur App
@@ -1660,8 +1574,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                     <IconButton label={`Neuer Chat in ${space.name}`} onClick={()=>newDraft(space.id)}>{icon(Plus,16)}</IconButton>
                   </div>
                   {expandedProject === space.id && (
-                    <ScrollEdgeFade className="workspace-chats chats-scroll" tabIndex={0} role="region" aria-label={`Chats in ${space.name}`}>
-                      {projectChatList(chats, space.id, expandedLists[space.id] !== false).visible.map((c, index, visible) => (
+                    <div className="workspace-chats chats-scroll" tabIndex={0} role="region" aria-label={`Chats in ${space.name}`}>
+                      {projectChatList(chats, space.id, expandedLists[space.id]).visible.map((c, index, visible) => (
                         <React.Fragment key={c.id}>
                           {(index === 0 || chatDateGroup(c, listClock) !== chatDateGroup(visible[index - 1], listClock)) && (
                             <div className="chat-date-separator"><span>{chatDateGroup(c, listClock)}</span></div>
@@ -1680,7 +1594,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                             {c.pinned && <span className="chat-pin" title="Angepinnt">{icon(Pin, 12)}</span>}
                             <span className="chat-age">{relativeTime(c.updatedAt, listClock)}</span>
                             <span className="chat-state" role="img" aria-label={active[c.id] ? "In Arbeit" : hasUnreadReply(c) ? "Ungelesene Antwort" : c.lastTurnStatus === "failed" ? "Fehlgeschlagen" : c.lastTurnStatus === "interrupted" ? "Gestoppt" : undefined}>
-                              {active[c.id] ? <AppLoader /> : hasUnreadReply(c) ? <span className="chat-complete">{icon(Check, 15)}</span> : c.lastTurnStatus === "failed" ? icon(AlertCircle, 15) : c.lastTurnStatus === "interrupted" ? icon(Pause, 14) : null}
+                              {active[c.id] ? <span className="chat-spinner" /> : hasUnreadReply(c) ? <span className="chat-complete">{icon(Check, 15)}</span> : c.lastTurnStatus === "failed" ? icon(AlertCircle, 15) : c.lastTurnStatus === "interrupted" ? icon(Pause, 14) : null}
                             </span>
                           </button>
                           <IconButton
@@ -1721,11 +1635,11 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                         </div>
                         </React.Fragment>
                       ))}
-                      {projectChatList(chats, space.id, true).more && <button className="chat-list-expand" aria-expanded={expandedLists[space.id] !== false} onClick={() => setExpandedLists(old => ({...old, [space.id]: old[space.id] === false}))}>{expandedLists[space.id] !== false ? "Weniger anzeigen" : "Mehr anzeigen"}</button>}
+                      {projectChatList(chats, space.id, true).more && <button className="chat-list-expand" aria-expanded={!!expandedLists[space.id]} onClick={() => setExpandedLists(old => ({...old, [space.id]: !old[space.id]}))}>{expandedLists[space.id] ? "Weniger anzeigen" : "Mehr anzeigen"}</button>}
                       {!projectChatList(chats, space.id, true).visible.length && (
                         <p className="sidebar-empty">Noch keine Gespräche</p>
                       )}
-                    </ScrollEdgeFade>
+                    </div>
                   )}
                 </section>
               ))}
@@ -1770,16 +1684,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               >
                 {icon(Archive)}Archivierte Chats
               </button>
-              <button
-                className="profile-restart"
-                disabled={serverRestartBusy}
-                onClick={() => {
-                  setProfileMenu(false);
-                  systemNoticeRef.current?.restart();
-                }}
-              >
-                {icon(RotateCcw)}{serverRestartBusy ? "Startet neu …" : "Server neu starten"}
-              </button>
             </div>
           )}
           <button
@@ -1797,19 +1701,19 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         {(
           <div className="chat-layout" hidden={view !== "chat"}>
             <div className="chat-workspace">
-            {!embedded && view === "chat" && <header className="topbar chat-topbar floating-chat-topbar">
+            {!embedded && view === "chat" && <header className={"topbar chat-topbar " + (paneOrder.length === 1 ? "floating-chat-topbar" : "")}>
               <div className="row">
                 {!sidebar && <IconButton label="Seitenleiste anzeigen" onClick={() => setSidebar(true)}>{icon(PanelLeft)}</IconButton>}
               </div>
               <div className="row">
                 {paneOrder.length === 1 && headerSession?.hasTitle && <ChatTitle session={headerSession} compact/>}
                 <LayoutPicker count={paneOrder.length} onChange={changePaneCount}/>
-                <IconButton label={panel ? "Workspace schließen" : "Workspace öffnen"} active={!!panel} aria-expanded={!!panel} aria-controls="workspace-panel" onClick={() => { if (!panel) setSelectedFile(null); setPanel(panel ? null : "files"); }}>{icon(PanelRight)}</IconButton>
+                <IconButton label={panel ? "Workspace schließen" : "Workspace öffnen"} active={!!panel} aria-expanded={!!panel} aria-controls="workspace-panel" onClick={() => setPanel(panel ? null : "home")}>{icon(PanelRight)}</IconButton>
               </div>
             </header>}
 
             {!embedded && paneOrder.length > 1 && (visible.length < paneOrder.length || maximizedPane) && <div className="pane-tabs" role="tablist" aria-label="Offene Chat-Panels">
-              {paneOrder.map(id => { const session=sessions.current[id].current; return <button key={id} role="tab" tabIndex={activePane===id ? 0 : -1} onKeyDown={e=>{const offset=e.key==="ArrowRight"?1:e.key==="ArrowLeft"?-1:0;if(offset){e.preventDefault();const next=paneOrder[(paneOrder.indexOf(id)+offset+paneOrder.length)%paneOrder.length];activatePane(next);requestAnimationFrame(()=>panesRef.current?.parentElement.querySelector(`[aria-controls="chat-pane-${next}"]`)?.focus())}}} aria-selected={activePane===id} aria-controls={`chat-pane-${id}`} onClick={()=>activatePane(id)}>{session?.running ? <AppLoader /> : session?.unread ? icon(Check,14) : icon(MessageCircle,14)}<span>{session?.title || `Chat ${id+1}`}</span></button> })}
+              {paneOrder.map(id => { const session=sessions.current[id].current; return <button key={id} role="tab" tabIndex={activePane===id ? 0 : -1} onKeyDown={e=>{const offset=e.key==="ArrowRight"?1:e.key==="ArrowLeft"?-1:0;if(offset){e.preventDefault();const next=paneOrder[(paneOrder.indexOf(id)+offset+paneOrder.length)%paneOrder.length];activatePane(next);requestAnimationFrame(()=>panesRef.current?.parentElement.querySelector(`[aria-controls="chat-pane-${next}"]`)?.focus())}}} aria-selected={activePane===id} aria-controls={`chat-pane-${id}`} onClick={()=>activatePane(id)}>{session?.running ? <span className="chat-spinner"/> : session?.unread ? icon(Check,14) : icon(MessageCircle,14)}<span>{session?.title || `Chat ${id+1}`}</span></button> })}
               {maximizedPane && <IconButton label="Aufteilung wiederherstellen" onClick={()=>setMaximizedPane(false)}>{icon(PanelLeft,16)}</IconButton>}
             </div>}
             <div className={"chat-panes " + (!embedded && visible.length > 1 ? "multiple" : "")} ref={embedded ? undefined : panesRef}>
@@ -1817,7 +1721,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               id={`chat-pane-${paneNumber}`}
               role="region" aria-label={`Chat ${paneNumber+1}: ${chatTitle}`}
               data-pane={embedded ? undefined : 0}
-              data-trailing-pane={!embedded && visible.at(-1) === 0 ? "true" : undefined}
               hidden={!embedded && !visible.includes(0)}
               style={embedded ? undefined : {order:paneOrder.indexOf(0)*2, flexGrow:paneWeights[0] || 1}}
               onPointerDownCapture={()=>embedded ? onActivate?.() : activatePane(0)}
@@ -1830,11 +1733,9 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
             >
               {((boot.settings.welcomeParticles === "all") || (!chatId && !loading && !thread?.turns?.length && (boot.settings.welcomeParticles || "on") === "on")) && <WelcomeParticles reduceMotion={boot.settings.reduceMotion === "on"} theme={boot.settings.theme} />}
               {draggingFiles && <div className="chat-file-drop" role="status">{icon(Paperclip,24)}<span>Dateien hier anhängen</span></div>}
-              {(embedded ? showPaneHeader : paneOrder.length > 1) && <div className="pane-header"><div className="row">
-                <ChatTitle session={localSession} compact extraItems={[
-                  {id:"maximize-panel", label:(embedded ? isMaximized : maximizedPane) ? "Aufteilung wiederherstellen" : `Chat ${paneNumber+1} maximieren`, icon:icon(Maximize,16), action:()=>embedded ? onMaximize?.() : (activatePane(0),setMaximizedPane(v=>!v))},
-                  {id:"close-panel", label:`Panel ${paneNumber+1} schließen`, icon:icon(X,16), action:()=>embedded ? onClosePane?.() : closePane(0)},
-                ]}/>
+              {(embedded ? showPaneHeader : paneOrder.length > 1) && <div className="pane-header"><ChatTitle session={localSession}/><div className="row compact">
+                <IconButton label={(embedded ? isMaximized : maximizedPane) ? "Aufteilung wiederherstellen" : `Chat ${paneNumber+1} maximieren`} onClick={()=>embedded ? onMaximize?.() : (activatePane(0),setMaximizedPane(v=>!v))}>{icon(PanelLeft,16)}</IconButton>
+                <IconButton label={`Panel ${paneNumber+1} schließen`} onClick={()=>embedded ? onClosePane?.() : closePane(0)}>{icon(X,16)}</IconButton>
               </div></div>}
               {!!thread?.turns?.length && <nav className="message-index" aria-label="Deine bisherigen Eingaben">{thread.turns.filter(t=>t.items?.some(i=>i.type === "userMessage")).map((t,n)=>{
                 const message=t.items.find(i=>i.type === "userMessage");
@@ -1848,7 +1749,9 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 aria-label="Gesprächsverlauf"
               >
                 {loading ? (
-                  <Skeleton variant="chat" label="Gespräch wird geladen …"/>
+                  <div className="loading-row">
+                    {icon(LoaderCircle)}Gespräch wird geladen …
+                  </div>
                 ) : !thread?.turns?.length ? (
                   <div className="welcome agent-chat-welcome">
                     <Avatar avatar={boot.settings.avatar} color={boot.settings.avatarColor} large />
@@ -1892,10 +1795,10 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       const previous = dayLabel(thread.turns[index - 1]?.startedAt);
                       return <React.Fragment key={t.id}>
                         {date && date !== previous && <div className="chat-day-divider"><span>{date}</span></div>}
-                        <ChatTurn agentProfile={boot.settings} paneNumber={paneNumber} workerId={current?.workerId || "codex"} workspace={boot.workspace} directory={current?.cwd || boot.workspace} turn={t} running={running && t.id === active[chatId]} onFork={guard(() => fork(t))}
+                        <ChatTurn agentProfile={boot.settings} paneNumber={paneNumber} workerId={current?.workerId || "codex"} workspace={boot.workspace} directory={current?.cwd || boot.workspace} turn={t} running={running && t.id === active[chatId]} onFork={guard(fork)}
                           onEdit={guard(() => revise(t))} onRetry={guard(() => revise(t, true))}
                           onDelete={() => setModal({type: "delete-message", turn: t})}
-                          actionsDisabled={running || busy} waiting={requests.some(r => r.params?.threadId === chatId)} visible={foreground && view === "chat" && readablePane} onFile={guard(openFile)} />
+                          actionsDisabled={running} waiting={requests.some(r => r.params?.threadId === chatId)} visible={foreground && view === "chat" && readablePane} onFile={guard(openFile)} />
                       </React.Fragment>;
                     })}
                     {requests
@@ -1918,7 +1821,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 <form className={"composer pill-composer " + (mode === "plan" ? "planning" : "")} onSubmit={guard(submit)}>
                   {(attachments.length > 0 || pendingUploads.some(item=>item.key === (chatId || `new:${projectId}`))) && (
                     <div className="attachments" aria-label="Angehängte Dateien">
-                      {pendingUploads.filter(item=>item.key === (chatId || `new:${projectId}`)).map(item=><span className="attachment" key={item.id} role="status">{<AppLoader size={14} />}<span className="attachment-name">{item.name}</span><span>Wird angeheftet …</span></span>)}
+                      {pendingUploads.filter(item=>item.key === (chatId || `new:${projectId}`)).map(item=><span className="attachment" key={item.id} role="status">{icon(LoaderCircle,14)}<span className="attachment-name">{item.name}</span><span>Wird angeheftet …</span></span>)}
                       {attachments.map((a, n) => (
                         <span className="attachment" key={a.path}>
                           <button type="button" className="attachment-open" title={a.name} aria-label={`Anhang öffnen: ${a.name}`} onClick={guard(() => openFile(a.path))}>
@@ -1952,7 +1855,11 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       </IconButton>
                   <textarea
                     ref={inputRef}
-                    placeholder="Nachricht"
+                    placeholder={
+                      running
+                        ? "Ergänze etwas …"
+                        : "Nachricht schreiben …"
+                    }
                     aria-label="Nachricht"
                     value={text}
                     rows={1}
@@ -1997,7 +1904,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                           }
                           aria-label="Nachricht senden"
                         >
-                          {busy ? <AppLoader size={21} /> : icon(ArrowUp, 21)}
+                          {icon(busy ? LoaderCircle : ArrowUp, 21)}
                         </button>
                       )}
                     </div>
@@ -2055,7 +1962,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 />
               </div>
             </section>
-            {!embedded && mountedPanes.filter(id=>id!==0).map(id=><div key={id} data-pane={id} data-trailing-pane={visible.at(-1) === id ? "true" : undefined} hidden={!visible.includes(id)} className={"pane-slot secondary-pane " + (activePane===id ? "active-pane" : "")} style={{order:paneOrder.indexOf(id)*2, flexGrow:paneWeights[id] || 1}}>
+            {!embedded && mountedPanes.filter(id=>id!==0).map(id=><div key={id} data-pane={id} hidden={!visible.includes(id)} className={"pane-slot secondary-pane " + (activePane===id ? "active-pane" : "")} style={{order:paneOrder.indexOf(id)*2, flexGrow:paneWeights[id] || 1}}>
               <App embedded paneVisible={view === "chat" && visible.includes(id)} paneNumber={id} sessionRef={sessions.current[id]} onSessionChange={sessionChanged} initialProject={projectId} isMaximized={maximizedPane} showPaneHeader={paneOrder.length>1} onActivate={()=>activatePane(id)} onMaximize={()=>{activatePane(id);setMaximizedPane(v=>!v)}} onClosePane={()=>closePane(id)} onOpenFile={path=>{activatePane(id);requestAnimationFrame(()=>guard(openFile)(path))}}/>
             </div>)}
             {!embedded && visible.slice(0,-1).map((id,index)=><div className="pane-divider-slot" key={`divider-${id}`} style={{order:paneOrder.indexOf(id)*2+1}}><PaneDivider value={Math.round(100*(paneWeights[id] || 1)/((paneWeights[id] || 1)+(paneWeights[visible[index+1]] || 1)))} onResize={delta=>resizePanes(id,visible[index+1],delta)}/></div>)}
@@ -2063,29 +1970,44 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
             </div>
             {panel && (
               <aside id="workspace-panel" aria-label="Workspace" ref={workspacePanelRef} className={"workspace-panel" + (workspaceExpanded ? " workspace-expanded" : "")}>
-                <PanelLight mode={boot.settings.panelLight || "animated"} active={view === "chat"} />
-                <div className="workspace-resizer"><PaneDivider label="Workspace-Breite ändern" value={workspaceWidth || 280} min={280} max={1000} onReset={()=>{setWorkspaceWidth(null);setWorkspaceExpanded(false)}} onResize={delta=>{setWorkspaceExpanded(false);setWorkspaceWidth(width=>Math.max(280,Math.min(1000,(workspacePanelRef.current?.getBoundingClientRect().width || width || 280)-delta)))}}/></div>
+                <div className="workspace-resizer"><PaneDivider label="Workspace-Breite ändern" value={workspaceWidth || (panel === "review" || selectedFile || filePreview ? 600 : panel === "terminal" ? 520 : 340)} min={280} max={1000} onReset={()=>{setWorkspaceWidth(null);setWorkspaceExpanded(false)}} onResize={delta=>{setWorkspaceExpanded(false);setWorkspaceWidth(width=>Math.max(280,Math.min(1000,(workspacePanelRef.current?.getBoundingClientRect().width || width || 340)-delta)))}}/></div>
                 <div className="panel-head">
                   <select className="workspace-view-select" aria-label="Workspace-Ansicht" value={panel} onChange={event => setPanel(event.target.value)}>
+                    <option value="home">Workspace</option>
                     <option value="files">Dateien</option>
+                    <option value="terminal" disabled={!boot.capabilities?.terminal}>Terminal</option>
                     <option value="review">Änderungen</option>
-                    <option value="terminal" disabled={!boot.capabilities?.terminal}>Befehle</option>
                   </select>
                   <div className="row">
-                  <IconButton label={workspaceExpanded ? "Kompakte Workspace-Breite" : "Workspace vergrößern"} aria-pressed={workspaceExpanded} onClick={()=>{
+                  <IconButton label={workspaceExpanded ? "Automatische Workspace-Breite" : "Workspace vergrößern"} aria-pressed={workspaceExpanded} onClick={()=>{
                     if (workspaceExpanded) setWorkspaceWidth(null);
                     setWorkspaceExpanded(value=>!value);
                   }}>{icon(workspaceExpanded ? Minimize : Maximize, 16)}</IconButton>
                   <IconButton label="Workspace schließen" onClick={() => setPanel(null)}>{icon(X,16)}</IconButton>
                   </div>
                 </div>
-                {<>
+                {panel === "home" ? (
+                  <div className="workspace-launchers">
+                    {[
+                      [FileText, "Änderungen", "review"],
+                      [Terminal, "Terminal", "terminal"],
+                      [FolderOpen, "Dateien", "files"],
+                    ].map(([I, label, id]) => (
+                      <button key={id} disabled={id === "terminal" && !boot.capabilities?.terminal} title={id === "terminal" && !boot.capabilities?.terminal ? "Dieser Worker stellt kein separates Terminal bereit." : undefined} onClick={() => setPanel(id)}>
+                        {icon(I)}
+                        {label}
+                        {icon(ChevronRight, 15)}
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <>
                     {panel === "files" ? (
-                      <div className={"file-panel" + (selectedFile ? " workspace-artifact-preview" : "")}>
+                      <div className="file-panel">
                         {selectedFile ? (
                           <>
                             <div className="file-toolbar">
-                              <button className="icon-button" aria-label="Zurück zu Dateien" onClick={() => setSelectedFile(null)}>
+                              <button onClick={() => setSelectedFile(null)}>
                                 {icon(ArrowLeft, 15)}
                               </button>
                               <span>{selectedFile.split("/").pop()}</span>
@@ -2104,17 +2026,15 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                             <FileContent key={selectedFile} path={selectedFile} api={api} />
                           </>
                         ) : (
-                          boot.workspaceToolsVersion ? <AgentFiles api={api} initialFolder={agentFolderTarget}/> : <p role="status">Die neue Agent-Dateiansicht wird nach dem nächsten Serverstart verfügbar. Laufende Aufträge können zuerst fertig werden.</p>
+                          boot.workspaceToolsVersion ? <AgentFiles api={api} onPreview={setFilePreview} initialFolder={agentFolderTarget}/> : <p role="status">Die neue Agent-Dateiansicht wird nach dem nächsten Serverstart verfügbar. Laufende Aufträge können zuerst fertig werden.</p>
                         )}
                       </div>
                     ) : panel === "terminal" ? (
                       <div className="terminal-panel">
-                        {terminalOutput ? <pre aria-label="Befehlsausgabe">{terminalOutput}</pre> : <div className="workspace-command-empty">
-                          {icon(Terminal, 20)}
-                          <strong>Befehl ausführen</strong>
-                          <p>Einzelne Befehle im Projektordner.</p>
-                          <p className="workspace-command-note">Jeder Aufruf startet neu und läuft höchstens 30 Sekunden.</p>
-                        </div>}
+                        <pre>
+                          {terminalOutput ||
+                            "Einzelne Befehle im Projektordner ausführen. Jeder Befehl startet eine neue Shell (max. 30 Sekunden)."}
+                        </pre>
                         <form
                           onSubmit={guard(async (e) => {
                             e.preventDefault();
@@ -2166,14 +2086,12 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       <ReviewPanel key={workspaceProject?.id} api={api} projectId={workspaceProject?.id || projectId} projectName={workspaceProject?.name}/>
                     ) : null}
                   </>
-                }
+                )}
               </aside>
             )}
           </div>
         )}
-        {view === "chat" ? null : view === "inbox" ? (
-          <InboxPage PageHeading={PageHeading} sidebarHost={inboxSidebarHost} sidebarVisible={sidebar} onShowSidebar={() => setSidebar(true)} onHideSidebar={() => setSidebar(false)} onBack={() => setView("chat")}/>
-        ) : view === "jobs" ? (
+        {view === "chat" ? null : view === "jobs" ? (
           <div className="page">
             <PageHeading title="Aufträge" onShowSidebar={!sidebar ? () => setSidebar(true) : undefined}>
               <button className="primary small-button" onClick={() => setModal({ type: "job" })}>{icon(Plus, 16)}Erstellen</button>
@@ -2205,8 +2123,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               ))}
             </div>
             {jobFilter === "templates" && <JobTemplateList query={search} onChoose={template => setModal({type: "job", template})} />}
-            {jobFilter !== "templates" && jobsLoading && !jobs.length && !jobsError && <Skeleton label="Aufträge werden geladen …"/>}
-            {jobFilter !== "templates" && jobsError && <p role="alert">{jobsError} <button onClick={loadJobs}>Erneut laden</button></p>}
             {visibleJobs.map((j) => (
               <div className="job-row" key={j.id}>
                 <div className="job-status">
@@ -2312,7 +2228,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 Wähle einen anderen Filter oder ändere deinen Suchbegriff.
               </Empty>
             )}
-            {jobFilter !== "templates" && !jobsLoading && !jobsError && !jobs.length && (
+            {jobFilter !== "templates" && !jobs.length && (
               <Empty
                 Icon={Clock}
                 title="Dein erster Auftrag"
@@ -2335,7 +2251,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
             </div>
           </div>
         ) : view === "library" ? (
-          <LibraryPage revision={libraryRevision} api={api} notify={notify} projects={boot.projects} PageHeading={PageHeading} onShowSidebar={!sidebar?()=>setSidebar(true):undefined} onOpen={(entry,entries)=>setModal({type:'library-file',entry,entries})} onReuse={guard(async entry=>{const file=await api('/library/reuse',{id:entry.id,projectId});setAttachments(a=>[...a,file]);setView('chat');})} onSource={guard(async entry=>{if(chats.some(c=>c.id===entry.threadId))await openChat(entry.threadId);else notify('Das Quellgespräch ist nicht verfügbar.');})}/>
+          <LibraryPage revision={libraryRevision} api={api} notify={notify} projects={boot.projects} PageHeading={PageHeading} onShowSidebar={!sidebar?()=>setSidebar(true):undefined} onOpen={entry=>setModal({type:'library-file',entry})} onImage={guard(async()=>{setIntegrations(await api('/integrations'));setModal({type:'image-create'});})}/>
         ) : view === "connections" ? (
           <div className="page connections-page">
             <PageHeading title="Verbindungen" onShowSidebar={!sidebar ? () => setSidebar(true) : undefined}/>
@@ -2439,7 +2355,9 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               </Empty>
             )}
             {!skills.length && skillsLoading && (
-              <Skeleton label="Skills werden geladen …"/>
+              <p className="skills-loading" role="status">
+                Skills werden geladen …
+              </p>
             )}
             {!skills.length && !skillsLoading && skillsError && (
               <Empty
@@ -2459,7 +2377,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
           </div>
         ) : (
           <div className={"page settings-page" + (settingsTab === "identity" ? " agent-settings-page" : "")}>
-            <PageHeading title={settingsTab === "design" ? "Unser Design" : settingNav.find((s) => s[0] === settingsTab)?.[2]} onShowSidebar={!sidebar ? () => setSidebar(true) : undefined}/>
+            <PageHeading title={settingNav.find((s) => s[0] === settingsTab)?.[2]} onShowSidebar={!sidebar ? () => setSidebar(true) : undefined}/>
             {['system','memory','storage','access'].includes(settingsTab) && boot.features.operations ? <SystemSettings key={settingsTab} api={api} section={settingsTab} chats={chats} onJobs={()=>setView('jobs')} onLibrary={()=>setView('library')} onConnections={()=>setView('connections')}/> : settingsTab === "general" ? (
               <>
                 <h3 className="section-heading">Schaltzentrale</h3>
@@ -2497,26 +2415,51 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               <VoiceSettings api={api} notify={notify} openConnections={() => setView("connections")} onText={value => { setText(previous => previous ? previous + "\n" + value : value); setView("chat"); }} />
             ) : settingsTab === "appearance" ? (
               <>
-                <AppearanceDesign settings={boot.settings} onChange={saveSettings}/>
+                <div className="theme-options">
+                  {[
+                    ["dark", "Dunkel", Moon],
+                    ["light", "Hell", Sun],
+                  ].map(([id, label, I]) => (
+                    <button
+                      key={id}
+                      className={
+                        "theme-choice " +
+                        id +
+                        " " +
+                        (boot.settings.theme === id ? "active" : "")
+                      }
+                      aria-pressed={boot.settings.theme === id}
+                      onClick={guard(() => saveSettings({ theme: id }))}
+                    >
+                      <div className="theme-preview">
+                        <div />
+                        <div>
+                          <i />
+                          <i />
+                          <i />
+                        </div>
+                      </div>
+                      <span>
+                        {icon(I, 16)}
+                        {label}
+                        {boot.settings.theme === id && icon(Check, 16)}
+                      </span>
+                    </button>
+                  ))}
+                </div>
                 <div className="settings-group appearance-controls">
-                  {Object.entries(appearanceOptions).filter(([key]) => ["uiFont", "textSize", "reduceMotion"].includes(key)).map(([key, spec]) => <SettingRow key={key} title={{uiFont: "Schriftart", textSize: "Schriftgröße", reduceMotion: "Bewegung"}[key]} description={{uiFont: "Eine gemeinsame Schrift für die gesamte Oberfläche.", textSize: "Passt Texte in Chats, Listen und Einstellungen an.", reduceMotion: "Reduziert Animationen. Ausgeschaltet gilt deine Systemeinstellung."}[key]}>
+                  {Object.entries(appearanceOptions).filter(([key]) => key !== "welcomeParticles").map(([key, spec]) => <SettingRow key={key} title={{uiFont: "Schriftart", textSize: "Schriftgröße", reduceMotion: "Bewegung"}[key]} description={{uiFont: "Eine gemeinsame Schrift für die gesamte Oberfläche.", textSize: "Passt Texte in Chats, Listen und Einstellungen an.", reduceMotion: "Reduziert Animationen. Ausgeschaltet gilt deine Systemeinstellung."}[key]}>
                     {key === "reduceMotion" ? <button type="button" role="switch" className="apple-switch" aria-label="Bewegung reduzieren" aria-checked={boot.settings.reduceMotion === "on"} onClick={guard(()=>saveSettings({reduceMotion: boot.settings.reduceMotion === "on" ? "system" : "on"}))}><span/></button> : <select aria-label={{uiFont: "Schriftart", textSize: "Schriftgröße", reduceMotion: "Bewegung"}[key]} value={boot.settings[key] || spec.default} onChange={guard(e => saveSettings({[key]: e.target.value}))}>{spec.options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>}
                   </SettingRow>)}
                 </div>
-                <LoaderSettings settings={boot.settings} onChange={saveSettings} />
                 <h3 className="section-heading">Visuell</h3>
                 <div className="settings-group">
-                  <SettingRow title="Flächenlicht" description="Dezente Lichtverläufe in Seitenleiste und Workspace.">
-                    <select aria-label="Flächenlicht" value={boot.settings.panelLight || "animated"} onChange={e => guard(() => saveSettings({panelLight: e.target.value}))()}>{appearanceOptions.panelLight.options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
-                  </SettingRow>
                   <SettingRow title="Reiseeffekt" description="Sanft wandernde Lichtpunkte auf der Startansicht oder in allen Chats.">
                     <select aria-label="Reiseeffekt" value={boot.settings.welcomeParticles || "on"} onChange={e => guard(() => saveSettings({welcomeParticles: e.target.value}))()}>{appearanceOptions.welcomeParticles.options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
                   </SettingRow>
                 </div>
-                <div className="settings-group"><SettingsNavigationRow title="Unser Design" description="Bausteine, Farben und Gestaltungsgrundlage" value={"CI " + designIdentity.version} onClick={()=>setSettingsTab("design")}/></div>
+                <details className="design-reference-disclosure"><summary>Design im Detail</summary><DesignReference theme={boot.settings.theme} /></details>
               </>
-            ) : settingsTab === "design" ? (
-              <><button className="design-back" onClick={()=>setSettingsTab("appearance")}>{icon(ArrowLeft,16)}Aussehen</button><DesignReference theme={boot.settings.theme} tone={boot.settings.designTone} accent={boot.settings.highlightColor}/></>
             ) : settingsTab === "identity" ? (
               <>
                 <AgentPreferences api={api} onSaved={profile=>{setBoot(old=>({...old,settings:{...old.settings,name:profile.name,avatar:profile.avatar,avatarColor:profile.avatarColor,avatarConfigured:true}}));notify("Dein Agent wurde gespeichert.")}} />
@@ -2634,8 +2577,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       </span>
                     }
                   />
-                  {!usage&&!usageError&&<Skeleton variant="settings" rows={2} label="Nutzung wird geladen …"/>}
-                  {usageError&&<p role="alert">{usageError} <button onClick={loadUsage}>Erneut laden</button></p>}
                   {Object.entries(
                     usage?.rateLimitsByLimitId || { codex: usage?.rateLimits },
                   )
@@ -2736,7 +2677,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
           </div>
         )}
       </MainSurface>
-      {!embedded && <SystemNotice ref={systemNoticeRef} onBusyChange={setServerRestartBusy} api={api} message={toast} onDismiss={()=>setToast("")} />}
+      {!embedded && <SystemNotice api={api} message={toast} onDismiss={()=>setToast("")} />}
       {welcome && !embedded && <AgentWelcome api={api} initialName={boot.settings.name} onClose={() => setWelcome(false)} onSaved={profile => {
         setBoot(old => ({...old, settings: {...old.settings, name:profile.name, avatar:profile.avatar, avatarColor:profile.avatarColor, avatarConfigured:true}}));
         setWelcome(false);
@@ -2759,27 +2700,34 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
           </div>
         </Modal>
       )}
-      {modal?.type === "search-note" && <NoteEditor api={api} entry={modal.entry} onClose={()=>setModal(null)} onSaved={()=>setLibraryRevision(v=>v+1)} onOpen={path=>setModal({...modal,entry:{...modal.entry,path}})}/> }
       {modal === "search" && (
-        <Modal title="Suche" className="system-search-dialog" onClose={() => setModal(null)}>
-          <SystemSearch api={api} pages={[
-            ...nav.map(([id, , title]) => ({kind:"page", id, title, detail:"Bereich"})),
-            ...settingNav.map(([id, , title]) => ({kind:"setting", id, title:`Einstellungen · ${title}`, detail:"Einstellungen"})),
-          ]} onOpen={guard(async result => {
-            setModal(null);
-            if (result.kind === "chat") { await openChat(result.id); return; }
-            if (result.kind === "project") { newDraft(result.id); chooseProject(result.id); setExpandedProject(result.id); setView("chat"); return; }
-            if (result.kind === "file") { setView("library"); setModal({type:"library-file",entry:result.entry}); return; }
-            if (result.kind === "knowledge") { setView("library"); setModal({type:"search-note",entry:result.entry}); return; }
-            if (result.kind === "skill") { setView("skills"); setModal({type:"skill",skill:result.entry}); return; }
-            if (result.kind === "job") {
-              if (result.entry.managed) { setSettingsTab(result.id==='system-memory'?'memory':result.id==='system-backup'||result.id==='system-cleanup'?'storage':'system'); setView('settings'); }
-              else { setView("jobs"); setModal({type:"job",job:result.entry}); }
-              return;
-            }
-            if (result.kind === "setting") { setSettingsTab(result.id); setView("settings"); return; }
-            setView(result.id);
-          })}/>
+        <Modal title="Chats durchsuchen" onClose={() => setModal(null)}>
+          <SearchBox
+            autoFocus
+            value={search}
+            onChange={setSearch}
+            placeholder="Suche nach einem Gespräch"
+          />
+          <div className="search-results">
+            {chats
+              .filter((c) => !c.archived)
+              .filter((c) =>
+                c.title.toLowerCase().includes(search.toLowerCase()),
+              )
+              .map((c) => (
+                <button
+                  key={c.id}
+                  onClick={guard(async () => {
+                    setModal(null);
+                    await openChat(c.id);
+                  })}
+                >
+                  {icon(MessageCircle, 17)}
+                  {c.title}
+                  {icon(ArrowUpRight, 15)}
+                </button>
+              ))}
+          </div>
         </Modal>
       )}
       {modal === "activity" && (
@@ -3049,10 +2997,14 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       {modal?.type==='service-connection'&&<Modal title={modal.connection.id?'Verbindung bearbeiten':'Verbindung hinzufügen'} onClose={()=>setModal(null)}>
         <ServiceConnectionForm key={modal.connection.id||modal.connection.provider} connection={modal.connection} api={api} notify={notify} Field={Field} workers={boot.workers||[]} projects={boot.projects||[]} requests={requests} RequestCard={RequestCard} onReply={guard(async(id,result)=>{await api('/respond',{id,result});setRequests(rs=>rs.filter(r=>r.id!==id));})} onChanged={connections=>setIntegrations(old=>({...old,connections:[...old.connections.filter(c=>c.kind!=='service'),...connections]}))} onSaved={async message=>{setIntegrations(await api('/integrations'));setModal(null);notify(message);}}/>
       </Modal>}
-      {modal?.type==='library-file'&&<LibraryPreview entry={modal.entry} entries={modal.entries} onNavigate={entry=>setModal(current=>({...current,entry}))} onClose={()=>setModal(null)}>
-        <div className="library-preview"><FileContent key={modal.entry.scope+modal.entry.path} path={modal.entry.path} scope={modal.entry.scope} api={api} readOnly reading/></div>
-
-      </LibraryPreview>}
+      {modal?.type==='library-file'&&<Modal wide title={modal.entry.name} onClose={()=>setModal(null)}>
+        <p className="page-note">{modal.entry.origin}{modal.entry.worker?' · '+modal.entry.worker:''}</p><code className="path-label">{modal.entry.path}</code>
+        <div className="library-preview"><FileContent path={modal.entry.path} scope={modal.entry.scope} api={api} readOnly/></div>
+        <div className="row between connection-actions"><button onClick={guard(async()=>{const entry=await api('/library/favorite',{id:modal.entry.id,favorite:!modal.entry.favorite});setModal({type:'library-file',entry});setLibraryRevision(v=>v+1);})}>{modal.entry.favorite?'Favorit entfernen':'Als Favorit merken'}</button>
+          {modal.entry.threadId&&chats.some(c=>c.id===modal.entry.threadId)&&<button onClick={guard(async()=>{await openChat(modal.entry.threadId);setModal(null);})}>Zum Gespräch</button>}
+          <a href={'/api/file/raw?path='+encodeURIComponent(modal.entry.path)+'&scope='+modal.entry.scope+'&download=1'} download>Herunterladen</a>
+          <button className="primary" disabled={modal.entry.missing} onClick={guard(async()=>{const file=await api('/library/reuse',{id:modal.entry.id,projectId});setAttachments(a=>[...a,file]);setView('chat');setModal(null);})}>Im Chat verwenden</button></div>
+      </Modal>}
       {modal?.type==='image-create'&&<Modal title="Bild erstellen" onClose={()=>setModal(null)}><ImageForm api={api} Field={Field} projects={boot.projects} projectId={projectId} connections={integrations.connections} onCreated={entry=>{setLibraryRevision(v=>v+1);setModal({type:'library-file',entry});}}/></Modal>}
       {modal?.type==='skill-hub'&&<Modal title="Skill hinzufügen" onClose={()=>setModal(null)}><SkillHub api={api} Field={Field} onSelect={skill=>setModal({type:'skill',skill})} onCreated={()=>setModal({type:'skill-create'})}/></Modal>}
       {modal?.type==='skill-create'&&<Modal title="Eigenen Skill erstellen" onClose={()=>setModal(null)}><CreateSkillForm api={api} Field={Field} onCreated={async()=>{await loadSkills();setModal(null);}}/></Modal>}
@@ -3156,7 +3108,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
           <SkillDetails skill={modal.skill} api={api} Field={Field} onChanged={async()=>{await loadSkills();setModal(null);notify('Eigene Skillvariante angelegt.');}} onUse={s=>{setText(t=>(t?t+'\n\n':'')+`Nutze den Skill „${s.name}“ aus ${s.source||'der vorhandenen Installation'}. Lies dazu ${JSON.stringify(s.path)} und bei Bedarf dessen Referenzen. Prüfe die Voraussetzungen mit deinen vorhandenen Werkzeugen.\n\n`);setView('chat');setModal(null);inputRef.current?.focus();}}/>
         </Modal>
       )}
-    </div></LoaderProvider>
+    </div>
   );
 }
 function SearchBox({ value, onChange, placeholder, autoFocus }) {

@@ -5,7 +5,6 @@ import { readFile } from 'node:fs/promises';
 
 export default defineConfig({
   root: new URL('./ui', import.meta.url).pathname,
-  resolve: { alias: { '@': new URL('./ui', import.meta.url).pathname } },
   plugins: [
     { name: 'local-raw-assets', enforce: 'pre', async load(id) {
       if (/\/assets\/avatars\/[a-z]+\.svg$/.test(id) || /-LICENSE\.txt$/.test(id))

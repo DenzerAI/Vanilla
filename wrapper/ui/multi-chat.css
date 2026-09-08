@@ -47,6 +47,10 @@
   flex-shrink: 0;
   border-bottom: 1px solid var(--border);
 }
+.active-pane > .pane-header,
+.active-pane > .embedded-chat .pane-header {
+  background: var(--selected);
+}
 .pane-header .row {
   flex-shrink: 0;
 }

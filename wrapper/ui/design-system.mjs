@@ -1,16 +1,16 @@
-/** AGENT CI v1.1 — the single source for CSS and the Appearance reference. */
+/** AGENT CI v1.0 — the single source for CSS and the Appearance reference. */
 export const identity = {
   name: "AGENT",
-  version: "1.1",
+  version: "1.0",
   description:
-    "Ruhig, klar und persönlich. Abgestimmte Flächen, präzise Typografie und neutrale Bedienelemente nach macOS-Vorbild.",
+    "Ruhig, klar und persönlich. Warme neutrale Flächen, präzise Typografie und ein neutrale Bedienelemente nach macOS-Vorbild.",
 };
 export const fonts = [
   {
-    name: "Systemschrift für Gespräche",
+    name: "System-Serif",
     role: "Antworten des Agenten",
     token: "font-conversation",
-    value: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif',
+    value: 'Charter, "Bitstream Charter", "Sitka Text", Georgia, serif',
     system: true,
     specimen: "Lass uns das gemeinsam anschauen.",
   },
@@ -65,14 +65,6 @@ export const typography = [
     line: 1.5,
     weight: 400,
     use: "Listen und kurze Inhalte",
-  },
-  {
-    id: "conversation",
-    label: "Gesprächsantwort",
-    size: 15,
-    line: 1.5,
-    weight: 400,
-    use: "Gut lesbare Agentenantworten im Gespräch",
   },
   {
     id: "reading",
@@ -133,8 +125,7 @@ export const typography = [
 ];
 export const spacing = [2, 4, 8, 12, 16, 20, 24, 28, 32, 40, 48, 64];
 export const radii = { small: 4, control: 8, button: 6, panel: 12, large: 24, pill: 999 };
-export const controls = { "turn-loader-slot": "19.2px", "composer-fallback":"112px", "nav-text-inset":"38px", "nav-group-inset":"46px", height: "32px", target: "40px", touch: "44px", "heading-height": "52px", "app-heading-height": "84px", "row-height": "48px", "switch-width": "36px", "switch-height": "20px", "switch-thumb": "16px", "switch-travel": "16px" };
-export const typeMetrics = { "font-root-size": "16px", "tracking-title": "-0.65px", "tracking-heading": "-0.35px", "tracking-welcome": "-0.7px" };
+export const controls = { height: "32px", target: "40px", touch: "44px", "heading-height": "52px", "app-heading-height": "84px", "row-height": "48px", "switch-width": "36px", "switch-height": "20px", "switch-thumb": "16px", "switch-travel": "16px" };
 export const weights = { regular: 400, medium: 500, semibold: 600, bold: 700 };
 export const leading = { tight: 1.2, compact: 1.4, normal: 1.5, reading: 1.6 };
 export const themes = {
@@ -142,12 +133,6 @@ export const themes = {
     'brand-asset-bg': '#ffffff',
     bg: "#1b1a19",
     "workspace-backdrop": "#151413",
-    "sidebar-sheen": "radial-gradient(ellipse at 90% 10%, #ffffff06, #ffffff00 65%), radial-gradient(ellipse at 10% 90%, #ffffff03, #ffffff00 60%)",
-    "sidebar-material-shadow": "inset 0 0 0 1px #ffffff0a, inset 0 1px 0 #ffffff05, 0 4px 16px #0000000a",
-    "workspace-panel-bg": "#000000",
-    "workspace-panel-glass": "#000000f0",
-    "workspace-panel-sheen": "radial-gradient(ellipse at 100% 0%, #ffffff0b, #ffffff00 65%), radial-gradient(ellipse at 0% 100%, #ffffff05, #ffffff00 55%)",
-    "workspace-panel-shadow": "inset 0 0 0 1px #ffffff14, inset 0 1px 0 #ffffff0a, 0 12px 32px #00000040",
     sidebar: "#282725",
     surface: "#252422",
     raised: "#302e2b",
@@ -157,17 +142,13 @@ export const themes = {
     muted: "#b5b0a8",
     faint: "#a39e96",
     accent: "#da977e",
-    "brand-accent": "#da977e",
     blue: "#91baff",
     input: "#2c2a27",
     glass: "#302e2b",
     "sheet-glass": "#302e2bb8",
-    "notice-glass": "#302e2b66",
-    "glass-highlight": "#ffffff26",
     hover: "#ffffff09",
     composer: "#282725",
-    "composer-blur": "#28272599",
-    "composer-glass-shadow": "inset 0 0 0 1px #ffffff12, inset 0 1px 0 #ffffff14, 0 4px 16px #00000018",
+    "composer-blur": "#282725b8",
     success: "#8dceb0",
     "switch-thumb": "#ffffff",
     "switch-on": "#858585",
@@ -197,8 +178,7 @@ export const themes = {
     primary: "#f3f1ed",
     "primary-hover": "#d8d3cb",
     "disabled-bg": "#47433d",
-    "selection-color": "#494744",
-    "focus-ring": "#a8a6a2",
+    "selection-color": "#395b85",
     scrollbar: "#77716a",
     overlay: "#00000066",
     shadow: "0 12px 38px #0003, 0 2px 8px #0002",
@@ -209,12 +189,6 @@ export const themes = {
   },
   light: {
     "workspace-backdrop": "#f7f6f2",
-    "sidebar-sheen": "radial-gradient(ellipse at 90% 10%, #ffffff40, #ffffff00 65%), radial-gradient(ellipse at 10% 90%, #00000003, #00000000 60%)",
-    "sidebar-material-shadow": "inset 0 0 0 1px #00000008, inset 0 1px 0 #ffffff40, 0 4px 16px #00000008",
-    "workspace-panel-bg": "#f7f6f2",
-    "workspace-panel-glass": "#f7f6f2",
-    "workspace-panel-sheen": "none",
-    "workspace-panel-shadow": "0 2px 10px #0000000a",
     'brand-asset-bg': '#ffffff',
     bg: "#fcfbf8",
     sidebar: "#f0eee9",
@@ -226,17 +200,13 @@ export const themes = {
     muted: "#625e57",
     faint: "#6c665e",
     accent: "#9e513b",
-    "brand-accent": "#9e513b",
     blue: "#275fab",
     input: "#eeece6",
     glass: "#f5f3ee",
     "sheet-glass": "#f5f3eecc",
-    "notice-glass": "#f5f3ee80",
-    "glass-highlight": "#ffffffb3",
     hover: "#00000005",
     composer: "#f0eee9",
-    "composer-blur": "#f0eee9b3",
-    "composer-glass-shadow": "inset 0 0 0 1px #0000000a, inset 0 1px 0 #ffffffb3, 0 4px 16px #0000000a",
+    "composer-blur": "#f0eee9c7",
     success: "#226644",
     "switch-thumb": "#ffffff",
     "switch-on": "#686868",
@@ -266,8 +236,7 @@ export const themes = {
     primary: "#292723",
     "primary-hover": "#45413b",
     "disabled-bg": "#e5e1d9",
-    "selection-color": "#dedcd8",
-    "focus-ring": "#706e69",
+    "selection-color": "#c6dcf9",
     scrollbar: "#938b7f",
     overlay: "#00000066",
     shadow: "0 12px 38px #00000012, 0 2px 8px #0000000a",
@@ -277,66 +246,28 @@ export const themes = {
     "shadow-control": "0 1px 2px #0002",
   },
 };
-// Product-owned palettes inspired by warm editorial and neutral desktop surfaces.
-// These are our values, not claimed vendor app tokens. See DESIGN.md for sources.
-export const designTones = [
-  {id: 'balanced', label: 'Ausgewogen', description: 'Sanfte Wärme, klare Kontraste'},
-  {id: 'warm', label: 'Warm', description: 'Papier und weiche Sandtöne'},
-  {id: 'neutral', label: 'Neutral', description: 'Klare Grautöne ohne Blaustich'},
-];
-export const designAccents = [
-  {id: 'terracotta', label: 'Terrakotta', dark: '#da977e', light: '#9e513b'},
-  {id: 'graphite', label: 'Graphit', dark: '#b7b7b7', light: '#575757'},
-  {id: 'sage', label: 'Salbei', dark: '#aac3a3', light: '#4c6744'},
-];
-const toneSurfaces = {
-  warm: {
-    light: {faint:'#625c54', muted:'#5f5a52', bg:'#faf7f0', sidebar:'#eee8dd', surface:'#f2ede3', raised:'#ebe5da', input:'#eee7dd', composer:'#eee8dd', glass:'#e5dfd3', 'workspace-backdrop':'#e7e0d4', 'workspace-panel-bg':'#e7e0d4', 'workspace-panel-glass':'#e7e0d4'},
-    dark: {bg:'#201d19', sidebar:'#29251f', surface:'#28241f', raised:'#332e27', input:'#2c2721', composer:'#29251f', glass:'#332e27', 'workspace-backdrop':'#181511'},
-  },
-  neutral: {
-    light: {bg:'#fafafa', sidebar:'#eeeeee', surface:'#f2f2f2', raised:'#e5e5e5', input:'#ebebeb', composer:'#eeeeee', glass:'#e5e5e5', text:'#262626', muted:'#5b5b5b', faint:'#636363', 'workspace-backdrop':'#e7e7e7', 'workspace-panel-bg':'#e7e7e7', 'workspace-panel-glass':'#e7e7e7'},
-    dark: {bg:'#1b1b1b', sidebar:'#272727', surface:'#242424', raised:'#2e2e2e', input:'#292929', composer:'#272727', glass:'#2e2e2e', text:'#f1f1f1', muted:'#b2b2b2', faint:'#a0a0a0', 'workspace-backdrop':'#151515'},
-  },
-};
-export function resolveDesign(theme = 'dark', tone = 'balanced', accent = 'terracotta') {
-  const mode = theme === 'light' ? 'light' : 'dark';
-  const palette = {...themes[mode], ...(toneSurfaces[tone]?.[mode] || {})};
-  const selectedAccent = designAccents.find(item => item.id === accent) || designAccents[0];
-  return {...palette, accent: selectedAccent[mode], highlight: selectedAccent[mode],
-    'composer-blur': palette.composer + (mode === 'light' ? 'b3' : '99'),
-    'sheet-glass': palette.glass + (mode === 'light' ? 'cc' : 'b8')};
-}
-export function designVariables(theme, tone, accent) {
-  return Object.fromEntries(Object.entries(resolveDesign(theme, tone, accent)).map(([key,value])=>['--'+key,value]));
-}
 export const colorRoles = {
   bg: "Hintergrund",
   sidebar: "Seitenleiste",
-  "workspace-panel-bg": "Workspace · dunkle Tiefenfläche",
   surface: "Gruppenfläche",
   raised: "Erhöhte Fläche",
   text: "Haupttext",
   muted: "Sekundärtext",
   faint: "Zusatztext",
-  accent: "Hervorhebung",
-  "brand-accent": "Markenakzent · Terrakotta",
+  accent: "Markenakzent",
   blue: "Links & Fokus",
   success: "Erfolg",
   warning: "Hinweis",
   danger: "Fehler",
 };
-export const motion = { 'panel-light-duration': '48s', 'panel-light-easing': 'ease-in-out', 'feedback-duration': '160ms', 'progress-duration': '1000ms', 'skeleton-duration': '1600ms' };
 export function renderDesignCSS() {
   const shared = Object.fromEntries([
-    ...Object.entries(typeMetrics),
     ...fonts.map((f) => [f.token, f.value]),
     ...typography.map((t) => [`text-${t.id}`, `${t.size / 16}rem`]),
     ...spacing.map((n) => [`space-${n}`, `${n / 16}rem`]),
     ...Object.entries(radii).map(([k, v]) => [`radius-${k}`, `${v}px`]),
     ...Object.entries(controls).map(([k, v]) => [`control-${k}`, v]),
     ...Object.entries(weights).map(([k, v]) => [`weight-${k}`, v]),
-    ...Object.entries(motion).map(([k, v]) => [`motion-${k}`, v]),
     ...Object.entries(leading).map(([k, v]) => [`leading-${k}`, v]),
   ]);
   const rule = (selector, values, mode) =>

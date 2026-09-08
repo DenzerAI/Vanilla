@@ -1,13 +1,10 @@
-.chat-artifacts { margin: var(--space-8) 0 var(--space-12); max-width: 100%; }
-.artifact-toggle { display: inline-flex; align-items: center; gap: var(--space-8); min-height: var(--control-target); padding: var(--space-4); color: var(--muted); font-size: var(--text-caption); }
-.artifact-toggle:hover, .artifact-toggle:focus-visible { color: var(--text); }
-.artifact-toggle[aria-expanded="true"] > svg:last-child { transform: rotate(180deg); }
-@media (pointer: coarse) { .artifact-toggle { min-height: var(--control-touch); } }
+.chat-artifacts { margin: var(--space-16) 0 var(--space-24); max-width: 100%; }
 .chat-artifact { border-bottom: 1px solid var(--border); }
 .artifact-row { display: flex; align-items: center; gap: var(--space-4); padding: var(--space-8) 0; }
 .artifact-open { display: flex; justify-content: flex-start; align-items: center; gap: var(--space-12); text-align: left; flex: 1; min-width: 0; padding: var(--space-4); color: var(--text); }
 .artifact-open > svg { flex-shrink: 0; color: var(--muted); }
-.artifact-open > span { min-width: 0; overflow-wrap: anywhere; font-size: var(--text-caption); }
+.artifact-open > span { min-width: 0; overflow-wrap: anywhere; font-size: var(--text-control); }
+.artifact-open small { display: block; color: var(--muted); font-size: var(--text-caption); }
 .artifact-row > .icon-button { flex-shrink: 0; }
 .artifact-preview { max-height: 420px; overflow: auto; padding-bottom: var(--space-12); }
 .artifact-preview .file-image { max-width: 100%; max-height: 260px; object-fit: contain; display: block; border-radius: var(--radius-control); }

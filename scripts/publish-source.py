@@ -41,8 +41,6 @@ def source_files(root=ROOT):
 
 def export(destination):
     destination = Path(destination)
-    # Refuse source adoption before copying or committing an invalid UI.
-    run("npm", "--prefix", "wrapper", "run", "design:verify", capture=False)
     files = source_files()
     for name in files:
         target = destination / name
