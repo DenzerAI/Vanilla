@@ -1,0 +1,18 @@
+"""Additive schema owned by the existing SQLite core. All tables are backed up together."""
+SCHEMA = '''
+CREATE TABLE IF NOT EXISTS crm_entities(id TEXT PRIMARY KEY, kind TEXT NOT NULL CHECK(kind IN ('person','organization','case')), revision INTEGER NOT NULL DEFAULT 0, created_at REAL NOT NULL, archived INTEGER NOT NULL DEFAULT 0 CHECK(archived IN (0,1)));
+CREATE TABLE IF NOT EXISTS crm_fields(entity_kind TEXT NOT NULL, key TEXT NOT NULL, definition TEXT NOT NULL CHECK(json_valid(definition)), PRIMARY KEY(entity_kind,key));
+CREATE TABLE IF NOT EXISTS crm_signals(id TEXT PRIMARY KEY, connection_id TEXT NOT NULL, kind TEXT NOT NULL, external_id TEXT NOT NULL, source_time REAL NOT NULL, received_at REAL NOT NULL, actor TEXT NOT NULL, payload TEXT NOT NULL CHECK(json_valid(payload)), entity_id TEXT REFERENCES crm_entities(id), status TEXT NOT NULL CHECK(status IN ('pending','processed','error','ignored')), UNIQUE(connection_id,kind,external_id));
+CREATE INDEX IF NOT EXISTS crm_signal_pending ON crm_signals(entity_id,status);
+CREATE TABLE IF NOT EXISTS crm_proposals(id TEXT PRIMARY KEY, signal_id TEXT NOT NULL REFERENCES crm_signals(id), entity_id TEXT REFERENCES crm_entities(id), kind TEXT NOT NULL, base_revision INTEGER NOT NULL, status TEXT NOT NULL CHECK(status IN ('pending','accepted','rejected')), confidence TEXT NOT NULL, actor TEXT NOT NULL, reason TEXT NOT NULL, created_at REAL NOT NULL, decided_by TEXT, decided_at REAL, decision_reason TEXT);
+CREATE INDEX IF NOT EXISTS crm_proposal_entity ON crm_proposals(entity_id,status);
+CREATE TABLE IF NOT EXISTS crm_proposal_values(proposal_id TEXT NOT NULL REFERENCES crm_proposals(id), field TEXT NOT NULL, slot TEXT NOT NULL, value TEXT NOT NULL CHECK(json_valid(value)), normalized TEXT NOT NULL, PRIMARY KEY(proposal_id,field,slot));
+CREATE TABLE IF NOT EXISTS crm_facts(id TEXT PRIMARY KEY, entity_id TEXT NOT NULL REFERENCES crm_entities(id), field TEXT NOT NULL, slot TEXT NOT NULL, value TEXT NOT NULL CHECK(json_valid(value)), normalized TEXT NOT NULL, signal_id TEXT NOT NULL REFERENCES crm_signals(id), proposal_id TEXT NOT NULL REFERENCES crm_proposals(id), actor TEXT NOT NULL, decided_by TEXT NOT NULL, confidence TEXT NOT NULL, source_time REAL NOT NULL, decided_at REAL NOT NULL, checked_at REAL NOT NULL, active INTEGER NOT NULL CHECK(active IN (0,1)));
+CREATE UNIQUE INDEX IF NOT EXISTS crm_fact_current ON crm_facts(entity_id,field,slot) WHERE active=1;
+CREATE INDEX IF NOT EXISTS crm_fact_lookup ON crm_facts(field,normalized,active);
+CREATE TABLE IF NOT EXISTS crm_external_ids(connection_id TEXT NOT NULL, object_type TEXT NOT NULL, external_id TEXT NOT NULL, entity_id TEXT NOT NULL REFERENCES crm_entities(id), signal_id TEXT NOT NULL REFERENCES crm_signals(id), PRIMARY KEY(connection_id,object_type,external_id));
+CREATE TABLE IF NOT EXISTS crm_relations(id TEXT PRIMARY KEY, entity_id TEXT NOT NULL REFERENCES crm_entities(id), target_type TEXT NOT NULL, target_id TEXT NOT NULL, relation TEXT NOT NULL, role TEXT NOT NULL, department TEXT NOT NULL, signal_id TEXT NOT NULL REFERENCES crm_signals(id), actor TEXT NOT NULL, created_at REAL NOT NULL, UNIQUE(entity_id,target_type,target_id,relation,role,department));
+CREATE TABLE IF NOT EXISTS crm_workflows(id TEXT PRIMARY KEY, definition TEXT NOT NULL CHECK(json_valid(definition)));
+CREATE TABLE IF NOT EXISTS crm_views(id TEXT PRIMARY KEY, revision INTEGER NOT NULL, definition TEXT NOT NULL CHECK(json_valid(definition)));
+CREATE TABLE IF NOT EXISTS crm_audit(id INTEGER PRIMARY KEY AUTOINCREMENT, entity_id TEXT, action TEXT NOT NULL, actor TEXT NOT NULL, reason TEXT NOT NULL, reference TEXT NOT NULL, created_at REAL NOT NULL);
+'''

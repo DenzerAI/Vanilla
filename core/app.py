@@ -23,6 +23,8 @@ from starlette.background import BackgroundTask
 
 from .config import Config
 from .database import Database
+from .crm import CRM
+from .crm_api import routes as crm_routes
 from .storage import Storage, valid_record_key
 from .knowledge import Knowledge
 from .queue import JobQueue
@@ -52,11 +54,13 @@ def create_app(config=None):
     config = config or Config.environment()
     config.workspace.mkdir(parents=True, exist_ok=True)
     db = Database(config.data / "agent.sqlite3")
+    crm = CRM(db)
     storage = Storage(db, config)
     storage.import_legacy()
     knowledge = Knowledge(db, config)
     settings = Settings(db)
     memory = Memory(db, config, knowledge, settings)
+    memory.crm = crm
     operations = Operations(db, config, settings, knowledge, memory)
     storage.system_jobs = operations.managed_jobs
     queue = JobQueue(db, storage, config.timezone)
@@ -88,6 +92,7 @@ def create_app(config=None):
         runtime,
     )
     app.state.operations = operations
+    app.state.crm = crm
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(request, error):
@@ -207,6 +212,7 @@ def create_app(config=None):
         return {"checks": operations.checks()}
 
     app.include_router(operations_routes(operations, queue))
+    app.include_router(crm_routes(crm, memory))
 
     @app.get("/api/auth/session")
     async def session(request: Request):
@@ -437,6 +443,7 @@ def create_app(config=None):
                 **payload.get("features", {}),
                 "knowledge": True,
                 "sqlite": True,
+                "crmCore": True,
                 "operations": True,
             }
             return JSONResponse(payload)
