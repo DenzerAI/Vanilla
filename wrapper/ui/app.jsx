@@ -1652,6 +1652,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   }, [foreground, view, readablePane, awayFromBottom, running, thread, chatId, current?.lastCompletedTurnId, current?.readTurnId]);
   const notificationState = useJobNotifications(api, !!boot?.features?.routines && !embedded, notify);
   useEffect(()=>{
+    if(embedded)return;
     const open=()=>setModal('notifications');
     const notificationId=new URLSearchParams(window.location.search).get('notification');
     if(notificationId)setModal({type:'notifications',id:notificationId});
