@@ -47,7 +47,17 @@ liest `Knowledge.context` die Quelldatei erneut; gelöschte oder geänderte
 Indexinhalte werden nicht ungeprüft übergeben. Standardmäßig kommen bis zu
 sechs Fundstellen mit insgesamt höchstens 8.000 Textzeichen hinzu, als Daten
 mit Pfad, Version, Fundmethode und Offset. Andere Projektbereiche bleiben
-getrennt; `notes/shared/` ist eine ausdrückliche Freigabeoption.
+getrennt; `notes/shared/` ist eine ausdrückliche Freigabeoption. Die gemeinsame
+Suche filtert auf diesen freigegebenen Ordner vor Rangfolge und Trefferlimit,
+damit private Notizen freigegebene Treffer weder verdrängen noch als Kontext
+in andere Projekte gelangen. Nicht mehr lesbare Quellen werden übersprungen.
+
+Die automatische Aufnahme behält vorgemerkte Gespräche während einer Pause
+und über Neustarts. Nach dem Einschalten werden sie nachgeholt; ausdrücklich
+ausgeschlossene Gespräche bleiben ausgeschlossen. Neue Ergebnisse während
+einer Aufnahme werden anschließend erneut geprüft. Eine fehlerhafte Quelle
+bleibt vorgemerkt, während andere Gespräche weiterverarbeitet werden. Dies
+nutzt den vorhandenen Wartungstakt, keinen zusätzlichen Heartbeat.
 
 Automatische Notizen unter `brain/daily/`, Ergebniszusammenstellungen und
 Fortsetzungsnotizen sind Ableitungen aus Gesprächsquellen. Sie verändern

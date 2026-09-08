@@ -58,3 +58,8 @@ Fehlen beim ersten Abruf eingerichtete Einträge, zeigt dieser Listenbereich
 den gemeinsamen List-Skeleton. Der lokal verfügbare Dienstekatalog und
 bereits geladene Verbindungen bleiben bedienbar. Fehler ersetzen den
 Platzhalter und behalten „Erneut laden“.
+
+
+Der Einstieg liegt unter **Einstellungen → Verbindungen**. Die vorhandene
+Katalogansicht übernimmt die Einstellungsnavigation mit Zurück zur App;
+bestehende Direktlinks und globale Suchtreffer bleiben nutzbar.

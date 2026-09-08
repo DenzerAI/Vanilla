@@ -1,0 +1,9 @@
+.privacy-value { font-variant-numeric: tabular-nums; white-space: nowrap; }
+.privacy-settings .setting-row > :first-child { min-width: 0; }
+.privacy-settings .row { flex-wrap: wrap; }
+.privacy-evidence { display: grid; gap: var(--space-8); padding: var(--space-12) 0 var(--space-16); }
+.privacy-evidence label, .privacy-test label { font-size: var(--text-small); color: var(--muted); }
+.privacy-evidence textarea, .privacy-test textarea { width: 100%; resize: vertical; box-sizing: border-box; }
+.privacy-test { display: grid; gap: var(--space-12); }
+.privacy-settings a { color: var(--blue); text-decoration: underline; }
+@media(max-width:600px) { .privacy-settings select { max-width: 100%; } }

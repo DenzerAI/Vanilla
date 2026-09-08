@@ -6,6 +6,7 @@ export const capabilities = {
   schemaVersion: 1,
   availability: 'Query the referenced status endpoint at runtime; source presence is not readiness.',
   domains: [
+    {id:'privacy',sources:['core/privacy.py','wrapper/privacy.mjs','wrapper/ui/privacy-settings.tsx'],contract:'docs/PRIVACY.md',status:'/api/privacy/status'},
     {id:'inbox', sources:['wrapper/ui/inbox.tsx','wrapper/ui/inbox.css'], contract:'wrapper/surfaces/inbox.md', status:'design-preview-only', backend:null},
     {id:'chat', sources:['wrapper/ui/app.jsx','wrapper/server.mjs'], contract:'wrapper/surfaces/chat.md'},
     {id:'speech', sources:['wrapper/ui/message-speech.tsx','wrapper/ui/speech-playback.mjs','wrapper/speech.mjs','system/runtime-assets.mjs','requirements-speech.lock','scripts/setup-system.mjs'], contract:'wrapper/VOICE.md', status:'/api/speech/status'},
@@ -21,6 +22,7 @@ export const capabilities = {
     {id:'operations', sources:['core/operations.py','core/service.py','core/backups.py','core/restore.py','core/secrets.py'], contract:'docs/OPERATIONS.md'},
   ],
   actions: [
+    {id:'settings.privacy', surface:'Einstellungen → Datenschutz', component:'wrapper/ui/privacy-settings.tsx', selector:'[data-capability="settings.privacy"]', api:{status:'GET /api/privacy/status',settings:'POST /api/privacy/settings',preview:'POST /api/privacy/preview',export:'GET /api/privacy/export',check:'POST /internal/privacy/check'}, behavior:'Local pre-handoff rules and metadata audit; no control of native worker traffic. Legal review is self-documentation, not certification.'},
     {id:'inbox.preview', surface:'sidebar above jobs; inbox replaces sidebar with conversation list and back action', component:'wrapper/ui/inbox.tsx', selector:'[data-capability="inbox.preview"]', api:null, behavior:'Local fictional examples only; no connector calls, persistent drafts, agent work or sending. Concept: docs/INBOX.md'},
     {id:'chat.message.edit', surface:'user message actions', component:'wrapper/ui/app.jsx#Item', behavior:'Edit and branch via existing confirmation flow'},
     {id:'chat.message.delete', surface:'user message actions', component:'wrapper/ui/app.jsx#Item', behavior:'Direct delete button opens existing confirmation; disabled during active turn'},

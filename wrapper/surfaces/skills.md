@@ -33,3 +33,8 @@ Aktualisieren sichtbar; Fehler und echte leere Ergebnisse ersetzen den
 Platzhalter. Suchfeld und Filter bleiben an ihren vorgesehenen Stellen.
 
 Aufgeklappte Anweisungen zeigen bis zum Abruf einen Document-Skeleton; Ladefehler beenden ihn.
+
+
+Der Einstieg liegt unter **Einstellungen → Skills**. Die vorhandene
+Katalogansicht übernimmt die Einstellungsnavigation mit Zurück zur App;
+bestehende Direktlinks und globale Suchtreffer bleiben nutzbar.

@@ -163,3 +163,26 @@ Die grafischen Loader benötigen die Utility-Klassen ihrer verschachtelten Kompo
 Seitenleiste und Workspace verwenden den gemeinsamen dekorativen Baustein `PanelLight`. Die Seitenleiste behält ihre hellere Grundfläche `sidebar` und erhält über `sidebar-material-shadow` eine sehr feine innere Kante; `sidebar-sheen` zeigt zwei diffuse, schwache radiale Verläufe. Der Workspace nutzt seine bestehende schwarze Materialfläche und `workspace-panel-sheen`. Nur die Lichtschicht bewegt sich, um jeweils wenige Prozent, mit 48 Sekunden je Richtung, sanften Wendepunkten und gegenläufiger Phase links/rechts. Dauer und Easing liegen in der zentralen Designquelle. Keine zufälligen Sprünge, kein Pulsieren von Text oder Kante.
 
 Aussehen → Visuell → Flächenlicht bietet Aus, Ruhend und Sanft bewegt (Standard). Die Auswahl wird gemeinsam mit den bestehenden Darstellungseinstellungen validiert und gespeichert. App- und Systemvorgaben für reduzierte Bewegung zeigen statische Verläufe. Versteckte Tabs, eingeklappte Seitenleisten und nicht sichtbare Flächen pausieren. Nur die Dekoration wird an den Rundungen beschnitten; Menüs, Tastaturfokus und Ziehkanten bleiben erreichbar. Erzwungener Kontrast blendet die Dekoration aus. Unser Design zeigt denselben Baustein.
+
+
+## Navigation im Alltag
+
+Tägliche Arbeit bleibt in der Hauptnavigation; Skills und Verbindungen gehören
+in die Einstellungen. Aufbau und Direktzugriffe führt der Navigationsvertrag
+in `wrapper/surfaces/README.md`. Die bestehenden Kataloge werden wiederverwendet.
+
+
+## Datenschutz
+
+`PrivacySettings` verwendet PageHeading, SettingRow, apple-switch, Modal und
+Settings-Skeleton. Reihenfolge: dokumentierter Prüfstand und Übergabezähler →
+Regeln vor Übergabe → gemeinsame Daten → aufklappbare betriebliche Prüfpunkte.
+Details und Texttest bleiben bedarfsweise sichtbar. Speicherung ist versioniert;
+Konflikte erhalten den Entwurf und bieten ausdrücklich Verwerfen/Neu laden.
+
+Prozente nennen immer Grundgesamtheit und Zeitraum: dokumentierte Prüfpunkte
+oder blockierte Übergabeversuche. Ohne Versuche steht „Noch keine Daten“.
+Keine Sicherheitsnote oder Konformitätsquote. Der lokale Test speichert keinen
+Testtext und erhöht keinen Zähler. Der Export enthält auch eigene Prüfanmerkungen,
+aber keine Nachrichteninhalte. Der Schutzumfang und seine Grenzen stehen in
+`docs/PRIVACY.md`; laufende Worker werden durch Pausieren nicht angehalten.

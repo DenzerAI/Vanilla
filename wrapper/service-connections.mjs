@@ -163,7 +163,7 @@ export class ServiceConnections {
   }
   async action(id,action,input={}) {
     const c=this.get(id);
-    await this.recordBoundary('service',{connectionId:id,action});
+    await this.recordBoundary('service',{connectionId:id,action,text:JSON.stringify(input)});
     if(c.provider==='microsoft-graph' && action==='inbox') return this.graph(c,'mailFolders/inbox/messages?$top=10&$select=id,subject,receivedDateTime,from');
     if(c.provider==='microsoft-graph' && action==='calendar') return this.graph(c,'events?$top=10&$select=id,subject,start,end');
     if(c.provider==='a2a' && c.config.mode==='client' && ['message','task'].includes(action)) {

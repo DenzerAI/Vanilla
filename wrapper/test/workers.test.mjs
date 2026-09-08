@@ -186,7 +186,7 @@ test("worker crash finalizes only its own turn as failed and never replays the p
   assert.equal((await adapter.call("thread/read",{threadId:thread.id})).thread.turns.length,1);
 });
 
-test("actual HTTP server routes ACP chats and jobs, protects mutations and survives restart", {timeout:20000}, async t => {
+test("standalone adapter preserves sessions and denies dispatch without the privacy core", {timeout:20000}, async t => {
   let child, exited, token;
   const {dir} = await fixture(t, {beforeCleanup: async () => {
     if (child && child.exitCode === null) { child.kill(); await exited; }
@@ -230,45 +230,19 @@ test("actual HTTP server routes ACP chats and jobs, protects mutations and survi
   assert.equal(configured.thread.workerSession.configOptions[0].currentValue, 'high');
   const invalid = await fetch(base+'/worker-session',{method:'POST',headers:{'content-type':'application/json','x-uwe-token':token},body:JSON.stringify({id:created.thread.id,configId:'quality',value:'invented'})});
   assert.notEqual(invalid.status,200);
-  await call('/turn',{id:created.thread.id,text:'Fiktiver Test',mode:'default'});
-  async function finished(id) {
-    for(let i=0;i<100;i++) { const r=await call('/thread?id='+id); if(r.thread.turns.at(-1)?.status==='completed')return r; await new Promise(r=>setTimeout(r,20)); }
-    throw new Error('Testauftrag nicht abgeschlossen');
-  }
-  assert.equal((await finished(created.thread.id)).thread.turns[0].items.at(-1).text,'Ergebnis: Kontext erhalten');
-  await writeFile(path.join(dir,'runtime/soul/IDENTITY.md'),'Anzeigename: Ada\n<!-- user-preferences:start -->\nNur mein eigener Stil.\n<!-- user-preferences:end -->');
-  await writeFile(path.join(dir,'company/FIRMA.md'),'FIRMA: Aktueller Betrieb');
-  await call('/turn',{id:created.thread.id,text:'Weitere Nachricht',mode:'default'});
-  await finished(created.thread.id);
-  const job=await call('/jobs/save',{name:'Fiktiver automatischer Auftrag',instructions:'Fiktiver Test',worker:'auto'});
-  const run=await call('/jobs/run',{id:job.id}); await finished(run.threadId);
-  for(let i=0;i<100;i++){const jobs=await call('/jobs');if(jobs[0].lastRun?.status==='completed')break;await new Promise(r=>setTimeout(r,20));}
-  const jobs=await call('/jobs'); assert.equal(jobs[0].lastRun.workerId,'hermes');
+  const denied=await fetch(base+'/turn',{method:'POST',headers:{'content-type':'application/json','x-uwe-token':token},body:JSON.stringify({id:created.thread.id,text:'Fiktiver Test',mode:'default'})});
+  assert.equal(denied.status,400);
+  assert.match((await denied.json()).error,/Datenschutzprüfung/);
+  const before = await call('/thread?id='+created.thread.id);
+  assert.equal(before.thread.turns.length,0);
   child.kill();await exited;await start();
   assert.equal((await call('/workers')).settings.defaultWorker,'hermes');
-  await call('/turn',{id:created.thread.id,text:'Nach Neustart fortsetzen',mode:'default'});
-  const after=await finished(created.thread.id);assert.equal(after.thread.turns.length,3);
-  const codexChat=await call('/chats',{worker:'codex',mode:'default'});
-  await call('/turn',{id:codexChat.thread.id,text:'Codex Kontextprobe',mode:'default'});
-  await finished(codexChat.thread.id);
+  const after=await call('/thread?id='+created.thread.id);
+  assert.equal(after.thread.workerSession.configOptions[0].currentValue,'high');
   const wire=(await readFile(path.join(dir,'wire.ndjson'),'utf8')).trim().split('\n').map(JSON.parse);
-  const prompts=wire.filter(m=>m.method==='session/prompt' && m.params.prompt.length>1).map(m=>m.params.prompt);
-  assert.match(prompts[0][0].text,/Anzeigename: Agent/);
-  for(const prompt of prompts.slice(1)){
-    assert.match(prompt[0].text,/Anzeigename: Ada/);
-    assert.match(prompt[0].text,/FIRMA: Aktueller Betrieb/);
-    assert.equal(prompt[0].text.split('Nur mein eigener Stil.').length-1,1);
-    assert.doesNotMatch(prompt[0].text,/Sei mein persönlicher Assistent/);
-  }
-  const jobPrompt=prompts.find(p=>p[1].text.startsWith('Führe diesen Job aus.'));
-  assert.ok(jobPrompt);assert.match(jobPrompt[1].text,/aus SKILL.md.*geladen/);
-  assert.doesNotMatch(jobPrompt[1].text,/Lies SKILL.md/);
-  assert.equal(jobPrompt[1].text.split('Fiktiver Test').length-1,1);
-  assert.match(jobPrompt[0].text,new RegExp('jobs/'+job.id));
-  assert.equal(wire.find(m=>m.method==='thread/start').params.developerInstructions,undefined);
-  const codexContext=wire.find(m=>m.method==='turn/start').params.collaborationMode.settings.developer_instructions;
-  assert.match(codexContext,/Anzeigename: Ada/);assert.match(codexContext,/FIRMA: Aktueller Betrieb/);
-  assert.equal(codexContext.split('Nur mein eigener Stil.').length-1,1);
+  assert.equal(wire.some(m=>m.method==='session/prompt'||m.method==='turn/start'),false);
+  // Full dispatch, fresh context, jobs and resume are exercised through the real
+  // Python privacy service in core/tests/test_integration.py.
 
 });
 

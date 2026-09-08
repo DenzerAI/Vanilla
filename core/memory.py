@@ -89,9 +89,10 @@ class Memory:
     def queue_capture(self, key, thread):
         if not key.startswith("workspace/chats/") or not key.endswith("/transcript.json"):
             return
-        if any(t.get("status") == "completed" and not self.db.rows('SELECT id FROM memory_sources WHERE id=?', (thread['id']+':'+t['id'],)) for t in thread.get("turns", [])):
-            self.pending.add(thread["id"])
-            self.db.put('memory/pending/'+thread['id'], True)
+        with self.lock:
+            if any(t.get("status") == "completed" and not self.db.rows('SELECT id FROM memory_sources WHERE id=?', (thread['id']+':'+t['id'],)) for t in thread.get("turns", [])):
+                self.pending.add(thread["id"])
+                self.db.put('memory/pending/'+thread['id'], True)
 
     def capture(self, chat_id):
         options = self.settings.values["memory"]
@@ -155,14 +156,26 @@ class Memory:
         result = self.save(path, text, digest(existing) if existing is not None else None, project, kind)
         self.db.put("memory/generated/" + path, result["version"])
 
-    def flush(self, backfill=False):
+    def flush(self, backfill=False, *, raise_on_error=True):
         with self.lock:
+            # A pause is not an acknowledgement: retain queued work across restarts.
+            if not self.settings.values["memory"]["capture"]:
+                return {"captured": 0, "pending": len(self.pending), "mode": "local-extractive"}
             ids = {r["id"] for r in self.db.rows("SELECT id FROM chats")} if backfill else set(self.pending)
-            total = 0
+            total, failed = 0, 0
             for id in sorted(ids):
-                total += self.capture(id)
+                try:
+                    total += self.capture(id)
+                except (ValueError, OSError, subprocess.SubprocessError):
+                    # One damaged source must not starve every later conversation.
+                    self.pending.add(id)
+                    self.db.put('memory/pending/'+id, True)
+                    failed += 1
+                    continue
                 self.pending.discard(id)
                 self.db.put('memory/pending/'+id, False)
+            if failed and raise_on_error:
+                raise ValueError(f"Memory-Aufnahme für {failed} Gespräch(e) noch offen. Andere Gespräche wurden verarbeitet; erneuter Versuch folgt automatisch.")
             return {"captured": total, "pending": len(self.pending), "mode": "local-extractive"}
 
     def continuation(self, chat_id):
@@ -191,7 +204,7 @@ class Memory:
 
     def dream(self):
         with self.lock:
-            self.flush()
+            self.flush(raise_on_error=False)
             day = datetime.now(ZoneInfo(self.config.timezone)).strftime("%Y-%m-%d")
             projects = self.db.rows("SELECT DISTINCT project_id FROM memory_sources")
             total = 0
@@ -257,11 +270,14 @@ class Memory:
         if options["shared_notes"] and project != "default":
             left = limit - result["characters"]
             if left > 300:
-                hits = self.knowledge.search(query, "default", limit=4)
+                hits = self.knowledge.search(query, "default", limit=4, path_prefix="notes/shared/")
                 for hit in hits:
                     if not hit["path"].startswith("notes/shared/"):
                         continue
-                    doc = self.knowledge.read(hit["path"])
+                    try:
+                        doc = self.knowledge.read(hit["path"])
+                    except (OSError, ValueError):
+                        continue
                     text, offset = passage(doc["text"], query, min(left, 1200))
                     result["sources"].append({"path": hit["path"], "version": doc["version"], "method": hit["method"], "offset": offset, "text": text})
                     left -= len(text)

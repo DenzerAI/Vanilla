@@ -173,6 +173,28 @@ def test_existing_workers_stream_persist_and_resume_through_python(integration_r
             time.sleep(0.1)
         assert runs[0]["status"] == "completed", runs
         assert runs[0]["thread_id"]
+        # A wrapper preflight must reject before the native worker sees text.
+        time.sleep(0.2)  # allow independent title work to finish
+        before = (tmp_path / "prompts.jsonl").read_text()
+        rejected = client.post("/turn", json={"id": chat["thread"]["id"], "text": "sk-" + "test1234567890" * 3})
+        assert rejected.status_code == 400
+        assert "Zugangsdaten" in rejected.json()["error"]
+        assert (tmp_path / "prompts.jsonl").read_text() == before
+        assert call("/bootstrap")["features"]["privacy"] is True
+        privacy = call("/privacy/status")
+        policy = privacy["settings"]
+        policy["values"]["pause_handoffs"] = True
+        call("/privacy/settings", policy)
+        paused = client.post("/turn", json={"id": chat["thread"]["id"], "text": "Nicht weitergeben"})
+        assert paused.status_code == 400 and "pausiert" in paused.json()["error"]
+        assert (tmp_path / "prompts.jsonl").read_text() == before
+        assert call("/knowledge/search?q=Prüfnotz")["results"]
+        policy = call("/privacy/status")["settings"]
+        policy["values"]["pause_handoffs"] = False
+        call("/privacy/settings", policy)
+        report = call("/privacy/export")
+        assert report["handoffs"]["blocked"] == 2
+        assert "Nicht weitergeben" not in json.dumps(report)
         child.terminate()
         child.wait(timeout=15)
         start()

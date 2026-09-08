@@ -16,12 +16,14 @@ from .database import dump
 from .files import atomic_write, read_json
 from .secrets import save_secret, register_secret
 from .service import label, service_status
+from .privacy import Privacy
 
 
 class Operations:
     def __init__(self, db, config, settings, knowledge, memory):
         self.db, self.config, self.settings, self.knowledge, self.memory = db, config, settings, knowledge, memory
         self.backups = Backups(db, config, settings, memory)
+        self.privacy = Privacy(db, settings, config, knowledge)
         self.runtime = None
         self.started = time()
         self.network_cache = (0, {})
@@ -74,7 +76,7 @@ class Operations:
 
     def status(self):
         heartbeat = read_json(self.config.data / "heartbeat.json", None)
-        return {"settings": self.settings.read(), "checks": self.checks(), "heartbeat": heartbeat, "service": service_status(self.config), "embeddings": self.knowledge.embeddings.status(), "maintenance": self.db.rows("SELECT * FROM maintenance ORDER BY name"), "memory": {"sources": self.db.rows("SELECT count(*) n FROM memory_sources WHERE forgotten=0")[0]["n"], "pending": len(self.memory.pending), "mode": "local-extractive", "changes": self.db.rows("SELECT * FROM memory_changes ORDER BY created_at DESC LIMIT 20")}, "storage": {"free_mb": shutil.disk_usage(self.config.data).free // 1024**2, "database_bytes": (self.config.data / "agent.sqlite3").stat().st_size}, "backup_installed": bool(self.backups.binary), "access": {"enabled": self.config.login_required, "origin": self.config.public_origin}, "stream": {"connected": bool(self.runtime and self.runtime.stream.connected), "clients": len(self.runtime.stream.clients) if self.runtime else 0}}
+        return {"privacy": self.privacy.status(), "settings": self.settings.read(), "checks": self.checks(), "heartbeat": heartbeat, "service": service_status(self.config), "embeddings": self.knowledge.embeddings.status(), "maintenance": self.db.rows("SELECT * FROM maintenance ORDER BY name"), "memory": {"sources": self.db.rows("SELECT count(*) n FROM memory_sources WHERE forgotten=0")[0]["n"], "pending": len(self.memory.pending), "mode": "local-extractive", "changes": self.db.rows("SELECT * FROM memory_changes ORDER BY created_at DESC LIMIT 20")}, "storage": {"free_mb": shutil.disk_usage(self.config.data).free // 1024**2, "database_bytes": (self.config.data / "agent.sqlite3").stat().st_size}, "backup_installed": bool(self.backups.binary), "access": {"enabled": self.config.login_required, "origin": self.config.public_origin}, "stream": {"connected": bool(self.runtime and self.runtime.stream.connected), "clients": len(self.runtime.stream.clients) if self.runtime else 0}}
 
     def run(self, handler):
         try:
@@ -98,6 +100,7 @@ class Operations:
             raise
 
     def cleanup(self):
+        self.privacy.cleanup()
         values = self.settings.values["retention"]
         now = time()
         with self.db.transaction() as cx:

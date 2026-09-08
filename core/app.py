@@ -438,6 +438,7 @@ def create_app(config=None):
                 "knowledge": True,
                 "sqlite": True,
                 "operations": True,
+                "privacy": True,
             }
             return JSONResponse(payload)
         forwarded = {

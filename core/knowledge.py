@@ -240,22 +240,21 @@ class Knowledge:
                 count += 1
             return {"indexed": count, **self.embeddings.status()}
 
-    def search(self, query, project="all", limit=30, semantic=True):
+    def search(self, query, project="all", limit=30, semantic=True, *, path_prefix=""):
         query = query.strip()[:500]
         params = () if project == "all" else (project,)
         docs = self.db.rows(
             "SELECT path,project_id,title,digest,updated_at FROM documents"
-            + (" WHERE project_id=?" if params else "")
-            + " ORDER BY path",
-            params,
+            + (" WHERE project_id=?" if params else " WHERE 1=1")
+            + " AND substr(path,1,?)=? ORDER BY path",
+            (*params, len(path_prefix), path_prefix),
         )
         if not query:
             return [
-                self.result(d, 0, "recent")
-                for d in sorted(docs, key=lambda d: (-d["updated_at"], d["path"]))[
-                    :limit
-                ]
-            ]
+                result
+                for d in sorted(docs, key=lambda d: (-d["updated_at"], d["path"]))
+                if (result := self.result(d, 0, "recent")) is not None
+            ][:limit]
         scores, methods, passages = {}, {}, {}
         terms = re.findall(r"\w+", query, re.UNICODE)
         if terms:
@@ -283,8 +282,8 @@ class Knowledge:
             )
             rows = self.db.rows(
                 "SELECT document_fts.path,bm25(document_fts,0,5,1) AS rank FROM document_fts JOIN documents d ON d.path=document_fts.path WHERE document_fts MATCH ?"
-                + (" AND d.project_id=?" if project != "all" else "") + " ORDER BY rank,document_fts.path LIMIT 500",
-                (expression, project) if project != "all" else (expression,),
+                + (" AND d.project_id=?" if project != "all" else "") + " AND substr(d.path,1,?)=? ORDER BY rank,document_fts.path LIMIT 500",
+                (expression, *params, len(path_prefix), path_prefix),
             )
             for n, row in enumerate(rows):
                 scores[row["path"]] = 1 / (60 + n)
@@ -303,10 +302,8 @@ class Knowledge:
         if semantic and self.embeddings.identity:
             vectors = self.db.rows(
                 "SELECT v.* FROM vectors v JOIN documents d ON d.path=v.path WHERE v.model=?"
-                + (" AND d.project_id=?" if project != "all" else ""),
-                (self.embeddings.identity, project)
-                if project != "all"
-                else (self.embeddings.identity,),
+                + (" AND d.project_id=?" if project != "all" else "") + " AND substr(d.path,1,?)=?",
+                (self.embeddings.identity, *params, len(path_prefix), path_prefix),
             )
             encoded = self.embeddings.encode([query]) if vectors else None
             if encoded:
@@ -331,19 +328,33 @@ class Knowledge:
         ranked = sorted(
             (d for d in docs if d["path"] in scores),
             key=lambda d: (-scores[d["path"]], d["path"]),
-        )[:limit]
-        return [
-            self.result(d, scores[d["path"]], methods[d["path"]], query, passages.get(d["path"])) for d in ranked
-        ]
+        )
+        results = []
+        for d in ranked:
+            result = self.result(d, scores[d["path"]], methods[d["path"]], query, passages.get(d["path"]))
+            if result is not None:
+                results.append(result)
+            if len(results) >= limit:
+                break
+        return results
 
     def result(self, doc, score, method, query="", matched=None):
-        if "content" not in doc:
-            doc = {
-                **doc,
-                "content": self.db.rows(
-                    "SELECT content FROM documents WHERE path=?", (doc["path"],)
-                )[0]["content"],
-            }
+        # The index is a search aid, never a second authoritative source.
+        # A removed, changed, hidden or escaped source must not leak old snippets.
+        if self.db.get("memory/hidden/" + doc["path"])["found"]:
+            return None
+        try:
+            file = safe_path(self.config.workspace, doc["path"])
+            if file.stat().st_size > 2_000_000:
+                return None
+            if not any(project == doc["project_id"] and file.is_relative_to(root.resolve()) for project, root in self.roots()):
+                return None
+            content = file.read_text(encoding="utf-8")
+        except (OSError, ValueError, UnicodeError):
+            return None
+        if digest(content) != doc["digest"]:
+            return None
+        doc = {**doc, "content": content}
         selected, start = passage(doc["content"], query)
         if matched and matched in doc["content"]:
             selected, start = matched, doc["content"].find(matched)

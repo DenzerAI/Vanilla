@@ -80,3 +80,15 @@ vorhandene Ergebnisse bleiben während Aktualisierungen bedienbar. Die globale
 Suche zeigt Listenformen bis erste Treffer eintreffen; ihre vorhandene
 Statuszeile übernimmt die Ansage. App-Start zeigt auf schmalen Ansichten
 nur den Inhaltsbereich; Fehler ersetzen die Platzhalter durch Wiederholen.
+
+
+## Navigation im Alltag
+
+Suche, Inbox, Aufträge, Bibliothek sowie Projekte und Chats bleiben direkt in
+der Hauptseitenleiste. Skills und Verbindungen gehören zur Einrichtung unter
+Einstellungen und verwenden dort dieselbe Einstellungsnavigation mit Zurück
+zur App. Ihre bestehenden Kataloge, Suchfelder und Dialoge bleiben erhalten;
+Anbieter werden weiter ausschließlich im Verbindungskatalog eingerichtet.
+Direkte Links und Treffer der globalen Suche öffnen denselben Katalog mit
+passend ausgewähltem Einstellungsbereich. Skills bleiben über die globale
+Suche direkt im Chat verwendbar. Es entsteht keine zweite Verwaltungsseite.
