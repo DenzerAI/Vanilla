@@ -1,9 +1,8 @@
 # Gemeinsame Firmenbasis
 
-Berücksichtige bei jedem neuen Auftrag diese Datei und [FIRMA.md](FIRMA.md).
-Sind sie bereits frisch übergeben, ist kein erneuter Lesezugriff nötig. Wähle
-anhand der Landkarte eine passende Arbeitsweise, sofern der Auftrag sie benötigt,
-und lies dann ihre vollständige SKILL.md. Lies weitere Quellen nur bei Bedarf. Bei Aufgaben- oder Rollenwechsel
+Lies bei jedem neuen Auftrag zuerst diese Datei und dann [FIRMA.md](FIRMA.md).
+Wähle anhand der Landkarte die passende Arbeitsweise und lies ihre vollständige
+SKILL.md. Lies weitere Quellen nur bei Bedarf. Bei Aufgaben- oder Rollenwechsel
 wähle neu; frühere lokale Regeln gelten nicht automatisch weiter.
 
 ## Landkarte
@@ -30,10 +29,8 @@ Learnings sind keine neuen verbindlichen Regeln.
 
 Firmenweit gültige Angaben werden ausschließlich in FIRMA.md oder einer dort
 verlinkten führenden Quelle gepflegt. Arbeitsweisen enthalten nur Ergänzungen.
-Firmenweit wiederverwendbare Abläufe erhalten hier einen Ordner mit SKILL.md
+Ein neuer wiederverwendbarer Ablauf erhält direkt hier einen Ordner mit SKILL.md
 (name und description im YAML-Kopf) und einen Eintrag in der Landkarte.
-Projektbezogene Fähigkeiten und ausführbare Jobs bleiben bei ihren bestehenden
-Ordnern im Arbeitsbereich; ihre Ressourcen werden dort referenziert.
 Einzelaufträge und ihre Ergebnisse bleiben im bestehenden Arbeitsbereich:
 Order-System data/, Wrapper input/ und output/ beziehungsweise Job-Ausgaben.
 

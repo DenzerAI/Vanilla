@@ -8,7 +8,7 @@ Der gemeinsame `PageHeading` zeigt „Aufträge“ und „Erstellen“ in einer 
 Titel und vorhandene Erstellen-Aktion, Suche/Filter soweit vorhanden, Liste vorhandener Aufträge. Leerer Zustand hat denselben Erstellen-Einstieg. Ein Auftrag zeigt Name, Zeitplan/Worker und den vorhandenen Status; Aktionen im bestehenden Zeilen-/Menümuster. Keine getrennten Karten oder Formularfelder nur für einen neuen Auftragstyp.
 
 Der Filter „Vorlagen“ zeigt den deutschen Auftragskatalog in thematischen Gruppen
-als vollständig klickbare `settings-navigation-row`-Zeilen in gemeinsamen Gruppen. Icon, mehrzeiliger Text und Chevron liegen innerhalb der Gruppenfläche; keine Pillen um den Text. Suche und `FilterPicker` grenzen die Vorlagen ein.
+als vorhandene `job-row`-Zeilen. Suche und `FilterPicker` grenzen die Vorlagen ein.
 Eine Auswahl öffnet dasselbe `JobForm` als neuen, vorausgefüllten Entwurf.
 „Erstellen“ bietet dieselben Vorlagen gruppiert im Formular an. Eine andere
 Auswahl ersetzt Eingaben erst über „Vorlage in Entwurf übernehmen“; bestehende
@@ -41,11 +41,3 @@ erhalten. Zeitpläne verwenden die konfigurierte Zeitzone und holen höchstens
 den heutigen verpassten Termin nach.
 
 Python-Aufträge verwenden das vorhandene Formular: lokaler Skriptpfad, JSON-Eingabe, Zeitlimit und ausdrücklich idempotente Wiederholungen. Intervall- und Ereignispläne ergänzen täglich/werktäglich. Systemaufträge erscheinen in derselben Liste; Bearbeiten führt zu ihren Systemeinstellungen. Laufdetails lesen den echten SQLite-Lauf einschließlich Ergebnis, Fehler, Protokoll und Abbruch.
-
-## Laden der Liste
-
-Beim ersten Abruf zeigt der Listenbereich gemeinsame List-Skeletons.
-„Dein erster Auftrag“ erscheint erst nach erfolgreichem leerem Ergebnis.
-Fehler bieten „Erneut laden“; vorhandene Aufträge bleiben beim Nachladen
-sichtbar. Der lokale Vorlagenkatalog braucht keinen künstlichen Ladezustand.
-Ausführungsdetails verwenden den gemeinsamen Settings-Skeleton.

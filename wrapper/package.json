@@ -11,21 +11,16 @@
     "setup:dictation": "node scripts/setup-dictation.mjs",
     "setup:speech": "node scripts/setup-speech.mjs",
     "start:adapter": "node server.mjs",
-    "typecheck": "tsc --noEmit",
-    "design:check": "node scripts/design-audit.mjs",
-    "design:verify": "npm run design:check && node --test test/design-audit.test.mjs test/design-system.test.mjs test/appearance.test.mjs && npm run typecheck"
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@agentclientprotocol/claude-agent-acp": "0.75.1",
-    "clsx": "^2.1.1",
     "dompurify": "^3.2.7",
     "framework7-icons": "^5.0.5",
     "marked": "^15.0.12",
     "motion": "^12.43.0",
-    "pdfjs-dist": "^6.3.289",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "tailwind-merge": "^3.6.0",
     "yaml": "^2.9.0"
   },
   "devDependencies": {
@@ -34,7 +29,6 @@
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^5.2.0",
     "esbuild": "^0.25.0",
-    "postcss": "8.5.28",
     "prettier": "^3.9.6",
     "tailwindcss": "^4.3.3",
     "typescript": "^5.9.3",
