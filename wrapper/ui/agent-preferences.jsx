@@ -1,4 +1,3 @@
-import {Skeleton} from './skeleton.tsx';
 import React, { useState, useEffect } from "react";
 import { DEFAULT_AGENT_PREFERENCES } from "../identity-preferences.mjs";
 import { Avatar } from "./avatar.jsx";
@@ -8,8 +7,7 @@ import { SettingRow } from "./settings-row.jsx";
 export function AgentPreferences({ api, onSaved }) {
   const [data, setData] = useState(null),
     [saved, setSaved] = useState(null);
-  const [message, setMessage] = useState(""),
-    [error, setError] = useState(""),
+  const [error, setError] = useState(""),
     [saving, setSaving] = useState(false),
     [picker, setPicker] = useState(false);
   useEffect(() => {
@@ -29,7 +27,11 @@ export function AgentPreferences({ api, onSaved }) {
     };
   }, [api]);
   if (!data)
-    return error ? <p role="alert">{error}</p> : <Skeleton variant="settings" label="Dein Agent wird geladen …"/>;
+    return (
+      <p role={error ? "alert" : "status"}>
+        {error || "Dein Agent wird geladen …"}
+      </p>
+    );
   const dirty =
     data.name !== saved.name ||
     data.avatar !== saved.avatar ||
@@ -48,7 +50,6 @@ export function AgentPreferences({ api, onSaved }) {
             const profile = await api("/identity", data);
             setData(profile);
             setSaved(profile);
-            setMessage("Dein Agent wurde gespeichert.");
             onSaved(profile);
           } catch (e) {
             setError(e.message);
@@ -57,21 +58,6 @@ export function AgentPreferences({ api, onSaved }) {
           }
         }}
       >
-        {error && (
-          <p role="alert" className="inline-error">
-            {error}
-          </p>
-        )}
-        <div className="settings-save-row">
-          <span role="status">{dirty ? "Ungespeicherte Änderungen" : message || "Keine Änderungen"}</span>
-          <button
-            type="submit"
-            className="primary"
-            disabled={saving || !dirty || !data.name.trim()}
-          >
-            {saving ? "Wird gespeichert …" : "Speichern"}
-          </button>
-        </div>
         <fieldset className="agent-form-fields" disabled={saving}>
           <h3 className="section-heading">Profil</h3>
           <div className="settings-group">
@@ -134,7 +120,20 @@ export function AgentPreferences({ api, onSaved }) {
             </SettingRow>
           </div>
         </fieldset>
-
+        {error && (
+          <p role="alert" className="inline-error">
+            {error}
+          </p>
+        )}
+        <div className="agent-save-row">
+          <span role="status">{dirty ? "Ungespeicherte Änderungen" : ""}</span>
+          <button
+            className="primary"
+            disabled={saving || !dirty || !data.name.trim()}
+          >
+            {saving ? "Wird gespeichert …" : "Speichern"}
+          </button>
+        </div>
       </form>
       {picker && (
         <AvatarPicker

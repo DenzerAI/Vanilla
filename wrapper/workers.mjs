@@ -1,4 +1,4 @@
-import {sharedMemoryACPServers} from './shared-memory.mjs';
+import {sharedMemoryACPServers, configureGatewayMemory} from './shared-memory.mjs';
 import {fileURLToPath} from 'node:url';
 import { EventEmitter } from "node:events";
 import { access } from "node:fs/promises";
@@ -82,13 +82,14 @@ export class Workers extends EventEmitter {
   capability(id) {
     return this.adapters.get(id)?.capabilities || (this.entry(id).adapter === "codex"
       ? { chat: true, streaming: true, attachments: true, approvals: true, plan: true, steer: true, fork: true, archive: true, terminal: true, skills: true }
-      : { chat: true, streaming: true, attachments: false, approvals: true, plan: false, steer: false, fork: false, archive: true, terminal: false, skills: false });
+      : { chat: true, streaming: true, attachments: true, approvals: true, plan: false, steer: false, fork: false, archive: true, terminal: false, skills: false });
   }
   async adapter(id) {
     if (this.adapters.has(id)) return this.adapters.get(id);
     const entry = this.entry(id), command = await this.resolveCommand(entry);
     if (!command) throw new Error(`${entry.name}: Programm nicht gefunden. Zuerst installieren oder den Programmpfad hinterlegen.`);
     if (entry.adapter !== "acp") throw new Error("Worker-Adapter fehlt.");
+    if (id === 'openclaw') await configureGatewayMemory(command);
     return this.attach(id, this.makeACP({ id, name: entry.name, command, args: entry.args, cwd: this.store.root,
       contextEnv: { COMPANY_BASE: companyRoot(this.root), SYSTEM_BASE: systemRoot(), UWE_WORKSPACE: this.store.root },
       readThread: threadId => jsonFile(path.join(this.store.root, "chats", safeName(threadId), "transcript.json"), null),
@@ -148,7 +149,7 @@ export class Workers extends EventEmitter {
     const workers = await Promise.all(this.catalog.map(async entry => {
       const adapter = this.adapters.get(entry.id), command = await this.resolveCommand(entry);
       const configured = this.settings.enabled.includes(entry.id), connected = !!adapter?.connected;
-      return { ...entry, installed: !!command, configured, connected, status: connected ? "Verbunden" : this.errors.has(entry.id) ? "Nicht erreichbar" : !command ? (entry.command ? "Nicht installiert" : "Anschluss vorbereiten") : configured ? "Noch nicht geprüft" : "Bereit zum Verbinden", error: this.errors.get(entry.id) || null, version: adapter?.info?.userAgent || null, nativeCapabilities: adapter?.info?.agentCapabilities || null, capabilitySource: entry.adapter === "acp" ? (connected ? "ACP initialize + Wrapper-Unterstützung" : "Noch nicht ausgehandelt") : "Wrapper-Unterstützung; keine native Fähigkeitsliste", capabilities: this.capability(entry.id) };
+      return { ...entry, installed: !!command, configured, connected, status: connected ? "Verbunden" : this.errors.has(entry.id) ? "Nicht erreichbar" : !command ? (entry.command ? "Nicht installiert" : "Anschluss vorbereiten") : configured ? "Noch nicht geprüft" : "Bereit zum Verbinden", error: this.errors.get(entry.id) || null, version: adapter?.info?.userAgent || null, capabilities: this.capability(entry.id) };
     }));
     return { workers, settings: this.settings, routingOrder: this.routingOrder(), effectiveWorker: this.effectiveWorker, paths: { company: companyRoot(this.root), system: systemRoot(), workspace: this.store.root } };
   }

@@ -15,11 +15,11 @@ Diese Dateien sind verbindliche Bauanleitungen, keine Ideensammlung. Vor einer E
 
 ## Gemeinsamer Seitenkopf
 
-Aufträge, Verbindungen, Skills, Bibliothek und Einstellungen verwenden `PageHeading`: genau ein Seitentitel im Inhaltsbereich, daneben die unmittelbar zugehörigen Kopfaktionen. Keine zweite globale Titel- oder Tabzeile darüber. „Erstellen“ steht bei Aufträge; „Skill hinzufügen“ als Plus und „Skills neu laden“ stehen bei Skills. Verbindungen nutzt ausschließlich die vorhandenen Plus-Aktionen im Dienstekatalog. Die Bibliotheksaktionen stehen kompakt am PageHeading; der Ergebnisstatus unter den Dateien. Bei ausgeblendeter Seitenleiste steht ihr Öffnen-Button am Seitentitel; im Chat bei den Chataktionen. Die Navigation bleibt auch bei schmalen Fenstern erreichbar.
+Aufträge, Verbindungen, Skills, Bibliothek und Einstellungen verwenden `PageHeading`: genau ein Seitentitel im Inhaltsbereich, daneben die unmittelbar zugehörigen Kopfaktionen. Keine zweite globale Titel- oder Tabzeile darüber. „Erstellen“ steht bei Aufträge; „Skill hinzufügen“ als Plus und „Skills neu laden“ stehen bei Skills. Verbindungen nutzt ausschließlich die vorhandenen Plus-Aktionen im Dienstekatalog. Die Bibliotheksaktionen stehen bei ihrem Ergebnisstatus unter den Filtern. Bei ausgeblendeter Seitenleiste steht ihr Öffnen-Button am Seitentitel; im Chat bei den Chataktionen. Die Navigation bleibt auch bei schmalen Fenstern erreichbar.
 
 ## Gemeinsame Suche und Filter
 
-Skills und Bibliothek verwenden das gemeinsame Suchfeld und `FilterPicker`. Der kompakte Dateibrowser verwendet die zentrale control-Höhe; seine Filter dürfen neben der Suche umbrechen. Die Suche bleibt flexibel; reicht die verfügbare Inhaltsbreite nicht für beide Filter, bricht die Zeile um. Bis 900 CSS-Pixel Fensterbreite stehen Suche und Filter untereinander in voller Breite. Auch eine breite Seitenleiste darf das Suchfeld nicht zusammendrücken. Die gemeinsamen Regeln liegen in `ui/styles.css` und `ui/library-connections.css`.
+Skills und Bibliothek teilen Suchfeld und `FilterPicker` mit gleicher Höhe und Typografie. Die Suche bleibt flexibel; reicht die verfügbare Inhaltsbreite nicht für beide Filter, bricht die Zeile um. Bis 900 CSS-Pixel Fensterbreite stehen Suche und Filter untereinander in voller Breite. Auch eine breite Seitenleiste darf das Suchfeld nicht zusammendrücken. Die gemeinsamen Regeln liegen in `ui/styles.css` und `ui/library-connections.css`.
 
 ## Vorgehen bei Ergänzungen
 
@@ -35,7 +35,7 @@ Die Verträge schreiben keine Backend-Technik vor. Gemeinsame Frontend-Komponent
 
 ## Systemhinweise
 
-`SystemNotice` zeigt Updates als einzelnen schlichten Button mittig an der oberen Fensterkante. Reine UI-Builds bieten „Aktualisieren“ an und laden ausschließlich die Seite neu. Nur geänderter Laufzeitcode beziehungsweise Laufzeitabhängigkeiten bieten „Neustarten“ an. Buildskript, UI-Quellen, Paketversion und reine Entwicklungsabhängigkeiten lösen keinen Serverneustart aus; serverseitig importierte gemeinsame UI-Module zählen dagegen zum Laufzeitcode. Fehler und Anmeldehinweise behalten ihre erklärende Benachrichtigung. Kein automatisches Neuladen oder Neustarten. Nach einem Neustart bleibt das Neuladen ausdrücklich wählbar, damit Entwürfe nicht unerwartet verloren gehen. Routine-Speicherbestätigungen entfallen; tatsächliche Fehler bleiben erreichbar.
+`SystemNotice` ist der gemeinsame flache Hinweis am unteren Fensterrand. Änderungen am ausgelieferten UI-Build bieten „Neu laden“ an; geänderter Servercode bietet vorrangig „Neu starten …“ an. Kein automatisches Neuladen oder Neustarten. Nach einem Neustart bleibt das Neuladen ausdrücklich wählbar, damit Entwürfe nicht unerwartet verloren gehen. Routine-Speicherbestätigungen entfallen; tatsächliche Fehler bleiben erreichbar.
 
 Bei einer fehlenden oder abgelaufenen Anmeldung hat „Bitte erneut anmelden“ Vorrang
 vor veralteten Neustarthinweisen. „Anmelden“ öffnet das gemeinsame Modal für den
@@ -43,40 +43,4 @@ bestehenden Zugangscode. Die Anmeldung verbindet den gemeinsamen Ereignisstream
 neu; Chats, Entwürfe und Aufnahmen bleiben ohne Neuladen in der Oberfläche erhalten.
 Fehlgeschlagene Aktionen werden nach der Anmeldung nicht automatisch wiederholt.
 
-Der Neustart prüft alle laufenden Turns, Übergaben und Sprachsessions serverseitig. Bei laufender Arbeit folgt „Laufende Session beenden?“ mit Abbrechen und „Beenden und neu starten“. Die einmalige Bestätigung gilt nur für die zuvor geprüften Sessions; neu hinzugekommene Arbeit verlangt eine erneute Abfrage. Während des Neustarts werden neue Turns abgewiesen. Neuladen fragt zusätzlich bei laufenden Antworten, Sprache und Entwürfen nach; Serverantworten laufen dabei weiter. Die Benachrichtigung verwendet zentrale Tokens in Hell/Dunkel. Der kompakte Update-/Neustart-Button nutzt stärker transparentes Glas mit 40-px-Blur, feiner Glaskante, leichtem Schatten und kleinem RotateCcw-SVG neben dem Aktionsnamen; deckende Ersatzfläche bei reduzierter Transparenz oder fehlendem Blur. Die Bestätigungsdialoge behalten ihre ruhige Darstellung im gemeinsamen Modal. Buttons bleiben zugänglich.
-
-## Globale Suche
-
-Der Einstieg in der Seitenleiste und Cmd/Ctrl+K öffnen denselben nativen Suchdialog. Er verwendet die randlose transparente gemeinsame Glasfläche mit Hintergrundunschärfe und eine zusätzlich um 8 px weichgezeichnete, über `overlay` abgedunkelte Kulisse. Das kompakte Suchfeld nutzt dieselbe dunkle Fläche wie die Seitenleistensuche (`workspace-backdrop`) ohne nativen Suchfeldrahmen. Schreibmarke und hervorgehobene Lupe zeigen Eingabefokus, Ergebniszeilen behalten sichtbaren Tastaturfokus. Nur die Trefferliste scrollt; ScrollEdgeFade mildert überlaufende Kanten über 8 px. Bei reduzierter Transparenz oder fehlender Blur-Unterstützung bleibt die Fläche deckend.
-
-Chats erscheinen zuerst, danach Bibliotheksdateien/Artefakte, Wissen und Notizen, Aufträge, Skills, Projekte und Navigation. Leere Eingabe zeigt letzte Gespräche. Titel und lokale Gesprächsinhalte, Dateinamen/Pfade/Herkunft, indexierte Wissenstexte, Auftragsanweisungen sowie Skillnamen/-beschreibungen werden über die vorhandenen Quellen durchsucht; binäre Dateien erhalten keine erfundene Volltextsuche. Bibliotheks-, Skill- und Auftragskataloge werden pro Dialog geladen und bei Ladefehler erneut angefragt. Einzelne Ausfälle verdecken die übrigen Treffer nicht und werden benannt. Ergebnisse erscheinen bereits während weitere Quellen laden. Die Anzeige begrenzt auf 80 Datentreffer und nennt die gelieferte Trefferzahl.
-
-Pfeiltasten navigieren, Enter öffnet, Escape schließt. Dateien, Notizen, Skills und Aufträge öffnen ihre vorhandenen Detailansichten, verwaltete Systemaufträge ihre Einstellungen. Eine Auswahl startet keinen Auftrag und führt keinen Skill aus.
-
-Aktualisieren lädt die Oberfläche direkt ohne Bestätigungsdialog neu. HTML und Assets werden mit `Cache-Control: no-store` ausgeliefert; laufende Serverantworten bleiben bestehen. Nur ein tatsächlicher Serverneustart verwendet die bestehende Session-Bestätigung.
-
-Neustarten und anschließendes frisches Laden gehören zu einer Aktion. Die gemeinsame
-SystemNotice bleibt während Anfrage und Wiederanlauf als dieselbe zentrierte,
-randlose Pille stehen: feste Buttonbreite, „Neustarten …“ und die ausgewählte System-Ladeanzeige über `AppLoader`. Keine wechselnden Vorbereitungs-, Erfolgs- oder Aktualisieren-Buttons.
-Erst die Antwort einer neuen Serverinstanz löst genau ein automatisches Neuladen
-aus; Antwort der alten Instanz und Verbindungsunterbrechung gelten nicht als Erfolg.
-Ein UI-Update alleine lädt direkt. Ein echter Serverneustart hat Vorrang, wenn
-beides erforderlich ist. Session-Bestätigung, Anmeldung und echte Fehler bleiben
-verständlich erreichbar. Stil, Größe und Tempo entsprechen der Systemauswahl. Reduzierte Bewegung zeigt die Ladeanzeige statisch; Dauerrollen
-für Rückmeldung und Fortschritt stammen aus der zentralen Designquelle.
-
-## Gemeinsames Prüftor
-
-Alle Bereiche unterliegen `npm --prefix wrapper run design:verify`, auch neue
-Dateien, importierte Vorlagen und Demos. Fehler müssen vor Übernahme behoben
-werden. Genaue Abdeckung und begründete Sonderfälle stehen ausschließlich im
-[Designvertrag](../DESIGN.md#verbindliches-prüftor-vor-übernahme).
-
-## Gemeinsame Skeletons
-
-`ui/skeleton.tsx` liefert List-, Settings-, Chat-, Document-, Media- und
-Shell-Platzhalter gemäß DESIGN.md. Nur fehlende Inhalte werden überbrückt,
-vorhandene Ergebnisse bleiben während Aktualisierungen bedienbar. Die globale
-Suche zeigt Listenformen bis erste Treffer eintreffen; ihre vorhandene
-Statuszeile übernimmt die Ansage. App-Start zeigt auf schmalen Ansichten
-nur den Inhaltsbereich; Fehler ersetzen die Platzhalter durch Wiederholen.
+Der Neustart prüft alle laufenden Turns, Übergaben und Sprachsessions serverseitig. Bei laufender Arbeit folgt „Laufende Session beenden?“ mit Abbrechen und „Beenden und neu starten“. Die einmalige Bestätigung gilt nur für die zuvor geprüften Sessions; neu hinzugekommene Arbeit verlangt eine erneute Abfrage. Während des Neustarts werden neue Turns abgewiesen. Neuladen fragt zusätzlich bei laufenden Antworten, Sprache und Entwürfen nach; Serverantworten laufen dabei weiter. Die Darstellung verwendet zentrale Tokens in Hell/Dunkel, ohne Schatten oder Glas, mit zugänglichen Buttons und dem gemeinsamen Modal.

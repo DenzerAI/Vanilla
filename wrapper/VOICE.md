@@ -16,7 +16,7 @@ Automodus ist zunächst aus. Innerhalb eines ausdrücklich gestarteten Sprachcha
 
 ## Lokale Ausgabe
 
-Piper 1.4.2 mit `de_DE-thorsten-high` ist die mitgelieferte deutsche Ausgabestimme. Installation: automatisch als Teil von `npm run setup:system` im Projektordner. Einzelne Reparatur: `npm run setup:speech` im Wrapper. `npm start` und `npm run dev` starten die Anwendung, ohne Modelldownloads zu wiederholen. Python 3.9+ mit venv/pip ist erforderlich. Einmalige Paket-/Modelldownloads benötigen Internet; danach werden die lokalen Modelldateien verwendet. Dateien: `data/control/dictation-runtime`, `speech-model` und `dictation-model` beziehungsweise der konfigurierte `UWE_DATA_ROOT`.
+Piper 1.4.2 mit `de_DE-thorsten-high` ist die mitgelieferte deutsche Ausgabestimme. Installation: `npm run setup:dictation`, danach `npm run setup:speech`; beides wird auch vor `npm start`/`npm run dev` ausgeführt. Python 3.9+ mit venv/pip ist erforderlich. Einmalige Paket-/Modelldownloads benötigen Internet; danach werden die lokalen Modelldateien verwendet. Dateien: `data/control/dictation-runtime`, `speech-model` und `dictation-model` beziehungsweise der konfigurierte `UWE_DATA_ROOT`.
 
 Piper bekommt den Text über stdin, schreibt eine kurzlebige WAV-Datei und die lokale API liefert das Audio an den Browser. Temporäre Ausgabedateien werden nach der Antwort entfernt; das betrifft keine Mikrofonaufnahmen. Wiedergabe benutzt einen durch Benutzeraktion aktivierten AudioContext. Lange Antworten werden in Abschnitte bis 2.000 Zeichen zerlegt und vollständig nacheinander vorgelesen; Stoppen verhindert weitere Abschnitte. Blockierte Wiedergabe oder API-Fehler werden gemeldet, nicht verschwiegen.
 
@@ -37,11 +37,3 @@ Der Browser fragt ein Mikrofon ohne erzwungene Abtastrate oder Kanalzahl an. Der
 ## Prüfung der Umsetzung
 
 60 automatisierte Tests einschließlich Audioerhalt, Abtastratenumrechnung, Gerätefallback, Cloud-Einstellungen und Bereichsverträgen bestanden. Desktop-/Mobilprüfung im Browser, Einrichtung über den Groq-Dialog und echte lokale Piper-Hörprobe erfolgreich. Der komplette Automodus wurde in Chromium und WebKit mit synthetischem Mikrofonstream, simulierter Chatantwort und echter lokaler Piper-Ausgabe geprüft: Sprechpause → Übergabe → Ausgabe → erneute Aufnahme. Der Diktatweg wurde zusätzlich mit einer deutschen Sprachdatei bei 48 kHz als Browser-Mikrofoneingang erfolgreich bis zur Textübernahme geprüft. Persönliche Groq-/ElevenLabs-Aufrufe und das physische Nutzermikrofon benötigen die jeweiligen Zugänge beziehungsweise Gerätefreigabe und sind nicht als geprüft ausgewiesen.
-
-## Vorlesen einzelner Antworten
-
-Der Lautsprecher unter fertigen Antworten verwendet die bestehende Speech-API
-und die Auswahl unter Stimme. Die zentrale Anschlusslandkarte
-`system/CAPABILITIES.md` dokumentiert UI, Anbieter, Status und Endpunkte.
-`npm run setup:speech` legt seine Python-Laufzeit auch ohne vorheriges
-Diktat-Setup an. Gleichzeitige Ausgaben teilen sich eine exklusive Wiedergabe.
