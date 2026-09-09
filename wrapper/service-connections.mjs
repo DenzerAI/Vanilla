@@ -112,6 +112,24 @@ export class ServiceConnections {
     const token=await this.graphToken(c);
     return this.json(`https://graph.microsoft.com/v1.0/users/${encodeURIComponent(c.config.mailbox)}/${resource}`,{...options,headers:{authorization:'Bearer '+token,'content-type':'application/json'}});
   }
+  async calendar(c,input) {
+    const {start,end}=input;
+    if (![start,end].every(v=>typeof v==='string' && /(?:Z|[+-]\d{2}:\d{2})$/.test(v) && Number.isFinite(Date.parse(v))) || Date.parse(end)<=Date.parse(start) || Date.parse(end)-Date.parse(start)>94*86400000) throw Error('Kalenderzeitraum mit Zeitzone erforderlich (höchstens 93 Tage).');
+    const prefix=`https://graph.microsoft.com/v1.0/users/${encodeURIComponent(c.config.mailbox)}/calendar/calendarView`;
+    let url=prefix+'?'+new URLSearchParams({startDateTime:start,endDateTime:end,'$top':'250','$select':'id,subject,start,end,isAllDay,isCancelled,location,changeKey,seriesMasterId,originalStartTimeZone,originalEndTimeZone'});
+    const token=await this.graphToken(c),value=[],seen=new Set();
+    while(url) {
+      const next=new URL(url);
+      if(next.origin!=='https://graph.microsoft.com' || next.pathname!==new URL(prefix).pathname || next.username || next.password || next.hash || seen.has(url) || seen.size>=40) throw Error('Kalender-Paginierung ist ungültig oder unvollständig.');
+      seen.add(url);
+      const page=await this.json(url,{headers:{authorization:'Bearer '+token,Prefer:'outlook.timezone="UTC"'}});
+      if(!Array.isArray(page.value) || value.length+page.value.length>10000) throw Error('Kalenderantwort ist zu groß oder ungültig.');
+      value.push(...page.value);url=page['@odata.nextLink'];
+      if(url && typeof url!=='string') throw Error('Kalender-Folgeseite ist ungültig.');
+    }
+    if(this.get(c.id)!==c) throw Error('Kalenderanschluss wurde während des Abrufs geändert. Erneut abgleichen.');
+    return {value,complete:true,start,end};
+  }
   async a2aCard(c) {
     const {token}=await this.credentials(c),headers=token?{authorization:'Bearer '+token}:{};
     let card;
@@ -146,8 +164,12 @@ export class ServiceConnections {
       const data=await this.json(`https://graph.facebook.com/${c.config.apiVersion}/${c.config.phoneNumberId}?fields=id,display_phone_number`,{headers:{authorization:'Bearer '+credential.token}});
       result={message:'Rufnummer erreichbar.',identity:data.display_phone_number || data.id};
     } else if(c.provider==='microsoft-graph') {
-      await this.graph(c,'mailFolders/inbox/messages?$top=1&$select=id');
-      result={message:'Anmeldung und Postfach-Lesezugriff geprüft. Kalender- und Schreibrechte werden separat benötigt.'};
+      const capabilities=[];
+      try{await this.graph(c,'mailFolders/inbox/messages?$top=1&$select=id');capabilities.push('Postfach lesen');}catch{}
+      const start=new Date(),end=new Date(start.getTime()+86400000);
+      try{await this.calendar(c,{start:start.toISOString(),end:end.toISOString()});capabilities.push('Kalender lesen');}catch{}
+      if(!capabilities.length)throw Error('Kein Postfach- oder Kalender-Lesezugriff bestätigt. Zugang und Freigaben prüfen.');
+      result={message:capabilities.join(' und ')+' geprüft. Schreibrechte und Versand wurden nicht getestet.',capabilities};
     } else if(c.provider==='discord') {
       if(!credential.token) throw Error('Bot-Token fehlt.');
       const headers={authorization:'Bot '+credential.token};
@@ -165,7 +187,7 @@ export class ServiceConnections {
     const c=this.get(id);
     await this.recordBoundary('service',{connectionId:id,action});
     if(c.provider==='microsoft-graph' && action==='inbox') return this.graph(c,'mailFolders/inbox/messages?$top=10&$select=id,subject,receivedDateTime,from');
-    if(c.provider==='microsoft-graph' && action==='calendar') return this.graph(c,'events?$top=10&$select=id,subject,start,end');
+    if(c.provider==='microsoft-graph' && action==='calendar') return this.calendar(c,input);
     if(c.provider==='a2a' && c.config.mode==='client' && ['message','task'].includes(action)) {
       if(action==='message'&&(typeof input.text!=='string'||!text(input.text)||input.text.length>30000))throw Error('Nachricht fehlt oder ist zu lang.');
       if(action==='task'&&(typeof input.taskId!=='string'||input.taskId.length>256))throw Error('Auftragskennung fehlt.');

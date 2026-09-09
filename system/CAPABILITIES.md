@@ -1,5 +1,11 @@
 # Zentrale Funktions- und Anschlusslandkarte
 
+Der verbindliche, automatisch geprüfte Modulvertrag ist [MODULES.md](MODULES.md),
+seine Datenquelle [modules.json](modules.json). Worker entdecken Einrichtung und
+Aufrufe mit `system_modules` und `system_module`. Die folgenden Oberflächenaktionen
+ergänzen diese gemeinsame Grundlage. Neue oder geänderte Module unterliegen
+derselben Registrierungspflicht; Live-Status wird separat gelesen.
+
 Die maschinenlesbare Quelle ist [capabilities.mjs](capabilities.mjs). Sie führt
 alle Produktbereiche, ihre führenden Kataloge und Bereichsverträge zusammen.
 `node system/capabilities.mjs` liefert zusätzlich die vollständige Auflistung

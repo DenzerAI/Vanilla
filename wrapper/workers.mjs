@@ -1,3 +1,4 @@
+import {installationEnvironment} from './worker-environment.mjs';
 import {sharedMemoryACPServers} from './shared-memory.mjs';
 import {fileURLToPath} from 'node:url';
 import { EventEmitter } from "node:events";
@@ -36,7 +37,7 @@ export class Workers extends EventEmitter {
     this.queue = Promise.resolve();
   }
   async init() {
-    this.settings = await jsonFile(this.file, { defaultWorker: "auto", fallbackWorker: null, enabled: ["codex"] });
+    this.settings = await jsonFile(this.file, { defaultWorker: "auto", fallbackWorker: null, enabled: [] });
     if (this.settings.defaultWorker !== "auto" && !this.catalog.some(w => w.id === this.settings.defaultWorker)) throw new Error("Unbekannter Standard-Worker in workers.json.");
   }
   entry(id) { const entry = this.catalog.find(w => w.id === id); if (!entry) throw new Error("Unbekannter Worker."); return entry; }
@@ -103,15 +104,7 @@ export class Workers extends EventEmitter {
     const entry = this.entry(id), command = await this.resolveCommand(entry);
     if (!command) throw new Error(`${entry.name}: Programm nicht gefunden. Zuerst installieren oder den Programmpfad hinterlegen.`);
     if (entry.adapter !== "acp") throw new Error("Worker-Adapter fehlt.");
-    const contextEnv = { COMPANY_BASE: companyRoot(this.root), SYSTEM_BASE: systemRoot(), UWE_WORKSPACE: this.store.root };
-    if (id === "claw-code") {
-      // Like CODEX_HOME, native session state belongs to this installation.
-      // Authentication remains native (including inherited OAuth credentials).
-      contextEnv.CLAUDE_CONFIG_DIR = process.env.CLAUDE_CONFIG_DIR || path.join(this.store.dataRoot, "claude");
-      if (!path.isAbsolute(contextEnv.CLAUDE_CONFIG_DIR)) throw new Error("CLAUDE_CONFIG_DIR muss ein absoluter Ordnerpfad sein.");
-      await mkdir(contextEnv.CLAUDE_CONFIG_DIR, {recursive:true, mode:0o700});
-      await access(contextEnv.CLAUDE_CONFIG_DIR, constants.W_OK);
-    }
+    const contextEnv = { ...await installationEnvironment(this.store.dataRoot), AGENT_INTERNAL_TOKEN: process.env.AGENT_INTERNAL_TOKEN || "", COMPANY_BASE: companyRoot(this.root), SYSTEM_BASE: systemRoot(), UWE_WORKSPACE: this.store.root };
     return this.attach(id, this.makeACP({ id, name: entry.name, command, args: entry.args, cwd: this.store.root,
       contextEnv,
       readThread: async threadId => await jsonFile(path.join(this.store.root, "chats", safeName(threadId), "native-session.json"), null)

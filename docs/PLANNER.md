@@ -6,7 +6,7 @@ Heute/Kalender ist eine integrierte bedienbare Oberfläche mit isolierten Beispi
 Echte CRM-Folgeschritte kommen aus `/api/crm/query`, Detailaktualisierung aus
 `/api/crm/entities/{entity_id}`. Bestehende Benachrichtigungen und Agentenfragen
 werden eingebunden; deren APIs und Dialoge bleiben führend. Keine zweite
-Benachrichtigungsablage. Keine neue CRM- oder Kalenderdatenbank. Der UI-Vertrag
+Benachrichtigungsablage. Das CRM bleibt führend; Kalenderfenster liegen als lokale Projektion in derselben SQLite-Datenbank. Der UI-Vertrag
 steht unter `wrapper/surfaces/today.md`, Fähigkeiten unter `system/capabilities.mjs`.
 
 Die Beispielansicht beschreibt Termin → Kontakt → Anlass und eine explizite
@@ -14,10 +14,43 @@ Terminänderung nach neuer Nachricht. Sie verwendet ausschließlich flüchtigen
 React-Zustand; keine CRM-/Kalenderschreibanfrage, kein Import und keine Migration dieser Daten. Das ausdrückliche Öffnen eines Beispielbriefings speichert dessen gekennzeichneten Text in einem normalen Gespräch.
 Nur Ansichtspräferenzen werden lokal im Browser gespeichert.
 
-## Anschlussvertrag für den nächsten Produktionsschritt
+## Microsoft-Kalender: implementierter Leseweg
 
-Die folgenden Felder und Fähigkeiten sind Zielvertrag, noch keine implementierte
-Kalender-API. Bestehende CRM-, Routine- und Verbindungsquellen werden erweitert.
+`GET /api/calendar/events` liefert Termine und Feedstatus für `projectId`, `start`
+und `end` (exklusiv). `POST /api/calendar/sync` benötigt zusätzlich die ID eines
+Microsoft-Serviceanschlusses im selben Projekt. MCP: `calendar_list`, `calendar_sync`.
+Der bestehende Verbindungsdialog Kalender richtet diesen Anschluss ein; der
+Mail-OAuth-Zugang erteilt keine Kalenderrechte.
+
+Der Adapter liest `calendarView` mit expliziten Zeitzonen-Grenzen und vollständiger
+Paginierung. Damit kommen auch Vorkommen und Ausnahmen von Wiederholungsserien an.
+Folgeseiten müssen denselben Graph-Host und Postfachpfad behalten. 40 Seiten,
+10.000 Vorkommen und 93 Tage sind feste Grenzen; ein unvollständiger Abruf ersetzt
+keinen bisherigen Stand. Nach vollständigem Abruf wird das gesamte Fenster atomar
+ausgetauscht. Dadurch verschwinden gelöschte, abgesagte oder aus dem Fenster
+verschobene Termine. Pro Verbindung ist ein Fenster gespeichert. Mehrtägige
+Termine werden pro sichtbarem Tag dargestellt, mit stabiler Anbieter-ID und Revision.
+
+Der Kern aktualisiert konfigurierte Microsoft-Anschlüsse alle fünf Minuten.
+Monatswahl fordert den sichtbaren Zeitraum samt Randtagen an. Fehlgeschlagene
+Abrufe behalten alte Daten und melden Fehler; fehlende Abdeckung und über zehn
+Minuten alter Stand werden in der vorhandenen Statuszeile benannt. Neue Kunden
+sehen keine Beispiele, können die vorhandene Beispielansicht ausdrücklich wählen.
+
+Zeitpunkte kommen in UTC und werden in der Systemzeitzone dargestellt. Ganztägige
+Grenzen werden daraus als Kalendertage behandelt, Ende exklusiv. Bei Einrichtung
+Systemzeitzone und gewünschte Postfachzeitzone abstimmen; abweichende mehrzonige
+Ganztagskalender sind mit echten Anbieterereignissen gesondert abzunehmen.
+Bearbeiten und Einladungen erfolgen im Anbieter-Kalender. Der vorhandene
+Beispiel-Bearbeitungsbutton ist bei echten Terminen deaktiviert.
+
+Anbieterreferenzen: [calendarView](https://learn.microsoft.com/en-us/graph/api/calendar-list-calendarview?view=graph-rest-1.0),
+[Ereignis und Zeitzonen](https://learn.microsoft.com/en-us/graph/api/event-get?view=graph-rest-1.0).
+
+## Anschlussvertrag für weitere Produktionsschritte
+
+Die folgenden ergänzenden Felder und Schreibfähigkeiten sind Zielvertrag;
+der oben beschriebene Leseweg ist implementiert. Bestehende CRM-, Routine- und Verbindungsquellen werden erweitert.
 Jeder Feed meldet unabhängig: nicht eingerichtet, lädt, aktuell, veraltet, Fehler;
 Quellzeit, Empfangszeit, letzte erfolgreiche Synchronisierung und Abdeckungszeitraum.
 Ein eingerichteter Zugang beweist keinen Abgleich. Fehlende Daten sind nicht gleich
@@ -62,11 +95,9 @@ verhindern eine pauschale Zusicherung der Aktualität. Das Lesen eines CRM-Vorga
 prüft dessen aktuellen Stand, ersetzt aber keine Versionskontrolle bei späteren
 Aktionen. Bereits geladener Agentenkontext wird nicht rückwirkend entfernt.
 
-Noch offen: dauerhafte Kalendertermine/API, Anbieter-Sync mit Paging/Delta/Löschungen,
-Wiederholungen und Einladungen, Wetterquelle/Ortswahl, fachlich typisierte
+Noch offen: Kalender-Schreibaktionen und Einladungen, weitere Anbieter und Delta statt vollständigem Fensterabgleich, Wetterquelle/Ortswahl, fachlich typisierte
 Briefing-Zuordnung (die Liste zeigt aktuell alle abgeschlossenen Routine-Ergebnisse), produktive Kontakte-/Entscheidungsmasken, vollständige
-serverseitige Fälligkeitsabfrage statt begrenzter CRM-Leseseite. Die vorhandene
-Inbox bleibt eine separate Designstudie und liefert noch keine echten Nachrichten.
+serverseitige Fälligkeitsabfrage statt begrenzter CRM-Leseseite. Die Inbox liefert echte Outlook-/Gmail-Nachrichten; ihre Quellenübergabe an CRM und Routinen führt MAIL.md.
 
 ## Berichtsliste und Fortsetzung
 
@@ -77,3 +108,8 @@ Es akzeptiert keinen Berichtstext vom Browser. Beispiele werden aus dem gemeinsa
 fiktiven Katalog aufgelöst. Snapshot und Kontext verwenden `chat-handoff.mjs`;
 Berichts-ID und Chatzuordnung liegen im bestehenden Chatbestand. Gleichzeitige
 Öffnungen werden zusammengefasst. Die Berichtsliste ist keine zweite Ergebnisablage.
+
+Beim Entfernen oder Umhängen des Serviceanschlusses bleiben bereits empfangene
+Termine als historische Projektion erhalten und werden ausdrücklich als nicht mehr
+verbunden gekennzeichnet. Führend ist die vorhandene gemeinsame Verbindungsablage
+`control/state.json`; die Kalenderprojektion erzeugt keine zweite Kontoverwaltung.

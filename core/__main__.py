@@ -7,9 +7,10 @@ from .config import Config
 
 def main():
     os.umask(0o077)
-    config = Config.environment()
+    config = Config.environment(load_credentials=False)
     from .restore import apply_pending
     apply_pending(config)
+    config = Config.environment()
     uvicorn.run(
         create_app(config),
         host=config.host,

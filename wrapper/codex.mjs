@@ -1,3 +1,4 @@
+import {workerEnvironment} from './worker-environment.mjs';
 import { spawn } from "node:child_process";
 import { createInterface } from "node:readline";
 import { EventEmitter } from "node:events";
@@ -48,7 +49,7 @@ export class Codex extends EventEmitter {
         cwd: this.cwd,
         stdio: ["pipe", "pipe", "pipe"],
         env: {
-          ...process.env,
+          ...workerEnvironment(),
           ...this.contextEnv,
           NO_COLOR: "1",
           ...(this.home ? { CODEX_HOME: this.home } : {}),

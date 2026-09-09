@@ -54,7 +54,8 @@ export const audioServices=connectionCatalog.filter(s=>s.kind==='audio');
 
 // The static UI can be rebuilt while older server processes finish active chats.
 export function catalogForFeatures(features={}) {
-  const available = connectionCatalog.filter(service => (service.kind !== 'crm' || features.crmConnections) && (service.kind !== 'system' || features.operations));
+  const catalog = connectionCatalog.map(s=>features.mailInbox && s.provider==='calendar'?{...s,provider:'microsoft-graph',kind:'service',description:'Microsoft-Termine mit dem Kalender abgleichen'}:features.mailInbox && ['gmail','microsoft-graph'].includes(s.provider)?{...s,name:s.provider==='gmail'?'Gmail':'Outlook',provider:s.provider==='gmail'?'gmail':'outlook',kind:'mail',description:'Postfach mit der Inbox verbinden'}:s);
+  const available = catalog.filter(service => (service.kind !== 'crm' || features.crmConnections) && (service.kind !== 'system' || features.operations));
   if(features.serviceConnections)return available;
   return available.flatMap(s=>s.kind!=='service'?[s]:s.provider==='microsoft-graph'?[{name:'Outlook',provider:'outlook',category:'office',icon:'mail',description:'E-Mail über einen Workflow anbinden',kind:'webhook'}]:s.provider==='whatsapp-local'?[{name:'WhatsApp',provider:'whatsapp',category:'messaging',icon:'message',description:'Bestehende Bridge oder Workflow anbinden',kind:'webhook'}]:[]);
 }

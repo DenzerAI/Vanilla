@@ -55,7 +55,7 @@ class Config:
         return bool(self.access_token or self.login_password)
 
     @classmethod
-    def environment(cls):
+    def environment(cls, load_credentials=True):
         config = cls(
             workspace=Path(os.environ["UWE_WORKSPACE"])
             if os.getenv("UWE_WORKSPACE")
@@ -76,9 +76,9 @@ class Config:
         from .files import read_json
         from .secrets import read_secret
         host = read_json(config.data / "host.json", {})
-        if host.get("access_enabled"):
-            config.login_password = read_secret("system-access")
-            config.access_token = read_secret("system-api")
+        if load_credentials and host.get("access_enabled"):
+            config.login_password = read_secret("system-access", config)
+            config.access_token = read_secret("system-api", config)
         if not config.public_origin and host.get("public_origin"):
             origin = host["public_origin"]
             if not origin.startswith("https://"):

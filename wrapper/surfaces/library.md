@@ -94,3 +94,13 @@ Codeblöcke im gemeinsamen Markdown-Renderer verwenden ebenfalls CopyButton.
 Die bereinigte Toolbar enthält nur den Portalplatz; React rendert darin dieselbe
 zugängliche Kopieraktion mit Haken und Fehlerzustand. Kopiert wird ausschließlich
 der Text des zugehörigen Codeblocks, ohne die letzte Formatierungszeile.
+
+
+## Workspacebezogene Dateinavigation
+
+AgentFiles verwendet die gewählte Projekt-ID und den Workspace-Namen. Die
+Navigation endet an dessen Wurzel; ein Workspace-Wechsel verwirft die bisherige
+Dateiauswahl. Während ein ausdrücklich verlinkter Unterordner geladen wird,
+bleibt der Datei-Skeleton sichtbar. LibraryThumbnail bietet zusätzlich eine
+Kartenvariante mit lesbarer Dokumentbreite; normale Bibliotheksminiaturen
+behalten ihren Aufbau und ihre bisherigen Ladegrenzen.

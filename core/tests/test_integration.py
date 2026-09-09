@@ -44,8 +44,11 @@ def test_existing_workers_stream_persist_and_resume_through_python(integration_r
         "#!"
         + shutil.which("node")
         + "\n"
-        + (Path(__file__).parent / "worker_fixture.cjs").read_text()
+        + (Path(__file__).parent / "worker_fixture.cjs").read_text().replace("process.env.FIXTURE_PROMPT_FILE", json.dumps(str(tmp_path / "prompts.jsonl")))
     )
+    fixture_text=binary.read_text()
+    fixture_text=fixture_text.replace("\n", "\nif (process.env.OPENAI_API_KEY || process.env.ANTHROPIC_API_KEY || process.env.HOME === "+json.dumps(str(tmp_path))+" || process.env.CODEX_HOME === "+json.dumps(str(tmp_path/'foreign-profile'))+") throw Error('Host environment crossed worker boundary');\n",1)
+    binary.write_text(fixture_text)
     binary.chmod(0o700)
     port, adapter_port = free_port(), free_port()
     env = {
@@ -59,7 +62,13 @@ def test_existing_workers_stream_persist_and_resume_through_python(integration_r
         "UWE_CODEX_BINARY": str(binary),
         "UWE_HERMES_BINARY": str(binary),
         "FIXTURE_PROMPT_FILE": str(tmp_path / "prompts.jsonl"),
+        "CODEX_HOME":str(tmp_path/'foreign-profile'),
+        "OPENAI_API_KEY":"synthetic-foreign-host-key",
+        "ANTHROPIC_API_KEY":"synthetic-foreign-host-key",
     }
+    foreign=tmp_path/'foreign-profile';foreign.mkdir()
+    (foreign/'auth.json').write_text('{"sentinel":"synthetic-foreign-host-login"}')
+    (foreign/'AGENTS.md').write_text('Synthetic foreign instructions must not be imported.')
     log = (tmp_path / "server.log").open("w+")
     client = httpx.Client(
         base_url=f"http://127.0.0.1:{port}/api", trust_env=False, timeout=10

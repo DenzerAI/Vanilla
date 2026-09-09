@@ -1,4 +1,5 @@
 from __future__ import annotations
+from .modules import Modules, routes as module_routes
 
 import asyncio
 import hashlib
@@ -36,6 +37,9 @@ from .memory import Memory
 from .operations import Operations
 from .api import routes as operations_routes
 from .routines import Routines, validate_schedule, instant
+from .mail import Mail, routes as mail_routes
+from .mail_workflow import MailWorkflow, routes as mail_workflow_routes
+from .calendar import Calendar, routes as calendar_routes
 
 
 class NoteInput(BaseModel):
@@ -68,6 +72,9 @@ def create_app(config=None):
     queue = JobQueue(db, storage, config.timezone)
     runtime = Runtime(config, queue, knowledge, operations)
     routines = Routines(storage, runtime, memory)
+    mail = Mail(db, config)
+    mail.workflow = MailWorkflow(mail, crm, routines)
+    calendar = Calendar(db, config, runtime, mail.project)
     local_csrf = secrets.token_urlsafe(32)
     login_attempts = {}
 
@@ -76,7 +83,11 @@ def create_app(config=None):
         queue.recover()
         await asyncio.to_thread(knowledge.scan)
         await runtime.start()
+        mail.task = asyncio.create_task(mail.loop())
+        calendar.task = asyncio.create_task(calendar.loop())
         yield
+        await calendar.close()
+        await mail.close()
         await runtime.close()
         db.close()
 
@@ -96,6 +107,7 @@ def create_app(config=None):
     )
     app.state.operations = operations
     app.state.crm = crm
+    app.state.mail = mail
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(request, error):
@@ -167,6 +179,7 @@ def create_app(config=None):
             if (
                 not session
                 and not bearer
+                and request.url.path not in {"/api/mail/oauth/callback/gmail", "/api/mail/oauth/callback/outlook"}
                 and request.url.path
                 not in {"/login", "/login.js", "/login.css", "/api/auth/login", "/healthz"}
             ):
@@ -216,6 +229,10 @@ def create_app(config=None):
 
     app.include_router(operations_routes(operations, queue))
     app.include_router(crm_routes(crm, memory))
+    app.include_router(mail_routes(mail))
+    app.include_router(mail_workflow_routes(mail.workflow))
+    app.include_router(calendar_routes(calendar))
+    app.include_router(module_routes(Modules(config), runtime, mail))
 
     @app.get("/api/auth/session")
     async def session(request: Request):
@@ -509,6 +526,7 @@ def create_app(config=None):
             payload["token"] = request.state.csrf
             payload["features"] = {
                 **payload.get("features", {}),
+                "mailInbox": True,
                 "knowledge": True,
                 "sqlite": True,
                 "crmCore": True,

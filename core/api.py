@@ -36,6 +36,10 @@ class SnapshotInput(BaseModel):
 class MemoryArguments(BaseModel):
     projectId: str = Field(min_length=1, max_length=100)
     query: str = Field(default="", max_length=20000)
+    chatId: str = Field(default='',max_length=150)
+    turnId: str = Field(default='',max_length=150)
+    offset: int = Field(default=0,ge=0,le=100000000)
+    limit: int = Field(default=20000,ge=1,le=20000)
     path: str = Field(default="", max_length=1000)
     text: str = Field(default="", max_length=1000000)
     version: str | None = Field(default=None, max_length=128)
@@ -59,6 +63,8 @@ def routes(operations, queue):
     async def memory_tool(b: MemoryTool):
         a = b.arguments
         o.memory.project_prefix(a.projectId)
+        if b.name == "memory_original":
+            return await asyncio.to_thread(o.memory.original,a.chatId,a.turnId,a.projectId,a.offset,a.limit)
         if b.name == "memory_search":
             return {"results": await asyncio.to_thread(o.knowledge.search, a.query[:500], a.projectId, 20)}
         if b.name == "memory_context":
@@ -171,6 +177,8 @@ def routes(operations, queue):
             raise ValueError("Zuerst eine Sicherung wiederherstellen und prüfen.")
         if await o.runtime.has_active_work():
             raise ValueError("Bitte laufende Arbeit zuerst beenden.")
+        from .backups import verify_apply
+        await asyncio.to_thread(verify_apply, record["path"], o.config)
         atomic_write(o.config.data / "restore-pending.json", json.dumps(record))
         return await restart()
 

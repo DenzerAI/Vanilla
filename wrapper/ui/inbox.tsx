@@ -1,4 +1,5 @@
-import React, { useLayoutEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
+import {inboxDraftStore, inboxConversation} from './inbox-data.mjs';
+import React, { useEffect, useLayoutEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { ArrowLeft, Check, FileText, Inbox, Search } from "./icons.jsx";
 import { BrandIcon } from "./brand-icon.jsx";
@@ -7,7 +8,7 @@ import { Modal } from "./modal.jsx";
 import "./inbox.css";
 
 type Conversation = {
-  id: string; sender: string; initials: string; provider: string; account: string;
+  id: string; revision?: number; sender: string; initials: string; provider: string; account: string;
   subject: string; time: string; unread: boolean; done: boolean;
   messages: { sender: string; time: string; text: string; outgoing?: boolean }[];
 };
@@ -55,21 +56,69 @@ type Props = {
   onShowSidebar: () => void;
   onHideSidebar: () => void;
   onBack: () => void;
+  api: any;
+  projectId: string;
 };
 
-export function InboxPage({ PageHeading, sidebarHost, sidebarVisible, onShowSidebar, onHideSidebar, onBack }: Props) {
-  const [conversations, setConversations] = useState(examples);
-  const [selectedId, setSelectedId] = useState(examples[0].id);
+export function InboxPage({ PageHeading, sidebarHost, sidebarVisible, onShowSidebar, onHideSidebar, onBack, api, projectId }: Props) {
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [selectedId, setSelectedId] = useState("");
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState("all");
   const [provider, setProvider] = useState("all");
-  const [drafts, setDrafts] = useState<Record<string, string>>({});
+  const [, redraw] = useState(0);
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [detail, setDetail] = useState<any>(null);
+  const drafts = useRef(inboxDraftStore(api, projectId, () => redraw(n => n + 1))).current;
+  useEffect(() => {
+    let alive = true, busy = false;
+    async function refresh() {
+      if (busy) return;
+      busy = true;
+      try {
+        const result:any={conversations:[]};let offset:any=0;
+        do {
+          const page=await api('/inbox/threads?'+new URLSearchParams({projectId,offset:String(offset)}));
+          result.conversations.push(...page.conversations);offset=page.nextOffset;
+          if(!alive)return;
+          if(result.conversations.length>=10000 && offset!=null)throw Error('Mehr als 10.000 Gespräche: gezielt über den Agenten mit inbox_threads weiterlesen.');
+        }while(offset!=null);
+        if (!alive) return;
+        setConversations(result.conversations.map((row: any) => inboxConversation(row)));
+        setSelectedId(previous => previous || result.conversations[0]?.id || '');
+        setError('');
+      } catch (e: any) {if (alive) setError(e.message);}
+      finally {busy = false; if (alive) setLoading(false);}
+    }
+    void refresh();
+    const timer = setInterval(refresh, 10000);
+    const leaving = (event: BeforeUnloadEvent) => {if (drafts.pending) {event.preventDefault();event.returnValue='';}};
+    window.addEventListener('beforeunload', leaving);
+    return () => {alive = false;clearInterval(timer);window.removeEventListener('beforeunload', leaving);};
+  }, [api, projectId, drafts]);
+  const selectedRevision=conversations.find(item=>item.id===selectedId)?.revision;
+  useEffect(() => {
+    if (!selectedId) return;
+    let alive = true;
+    setDetail(null);
+    api('/inbox/thread?id=' + encodeURIComponent(selectedId) + '&projectId=' + encodeURIComponent(projectId))
+      .then(async (result: any) => {
+        if (!alive) return;
+        drafts.load(selectedId, result.draft);setDetail(result);
+        await api('/inbox/mark', {id:selectedId, projectId, revision:result.thread.revision});
+        if (alive) setConversations(items => items.map(item => item.id === selectedId ? {...item, unread:false} : item));
+      }).catch((e: Error) => {if (alive) setError(e.message);});
+    return () => {alive = false;};
+  }, [selectedId, selectedRevision, projectId, api, drafts]);
   const [conceptOpen, setConceptOpen] = useState(false);
   const detailHeading = useRef<HTMLHeadingElement>(null);
   const list = useRef<HTMLDivElement>(null);
   const draftField = useRef<HTMLTextAreaElement>(null);
-  const selected = conversations.find(item => item.id === selectedId)!;
-  const draft = drafts[selectedId] || "";
+  const row = conversations.find(item => item.id === selectedId);
+  const selected = row ? {...row, messages: detail?.messages || []} : null;
+  const draftRecord = drafts.records.get(selectedId);
+  const draft = draftRecord?.text || "";
   const results = conversations.filter(item => {
     const text = [item.sender, item.subject, item.provider, item.account, ...item.messages.map(message => message.text)].join(" ").toLocaleLowerCase("de");
     return (provider === "all" || item.provider === provider) &&
@@ -102,7 +151,6 @@ export function InboxPage({ PageHeading, sidebarHost, sidebarVisible, onShowSide
   }, [draft, selectedId, sidebarVisible]);
   function openConversation(item: Conversation) {
     setSelectedId(item.id);
-    setConversations(items => items.map(row => row.id === item.id ? { ...row, unread: false } : row));
     if (window.matchMedia("(max-width: 650px)").matches) onHideSidebar();
     requestAnimationFrame(() => detailHeading.current?.focus({ preventScroll: true }));
   }
@@ -124,34 +172,33 @@ export function InboxPage({ PageHeading, sidebarHost, sidebarVisible, onShowSide
         {!results.length && <div className="inbox-empty" role="status"><Inbox strokeWidth={1.55} size={24}/><p>{query ? "Keine Treffer" : filter === "done" ? "Noch nichts erledigt" : filter === "unread" ? "Alles gelesen" : "Keine passenden Gespräche"}</p></div>}
       </div>
     </div>, sidebarHost)}
-    <section className="inbox-page" data-capability="inbox.preview" aria-label="Nachrichtenverlauf">
+    <section className="inbox-page" data-capability="inbox.messages" aria-label="Nachrichtenverlauf">
+      {(error || draftRecord?.error) && <p role="alert">{error || draftRecord.error} {draftRecord?.error && 'Dein Text bleibt hier erhalten. Bitte vor dem Verlassen kopieren und den aktuellen Entwurf neu laden.'}</p>}
+      {!selected ? <div className="inbox-empty" role="status"><Inbox size={24}/><p>{loading ? 'Nachrichten werden geladen …' : 'Noch keine Nachrichten. Postfach unter Verbindungen einrichten.'}</p></div> : <>
       <header className="inbox-detail-head">
         {!sidebarVisible && <button className="icon-button" type="button" aria-label="Zur Gesprächsliste" onClick={backToList}><ArrowLeft strokeWidth={1.55} size={18}/></button>}
         <BrandIcon name={selected.provider}/>
         <h2 ref={detailHeading} tabIndex={-1} title={`${selected.provider} · ${selected.account}`}>{selected.sender}</h2>
-        <button className="icon-button" type="button" aria-label={selected.done ? "Wieder öffnen" : "Als erledigt markieren"} title={selected.done ? "Wieder öffnen" : "Als erledigt markieren"} aria-pressed={selected.done} onClick={() => setConversations(items => items.map(item => item.id === selectedId ? { ...item, done: !item.done } : item))}><Check strokeWidth={1.55} size={18}/></button>
+        <button className="icon-button" type="button" aria-label={selected.done ? "Wieder öffnen" : "Als erledigt markieren"} title={selected.done ? "Wieder öffnen" : "Als erledigt markieren"} aria-pressed={selected.done} onClick={async () => {try {await api('/inbox/mark',{id:selectedId,projectId,done:!selected.done});setConversations(items=>items.map(item=>item.id===selectedId?{...item,done:!selected.done}:item));}catch(e:any){setError(e.message);}}}><Check strokeWidth={1.55} size={18}/></button>
       </header>
       <div className="inbox-messages" key={selectedId}>
         <div className="inbox-message-column">
           <p className="inbox-thread-subject">{selected.subject}</p>
-          {selected.messages.map((message, index) => <article key={index} className={"inbox-message " + (message.outgoing ? "inbox-message-outgoing" : "")}>
+          {selected.messages.map((message: any, index: number) => <article key={index} className={"inbox-message " + (message.outgoing ? "inbox-message-outgoing" : "")}>
             <div className="inbox-message-meta"><strong>{message.sender}</strong><span>{message.time}</span></div>
             <p>{message.text}</p>
           </article>)}
         </div>
       </div>
       <div className="inbox-compose"><div className="inbox-compose-inner">
-        <textarea ref={draftField} aria-label="Antwortentwurf" rows={1} wrap="soft" placeholder="Antwort schreiben …" value={draft} onChange={event => setDrafts(previous => ({ ...previous, [selectedId]: event.target.value }))}/>
+        <textarea ref={draftField} aria-label="Antwortentwurf" rows={1} wrap="soft" placeholder="Antwort schreiben …" value={draft} disabled={!detail || !!draftRecord?.error} onChange={event => {void drafts.edit(selectedId,event.target.value);}}/>
       </div></div>
+      </>}
     </section>
     {conceptOpen && <Modal title="Eine Inbox für alle Nachrichten" onClose={() => setConceptOpen(false)} wide={false} className="inbox-concept">
-      <p>Outlook, Gmail und WhatsApp laufen hier später in einer gemeinsamen Gesprächsliste zusammen. Die Konten richtest du unter Verbindungen ein.</p>
-      <div className="settings-group">
-        <div className="inbox-concept-step"><strong>1. Gemeinsam gestalten</strong><p>Jetzt: Gesprächsliste in der linken Seitenleiste, Verlauf, Suche und lokale Beispielentwürfe. Alle Nachrichten sind erfunden, Konten sind noch nicht verbunden. Entwürfe bleiben nur bis zum Verlassen der Inbox erhalten und werden nicht versendet.</p></div>
-        <div className="inbox-concept-step"><strong>2. Nachrichten empfangen</strong><p>Als Nächstes: echte Konten anbinden, Nachrichten zusammenführen und ihren Bearbeitungsstatus speichern.</p></div>
-        <div className="inbox-concept-step"><strong>3. Mit dem Agenten bearbeiten</strong><p>Danach: ausgewählte Verläufe mitlesen lassen, Triage und Antwortentwürfe. Versand kommt als eigene freigegebene Aktion hinzu.</p></div>
-      </div>
-      <p>Aus Nachrichten können später Aufträge werden. Die Inbox bleibt der Ort für die Gespräche.</p>
+      <p>Outlook und Gmail werden unter Verbindungen eingerichtet. Die Inbox zeigt ausschließlich Nachrichten aus deinen ausdrücklich verbundenen Konten.</p>
+      <p>Lesen, Erledigen und Antwortentwürfe werden lokal gespeichert. Die Antwortzeile sendet keine Nachricht. Im Agentenchat kannst du einen Entwurf prüfen und den Versand mit Empfänger und Inhalt ausdrücklich beauftragen.</p>
+      <p>WhatsApp bleibt bis zur gemeinsamen Anbindung in seinem vorhandenen Verbindungsdialog. Es gibt hier keine automatischen Antworten.</p>
     </Modal>}
   </>;
 }

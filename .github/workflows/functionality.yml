@@ -1,0 +1,43 @@
+name: Functionality
+on:
+  pull_request:
+  push:
+    branches: [main, 'feat/customer-ready']
+jobs:
+  customer-base:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: npm ci --ignore-scripts
+      - run: npm ci --prefix wrapper --ignore-scripts
+      - run: npm run source:setup
+      - run: python -m venv .venv
+      - run: .venv/bin/python -m pip install -r requirements.lock pytest pytest-asyncio
+      - name: Validate module contracts against the actual change
+        env:
+          MODULE_BASE: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: |
+          if git cat-file -e "$MODULE_BASE^{commit}" 2>/dev/null; then
+            .venv/bin/python scripts/verify-modules.py --revision HEAD --base "$MODULE_BASE"
+          else
+            .venv/bin/python scripts/verify-modules.py --revision HEAD
+          fi
+      - run: .venv/bin/python -m core.setup --data .verify/backup-runtime
+      - run: npm run control:build
+      - run: npm test
+      - run: npm run test:core -- -q
+        env:
+          AGENT_TEST_RESTIC: ${{ github.workspace }}/.verify/backup-runtime/bin/restic
+          AGENT_REQUIRE_RESTIC: '1' 
+      - run: npm run typecheck

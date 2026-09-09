@@ -35,7 +35,7 @@ test("catalog separates all requested workers and discovers configured executabl
 test("automatic fallback happens before dispatch; pinned chats and explicit jobs never switch", async t => {
   const { store } = await fixture(t), primary = new Adapter(), backup = new Adapter();
   const workers = new Workers({ store, root: store.root, codex: primary, resolveCommand: async () => process.execPath, makeACP: () => backup });
-  await workers.init(); await workers.connect("hermes"); await workers.preferences({ defaultWorker: "codex", fallbackWorker: "hermes" });
+  await workers.init(); await workers.connect("codex"); await workers.connect("hermes"); await workers.preferences({ defaultWorker: "codex", fallbackWorker: "hermes" });
   primary.fail = true;
   assert.equal((await workers.select()).id, "hermes");
   await assert.rejects(workers.select("codex"), /Nicht erreichbar/);
@@ -51,7 +51,8 @@ test("worker preferences survive restart; failed connection never enables an una
   const { store } = await fixture(t), primary = new Adapter();
   const workers = new Workers({ store, root: store.root, codex: primary, resolveCommand: async () => null }); await workers.init();
   await assert.rejects(workers.connect("hermes"), /Programm nicht gefunden/);
-  assert.deepEqual(workers.settings.enabled, ["codex"]);
+  assert.deepEqual(workers.settings.enabled, []);
+  await workers.connect("codex");
   await assert.rejects(workers.preferences({ defaultWorker: "hermes" }), /zuerst verbinden/);
   await workers.preferences({ defaultWorker: "codex", fallbackWorker: null });
   const reopened = new Workers({ store, root: store.root, codex: new Adapter() }); await reopened.init();
@@ -72,9 +73,9 @@ test("Claude native state uses the installation data directory without changing 
   const claude=options.find(o=>o.id==='claw-code'),hermes=options.find(o=>o.id==='hermes');
   assert.equal(claude.contextEnv.CLAUDE_CONFIG_DIR,path.join(store.dataRoot,'claude'));
   assert.equal((await stat(claude.contextEnv.CLAUDE_CONFIG_DIR)).isDirectory(),true);
-  assert.equal(hermes.contextEnv.CLAUDE_CONFIG_DIR,undefined);
+  assert.equal(hermes.contextEnv.CLAUDE_CONFIG_DIR,path.join(store.dataRoot,'claude'));
   assert.equal(claude.contextEnv.UWE_WORKSPACE,store.root);
-  assert.ok(!Object.keys(claude.contextEnv).some(k=>/TOKEN|KEY|SECRET/.test(k)));
+  assert.ok(!Object.entries(claude.contextEnv).some(([k,v])=>/TOKEN|KEY|SECRET/.test(k) && v));
 });
 test("each job can use the catalog and legacy worker values stay pinned", async t => {
   const {store} = await fixture(t);
@@ -202,7 +203,7 @@ test("actual HTTP server routes ACP chats and jobs, protects mutations and survi
   const {dir} = await fixture(t, {beforeCleanup: async () => {
     if (child && child.exitCode === null) { child.kill(); await exited; }
   }}), binary = path.join(dir,"worker.cjs");
-  await writeFile(binary, `#!${process.execPath}\n${nativeFixture}`, {mode:0o700});
+  await writeFile(binary, `#!${process.execPath}\n${nativeFixture.replaceAll("process.env.FIXTURE_LOG", JSON.stringify(path.join(dir,"wire.ndjson")))}`, {mode:0o700});
   await mkdir(path.join(dir,"company"));
   await writeFile(path.join(dir,"company/AGENTS.md"),"# Testregeln");
   await writeFile(path.join(dir,"company/FIRMA.md"),"FIRMA: Fiktiver Betrieb");
@@ -223,6 +224,7 @@ test("actual HTTP server routes ACP chats and jobs, protects mutations and survi
   await start();
   assert.equal((await fetch(base+'/workers/preferences',{method:'POST',body:'{}'})).status,403);
   assert.equal((await fetch(base+'/worker-session',{method:'POST',body:'{}'})).status,403);
+  await call('/workers/connect',{id:'codex'});
   await call('/workers/connect',{id:'hermes'});
   await call('/workers/preferences',{defaultWorker:'auto',fallbackWorker:'hermes'});
   const autoBoot = await call('/bootstrap');
@@ -312,7 +314,7 @@ test("Auto tries configured workers in stable order, reserves explicit backup an
   const {store} = await fixture(t), codex = new Adapter();
   const adapters = new Map([['hermes',new Adapter()],['openclaw',new Adapter()]]);
   const workers = new Workers({store,root:store.root,codex,resolveCommand:async()=>process.execPath,makeACP:({id})=>adapters.get(id)});
-  await workers.init(); await workers.connect('hermes'); await workers.connect('openclaw');
+  await workers.init(); await workers.connect('codex'); await workers.connect('hermes'); await workers.connect('openclaw');
   await workers.preferences({defaultWorker:'auto',fallbackWorker:'hermes'});
   assert.deepEqual(workers.routingOrder(),['codex','openclaw','hermes']);
   codex.fail = true; adapters.get('openclaw').fail = true;

@@ -225,3 +225,9 @@ cache/
 !/requirements-speech.lock
 
 !/wrapper/ui/assets/21st.png
+
+!/system/modules.json
+!/.github/workflows/functionality.yml
+
+!/wrapper/ui/assets/icons/
+!/wrapper/ui/assets/icons/*-LICENSE.txt

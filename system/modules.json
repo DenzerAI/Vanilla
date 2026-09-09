@@ -1,0 +1,976 @@
+{
+  "version": 1,
+  "modules": [
+    {
+      "id": "work-evidence",
+      "title": "Arbeitsnachweise",
+      "purpose": "Arbeitsnachweise über die bestehenden Anschlüsse bedienen und erweitern.",
+      "stage": "preview",
+      "contract": "wrapper/surfaces/work-evidence.md",
+      "setup": "docs/CUSTOMER-SETUP.md#work-evidence",
+      "data": "Installationsdaten in data/control und workspaces; Code enthält keine Kundendaten.",
+      "sources": [
+        "wrapper/ui/work-evidence.css",
+        "wrapper/ui/work-evidence.mjs",
+        "wrapper/ui/work-evidence.tsx"
+      ],
+      "entrypoints": [],
+      "dependencies": [
+        "platform"
+      ],
+      "verification": [
+        "wrapper/test/work-evidence.test.mjs"
+      ],
+      "status": {
+        "endpoint": "GET /api/system/modules",
+        "meaning": "Vorschau; keine Leistungserfassung angeschlossen."
+      },
+      "limits": "Vorschau; keine Leistungserfassung angeschlossen.",
+      "version": 1,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+    },
+    {
+      "id": "crm-core",
+      "title": "CRM und Kundenwissen",
+      "purpose": "CRM und Kundenwissen über die bestehenden Anschlüsse bedienen und erweitern.",
+      "stage": "partial",
+      "contract": "docs/CRM.md",
+      "setup": "docs/CUSTOMER-SETUP.md#crm-core",
+      "data": "Installationsdaten in data/control und workspaces; Code enthält keine Kundendaten.",
+      "sources": [
+        "core/crm.py",
+        "core/crm_api.py",
+        "core/crm_mapping.py",
+        "core/crm_models.py",
+        "core/crm_schema.py",
+        "core/mcp.py",
+        "wrapper/crm-connections.mjs",
+        "wrapper/ui/crm-connection.jsx"
+      ],
+      "entrypoints": [
+        "GET /api/crm/connections",
+        "GET /api/crm/entities/{entity_id}",
+        "GET /api/crm/entities/{entity_id}/history",
+        "GET /api/crm/proposals",
+        "GET /api/crm/schema",
+        "GET /api/crm/sources/{signal_id}",
+        "GET /api/crm/sources/{signal_id}/normalize",
+        "POST /api/crm/decisions",
+        "POST /api/crm/entities/{entity_id}/archive",
+        "POST /api/crm/entities/{entity_id}/check",
+        "POST /api/crm/fields",
+        "POST /api/crm/identities",
+        "POST /api/crm/proposals",
+        "POST /api/crm/query",
+        "POST /api/crm/relations",
+        "POST /api/crm/sources",
+        "POST /api/crm/sources/{signal_id}/classify",
+        "POST /api/crm/tool",
+        "POST /api/crm/views",
+        "POST /api/crm/workflows",
+        "POST /internal/crm/sources",
+        "POST /internal/crm/tool"
+      ],
+      "dependencies": [
+        "platform"
+      ],
+      "verification": [
+        "core/tests/test_crm.py"
+      ],
+      "status": {
+        "endpoint": "GET /api/crm/schema",
+        "meaning": "Schema ist verfügbar; externe CRM-Synchronisation separat prüfen."
+      },
+      "limits": "Schema ist verfügbar; externe CRM-Synchronisation separat prüfen.",
+      "version": 1,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+    },
+    {
+      "id": "planner",
+      "title": "Planer und Kalender",
+      "purpose": "Planer und Kalender über die bestehenden Anschlüsse bedienen und erweitern.",
+      "stage": "partial",
+      "contract": "docs/PLANNER.md",
+      "setup": "docs/CUSTOMER-SETUP.md#planner",
+      "data": "Installationsdaten in data/control und workspaces; Code enthält keine Kundendaten.",
+      "sources": [
+        "core/calendar.py",
+        "wrapper/ui/planner-briefings.mjs",
+        "wrapper/ui/planner-data.mjs",
+        "wrapper/ui/planner-dates.mjs",
+        "wrapper/ui/planner-demo.ts",
+        "wrapper/ui/planner.css",
+        "wrapper/ui/planner.tsx"
+      ],
+      "entrypoints": [
+        "GET /api/calendar/events",
+        "GET /api/planner/results",
+        "POST /api/calendar/sync",
+        "POST /api/calendar/tool",
+        "POST /api/planner/chat",
+        "POST /internal/calendar/tool"
+      ],
+      "dependencies": [
+        "connections",
+        "platform"
+      ],
+      "verification": [
+        "core/tests/test_calendar.py",
+        "wrapper/test/planner-data.test.mjs"
+      ],
+      "status": {
+        "endpoint": "GET /api/calendar/events",
+        "meaning": "Gespeicherte Termine, letzter erfolgreicher Abgleich, Fehler und abgedeckter Zeitraum je Anschluss. Keine Feeds bedeutet noch keinen erfolgreichen Kalenderabgleich."
+      },
+      "limits": "Microsoft-Kalender lesen mit Paging und vollständigem Zeitfenster; Änderungen und Einladungen erfolgen beim Anbieter. Höchstens 93 Tage und 10.000 Vorkommen pro Abruf. Wetter und fachliche Briefing-Typisierung sind noch nicht implementiert.",
+      "version": 1,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten.",
+      "keywords": [
+        "Microsoft",
+        "Outlook",
+        "Kalender",
+        "Termine",
+        "calendar"
+      ]
+    },
+    {
+      "id": "source-privacy",
+      "title": "Codeaustausch",
+      "purpose": "Codeaustausch über die bestehenden Anschlüsse bedienen und erweitern.",
+      "stage": "implemented",
+      "contract": "docs/CODE-SYNC.md",
+      "setup": "docs/CUSTOMER-SETUP.md#source-privacy",
+      "data": "Installationsdaten in data/control und workspaces; Code enthält keine Kundendaten.",
+      "sources": [
+        "backend/company-base.mjs",
+        "scripts/install-git-hooks.mjs",
+        "scripts/publish-source.py",
+        "scripts/security-scan.py",
+        "scripts/source-sync.py",
+        "scripts/verify-design-adoption.mjs",
+        "scripts/verify-source-adoption.mjs",
+        "system/source-policy.json"
+      ],
+      "entrypoints": [],
+      "dependencies": [
+        "platform"
+      ],
+      "verification": [
+        "core/tests/test_source_privacy.py"
+      ],
+      "status": {
+        "endpoint": "GET /api/system/modules",
+        "meaning": "Lokales Prüfergebnis über npm run source:check; HTTP bestätigt nur den Katalog."
+      },
+      "limits": "Lokales Prüfergebnis über npm run source:check; HTTP bestätigt nur den Katalog.",
+      "command": "node system/capabilities.mjs",
+      "version": 1,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+    },
+    {
+      "id": "inbox",
+      "title": "Posteingang, Gmail und Outlook",
+      "purpose": "Posteingang, Gmail und Outlook über die bestehenden Anschlüsse bedienen und erweitern.",
+      "stage": "implemented",
+      "contract": "docs/MAIL.md",
+      "setup": "docs/CUSTOMER-SETUP.md#inbox",
+      "data": "Installationsdaten in data/control und workspaces; Code enthält keine Kundendaten.",
+      "sources": [
+        "core/mail.py",
+        "core/mail_workflow.py",
+        "core/provider_vault.py",
+        "wrapper/ui/inbox-data.mjs",
+        "wrapper/ui/inbox.css",
+        "wrapper/ui/inbox.tsx",
+        "wrapper/ui/mail-connection.tsx"
+      ],
+      "entrypoints": [
+        "GET /api/inbox/attachment",
+        "GET /api/inbox/attachments",
+        "GET /api/inbox/context",
+        "GET /api/inbox/links",
+        "GET /api/inbox/thread",
+        "GET /api/inbox/threads",
+        "GET /api/mail/accounts",
+        "GET /api/mail/oauth/callback/{provider}",
+        "GET /api/mail/oauth/status",
+        "GET /api/mail/setup",
+        "POST /api/inbox/capture",
+        "POST /api/inbox/compose",
+        "POST /api/inbox/draft",
+        "POST /api/inbox/mark",
+        "POST /api/inbox/routine",
+        "POST /api/inbox/send",
+        "POST /api/inbox/tool",
+        "POST /api/mail/admin",
+        "POST /api/mail/disconnect",
+        "POST /api/mail/oauth/start",
+        "POST /api/mail/setup",
+        "POST /api/mail/sync",
+        "POST /internal/inbox/tool",
+        "POST /internal/provider-secrets"
+      ],
+      "dependencies": [
+        "crm-core",
+        "jobs",
+        "platform"
+      ],
+      "verification": [
+        "core/tests/test_customer_workflows.py",
+        "core/tests/test_mail.py"
+      ],
+      "status": {
+        "endpoint": "GET /api/mail/setup",
+        "meaning": "OAuth-App bereit ist noch kein verbundenes Postfach. Zusätzlich /api/mail/accounts und letzten Sync prüfen."
+      },
+      "limits": "Gmail und Outlook: Lesen, Entwürfe und expliziter Versand. CRM-Übergabe erzeugt Belege und Vorschläge; Entscheidungen bleiben separat. Kalender nutzt den eigenen Microsoft-Serviceanschluss. Weitere Messenger sind keine Mailpostfächer.",
+      "version": 1,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+    },
+    {
+      "id": "chat",
+      "title": "Chat und Nachrichtenübergabe",
+      "purpose": "Chat und Nachrichtenübergabe über die bestehenden Anschlüsse bedienen und erweitern.",
+      "stage": "implemented",
+      "contract": "wrapper/surfaces/chat.md",
+      "setup": "docs/CUSTOMER-SETUP.md#chat",
+      "data": "Installationsdaten in data/control und workspaces; Code enthält keine Kundendaten.",
+      "sources": [
+        "wrapper/briefing-chat.mjs",
+        "wrapper/chat-archive.mjs",
+        "wrapper/chat-handoff.mjs",
+        "wrapper/chat-read-state.mjs",
+        "wrapper/chat-style.mjs",
+        "wrapper/chat-title.mjs",
+        "wrapper/message-delivery.mjs",
+        "wrapper/server.mjs",
+        "wrapper/ui/app.jsx",
+        "wrapper/ui/chat-activity.jsx",
+        "wrapper/ui/chat-artifacts.jsx",
+        "wrapper/ui/chat-controls.jsx",
+        "wrapper/ui/chat-events.mjs",
+        "wrapper/ui/chat-greetings.mjs",
+        "wrapper/ui/chat-layout.mjs",
+        "wrapper/ui/chat-presentation.mjs",
+        "wrapper/ui/chat-rich-content.jsx",
+        "wrapper/ui/chat-rich-content.mjs",
+        "wrapper/ui/chat-scroll.mjs",
+        "wrapper/ui/chat-start-data.tsx",
+        "wrapper/ui/chat-start-feed.mjs",
+        "wrapper/ui/chat-start-heading.tsx",
+        "wrapper/ui/chat-start-preferences.tsx",
+        "wrapper/ui/chat-start.tsx",
+        "wrapper/ui/message-submit.mjs"
+      ],
+      "entrypoints": [
+        "GET /api/agent/files",
+        "GET /api/bootstrap",
+        "GET /api/chats",
+        "GET /api/computer-use",
+        "GET /api/core/context-routes",
+        "GET /api/diagnostics",
+        "GET /api/events",
+        "GET /api/messages",
+        "GET /api/review",
+        "GET /api/search",
+        "GET /api/status",
+        "GET /api/thread",
+        "GET /api/updates",
+        "GET /api/usage",
+        "POST /api/chat/provider",
+        "POST /api/chat/read",
+        "POST /api/chat/speed",
+        "POST /api/chat/update",
+        "POST /api/chats",
+        "POST /api/engine/reconnect",
+        "POST /api/fork",
+        "POST /api/messages",
+        "POST /api/messages/edit",
+        "POST /api/messages/resume",
+        "POST /api/projects/save",
+        "POST /api/respond",
+        "POST /api/stop",
+        "POST /api/terminal",
+        "POST /api/turn",
+        "POST /api/turn/delete",
+        "POST /api/updates/presence",
+        "POST /api/updates/restart",
+        "POST /api/voice/start",
+        "POST /api/voice/stop"
+      ],
+      "dependencies": [
+        "platform",
+        "weather"
+      ],
+      "verification": [
+        "wrapper/test/message-delivery.test.mjs",
+        "wrapper/test/message-submit.test.mjs"
+      ],
+      "status": {
+        "endpoint": "GET /api/workers",
+        "meaning": "Eingerichtet, verbunden und authentifiziert getrennt auswerten."
+      },
+      "limits": "Eingerichtet, verbunden und authentifiziert getrennt auswerten.",
+      "version": 2,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+    },
+    {
+      "id": "speech",
+      "title": "Vorlesen",
+      "purpose": "Vorlesen über die bestehenden Anschlüsse bedienen und erweitern.",
+      "stage": "implemented",
+      "contract": "wrapper/VOICE.md",
+      "setup": "docs/CUSTOMER-SETUP.md#speech",
+      "data": "Installationsdaten in data/control und workspaces; Code enthält keine Kundendaten.",
+      "sources": [
+        "requirements-speech.lock",
+        "scripts/setup-system.mjs",
+        "system/runtime-assets.mjs",
+        "wrapper/scripts/setup-speech.mjs",
+        "wrapper/scripts/speech.py",
+        "wrapper/speech.mjs",
+        "wrapper/ui/message-speech.tsx",
+        "wrapper/ui/speech-playback.mjs"
+      ],
+      "entrypoints": [
+        "GET /api/speech/status",
+        "GET /api/speech/voices",
+        "POST /api/speech/connect",
+        "POST /api/speech/disconnect",
+        "POST /api/speech/settings",
+        "POST /api/speech/synthesize"
+      ],
+      "dependencies": [
+        "platform"
+      ],
+      "verification": [
+        "wrapper/test/speech.test.mjs"
+      ],
+      "status": {
+        "endpoint": "GET /api/speech/status",
+        "meaning": "localReady oder eingerichteter Cloudanbieter plus gewählte Stimme."
+      },
+      "limits": "localReady oder eingerichteter Cloudanbieter plus gewählte Stimme.",
+      "version": 1,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+    },
+    {
+      "id": "dictation",
+      "title": "Diktat",
+      "purpose": "Diktat über die bestehenden Anschlüsse bedienen und erweitern.",
+      "stage": "implemented",
+      "contract": "wrapper/DICTATION.md",
+      "setup": "docs/CUSTOMER-SETUP.md#dictation",
+      "data": "Installationsdaten in data/control und workspaces; Code enthält keine Kundendaten.",
+      "sources": [
+        "wrapper/dictation.mjs",
+        "wrapper/scripts/dictation.py",
+        "wrapper/scripts/setup-dictation.mjs",
+        "wrapper/ui/dictation-audio.mjs",
+        "wrapper/ui/dictation-storage.mjs",
+        "wrapper/ui/dictation.jsx"
+      ],
+      "entrypoints": [
+        "GET /api/dictation/status",
+        "POST /api/dictation/chunk",
+        "POST /api/dictation/create",
+        "POST /api/dictation/disconnect",
+        "POST /api/dictation/finish",
+        "POST /api/dictation/settings",
+        "POST /api/dictation/transcribe",
+        "POST /api/dictation/trash"
+      ],
+      "dependencies": [
+        "platform"
+      ],
+      "verification": [
+        "wrapper/test/dictation.test.mjs"
+      ],
+      "status": {
+        "endpoint": "GET /api/dictation/status",
+        "meaning": "Lokales Modell oder explizit eingerichteter Anbieter."
+      },
+      "limits": "Lokales Modell oder explizit eingerichteter Anbieter.",
+      "version": 1,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+    },
+    {
+      "id": "connections",
+      "title": "Verbindungen und Anbieter",
+      "purpose": "Verbindungen und Anbieter über die bestehenden Anschlüsse bedienen und erweitern.",
+      "stage": "partial",
+      "contract": "wrapper/surfaces/connections.md",
+      "setup": "docs/CUSTOMER-SETUP.md#connections",
+      "data": "Installationsdaten in data/control und workspaces; Code enthält keine Kundendaten.",
+      "sources": [
+        "wrapper/crm-catalog.mjs",
+        "wrapper/integration-snapshot.mjs",
+        "wrapper/integrations.mjs",
+        "wrapper/service-catalog.mjs",
+        "wrapper/service-connections.mjs",
+        "wrapper/ui/connection-catalog.mjs",
+        "wrapper/ui/service-connection.jsx"
+      ],
+      "entrypoints": [
+        "GET /api/integrations",
+        "GET /api/services",
+        "GET /api/services/sessions",
+        "POST /api/connections/delete",
+        "POST /api/connections/save",
+        "POST /api/connections/test",
+        "POST /api/secrets/delete",
+        "POST /api/secrets/save",
+        "POST /api/services/action",
+        "POST /api/services/check",
+        "POST /api/services/delete",
+        "POST /api/services/save",
+        "POST /api/services/start",
+        "POST /api/services/stop"
+      ],
+      "dependencies": [
+        "platform"
+      ],
+      "verification": [
+        "wrapper/test/service-platform.test.mjs"
+      ],
+      "status": {
+        "endpoint": "GET /api/integrations",
+        "meaning": "Gespeichert, getestet, verbunden und ausführbar getrennt behandeln; reine Links versprechen kein Werkzeug."
+      },
+      "limits": "Gespeichert, getestet, verbunden und ausführbar getrennt behandeln; reine Links versprechen kein Werkzeug.",
+      "version": 1,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+    },
+    {
+      "id": "workers",
+      "title": "Codex CLI, Claude Code, Hermes und OpenClaw",
+      "purpose": "Codex CLI, Claude Code, Hermes und OpenClaw über die bestehenden Anschlüsse bedienen und erweitern.",
+      "stage": "implemented",
+      "contract": "wrapper/WORKERS.md",
+      "setup": "docs/CUSTOMER-SETUP.md#workers",
+      "data": "Installationsdaten in data/control und workspaces; Code enthält keine Kundendaten.",
+      "sources": [
+        "backend/worker-context.mjs",
+        "scripts/worker-login.mjs",
+        "system/worker-catalog.mjs",
+        "wrapper/acp-worker.mjs",
+        "wrapper/codex-home.mjs",
+        "wrapper/codex.mjs",
+        "wrapper/local-model-catalog.mjs",
+        "wrapper/local-workers.mjs",
+        "wrapper/ui/local-workers.jsx",
+        "wrapper/ui/worker-session-controls.tsx",
+        "wrapper/ui/worker-settings.jsx",
+        "wrapper/worker-environment.mjs",
+        "wrapper/worker-models.mjs",
+        "wrapper/worker-rpc.mjs",
+        "wrapper/workers.mjs"
+      ],
+      "entrypoints": [
+        "GET /api/local-workers",
+        "GET /api/local-workers/operations",
+        "GET /api/workers",
+        "POST /api/local-workers/cancel",
+        "POST /api/local-workers/machines/remove",
+        "POST /api/local-workers/machines/save",
+        "POST /api/local-workers/pull",
+        "POST /api/local-workers/start",
+        "POST /api/local-workers/test",
+        "POST /api/worker-session",
+        "POST /api/workers/activate",
+        "POST /api/workers/connect",
+        "POST /api/workers/disconnect",
+        "POST /api/workers/preferences"
+      ],
+      "dependencies": [
+        "platform"
+      ],
+      "verification": [
+        "wrapper/test/workers.test.mjs"
+      ],
+      "status": {
+        "endpoint": "GET /api/workers",
+        "meaning": "Programmfund ist kein Login. Nur eigene Profile und bestätigte Sitzung verwenden."
+      },
+      "limits": "Programmfund ist kein Login. Nur eigene Profile und bestätigte Sitzung verwenden.",
+      "version": 1,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+    },
+    {
+      "id": "jobs",
+      "title": "Aufträge und Routinen",
+      "purpose": "Aufträge und Routinen über die bestehenden Anschlüsse bedienen und erweitern.",
+      "stage": "implemented",
+      "contract": "wrapper/surfaces/jobs.md",
+      "setup": "docs/CUSTOMER-SETUP.md#jobs",
+      "data": "Installationsdaten in data/control und workspaces; Code enthält keine Kundendaten.",
+      "sources": [
+        "core/mcp.py",
+        "core/notifications.py",
+        "core/queue.py",
+        "core/routines.py",
+        "wrapper/job-notifications.mjs",
+        "wrapper/job-templates.mjs",
+        "wrapper/ui/job-notifications.jsx",
+        "wrapper/ui/job-template-list.jsx",
+        "wrapper/ui/notification-bell.tsx"
+      ],
+      "entrypoints": [
+        "GET /api/core/executions",
+        "GET /api/core/executions/{id}",
+        "GET /api/jobs",
+        "GET /api/jobs/notification-targets",
+        "GET /api/jobs/readiness",
+        "GET /api/notifications",
+        "GET /api/notifications/item",
+        "GET /api/notifications/preference",
+        "POST /api/core/executions/{id}/cancel",
+        "POST /api/jobs/notify",
+        "POST /api/jobs/run",
+        "POST /api/jobs/save",
+        "POST /api/notifications/preference",
+        "POST /api/notifications/read",
+        "POST /api/routines/tool",
+        "POST /internal/routines/tool"
+      ],
+      "dependencies": [
+        "platform"
+      ],
+      "verification": [
+        "core/tests/test_routines.py"
+      ],
+      "status": {
+        "endpoint": "GET /api/notifications",
+        "meaning": "Ausführung über Scheduler; Abschluss und Zustellbeleg prüfen."
+      },
+      "limits": "Ausführung über Scheduler; Abschluss und Zustellbeleg prüfen.",
+      "version": 1,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+    },
+    {
+      "id": "library",
+      "title": "Bibliothek und Arbeitsdateien",
+      "purpose": "Bibliothek und Arbeitsdateien über die bestehenden Anschlüsse bedienen und erweitern.",
+      "stage": "implemented",
+      "contract": "wrapper/surfaces/library.md",
+      "setup": "docs/CUSTOMER-SETUP.md#library",
+      "data": "Installationsdaten in data/control und workspaces; Code enthält keine Kundendaten.",
+      "sources": [
+        "core/files.py",
+        "wrapper/library.mjs",
+        "wrapper/ui/library-order.mjs",
+        "wrapper/ui/library-thumbnail.jsx",
+        "wrapper/ui/library.jsx"
+      ],
+      "entrypoints": [
+        "GET /api/file/info",
+        "GET /api/file/text",
+        "GET /api/files",
+        "GET /api/library",
+        "POST /api/file/save",
+        "POST /api/library/favorite",
+        "POST /api/library/image",
+        "POST /api/library/reuse",
+        "POST /api/upload"
+      ],
+      "dependencies": [
+        "platform"
+      ],
+      "verification": [
+        "wrapper/test/artifact-content.test.mjs"
+      ],
+      "status": {
+        "endpoint": "GET /api/library",
+        "meaning": "Dateibestand; Vorschau ist kein Suchindex."
+      },
+      "limits": "Dateibestand; Vorschau ist kein Suchindex.",
+      "version": 1,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+    },
+    {
+      "id": "skills",
+      "title": "Skills und Arbeitsweisen",
+      "purpose": "Skills und Arbeitsweisen über die bestehenden Anschlüsse bedienen und erweitern.",
+      "stage": "implemented",
+      "contract": "wrapper/surfaces/skills.md",
+      "setup": "docs/CUSTOMER-SETUP.md#skills",
+      "data": "Installationsdaten in data/control und workspaces; Code enthält keine Kundendaten.",
+      "sources": [
+        "wrapper/shared-skills.mjs",
+        "wrapper/skill-icons.mjs",
+        "wrapper/skill-library.mjs",
+        "wrapper/ui/skill-art.mjs",
+        "wrapper/ui/skill-categories.mjs",
+        "wrapper/ui/skill-details.jsx"
+      ],
+      "entrypoints": [
+        "GET /api/skills",
+        "GET /api/skills/hub",
+        "GET /api/skills/read",
+        "POST /api/skills/copy",
+        "POST /api/skills/create"
+      ],
+      "dependencies": [
+        "platform"
+      ],
+      "verification": [
+        "wrapper/test/shared-memory.test.mjs"
+      ],
+      "status": {
+        "endpoint": "GET /api/skills",
+        "meaning": "Ausschließlich Installations- und Firmenquellen."
+      },
+      "limits": "Ausschließlich Installations- und Firmenquellen.",
+      "version": 1,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+    },
+    {
+      "id": "knowledge",
+      "title": "Wissen, Memory und Suche",
+      "purpose": "Wissen, Memory und Suche über die bestehenden Anschlüsse bedienen und erweitern.",
+      "stage": "implemented",
+      "contract": "docs/CORE.md",
+      "setup": "docs/CUSTOMER-SETUP.md#knowledge",
+      "data": "Installationsdaten in data/control und workspaces; Code enthält keine Kundendaten.",
+      "sources": [
+        "core/knowledge.py",
+        "core/mcp.py",
+        "core/memory.py",
+        "wrapper/shared-memory.mjs",
+        "wrapper/ui/knowledge.tsx"
+      ],
+      "entrypoints": [
+        "GET /api/knowledge/note",
+        "GET /api/knowledge/search",
+        "POST /api/knowledge/context",
+        "POST /api/knowledge/note",
+        "POST /api/knowledge/reindex",
+        "POST /api/memory/capture",
+        "POST /api/memory/compact",
+        "POST /api/memory/forget",
+        "POST /api/memory/restore",
+        "POST /api/memory/tool",
+        "POST /internal/context",
+        "POST /internal/memory/tool"
+      ],
+      "dependencies": [
+        "platform"
+      ],
+      "verification": [
+        "core/tests/test_operations.py"
+      ],
+      "status": {
+        "endpoint": "GET /api/system/status",
+        "meaning": "FTS ist unabhängig von optionalen Embeddings; noch nicht indexierte Formate kennzeichnen."
+      },
+      "limits": "FTS ist unabhängig von optionalen Embeddings; noch nicht indexierte Formate kennzeichnen.",
+      "version": 1,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+    },
+    {
+      "id": "channels",
+      "title": "Telegram, WhatsApp und A2A",
+      "purpose": "Telegram, WhatsApp und A2A über die bestehenden Anschlüsse bedienen und erweitern.",
+      "stage": "partial",
+      "contract": "wrapper/CHANNELS.md",
+      "setup": "docs/CUSTOMER-SETUP.md#channels",
+      "data": "Installationsdaten in data/control und workspaces; Code enthält keine Kundendaten.",
+      "sources": [
+        "wrapper/channel-runtime.mjs"
+      ],
+      "entrypoints": [
+        "GET /api/services",
+        "GET /api/services/sessions",
+        "POST /api/services/action",
+        "POST /api/services/check",
+        "POST /api/services/delete",
+        "POST /api/services/save",
+        "POST /api/services/start",
+        "POST /api/services/stop"
+      ],
+      "dependencies": [
+        "platform"
+      ],
+      "verification": [
+        "wrapper/test/service-platform.test.mjs"
+      ],
+      "status": {
+        "endpoint": "GET /api/services",
+        "meaning": "Kanal muss gestartet und verifiziert sein; externe Zustellung separat bestätigen."
+      },
+      "limits": "Kanal muss gestartet und verifiziert sein; externe Zustellung separat bestätigen.",
+      "version": 1,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+    },
+    {
+      "id": "settings",
+      "title": "Einstellungen und Identität",
+      "purpose": "Einstellungen und Identität über die bestehenden Anschlüsse bedienen und erweitern.",
+      "stage": "implemented",
+      "contract": "wrapper/surfaces/settings.md",
+      "setup": "docs/CUSTOMER-SETUP.md#settings",
+      "data": "Installationsdaten in data/control und workspaces; Code enthält keine Kundendaten.",
+      "sources": [
+        "core/settings.py",
+        "wrapper/ui/voice-settings.jsx",
+        "wrapper/ui/user-preferences.tsx",
+        "wrapper/ui/user-profile.mjs"
+      ],
+      "entrypoints": [
+        "GET /api/identity",
+        "POST /api/identity",
+        "POST /api/settings"
+      ],
+      "dependencies": [
+        "platform"
+      ],
+      "verification": [
+        "core/tests/test_operations.py",
+        "wrapper/test/user-profile.test.mjs"
+      ],
+      "status": {
+        "endpoint": "GET /api/system/settings",
+        "meaning": "Persistierte Konfiguration dieser Installation."
+      },
+      "limits": "Persistierte Konfiguration dieser Installation.",
+      "version": 2,
+      "migration": "Vorhandene Einstellungen und Markdown-Abschnitte erhalten. Optionale Wetterkoordinaten ergänzen USER.md; alte Ortsnamen bleiben lesbar und werden bei Mehrdeutigkeit erst nach Auswahl verwendet."
+    },
+    {
+      "id": "operations",
+      "title": "Betrieb, Zugang und Sicherung",
+      "purpose": "Betrieb, Zugang und Sicherung über die bestehenden Anschlüsse bedienen und erweitern.",
+      "stage": "implemented",
+      "contract": "docs/OPERATIONS.md",
+      "setup": "docs/CUSTOMER-SETUP.md#operations",
+      "data": "Installationsdaten in data/control und workspaces; Code enthält keine Kundendaten.",
+      "sources": [
+        "core/api.py",
+        "core/backups.py",
+        "core/operations.py",
+        "core/restore.py",
+        "core/secrets.py",
+        "core/service.py",
+        "scripts/host-service.py",
+        "scripts/init-company.mjs",
+        "scripts/start-core.mjs",
+        "scripts/verify-hero-keys.mjs",
+        "scripts/verify-modules.py",
+        "scripts/verify-start.py"
+      ],
+      "entrypoints": [
+        "GET /api/auth/session",
+        "GET /api/core/status",
+        "GET /api/system/backups",
+        "GET /api/system/mcp",
+        "GET /api/system/modules",
+        "GET /api/system/modules/{id}",
+        "GET /api/system/settings",
+        "GET /api/system/status",
+        "GET /api/system/tailscale",
+        "GET /healthz",
+        "POST /api/auth/login",
+        "POST /api/auth/logout",
+        "POST /api/system/access",
+        "POST /api/system/backup/setup",
+        "POST /api/system/backups/apply",
+        "POST /api/system/backups/restore",
+        "POST /api/system/restart",
+        "POST /api/system/service",
+        "POST /api/system/settings",
+        "POST /api/system/setup",
+        "POST /api/system/tailscale",
+        "POST /api/system/tool",
+        "POST /internal/restart",
+        "GET /api/system/readiness"
+      ],
+      "dependencies": [
+        "platform"
+      ],
+      "verification": [
+        "core/tests/test_operations.py"
+      ],
+      "status": {
+        "endpoint": "GET /api/system/readiness",
+        "meaning": "Prozess, vollständige lokale Basis und tatsächliche Worker-Ausführbarkeit getrennt prüfen; Kundenanschlüsse werden nicht pauschal als bereit erklärt."
+      },
+      "limits": "Betriebszustand, Login, Backup und Restore-Nachweis separat prüfen.",
+      "version": 1,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+    },
+    {
+      "id": "platform",
+      "title": "Modulsystem und Laufzeit",
+      "purpose": "Modulsystem und Laufzeit über die bestehenden Anschlüsse bedienen und erweitern.",
+      "stage": "implemented",
+      "contract": "system/MODULES.md",
+      "setup": "docs/CUSTOMER-SETUP.md#platform",
+      "data": "Installationsdaten in data/control und workspaces; Code enthält keine Kundendaten.",
+      "sources": [
+        "backend/artifacts.mjs",
+        "backend/bootstrap.mjs",
+        "backend/hero-client.mjs",
+        "backend/hero-key-diagnostics.mjs",
+        "backend/security.mjs",
+        "backend/server.mjs",
+        "backend/store.mjs",
+        "backend/whatsapp-bridge.mjs",
+        "core/__init__.py",
+        "core/__main__.py",
+        "core/app.py",
+        "core/config.py",
+        "core/database.py",
+        "core/events.py",
+        "core/heartbeat.py",
+        "core/isolation.py",
+        "core/models.py",
+        "core/modules.py",
+        "core/runtime.py",
+        "core/setup.py",
+        "core/storage.py",
+        "core/streaming.py",
+        "frontend/app.js",
+        "jobs/briefings/research_context.py",
+        "system/capabilities.mjs",
+        "wrapper/agent-files.mjs",
+        "wrapper/build.mjs",
+        "wrapper/core-client.mjs",
+        "wrapper/git-review.mjs",
+        "wrapper/html-preview.mjs",
+        "wrapper/identity-preferences.mjs",
+        "wrapper/identity-profile.mjs",
+        "wrapper/isolation.mjs",
+        "wrapper/local-device.mjs",
+        "wrapper/local-request.mjs",
+        "wrapper/public/login.js",
+        "wrapper/public/sw.js",
+        "wrapper/run-mode.mjs",
+        "wrapper/safe-request.mjs",
+        "wrapper/scripts/design-audit.mjs",
+        "wrapper/search.mjs",
+        "wrapper/storage.mjs",
+        "wrapper/thread-loading.mjs",
+        "wrapper/tool-events.mjs",
+        "wrapper/ui/agent-avatars.mjs",
+        "wrapper/ui/agent-files.jsx",
+        "wrapper/ui/agent-menu.tsx",
+        "wrapper/ui/agent-preferences.jsx",
+        "wrapper/ui/app-loader.tsx",
+        "wrapper/ui/appearance-design.jsx",
+        "wrapper/ui/appearance.mjs",
+        "wrapper/ui/artifact-content.mjs",
+        "wrapper/ui/attachment-upload.mjs",
+        "wrapper/ui/avatar-motion-setting.jsx",
+        "wrapper/ui/avatar-motion.mjs",
+        "wrapper/ui/avatar-picker.jsx",
+        "wrapper/ui/avatar.jsx",
+        "wrapper/ui/brand-icon.jsx",
+        "wrapper/ui/components/ui/amount-slider.tsx",
+        "wrapper/ui/components/ui/attention-fan.tsx",
+        "wrapper/ui/components/ui/chapter-scrubber.tsx",
+        "wrapper/ui/components/ui/demo.tsx",
+        "wrapper/ui/components/ui/glass-button-demo.tsx",
+        "wrapper/ui/components/ui/glass-button.tsx",
+        "wrapper/ui/components/ui/loader-utils/ease.ts",
+        "wrapper/ui/components/ui/loader.tsx",
+        "wrapper/ui/components/ui/theme-toggle-demo.tsx",
+        "wrapper/ui/components/ui/theme-toggle.tsx",
+        "wrapper/ui/connections-page.jsx",
+        "wrapper/ui/copy-button.tsx",
+        "wrapper/ui/design-reference.jsx",
+        "wrapper/ui/design-system.mjs",
+        "wrapper/ui/dictation-worklet.js",
+        "wrapper/ui/file-content.jsx",
+        "wrapper/ui/filter-picker.jsx",
+        "wrapper/ui/html-preview.tsx",
+        "wrapper/ui/icon-animation.mjs",
+        "wrapper/ui/icon-button.tsx",
+        "wrapper/ui/icon-catalog.mjs",
+        "wrapper/ui/icon-motion-preview.tsx",
+        "wrapper/ui/icon-motion-setting.tsx",
+        "wrapper/ui/icon-motion.tsx",
+        "wrapper/ui/icon-variants.jsx",
+        "wrapper/ui/icons.jsx",
+        "wrapper/ui/lib/utils.ts",
+        "wrapper/ui/loader-options.mjs",
+        "wrapper/ui/loader-settings.tsx",
+        "wrapper/ui/main.tsx",
+        "wrapper/ui/modal.jsx",
+        "wrapper/ui/model-picker.jsx",
+        "wrapper/ui/motion-glyph.tsx",
+        "wrapper/ui/panel-light.tsx",
+        "wrapper/ui/pdf-preview.jsx",
+        "wrapper/ui/restart-recovery.mjs",
+        "wrapper/ui/scroll-edge-fade.tsx",
+        "wrapper/ui/search-match.mjs",
+        "wrapper/ui/settings-patterns.jsx",
+        "wrapper/ui/settings-row.jsx",
+        "wrapper/ui/skeleton.tsx",
+        "wrapper/ui/system-notice.jsx",
+        "wrapper/ui/system-search-data.mjs",
+        "wrapper/ui/system-search.tsx",
+        "wrapper/ui/system-settings.tsx",
+        "wrapper/ui/tool-content.mjs",
+        "wrapper/ui/voice-visual.tsx",
+        "wrapper/ui/voice.jsx",
+        "wrapper/ui/welcome-particles.tsx",
+        "wrapper/ui/welcome-suggestions.tsx",
+        "wrapper/ui/workspace-review.jsx",
+        "wrapper/updates.mjs",
+        "wrapper/vite.config.ts"
+      ],
+      "entrypoints": [
+        "GET /internal/storage",
+        "GET /{path:path}",
+        "POST /internal/jobs/attention",
+        "POST /internal/jobs/finish",
+        "POST /internal/planner/result",
+        "POST /internal/storage",
+        "POST /internal/system/tool",
+        "GET /api/system/modules/{id}/status"
+      ],
+      "dependencies": [],
+      "verification": [
+        "core/tests/test_modules.py"
+      ],
+      "status": {
+        "endpoint": "GET /api/system/modules",
+        "meaning": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen."
+      },
+      "limits": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen.",
+      "version": 1,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+    },
+    {
+      "id": "weather",
+      "title": "Wetter und Ortssuche",
+      "purpose": "Bestätigte Wetterorte im Profil einrichten und aktuelle Wetterdaten im Chatstart anzeigen.",
+      "stage": "implemented",
+      "contract": "wrapper/surfaces/settings.md#dein-profil",
+      "setup": "wrapper/surfaces/settings.md#dein-profil",
+      "data": "Ort und optionale Koordinaten liegen im Workspace in soul/USER.md. Wetterantworten werden zehn Minuten ausschließlich im Arbeitsspeicher zwischengespeichert.",
+      "sources": [
+        "wrapper/weather.mjs",
+        "wrapper/ui/weather-client.mjs"
+      ],
+      "entrypoints": [
+        "GET /api/weather/locations",
+        "GET /api/weather/current"
+      ],
+      "dependencies": [
+        "platform",
+        "settings"
+      ],
+      "verification": [
+        "wrapper/test/weather.test.mjs"
+      ],
+      "status": {
+        "endpoint": "GET /api/status",
+        "meaning": "Erreichbarkeit des lokalen Adapters; bestätigt keine Wetterverbindung. Der aktuelle Abruf benötigt bestätigte latitude/longitude an GET /api/weather/current."
+      },
+      "limits": "Öffentliche Open-Meteo-Dienste benötigen Internet. Ortssuche über GeoNames ist keine Adressprüfung. Fehler und veraltete Antworten werden benannt; keine Beispieldaten als Wetter.",
+      "version": 1,
+      "migration": "Additive optionale Koordinaten in USER.md; bestehender Ortsname und andere Markdown-Abschnitte bleiben erhalten. Löschen des Orts entfernt seine Koordinaten; der Cache ist nicht dauerhaft."
+    }
+  ]
+}

@@ -6,7 +6,7 @@ import './work-evidence.css';
 export function ServiceSettings() {
   const [expanded,setExpanded]=useState({sessions:false,tickets:false});
   const [period,setPeriod]=useState('september');
-  const [showDemo,setShowDemo]=useState(true);
+  const [showDemo,setShowDemo]=useState(false);
   const [ticketFilter,setTicketFilter]=useState('open');
   const [tickets,setTickets]=useState(demoTickets);
   const bounds=period==='september'?['2026-09-01','2026-09-30']:period==='august'?['2026-08-01','2026-08-31']:['',''];
@@ -41,6 +41,6 @@ export function ServiceSettings() {
       <p>Die Bedienung über eine Session und der begrenzte A2A-Anschluss sind noch offen. Meldungsänderungen gelten nur bis zum Verlassen dieser Ansicht.</p>
       <div className="settings-group"><SettingRow title="Beispieldaten anzeigen" action={<button type="button" role="switch" className="apple-switch" aria-label="Beispieldaten anzeigen" aria-checked={showDemo} onClick={()=>setShowDemo(v=>!v)}><span/></button>}/></div>
     </details>
-    {!showDemo&&<p className="work-evidence-note" role="status">Die echte Erfassung ist noch nicht eingerichtet.</p>}
+    {!showDemo&&<p className="work-evidence-note" role="status">Die echte Erfassung ist noch nicht implementiert.</p>}
   </div>;
 }

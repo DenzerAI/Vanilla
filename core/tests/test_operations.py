@@ -140,7 +140,9 @@ def test_stream_bounds_slow_clients_and_preserves_frames(config, db):
 
 def test_real_encrypted_backup_restore_and_corruption(config, db, monkeypatch):
     binary=Path(os.environ.get('AGENT_TEST_RESTIC', str(Path(__file__).resolve().parents[2]/'data/control/bin/restic')))
-    if not binary.exists(): pytest.skip('Pinned restic binary not installed on this test host')
+    if not binary.exists():
+        if os.environ.get('AGENT_REQUIRE_RESTIC'): pytest.fail('Pinned restic is required for customer acceptance')
+        pytest.skip('Pinned restic binary not installed on this test host')
     settings,k,m,o,storage,queue,runtime=services(config,db)
     monkeypatch.setattr(Backups,'binary',property(lambda self:str(binary)))
     o.backups.password=lambda:'test-only-random-backup-passphrase-9fa8c742'
@@ -148,6 +150,9 @@ def test_real_encrypted_backup_restore_and_corruption(config, db, monkeypatch):
     settings.set_group('backup',target=str(target))
     o.backups.command('init')
     write_note(config,'notes/Backup.md','# Wiederherstellbarer Text')
+    company=config.root/'firmenbasis';company.mkdir();(company/'FIRMA.md').write_text('# Synthetische Firma')
+    audio=config.data/'dictations';audio.mkdir();(audio/'synthetic.wav').write_bytes(b'synthetic recording')
+    o.configure_access('synthetic-installation-password')
     k.scan()
     result=o.backups.snapshot()
     assert result['snapshot']
@@ -156,6 +161,30 @@ def test_real_encrypted_backup_restore_and_corruption(config, db, monkeypatch):
     base=Path(restored['path'])
     assert (base/'workspace/notes/Backup.md').read_text()=='# Wiederherstellbarer Text'
     assert verify_restore(base)['format']=='agent-backup-v1'
+    assert (base/'company/FIRMA.md').read_text()=='# Synthetische Firma'
+    assert (base/'dictations/synthetic.wav').read_bytes()==b'synthetic recording'
+    from core.config import Config
+    from core.restore import apply_pending
+    from core.database import Database
+    from core.secrets import read_secret
+    moved=Config(root=config.root.parent/'fresh-customer',start_adapter=False)
+    moved_stage=moved.data/'restores/checked';shutil.copytree(base,moved_stage)
+    (moved.data/'restore-pending.json').write_text(json.dumps({'path':str(moved_stage),'snapshot':result['snapshot']}))
+    apply_pending(moved)
+    restored_db=Database(moved.data/'agent.sqlite3')
+    assert read_secret('system-access',moved,restored_db)=='synthetic-installation-password'
+    assert (moved.root/'firmenbasis/FIRMA.md').is_file()
+    assert (moved.data/'dictations/synthetic.wav').is_file()
+    restored_db.close()
+    from core.files import sha256
+    from cryptography.fernet import Fernet
+    original_key=(base/'provider-vault/provider.key').read_bytes()
+    (base/'provider-vault/provider.key').write_bytes(Fernet.generate_key())
+    manifest=json.loads((base/'manifest.json').read_text());manifest['files']['provider-vault/provider.key']=sha256(base/'provider-vault/provider.key')
+    (base/'manifest.json').write_text(json.dumps(manifest))
+    with pytest.raises(ValueError,match='Tresorschlüssel'):verify_restore(base)
+    (base/'provider-vault/provider.key').write_bytes(original_key)
+    manifest['files']['provider-vault/provider.key']=sha256(base/'provider-vault/provider.key');(base/'manifest.json').write_text(json.dumps(manifest))
     (base/'workspace/notes/Backup.md').write_text('manipuliert')
     with pytest.raises(ValueError): verify_restore(base)
     # The encrypted repository never stores the known note in plaintext.
@@ -180,7 +209,7 @@ def test_mcp_routes_share_versions_and_enforce_projects(config):
         assert client.post('/api/memory/tool',json={'name':'memory_read','arguments':{'projectId':'unknown','path':'notes/Shared.md'}}).status_code==400
         assert client.post('/internal/memory/tool',json=body).status_code==403
         listing=handle({'jsonrpc':'2.0','id':1,'method':'tools/list'},SimpleNamespace())
-        assert {t['name'] for t in listing['result']['tools'] if t['name'].startswith('memory_')}=={'memory_read','memory_write','memory_search','memory_context'}
+        assert {t['name'] for t in listing['result']['tools'] if t['name'].startswith('memory_')}=={'memory_read','memory_write','memory_search','memory_context','memory_original'}
         assert {t['name'] for t in listing['result']['tools'] if t['name'].startswith('routine_')}=={'routine_capabilities','routine_list','routine_create','routine_update'}
 
 
@@ -291,3 +320,39 @@ def test_vanilla_refuses_global_tailscale_changes(config, db, monkeypatch):
     with pytest.raises(ValueError, match='Vanilla'):
         runtime.operations.enable_serve()
     asyncio.run(runtime.close())
+
+
+def test_original_memory_tail_stays_reachable_and_respects_forgetting(config,db):
+    _,k,m,_,_,_,runtime=services(config,db)
+    db.put('control/state.json',{'chats':[{'id':'tailchat','projectId':'default','title':'Tail'}],'projects':[]})
+    text='Einleitung. '*800+'Abschlussergebnis TAIL-9371.'
+    db.put('workspace/chats/tailchat/transcript.json',{'id':'tailchat','turns':[{'id':'turn1','status':'completed','items':[{'type':'agentMessage','text':text},{'type':'reasoning','text':'hidden-reasoning'}]}]})
+    m.capture('tailchat');k.scan()
+    assert k.search('TAIL-9371','default')
+    result=m.original('tailchat','turn1','default',8500)
+    assert 'TAIL-9371' in result['text'] and 'hidden-reasoning' not in result['text']
+    with pytest.raises(ValueError):m.original('tailchat','turn1','other')
+    m.forget_chat('tailchat')
+    with pytest.raises(ValueError):m.original('tailchat','turn1','default')
+    asyncio.run(runtime.close())
+
+
+def test_invalid_pending_restore_keeps_current_data_and_stops_retrying(config,db):
+    from core.restore import apply_pending
+    from core.backups import verify_apply
+    from core.files import sha256
+    stage=config.data/'restores/legacy';stage.mkdir(parents=True)
+    db.backup(stage/'database.sqlite3')
+    with sqlite3.connect(stage/'database.sqlite3') as cx:cx.execute('PRAGMA journal_mode=DELETE')
+    manifest={'format':'agent-backup-v1','schema':2,'files':{'database.sqlite3':sha256(stage/'database.sqlite3')}}
+    (stage/'manifest.json').write_text(json.dumps(manifest))
+    (config.data/'host.json').write_text('{"access_enabled":true}')
+    with pytest.raises(ValueError,match='keine eigene App-Anmeldung'):verify_apply(stage,config)
+    (config.data/'restore-pending.json').write_text(json.dumps({'path':str(stage),'snapshot':'synthetic'}))
+    db.close()
+    with pytest.raises(ValueError,match='keine eigene App-Anmeldung'):apply_pending(config)
+    assert not (config.data/'restore-pending.json').exists()
+    assert (config.data/'restore-failed.json').exists()
+    # Opening/closing SQLite can checkpoint WAL; the original DB remains readable.
+    with sqlite3.connect(config.data/'agent.sqlite3') as cx:assert cx.execute('PRAGMA quick_check').fetchone()[0]=='ok'
+    apply_pending(config)

@@ -51,6 +51,7 @@ type Props = {
   onShowSidebar?: () => void;
   api: Api;
   crmEnabled: boolean;
+  projectId: string;
   notifications: { data: any; error: string; refresh: () => unknown };
   notificationsEnabled: boolean;
   requests: number;
@@ -143,9 +144,36 @@ export function PlannerPage(props: Props) {
     () => preference("planner.workweek", "false") === "true",
   );
   const [demo, setDemo] = useState(
-    () => preference("planner.demo", "true") === "true",
+    () => preference("planner.demo", "false") === "true",
   );
   const [events, setEvents] = useState<PlannerEvent[]>(() => demoEvents(today));
+  const [calendarEvents, setCalendarEvents] = useState<PlannerEvent[]>([]);
+  const [calendarStatus, setCalendarStatus] = useState('Kalender wird geladen …');
+  useEffect(() => {
+    let alive=true, busy=false;
+    const start=addDays(date.slice(0,7)+'-01',-7),end=addDays(shiftMonth(date.slice(0,7)+'-01',1),7);
+    async function refresh(sync=false) {
+      if(busy)return;busy=true;
+      try {
+        let syncFailed=false;
+        if(sync) {
+          const sources=await api('/services');
+          for(const c of sources.connections.filter((c:any)=>c.provider==='microsoft-graph' && (c.projectId||'default')===props.projectId)) {
+            try {await api('/calendar/sync',{id:c.id,projectId:props.projectId,start,end});}catch {syncFailed=true;}
+          }
+        }
+        const result=await api('/calendar/events?'+new URLSearchParams({projectId:props.projectId,start,end}));
+        if(!alive)return;
+        setCalendarEvents(result.events);
+        const stale=syncFailed||result.feeds.some((f:any)=>f.error||!f.covered||!f.synced||Date.now()-Date.parse(f.synced)>600000);
+        setCalendarStatus(!result.feeds.length?'Noch kein Kalender abgeglichen. Unter Verbindungen einrichten.':stale?'Kalenderstand prüfen: Abgleich fehlt, ist fehlgeschlagen oder deckt diesen Zeitraum nicht ab.':'Letzter Abgleich: '+new Date(Math.min(...result.feeds.map((f:any)=>Date.parse(f.synced)))).toLocaleString('de-DE'));
+      }catch(e){if(alive)setCalendarStatus('Kalenderstand prüfen: '+(e as Error).message);}
+      finally{busy=false;}
+    }
+    setCalendarEvents([]);void refresh(true);
+    const timer=setInterval(()=>{if(document.visibilityState==='visible')void refresh();},30000);
+    return()=>{alive=false;clearInterval(timer);};
+  },[date,props.projectId,api]);
   const [detail, setDetail] = useState<PlannerEvent | null>(null),
     [draft, setDraft] = useState<PlannerEvent | null>(null),
     [modal, setModal] = useState<
@@ -253,7 +281,7 @@ export function PlannerPage(props: Props) {
     setDraft(null);
     setModal(null);
   };
-  const visibleEvents = demo ? sortEvents(events) : [];
+  const visibleEvents = sortEvents(demo ? events : calendarEvents);
   const onDay = (key: string) =>
     visibleEvents.filter((event: PlannerEvent) => eventOnDay(event, key));
   const due: Entity[] = dueCases(entities, workflows, today);
@@ -754,8 +782,7 @@ export function PlannerPage(props: Props) {
           </div>
           {!demo && (
             <p className="planner-empty">
-              Kalenderansicht bereit. Termine erscheinen nach der Anbindung; ein
-              gespeicherter Zugang allein startet noch keinen Abgleich.
+              {calendarStatus}
             </p>
           )}
           {workweek && (
@@ -846,10 +873,10 @@ export function PlannerPage(props: Props) {
             )}
           </div>
           <p className="planner-demo-note">
-            Beispieltermin. Änderungen werden weder gespeichert noch an einen
-            Kalender gesendet.
+{demo ? "Beispieltermin. Änderungen werden weder gespeichert noch an einen Kalender gesendet." : "Synchronisierter Termin. Änderungen und Einladungen erfolgen im verbundenen Kalender."}
           </p>
           <button
+            disabled={!demo}
             type="button"
             onClick={() => {
               setDraft({ ...detail });

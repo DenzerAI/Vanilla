@@ -1,3 +1,5 @@
+import {submitMessage} from "./message-submit.mjs";
+import {MailConnectionForm} from "./mail-connection";
 import { StartTextMotionSetting } from './chat-start-preferences';
 import { IconMotionSetting } from './icon-motion-setting';
 import { IconButton } from './icon-button';
@@ -1349,8 +1351,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
           });
         return next;
       });
-      await api("/turn", {
-        id,
+      const delivery=await submitMessage(api, id, {
         text: msg,
         attachments: files,
         model: selectedModel,
@@ -1358,6 +1359,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         nextSelection,
         mode,
       });
+      if(delivery.message?.status==='waiting')notify("Nachricht gespeichert; folgt nach der laufenden Antwort.");
       if (nextSelection) {
         setNextSelections(old => { const next = {...old}; delete next[id]; return next; });
         setModel(selectedModel); setEffort(pickerEffort);
@@ -2216,9 +2218,9 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
           </div>
         )}
         {view === "chat" ? null : view === "inbox" ? (
-          <InboxPage PageHeading={PageHeading} sidebarHost={inboxSidebarHost} sidebarVisible={sidebar} onShowSidebar={() => setSidebar(true)} onHideSidebar={() => setSidebar(false)} onBack={() => setView("chat")}/>
+          <InboxPage key={projectId} api={api} projectId={projectId} PageHeading={PageHeading} sidebarHost={inboxSidebarHost} sidebarVisible={sidebar} onShowSidebar={() => setSidebar(true)} onHideSidebar={() => setSidebar(false)} onBack={() => setView("chat")}/>
         ) : view === "today" || view === "calendar" ? (
-          <PlannerPage PageHeading={PageHeading} section={view} onSection={setView} onShowSidebar={!sidebar ? () => setSidebar(true) : undefined} api={api} crmEnabled={!!boot.features?.crmCore} notifications={notificationState} notificationsEnabled={!!boot.features?.routines} requests={requests.length} onRequests={()=>setModal("activity")} onNotifications={id=>setModal(id?{type:"notifications",id}:"notifications")} onConnections={()=>{setSettingsTab("connections");setView("settings");}} onJobs={()=>setView("jobs")} onBriefing={async item=>{const result=await api("/planner/chat", {id:item.id, ...(item.demo?{demoDate:item.demoDate}: {})});await refreshChats();await openChat(result.thread.id);}}/>
+          <PlannerPage key={projectId} projectId={projectId} PageHeading={PageHeading} section={view} onSection={setView} onShowSidebar={!sidebar ? () => setSidebar(true) : undefined} api={api} crmEnabled={!!boot.features?.crmCore} notifications={notificationState} notificationsEnabled={!!boot.features?.routines} requests={requests.length} onRequests={()=>setModal("activity")} onNotifications={id=>setModal(id?{type:"notifications",id}:"notifications")} onConnections={()=>{setSettingsTab("connections");setView("settings");}} onJobs={()=>setView("jobs")} onBriefing={async item=>{const result=await api("/planner/chat", {id:item.id, ...(item.demo?{demoDate:item.demoDate}: {})});await refreshChats();await openChat(result.thread.id);}}/>
         ) : view === "jobs" ? (
           <div className="page">
             <PageHeading title="Aufträge" onShowSidebar={!sidebar ? () => setSidebar(true) : undefined}>
@@ -2388,7 +2390,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         ) : connectionsActive ? (
           <div className="page connections-page">
             <PageHeading title="Verbindungen" onShowSidebar={!sidebar ? () => setSidebar(true) : undefined}/>
-            <ConnectionsContent api={api} features={boot.features} integrations={integrations} audioConnections={audioConnections}
+            <ConnectionsContent projectId={projectId} api={api} features={boot.features} integrations={integrations} audioConnections={audioConnections}
               loaded={connectionsLoaded} error={connectionsError} category={connectionCategoryFilter} onCategory={setConnectionCategoryFilter}
               search={search} onSearch={setSearch} setModal={setModal} onRetry={()=>refreshConnections(true)} FilterPicker={FilterPicker} SearchBox={SearchBox}/>
           </div>
@@ -3105,6 +3107,9 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       )}
       {modal?.type==='crm-connection'&&<Modal title={modal.connection.id?'Verbindung bearbeiten':'Verbindung hinzufügen'} onClose={()=>setModal(null)}>
         <CrmConnectionForm key={modal.connection.id || modal.connection.provider} connection={modal.connection} api={api} notify={notify} Field={Field} onChanged={async()=>setIntegrations(await api('/integrations'))} onSaved={async message=>{setIntegrations(await api('/integrations'));setModal(null);notify(message);}}/>
+      </Modal>}
+      {modal?.type==='mail-connection' && <Modal title={modal.connection.id?'Verbindung bearbeiten':'Verbindung hinzufügen'} onClose={()=>setModal(null)}>
+        <MailConnectionForm connection={modal.connection} api={api} projectId={projectId} onSaved={async()=>{await refreshConnections(true);setModal(null);}} onHelp={message=>{setText(previous=>(previous?previous+'\n\n':'')+message);setModal(null);setView('chat');inputRef.current?.focus();}}/>
       </Modal>}
       {modal?.type==='service-connection'&&<Modal title={modal.connection.id?'Verbindung bearbeiten':'Verbindung hinzufügen'} onClose={()=>setModal(null)}>
         <ServiceConnectionForm key={modal.connection.id||modal.connection.provider} connection={modal.connection} api={api} notify={notify} Field={Field} workers={boot.workers||[]} projects={boot.projects||[]} requests={requests} RequestCard={RequestCard} onReply={guard(async(id,result)=>{await api('/respond',{id,result});setRequests(rs=>rs.filter(r=>r.id!==id));})} onChanged={connections=>setIntegrations(old=>({...old,connections:[...old.connections.filter(c=>c.kind!=='service'),...connections]}))} onSaved={async message=>{setIntegrations(await api('/integrations'));setModal(null);notify(message);}}/>

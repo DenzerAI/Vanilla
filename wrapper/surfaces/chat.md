@@ -432,3 +432,15 @@ Textbaustein und Fächer.
 
 
 Die angeschlossene Wetterkarte bleibt im Startfächer reserviert. Open-Meteo liefert Temperatur und Wetterlage; Quelle und Datenstand sind sichtbar. Ortssuche und bestätigte Koordinaten stehen unter Dein Profil. Speichern, erneutes Öffnen, Fokus und zehn Minuten im sichtbaren Chatstart aktualisieren das Wetter. Eindeutig passende alte Ortsnamen werden aufgelöst; mehrdeutige Orte erfordern Auswahl. Lade- und Abruffehler ersetzen keine Wetterwerte durch Beispiele. Wetter & Ort öffnet das Profil mit Aktualisieren-Aktion.
+
+## Gespeicherte Nachrichtenübergabe
+
+Der vorhandene Composer und Diktatversand nutzen stabile Nachrichtenkennungen.
+Der Kern speichert die Übergabe vor dem Worker-Aufruf. Nach verlorenem HTTP-Ergebnis
+verwendet Wiederholen dieselbe Kennung; bestätigte Eingabe wird nicht noch einmal
+übergeben. Der Browser speichert dafür nur die Kennung unter einem Inhalts-Hash,
+keinen Nachrichtentext. Unklare Zustellung bleibt gesperrt und wird über vorhandenen
+Verlauf und `/api/messages` geprüft. Explizite Fortsetzung nutzt `/api/messages/resume`
+mit aktuellem Prüftoken und bestätigtem Worker-Ruhezustand; die unklare Nachricht
+selbst wird dabei nicht wiederholt. Vorgemerkte Nachrichten erhalten die bestehende
+Rückmeldung. Keine neue Sendeleiste oder zusätzliche Navigation.

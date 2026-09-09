@@ -50,7 +50,7 @@ Pflichtscrollen. Lange Namen/Titel wachsen, native Steuerungen bleiben erreichba
 
 ## Beispiele, Einstellungen und echte Daten
 
-Erster Einstieg zeigt den ausdrücklich beauftragten, klar markierten Entwurf.
+Ein neuer Kunde startet ohne Beispieldaten. Die vorhandene Beispielauswahl bleibt für eine bewusste Vorschau verfügbar.
 Beispieldaten lassen sich im Verknüpfungsdialog abschalten. Die globale Beispielunterzeile und der bisherige Beispielansicht-Button entfallen. Einzelne fiktive Inhalte bleiben als Beispiel gekennzeichnet. Nur die UI-Präferenzen
 Beispielmodus, Kalenderansicht und Mo–Fr werden im Browser gespeichert; keine
 Termine, Personen, Quellen oder Nachrichten. Beispielbearbeitungen leben nur,
@@ -62,7 +62,7 @@ ganztägig oder Beginn/Ende, Ort, optionale Kontaktzuordnung. Leerer Titel und E
 vor/gleich Beginn werden abgewiesen. „Im Beispiel übernehmen“ bezeichnet die
 begrenzte Wirkung. Kein Versand, keine stillen CRM- oder Kalender-Schreibaktionen.
 
-Ohne Beispiele zeigt der Kalender einen ehrlichen leeren Anschlusszustand.
+Ohne Beispiele liest der Kalender `/api/calendar/events` und gleicht den gewählten Monat über den eigenen Microsoft-Serviceanschluss ab. Fehlende, veraltete oder fehlgeschlagene Feeds stehen in der vorhandenen Statuszeile. Echte Termine sind lesbar, ihre Beispielbearbeitung ist deaktiviert. Ohne Verbindung bleibt die Ansicht leer.
 „Kalender verbinden“ öffnet den vorhandenen Verbindungsbereich. Standort/Wetter
 öffnet den Konzeptstand, fordert keine Berechtigung an und verspricht keine
 aktive Wetterquelle. Die Liste „Briefings & Ergebnisse“ liest die letzten fünf abgeschlossenen Routine-Ergebnisse aus der bestehenden Benachrichtigungsablage, unabhängig vom Lesestatus. Es wird kein Berichtstyp aus Titeln geraten. Ohne echte Ergebnisse erscheinen im Beispielmodus vier datierte Beispielbriefings. Der Routinen-Button öffnet die bestehenden Aufträge.
@@ -113,3 +113,5 @@ bleiben über die Suche nutzbar. Aufbau und Verhalten führt [chat.md](chat.md).
 
 Alte Direkteinstiege mit ?view=today oder ?view=pipeline öffnen den neuen Chatstart.
 ?view=calendar öffnet weiterhin den Kalender.
+
+Kalenderprojektion, Zeitfenster, Fehler und Leserechte führt docs/PLANNER.md. Optik, Navigation und gemeinsame Komponenten bleiben erhalten.
