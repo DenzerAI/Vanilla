@@ -521,3 +521,13 @@ konsistent; kein zweiter Komponentenordner an der Repositorywurzel.
 Tailwind 4 liegt in `ui/tailwind.css`, gemeinsame Styles in `ui/styles.css`,
 Buttonstyles in `ui/components/ui/glass-button.css`. TypeScript und Tailwind
 sind bereits eingerichtet; keine erneute CLI-Initialisierung nötig.
+
+
+Aktives Diktat verwendet dieselbe einzeilige Composer-Pille wie die Texteingabe.
+Pegel, Laufzeit und runde Iconaktionen ersetzen vorübergehend Textfeld, Plus und
+normale Sendeaktionen, ohne eine zweite Zeile anzulegen. Der gemeinsame
+Senden-Pfeil rechts startet Erkennung und direkte Übergabe; der Haken ergänzt
+den Entwurf. Papierkorb verwirft wiederherstellbar, Pause setzt die Aufnahme aus.
+Kein zusätzliches X während der Aufnahme. Größen, Farben und Touchziele folgen
+den bestehenden Composer- und Iconbutton-Tokens; die Wellenform nutzt die
+verbleibende Breite. Den vollständigen Ablauf führt surfaces/chat.md.
