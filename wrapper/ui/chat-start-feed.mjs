@@ -33,3 +33,11 @@ export function chatStartFeed({requests=[],notifications=[],chats=[],projectId='
 export function startHeadline(kind, fallback) {
   return ({request:'Hier braucht es kurz dich.',notice:'Das sollten wir uns ansehen.',report:'Etwas Neues für dich.',chat:'Hier können wir weitermachen.'})[kind] || fallback;
 }
+
+export function headlineForItem(item, fallback) {
+  if(!item)return fallback;
+  const title=String(item.title||'').trim();
+  if(item.kind==='prompt')return ({plan:'Was möchtest du heute voranbringen?',file:'Welche Datei schauen wir uns an?',project:'Was steckt in deinem Projekt?'})[item.id] || fallback;
+  if(!title)return startHeadline(item.kind,fallback);
+  return ({request:`Bei „${title}“ braucht es dich.`,notice:`Schauen wir auf „${title}“.`,report:`„${title}“ ist bereit. Was nehmen wir mit?`,chat:`Wie geht es mit „${title}“ weiter?`})[item.kind] || fallback;
+}

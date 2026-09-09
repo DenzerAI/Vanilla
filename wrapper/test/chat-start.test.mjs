@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {chatStartFeed,startHeadline,conversationStarters} from '../ui/chat-start-feed.mjs';
+import {chatStartFeed,startHeadline,headlineForItem,conversationStarters} from '../ui/chat-start-feed.mjs';
 import {build} from 'esbuild';
 import {mkdtemp,writeFile,rm} from 'node:fs/promises';
 import {fileURLToPath,pathToFileURL} from 'node:url';
@@ -27,4 +27,10 @@ test('fan renders empty, single and multiple entries with accessible action name
   const many=render([...conversationStarters,{id:'4',kind:'notice',title:'Hinweis',description:'Neu'},{id:'5',kind:'report',title:'Ergebnis',description:'Neu'}]);
   assert.equal((many.match(/class="attention-fan-card/g)||[]).length,3);assert.match(many,/Nächste Karte/);assert.match(many,/aria-current="true"/);
  }finally{await rm(dir,{recursive:true,force:true});}
+});
+
+test('heading reflects the selected content, with a neutral fallback',()=>{
+ assert.equal(headlineForItem({kind:'chat',title:'Angebot prüfen'},'Hallo'),'Wie geht es mit „Angebot prüfen“ weiter?');
+ assert.equal(headlineForItem({kind:'request',title:'Termin planen'},'Hallo'),'Bei „Termin planen“ braucht es dich.');
+ assert.equal(headlineForItem(null,'Hallo'),'Hallo');
 });

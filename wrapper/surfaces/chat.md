@@ -343,3 +343,17 @@ zeigt denselben AttentionFan. Keine zusätzliche Wetter- oder Dashboardfläche.
 
 Alte Direkteinstiege mit ?view=today oder ?view=pipeline öffnen den neuen Chatstart.
 ?view=calendar öffnet weiterhin den Kalender.
+
+
+Der Chatstart sitzt im verfügbaren Gesprächsraum unten mit Abstand oberhalb des
+Composers. Auf kleinen Fenstern bleibt er scrollbar. Seine Lesefläche hat keine
+Maskierung, die Avatar oder Karten ausblendet. Der mittlere Avatar ist 88 px groß;
+Avatarflächen tragen keinen Rand oder Schatten, auch im Agent-Menü.
+ChatStartHeading bezieht den tatsächlichen Titel und Status der vorderen Karte
+ein. Lokale Formulierung, keine zusätzliche Modellanfrage oder erfundene Zusammenfassung.
+Beim Kartenwechsel erscheint die Zeile einmal Wort für Wort, der Cursor läuft
+kurz nach und verschwindet. Die vollständige Textfläche reserviert den Umbruch;
+Screenreader erhalten die vollständige Zeile ohne einzelne Wortmeldungen.
+App-/Systemreduktion zeigt sofort den vollständigen Satz. Verborgene Seiten und
+außerhalb des Sichtbereichs liegende Überschriften stoppen ihre Zeitgeber.
+Bewegungswerte stehen in chatHeadingMotion; kein permanenter Texteffekt.

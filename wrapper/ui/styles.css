@@ -455,9 +455,11 @@ nav {
 .identity-avatar {
   display: grid;
   place-items: center;
-  background: var(--surface);
+  background: transparent;
   color: var(--text);
-  border: 1px solid var(--border);
+  border: 0;
+  box-shadow: none;
+  overflow: visible;
 }
 .profile-button .status-dot {
   margin-left: auto;

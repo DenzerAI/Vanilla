@@ -11,7 +11,7 @@
 .attention-fan-navigation button { min-height: var(--control-touch); min-width: var(--control-touch); }
 .chat-start { width: 100%; min-width: 0; gap: var(--space-12); }
 .chat-start h1 { margin: var(--space-16) 0 0; text-align: center; }
-.welcome.agent-chat-welcome.chat-start .identity-avatar { width: 72px; height: 72px; margin: 0; }
+.welcome.agent-chat-welcome.chat-start .identity-avatar { width: 88px; height: 88px; margin: 0; }
 .chat-start-error { color: var(--muted); font-size: var(--text-small); text-align: center; }
 @container (max-width: 380px) {
  .attention-fan-card { padding: var(--space-16); gap: var(--space-8); width: 56%; left: calc(var(--fan-side) * 12cqw); }
@@ -26,3 +26,16 @@
 .attention-fan-card.is-active { z-index: 3; }
 
 .attention-fan-card strong, .attention-fan-description { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
+
+.chat-main > .conversation:has(> .chat-start) { display: flex; flex-direction: column; -webkit-mask-image: none; mask-image: none; padding-bottom: calc(var(--composer-height, var(--control-composer-fallback)) + var(--space-16)); }
+.welcome.agent-chat-welcome.chat-start { min-height: 0; flex: 0 0 auto; margin: auto auto 0; padding-bottom: 0; gap: var(--space-8); }
+.welcome.agent-chat-welcome.chat-start h1 { font-size: var(--text-title); max-width: 34ch; margin: var(--space-12) 0 0; }
+.chat-start-heading { display: grid; width: 100%; position: relative; }
+.chat-heading-measure, .chat-heading-writing { grid-area: 1 / 1; overflow-wrap: anywhere; }
+.chat-heading-measure { visibility: hidden; }
+.chat-heading-cursor { display: inline-block; width: 0.075em; height: 0.85em; margin-left: var(--space-4); vertical-align: -0.02em; border-radius: var(--radius-pill); background: currentColor; opacity: 0; }
+.chat-heading-cursor.is-writing { animation: chat-heading-blink var(--motion-progress-duration) ease-in-out infinite; }
+@keyframes chat-heading-blink { 0%, 100% { opacity: 0.2; } 50% { opacity: 0.8; } }
+@media (prefers-reduced-motion: reduce) { .chat-heading-cursor.is-writing { animation: none; opacity: 0; } }
+:root[data-reduce-motion="on"] .chat-heading-cursor.is-writing { animation: none; opacity: 0; }
+@media (max-width: 650px) { .welcome.agent-chat-welcome.chat-start h1 { font-size: var(--text-heading); } }
