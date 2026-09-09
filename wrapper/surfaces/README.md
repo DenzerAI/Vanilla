@@ -19,7 +19,7 @@ Diese Dateien sind verbindliche Bauanleitungen, keine Ideensammlung. Vor einer E
 
 Der gemeinsame Seitenleistenkopf zeigt AgentMenu mit konfiguriertem Avatar, Namen und integriertem Verbindungspunkt. Daneben stehen Suche als IconButton, Benachrichtigungen und Einklappen. Dies gilt auch für Inbox und Einstellungen. Der bisherige Agentenfuß und der separat bedienbare Serverstatus entfallen; Details und Neustart stehen im Agentenmenü. Aufbau und Tastaturbedienung führt chat.md.
 
-Heute, Inbox, Aufträge und die verfügbare Bibliothek bilden das Hauptmenü; Die Gruppe „Workspace“ und ihre Chats folgen darunter. Verbindungen und Skills stehen in der vorhandenen Einstellungsnavigation mit ihren bisherigen Symbolen und Katalogansichten. Globale Suche und Querverweise öffnen den jeweiligen Einstellungsbereich direkt. Keine Modul-Platzhalter, zusätzliche Navigationsebene oder neue Seitengestaltung.
+Inbox, Aufträge und die verfügbare Bibliothek bilden das Hauptmenü; Die Gruppe „Workspace“ und ihre Chats folgen darunter. Verbindungen und Skills stehen in der vorhandenen Einstellungsnavigation mit ihren bisherigen Symbolen und Katalogansichten. Globale Suche und Querverweise öffnen den jeweiligen Einstellungsbereich direkt. Keine Modul-Platzhalter, zusätzliche Navigationsebene oder neue Seitengestaltung.
 
 ## Gemeinsamer Seitenkopf
 
@@ -115,3 +115,8 @@ Buttonstyles in `ui/components/ui/glass-button.css`. TypeScript und Tailwind
 sind bereits eingerichtet; keine erneute CLI-Initialisierung nötig.
 
 Service steht als eigener Bereich in Einstellungen; Aufbau und Vorschaugrenzen führt [work-evidence.md](work-evidence.md).
+
+
+Der Standardstart ist jetzt der leere Chat mit kontextabhängiger Begrüßung und
+AttentionFan. Heute entfällt im Hauptmenü; Kalender und bestehende Direktlinks
+bleiben über die Suche nutzbar. Aufbau und Verhalten führt [chat.md](chat.md).

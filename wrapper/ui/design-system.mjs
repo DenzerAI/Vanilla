@@ -394,3 +394,5 @@ export function renderDesignCSS() {
 }
 
 export const scrubberSprings = { pointer: { stiffness: 700, damping: 52, mass: .5 }, strength: { stiffness: 260, damping: 30, mass: .6 } };
+
+export const attentionFanMotion = {rotation: 12, compactRotation: 6, depth: 18, scale: 0.94, spring: {stiffness: 180, damping: 25, mass: 0.8}};

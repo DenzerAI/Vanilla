@@ -475,7 +475,7 @@ Originalstufen und Verfügbarkeit stammen aus dem jeweiligen nativen Anschluss, 
 
 ## Heute und Kalender
 
-Heute ist der Start ohne Chat-Direktlink und bündelt Morgenbriefing, Tagesplan und
+Heute bleibt eine über die Suche erreichbare Detailansicht und bündelt Morgenbriefing, Tagesplan und
 „Braucht dich“. Kalender ist über denselben Seitenkopfbereich und die Suche
 zugänglich: Tag, Woche und Monatsliste mit ISO-Kalenderwochen, optional Mo–Fr.
 Die Pipeline-Designstudie entfällt; der gemeinsame CRM-Kern bleibt bestehen.
@@ -578,3 +578,8 @@ auf hellem Papier sichtbar bleiben. Bewegung und Abschaltmöglichkeiten bleiben
 bestehen. Dunkle Farbwerte bleiben unverändert. Visuelle Inspiration: warme
 Flächenhierarchie der Claude-Chatoberfläche, keine behauptete Übernahme originaler
 Vendor-Tokens (Referenz: https://www.bluestacks.com/blog/bluestacks-roundups/ai-tools-like-chatgpt-en.html).
+
+
+Der Standardstart ist jetzt der leere Chat mit kontextabhängiger Begrüßung und
+AttentionFan. Heute entfällt im Hauptmenü; Kalender und bestehende Direktlinks
+bleiben über die Suche nutzbar. Aufbau und Verhalten führt [surfaces/chat.md](surfaces/chat.md).

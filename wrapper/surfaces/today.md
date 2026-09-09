@@ -2,9 +2,9 @@
 
 ## Zweck, Navigation und Bestand
 
-Heute ist der ruhige Anlaufpunkt vor Inbox, Aufträge und Bibliothek. Ein frischer
-Start ohne expliziten Chatlink öffnet Heute; eingebettete Chats und Chatlinks
-öffnen weiterhin ihren Chat. `?view=today` und `?view=calendar` sind Direkteinstiege,
+Heute bleibt als bestehende Detailansicht über die Suche erreichbar. Ein frischer
+Start ohne expliziten Chatlink öffnet den leeren Chat; eingebettete Chats und
+Chatlinks öffnen weiterhin ihren Chat. `?view=today` und `?view=calendar` sind Direkteinstiege,
 der bisherige Pipeline-Link öffnet Heute. Kalender bleibt eine zweite Sicht
 innerhalb desselben Bereichs; kein zusätzlicher Hauptmenüpunkt. Globale Suche
 findet beide. Laufende Chats bleiben gemountet.
@@ -105,3 +105,8 @@ vom datierten Bericht ändern.
 Verknüpfungen behält das bestehende Modal. Seine native Scrollleiste ist visuell
 verborgen; Scrollen und Tastaturbedienung bleiben erhalten. Tagesplan und Braucht
 dich stehen auf breiten Ansichten nebeneinander, auf schmalen untereinander.
+
+
+Der Standardstart ist jetzt der leere Chat mit kontextabhängiger Begrüßung und
+AttentionFan. Heute entfällt im Hauptmenü; Kalender und bestehende Direktlinks
+bleiben über die Suche nutzbar. Aufbau und Verhalten führt [chat.md](chat.md).

@@ -1,0 +1,28 @@
+.attention-fan { width: 100%; max-width: 560px; min-width: 0; container-type: inline-size; }
+.attention-fan-track { display: grid; justify-items: center; padding: var(--space-24) 0 var(--space-40); touch-action: pan-y; }
+.attention-fan-card { grid-area: 1 / 1; width: 62%; max-width: 260px; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-12); padding: var(--space-20); min-height: 180px; text-align: left; border: 1px solid var(--border); border-radius: var(--radius-panel); background: var(--raised); color: var(--text); box-shadow: var(--shadow-small); position: relative; left: calc(var(--fan-side) * 16cqw); transform-origin: center bottom; overflow-wrap: anywhere; }
+.attention-fan-card.is-active { background: var(--surface); }
+.attention-fan-kind { display: flex; align-items: center; gap: var(--space-8); font-size: var(--text-caption); color: var(--muted); }
+.attention-fan-kind svg { color: var(--brand-accent); flex-shrink: 0; }
+.attention-fan-card strong { font-size: var(--text-body); line-height: var(--leading-tight); font-weight: var(--weight-medium); }
+.attention-fan-description { font-size: var(--text-small); line-height: var(--leading-normal); color: var(--muted); }
+.attention-fan-arrow { margin-top: auto; align-self: flex-end; color: var(--muted); }
+.attention-fan-navigation { display: flex; align-items: center; justify-content: center; gap: var(--space-8); font-size: var(--text-caption); color: var(--muted); }
+.attention-fan-navigation button { min-height: var(--control-touch); min-width: var(--control-touch); }
+.chat-start { width: 100%; min-width: 0; gap: var(--space-12); }
+.chat-start h1 { margin: var(--space-16) 0 0; text-align: center; }
+.welcome.agent-chat-welcome.chat-start .identity-avatar { width: 72px; height: 72px; margin: 0; }
+.chat-start-error { color: var(--muted); font-size: var(--text-small); text-align: center; }
+@container (max-width: 380px) {
+ .attention-fan-card { padding: var(--space-16); gap: var(--space-8); width: 56%; left: calc(var(--fan-side) * 12cqw); }
+ .attention-fan-card strong { font-size: var(--text-control); }
+ .attention-fan-description { font-size: var(--text-caption); }
+}
+@media (max-width: 650px) { .welcome.chat-start { padding: var(--space-16) 0; } }
+
+.attention-fan-card { --fan-side: 0; z-index: 1; }
+.attention-fan-card[data-side="-1"] { --fan-side: -1; }
+.attention-fan-card[data-side="1"] { --fan-side: 1; }
+.attention-fan-card.is-active { z-index: 3; }
+
+.attention-fan-card strong, .attention-fan-description { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }

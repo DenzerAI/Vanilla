@@ -3,7 +3,7 @@ import {useJobNotifications, JobNotifications, NotificationPreference} from "./j
 import { ChapterScrubber } from "./components/ui/chapter-scrubber";
 import { PlannerPage } from "./planner";
 import { InboxPage } from "./inbox";
-import { WelcomeSuggestions } from "./welcome-suggestions";
+import { ChatStart } from "./chat-start";
 import { PanelLight } from "./panel-light";
 import {Skeleton} from './skeleton.tsx';
 import { MessageSpeech } from "./message-speech";
@@ -622,7 +622,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const systemNoticeRef = useRef(null);
   const [boot, setBoot] = useState(null),
     [audioConnections, setAudioConnections] = useState({Groq:false, ElevenLabs:false}),
-    [view, setView] = useState(() => !embedded && ["inbox", "today", "calendar", "pipeline", "jobs", "work-evidence", "service"].includes(new URLSearchParams(window.location.search).get("view")) ? (["work-evidence", "service"].includes(new URLSearchParams(window.location.search).get("view")) ? "settings" : new URLSearchParams(window.location.search).get("view") === "pipeline" ? "today" : new URLSearchParams(window.location.search).get("view")) : (embedded || new URLSearchParams(window.location.search).has("chat") ? "chat" : "today")),
+    [view, setView] = useState(() => !embedded && ["inbox", "today", "calendar", "pipeline", "jobs", "work-evidence", "service"].includes(new URLSearchParams(window.location.search).get("view")) ? (["work-evidence", "service"].includes(new URLSearchParams(window.location.search).get("view")) ? "settings" : new URLSearchParams(window.location.search).get("view") === "pipeline" ? "today" : new URLSearchParams(window.location.search).get("view")) : "chat"),
     [chatId, setChatId] = useState(null),
     [thread, setThread] = useState(null),
     [chats, setChats] = useState([]),
@@ -1633,7 +1633,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       j.name.toLowerCase().includes(search.toLowerCase()),
   );
   const nav = [
-      ["today", Sun, "Heute"],
       ["inbox", Inbox, "Inbox"],
       ["jobs", Clock, "Aufträge"],
       ...(boot?.features?.library?[["library", FileText, "Bibliothek"]]:[]),
@@ -1921,14 +1920,18 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 {loading ? (
                   <Skeleton variant="chat" label="Gespräch wird geladen …"/>
                 ) : !thread?.turns?.length ? (
-                  <div className="welcome agent-chat-welcome">
-                    <Avatar avatar={boot.settings.avatar} color={boot.settings.avatarColor} large />
-                    <h1>{greeting}</h1>
-                    <WelcomeSuggestions onSelect={prompt => {
-                      setText(prompt);
-                      inputRef.current.focus();
-                    }} />
-                  </div>
+                  <ChatStart greeting={greeting} profile={boot.settings} requests={requests} notifications={notificationState.data?.items || []} chats={chats} projectId={projectId} error={notificationState.error}
+                    onOpen={async item=>{
+                      if(item.prompt){setText(item.prompt);inputRef.current?.focus();return;}
+                      if(item.threadId){await openChat(item.threadId);return;}
+                      if(item.kind==='request'){setModal("activity");return;}
+                      if(item.kind==='report'){
+                        const result=await api("/planner/chat",{id:item.noticeId});await refreshChats();await openChat(result.thread.id);
+                        await api("/notifications/read",{id:item.noticeId});await notificationState.refresh();return;
+                      }
+                      if(item.noticeId){setModal({type:"notifications",id:item.noticeId});}
+                    }}/>
+
                 ) : (
                   <div className="message-column">
                     {thread.turns?.map((t, index) => {

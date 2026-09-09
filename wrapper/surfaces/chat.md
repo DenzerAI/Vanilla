@@ -316,3 +316,27 @@ Komponente mit lokalem Vorschauzustand. Keine weiteren Kopf- oder Workspaceaktio
 
 
 Im hellen Theme setzen sich Sidebar und Workspace dunkler von der Papierfläche ab. Menüs und Composer erhalten helle, klar konturierte Flächen. Die Sterne nutzen die zentralen Theme-Deckkraftrollen; Reduzierung und Abschalten des Reiseeffekts bleiben erhalten. Palette und Referenz stehen in DESIGN.md.
+
+
+## Gespräch als Startpunkt
+
+Der Standardstart und das Plus am Workspace öffnen den leeren Chat. Heute steht
+nicht mehr im Hauptmenü. Vorhandene Heute-/Kalender-Direktlinks sowie die Suche
+bleiben nutzbar; die bestehende Kalenderansicht wird nicht gelöscht.
+ChatStart ersetzt die starren Startvorschläge: Avatar, kontextabhängige erste Zeile,
+ein kleiner AttentionFan und die unveränderte Nachrichteneingabe. Rückfragen haben
+Vorrang vor ungelesenen Hinweisen, aktuellen Routine-Ergebnissen und fertigen Chats.
+Pro Routine erscheint höchstens das neueste Ergebnis, auch wenn ältere ungelesen
+sind. Routine-Chats werden nicht zusätzlich angeboten. Ohne Anlass stehen drei
+Gesprächsvorschläge bereit; sie füllen nur den Entwurf und senden nichts.
+
+Maximal fünf Einträge, drei aufgefächerte Karten gleichzeitig. Seitliche Karten
+wählen aus; Klick auf die vordere öffnet den bestehenden Chat oder Berichtschat.
+Rückfragen ohne zugeordneten Chat und technische Hinweise verwenden ihre bisherigen
+Dialoge und Freigaben. Kein Auftrag startet durch die Vorschau. Erst erfolgreiches
+Öffnen eines Berichts markiert dessen Hinweis gelesen. Die gewählte ID bleibt bei
+Feed-Updates erhalten. Pfeile, Tastatur und horizontaler Touch-Wisch wechseln;
+vertikales Scrollen bleibt möglich. Keine automatische Rotation oder dauerhafte
+Zusatzanimation. App-/Systemreduktion unterbindet den Federübergang. Karten wachsen
+mit Text, Themefarben und Bewegung stammen aus design-system.mjs. Unser Design
+zeigt denselben AttentionFan. Keine zusätzliche Wetter- oder Dashboardfläche.
