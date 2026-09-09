@@ -1453,11 +1453,26 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     setSelectedFile(relative);
   }
 
+  const chatUpdateLocks = useRef(new Set());
+  const [updatingChats, setUpdatingChats] = useState({});
+  const archivedChats = chats.filter(c => c.archived);
+  const matchingArchivedChats = archivedChats.filter(c =>
+    (c.title || "Neuer Chat").toLocaleLowerCase("de").includes(search.trim().toLocaleLowerCase("de")),
+  ).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
   async function updateChat(c, change) {
-    await api("/chat/update", { id: c.id, ...change });
-    await refreshChats();
-    setChatMenu(null);
-    if (change.archived && chatId === c.id) newDraft();
+    if (chatUpdateLocks.current.has(c.id)) return;
+    chatUpdateLocks.current.add(c.id);
+    setUpdatingChats(old => ({...old, [c.id]:true}));
+    try {
+      const updated = await api("/chat/update", { id: c.id, ...change });
+      setChats(old => old.map(chat => chat.id === c.id ? {...chat, ...updated} : chat));
+      setChatMenu(null);
+      if (change.archived && chatId === c.id) newDraft();
+      await refreshChats();
+    } finally {
+      chatUpdateLocks.current.delete(c.id);
+      setUpdatingChats(old => { const next = {...old}; delete next[c.id]; return next; });
+    }
   }
   async function fork(turn) {
     const index = turn ? thread.turns.findIndex(t => t.id === turn.id) : -1;
@@ -1598,7 +1613,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       {id:"export",label:"Als Markdown exportieren",icon:icon(Download),disabled:!thread?.turns?.length,action:exportChat},
       {id:"switch",label:"Chat öffnen …",icon:icon(MessageCircle),action:()=>{setSearch("");setModal("search")}},
       {id:"new",label:"Neuer Chat",icon:icon(Plus),action:()=>newDraft(projectId)},
-      {id:"archive",label:"Archivieren",icon:icon(Archive),disabled:!current || running || busy,action:guard(()=>updateChat(current,{archived:true}))},
+      {id:"archive",label:"Archivieren",icon:icon(Archive),disabled:!current || running || busy || !!updatingChats[current?.id],action:guard(()=>updateChat(current,{archived:true}))},
     ],
   };
   (sessionRef || sessions.current[0]).current = localSession;
@@ -1838,6 +1853,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                                 {c.pinned ? "Lösen" : "Anheften"}
                               </button>
                               <button
+                                disabled={!!active[c.id] || !!updatingChats[c.id]}
                                 onClick={guard(() =>
                                   updateChat(c, { archived: true }),
                                 )}
@@ -2752,13 +2768,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                   onChange={setSearch}
                   placeholder="Archivierte Chats durchsuchen"
                 />
-                {chats
-                  .filter(
-                    (c) =>
-                      c.archived &&
-                      c.title.toLowerCase().includes(search.toLowerCase()),
-                  )
-                  .map((c) => (
+                {matchingArchivedChats.map((c) => (
                     <div className="archive-row" key={c.id}>
                       <div>
                         <strong>{c.title}</strong>
@@ -2767,15 +2777,22 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                         </p>
                       </div>
                       <button
+                        disabled={!!updatingChats[c.id] || !!active[c.id]}
+                        aria-label={"Chat wiederherstellen: " + c.title}
                         onClick={guard(() =>
                           updateChat(c, { archived: false }),
                         )}
                       >
-                        Dearchivieren
+                        {updatingChats[c.id] ? "Wiederherstellen …" : "Wiederherstellen"}
                       </button>
                     </div>
                   ))}
-                {!chats.some((c) => c.archived) && (
+                {archivedChats.length > 0 && matchingArchivedChats.length === 0 && (
+                  <Empty Icon={Search} title="Keine archivierten Chats gefunden">
+                    Versuche einen anderen Suchbegriff.
+                  </Empty>
+                )}
+                {archivedChats.length === 0 && (
                   <Empty Icon={Archive} title="Dein Archiv ist leer">
                     Archivierte Gespräche kannst du hier wiederherstellen.
                   </Empty>

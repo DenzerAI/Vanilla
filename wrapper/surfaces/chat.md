@@ -316,3 +316,18 @@ Komponente mit lokalem Vorschauzustand. Keine weiteren Kopf- oder Workspaceaktio
 
 
 Im hellen Theme setzen sich Sidebar und Workspace dunkler von der Papierfläche ab. Menüs und Composer erhalten helle, klar konturierte Flächen. Die Sterne nutzen die zentralen Theme-Deckkraftrollen; Reduzierung und Abschalten des Reiseeffekts bleiben erhalten. Palette und Referenz stehen in DESIGN.md.
+
+
+## Archivierte Chats
+
+Archivieren im Chatmenü und Wiederherstellen unter Einstellungen → Archivierte Chats
+verwenden denselben gespeicherten Status. Auch leere Chats und gespeicherte
+Berichte ohne native Sitzungsdatei können archiviert und wiederhergestellt werden;
+Gesprächsexporte und Berichte bleiben erhalten. Andere Anbieter- und Speicherfehler
+werden angezeigt und ändern den angezeigten Status nicht. Während einer Antwort,
+Übergabe oder Sprachsession wird nicht archiviert; doppelte Aktionen sind gesperrt.
+Erneutes Öffnen eines archivierten Berichts verwendet denselben Wiederherstellungsweg.
+Die Archivliste bleibt projektübergreifend, neueste Gespräche zuerst. Suchfilter ohne
+Treffer und ein vollständig leeres Archiv zeigen verschiedene vorhandene Empty-Zustände.
+Der bestehende Aktionsbutton zeigt Wiederherstellen und während der Anfrage
+Wiederherstellen …; erst bestätigter Erfolg entfernt die Zeile.

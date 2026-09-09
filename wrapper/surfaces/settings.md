@@ -191,3 +191,18 @@ Komponente mit lokalem Vorschauzustand. Keine weiteren Kopf- oder Workspaceaktio
 
 
 Die helle Palette unter Aussehen verwendet die abgestuften Papierflächen aus DESIGN.md. Ausgewogen, Warm und Neutral halten Menüs, Steuerelemente und Workspace unterscheidbar; Unser Design zeigt dieselben zentralen Werte.
+
+
+## Archivierte Chats
+
+Archivieren im Chatmenü und Wiederherstellen unter Einstellungen → Archivierte Chats
+verwenden denselben gespeicherten Status. Auch leere Chats und gespeicherte
+Berichte ohne native Sitzungsdatei können archiviert und wiederhergestellt werden;
+Gesprächsexporte und Berichte bleiben erhalten. Andere Anbieter- und Speicherfehler
+werden angezeigt und ändern den angezeigten Status nicht. Während einer Antwort,
+Übergabe oder Sprachsession wird nicht archiviert; doppelte Aktionen sind gesperrt.
+Erneutes Öffnen eines archivierten Berichts verwendet denselben Wiederherstellungsweg.
+Die Archivliste bleibt projektübergreifend, neueste Gespräche zuerst. Suchfilter ohne
+Treffer und ein vollständig leeres Archiv zeigen verschiedene vorhandene Empty-Zustände.
+Der bestehende Aktionsbutton zeigt Wiederherstellen und während der Anfrage
+Wiederherstellen …; erst bestätigter Erfolg entfernt die Zeile.
