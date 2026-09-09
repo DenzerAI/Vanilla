@@ -293,7 +293,7 @@ Wertetabelle.
 
 ## Kompakte Navigation und Suche
 
-Das Hauptmenü zeigt Heute, Inbox, Aufträge und die verfügbare Bibliothek in dieser Reihenfolge, darunter Projekte und Chats. Skills und Verbindungen sind eigene Einträge der vorhandenen Einstellungsnavigation. Der Einstieg bleibt im Agentenmenü. Bestehende Icons, Textkanten, Abstände und Inhaltsansichten bleiben erhalten; keine Platzhalter oder reservierten Leerzeilen für künftige Module. Suche und Querverweise öffnen beide Kataloge direkt mit ausgewähltem Einstellungsbereich. Die Einstellungsnavigation scrollt bei Platzmangel innerhalb der Seitenleiste; Zurück-Einstieg und Agentenzeile bleiben erreichbar.
+Das Hauptmenü zeigt Heute, Inbox, Aufträge, Arbeitsnachweis und die verfügbare Bibliothek in dieser Reihenfolge, darunter Projekte und Chats. Skills und Verbindungen sind eigene Einträge der vorhandenen Einstellungsnavigation. Der Einstieg bleibt im Agentenmenü. Bestehende Icons, Textkanten, Abstände und Inhaltsansichten bleiben erhalten; keine Platzhalter oder reservierten Leerzeilen für künftige Module. Suche und Querverweise öffnen beide Kataloge direkt mit ausgewähltem Einstellungsbereich. Die Einstellungsnavigation scrollt bei Platzmangel innerhalb der Seitenleiste; Zurück-Einstieg und Agentenzeile bleiben erreichbar.
 
 Oben in der Seitenleiste steht der konfigurierte Agent: 32-px-Avatar mittig in der 18-px-Symbolspalte der Navigation, Name auf derselben Textkante mit reading (16 px), semibold und bestehender UI-Schrift. Daneben stehen Suche als kreisrunder Iconbutton, bei Bedarf Benachrichtigungen sowie Einklappen. Der Agentenbutton nutzt die bestehende Hoverfläche und das gemeinsame ChatMenu mit Fokusführung, Pfeiltasten, Escape und Außenklick; das Portal hält das Menü im Viewport. Auch Inbox und Einstellungen behalten diesen Einstieg. Der Such-Iconbutton öffnet den Suchdialog mit fokussierter Eingabe und nennt Cmd/Ctrl+K im Tooltip und zugänglichen Tastaturhinweis. Suche umfasst Gesprächstitel, lokal gespeicherte Nutzer- und Agententexte einschließlich archivierter Chats über alle Projekte, Projektnamen und Navigation/Einstellungen. Treffer zeigen Kontext und Textausschnitt; moderate Tippfehler, Buchstabendreher und Akzente werden toleriert. Werkzeugausgaben, interne Überlegungen und reine Kanalgespräche sind ausgeschlossen. Fehlende lokale Exporte werden als eingeschränkte Inhaltssuche kenntlich gemacht; es wird kein Worker für die Suche gestartet.
 
@@ -484,6 +484,16 @@ PageHeading, Modal, SettingRow, Tabs, Schalter und zentrale Tokens werden
 wiederverwendet. Beispielansicht und echte Hinweise sind sichtbar getrennt.
 Aufbau, Zustände, Quellen und Grenzen führt [surfaces/today.md](surfaces/today.md).
 
+Heute zeigt datierte Berichte als kompakte `BriefingRow`-Liste mit höchstens fünf
+Ergebnissen, Vorschau und Chevron. Der Baustein teilt Agenda-Typografie, Fokus und
+Abstände und steht in der Designreferenz. Datum und Uhrzeit stehen am Desktop in
+einer eigenen Spalte, mobil über dem Text. Tagesplan und offene Punkte stehen bei
+ausreichender Breite nebeneinander, sonst untereinander. Berichte öffnen ihren
+dauerhaften Chat mit dem Bericht als erster Assistentennachricht; kein Briefingmodal.
+Die globale Beispielunterzeile und ihr Schalter entfallen. Fiktive Einträge bleiben
+lokal gekennzeichnet; der Schalter liegt im Verknüpfungsdialog. Dessen Scrollleiste
+ist visuell verborgen, Rad, Touch und Tastatur bleiben bedienbar.
+
 ## Routine-Ergebnisse
 
 Die Glocke öffnet ein gemeinsames Benachrichtigungsmodal. `NotificationRow`
@@ -522,12 +532,12 @@ Tailwind 4 liegt in `ui/tailwind.css`, gemeinsame Styles in `ui/styles.css`,
 Buttonstyles in `ui/components/ui/glass-button.css`. TypeScript und Tailwind
 sind bereits eingerichtet; keine erneute CLI-Initialisierung nötig.
 
-Heute zeigt datierte Berichte als kompakte `BriefingRow`-Liste mit höchstens fünf
-Ergebnissen, Vorschau und Chevron. Der Baustein teilt Agenda-Typografie, Fokus und
-Abstände und steht in der Designreferenz. Datum und Uhrzeit stehen am Desktop in
-einer eigenen Spalte, mobil über dem Text. Tagesplan und offene Punkte stehen bei
-ausreichender Breite nebeneinander, sonst untereinander. Berichte öffnen ihren
-dauerhaften Chat mit dem Bericht als erster Assistentennachricht; kein Briefingmodal.
-Die globale Beispielunterzeile und ihr Schalter entfallen. Fiktive Einträge bleiben
-lokal gekennzeichnet; der Schalter liegt im Verknüpfungsdialog. Dessen Scrollleiste
-ist visuell verborgen, Rad, Touch und Tastatur bleiben bedienbar.
+
+Aktives Diktat verwendet dieselbe einzeilige Composer-Pille wie die Texteingabe.
+Pegel, Laufzeit und runde Iconaktionen ersetzen vorübergehend Textfeld, Plus und
+normale Sendeaktionen, ohne eine zweite Zeile anzulegen. Der gemeinsame
+Senden-Pfeil rechts startet Erkennung und direkte Übergabe; der Haken ergänzt
+den Entwurf. Papierkorb verwirft wiederherstellbar, Pause setzt die Aufnahme aus.
+Kein zusätzliches X während der Aufnahme. Größen, Farben und Touchziele folgen
+den bestehenden Composer- und Iconbutton-Tokens; die Wellenform nutzt die
+verbleibende Breite. Den vollständigen Ablauf führt surfaces/chat.md.
