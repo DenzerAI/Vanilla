@@ -1921,9 +1921,11 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 {loading ? (
                   <Skeleton variant="chat" label="Gespräch wird geladen …"/>
                 ) : !thread?.turns?.length ? (
-                  <ChatStart composing={!!text.trim() || attachments.length>0} greeting={greeting} profile={boot.settings} requests={requests} notifications={notificationState.data?.items || []} chats={chats} projectId={projectId} error={notificationState.error}
+                  <ChatStart api={api} routines={!!boot.features?.routines} revision={libraryRevision} composing={!!text.trim() || attachments.length>0} greeting={greeting} profile={boot.settings} requests={requests} notifications={notificationState.data?.items || []} chats={chats} projectId={projectId} error={notificationState.error}
                     onOpen={async item=>{
                       if(item.prompt){setText(item.prompt);inputRef.current?.focus();return;}
+                      if(item.entry){setModal({type:'library-file',entry:item.entry,entries:[item.entry]});return;}
+                      if(item.job){setModal({type:'job',job:item.job});return;}
                       if(item.threadId){await openChat(item.threadId);return;}
                       if(item.kind==='request'){setModal("activity");return;}
                       if(item.kind==='report'){

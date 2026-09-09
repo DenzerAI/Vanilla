@@ -18,7 +18,7 @@ export function ChatStartHeading({texts,reduceMotion=false,paused=false}:{texts:
   const tick=()=>{
    const chars=Array.from(texts[current.index]||'');
    if(current.count<chars.length){current={...current,count:current.count+1,fading:false};setFrame(current);timer=setTimeout(tick,/[.!?،,;:]/.test(chars[current.count-1])?chatHeadingMotion.punctuation:chatHeadingMotion.character);}
-   else timer=setTimeout(()=>{setFrame({...current,fading:true});timer=setTimeout(()=>{current={index:(current.index+1)%texts.length,count:0,fading:false};setFrame(current);timer=setTimeout(tick,chatHeadingMotion.character);},chatHeadingMotion.fade);},chatHeadingMotion.hold);
+   else if(current.index<texts.length-1) timer=setTimeout(()=>{setFrame({...current,fading:true});timer=setTimeout(()=>{current={index:(current.index+1)%texts.length,count:0,fading:false};setFrame(current);timer=setTimeout(tick,chatHeadingMotion.character);},chatHeadingMotion.fade);},chatHeadingMotion.hold);
   };
   timer=setTimeout(tick,chatHeadingMotion.character);
   return()=>{if(timer)clearTimeout(timer);};
@@ -26,6 +26,6 @@ export function ChatStartHeading({texts,reduceMotion=false,paused=false}:{texts:
  const text=texts[frame.index]||texts[0]||'',staticText=reduced || !enabled;
  return <h1 ref={ref} className="chat-start-heading" aria-label={text}>
   {texts.map((value,index)=><span key={index} className="chat-heading-measure" aria-hidden="true">{value}<span className="chat-heading-cursor"/></span>)}
-  <motion.span className="chat-heading-writing" aria-hidden="true" animate={{opacity:frame.fading?0:1}} transition={{duration:staticText?0:chatHeadingMotion.fade/1000}}>{staticText?text:Array.from(text).slice(0,frame.count).join('')}<span className={'chat-heading-cursor'+(!staticText&&onscreen&&pageVisible&&!paused?' is-writing':'')}/></motion.span>
+  <motion.span className="chat-heading-writing" aria-hidden="true" animate={{opacity:frame.fading?0:1}} transition={{duration:staticText?0:chatHeadingMotion.fade/1000}}>{staticText?text:Array.from(text).slice(0,frame.count).join('')}<span className={'chat-heading-cursor'+(!staticText&&onscreen&&pageVisible&&!paused&&frame.count<Array.from(text).length?' is-writing':'')}/></motion.span>
  </h1>;
 }

@@ -593,9 +593,10 @@ Maus-Hover hebt eine Karte in ihrer bestehenden Position an und betont ihre Kont
 kein Umsortieren unter dem Zeiger. Ein Klick öffnet die angehobene Karte, Touch
 behält Auswahl/Öffnen. Tastaturfokus bietet dieselbe Hervorhebung.
 
-ChatStartHeading formuliert aus Titel und Art der aktuellen Karte mehrere lokale
-Impulse. Langsame Zeichenfolge mit Satzzeichenpausen, elf Sekunden Lesezeit und
-weiches Ausblenden vor dem nächsten Impuls. Die Karten wechseln nie automatisch.
+ChatStartHeading ordnet den belegten Zustand der Karte kurz ein, ohne Titel als
+Fragen zu wiederholen. Langsame Zeichenfolge, zwanzig Sekunden Lesezeit und
+höchstens eine sachliche Vertiefung aus dem vorhandenen Inhalt. Danach steht der
+Text still. Die Karten wechseln nie automatisch.
 Alle Varianten reservieren gemeinsam ihren Umbruch. Hover, Tastaturfokus oder
 Composer-Entwurf pausieren den Textwechsel; verborgene Ansichten stoppen Zeitgeber.
 Screenreader erhalten die vollständige Zeile ohne laufende Wortansagen. Reduzierte
@@ -603,3 +604,16 @@ Bewegung zeigt einen statischen Satz. Aussehen → Visuell → Lebendiger Startt
 schaltet den Effekt für diesen Browser dauerhaft ab; kein zusätzlicher Server nötig.
 Die Auswahl wird zwischen Tabs desselben Ursprungs synchronisiert und ein
 Speicherfehler angezeigt. Gemeinsame Werte: chatHeadingMotion und attentionFanMotion.
+
+
+Der kompakte Startfächer mischt bis zu fünf Karten. Rückfragen und Probleme kommen
+zuerst, danach die letzte vorhandene Datei, der nächste aktive Benutzerauftrag mit
+serverseitigem nextRun, das neueste Routine-Ergebnis und ungelesene Chatantworten.
+Eine Wetterkarte bleibt reserviert; ohne Einrichtung benennt sie den fehlenden Ort
+und die fehlende Wetterquelle, statt Beispieldaten als Wetter auszugeben.
+Dateien öffnen LibraryPreview, Jobs ihren vorhandenen Dialog, Ergebnisse den
+bestehenden Berichtschat. Keine Aktion startet beim Anzeigen automatisch Arbeit.
+Datei und Routine-Ergebnis mit derselben job_id werden nicht doppelt gezeigt.
+Einzelne Feed-Fehler erhalten übrige Daten und werden benannt. Quellen sind die
+vorhandenen GET /jobs, /library und /planner/results; Fokus und relevante Ereignisse
+aktualisieren die Daten. Kleinere Rollen: Überschrift subheading, Kartentitel control.

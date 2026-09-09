@@ -1,10 +1,11 @@
+import {CloudSun} from 'lucide-react';
 "use client";
 import {useState,useEffect,useRef} from 'react';
 import {motion,useReducedMotion} from 'motion/react';
-import {ArrowUpRight,Bell,FileText,MessageCircle,BrainCircuit,ChevronLeft,ChevronRight} from '../../icons.jsx';
+import {ArrowUpRight,Bell,FileText,MessageCircle,BrainCircuit,ChevronLeft,ChevronRight,Clock} from '../../icons.jsx';
 import {attentionFanMotion} from '../../design-system.mjs';
 import './attention-fan.css';
-export interface AttentionItem {id:string;kind:string;title:string;description:string;prompt?:string;threadId?:string;noticeId?:string;}
+export interface AttentionItem {id:string;kind:string;title:string;description:string;prompt?:string;threadId?:string;noticeId?:string;entry?:any;job?:any;}
 export function AttentionFan({items,onOpen,onActiveChange,reduceMotion=false,disabled=false}:{items:AttentionItem[];onOpen:(item:AttentionItem)=>void;onActiveChange?:(item:AttentionItem)=>void;reduceMotion?:boolean;disabled?:boolean}) {
   const [selected,setSelected]=useState<string|null>(null),[hovered,setHovered]=useState<string|null>(null);
   const index=Math.max(0,items.findIndex(item=>item.id===selected)), active=items[index];
@@ -24,7 +25,7 @@ export function AttentionFan({items,onOpen,onActiveChange,reduceMotion=false,dis
     <div className="attention-fan-track">
       {visible.map(i=>{
         const item=items[i],isActive=i===index,isHovered=hovered===item.id,side=isActive?0:i===(index+1)%items.length?1:-1;
-        const Icon=item.kind==='request'||item.kind==='notice'?Bell:item.kind==='report'?FileText:item.kind==='chat'?MessageCircle:BrainCircuit;
+        const Icon=item.kind==='weather'?CloudSun:item.kind==='job'?Clock:item.kind==='artifact'?FileText:item.kind==='request'||item.kind==='notice'?Bell:item.kind==='report'?FileText:item.kind==='chat'?MessageCircle:BrainCircuit;
         return <motion.button type="button" key={item.id} className={'attention-fan-card'+(isActive?' is-active':'')+(isHovered?' is-hovered':'')} data-side={side}
           initial={false} animate={{rotate:isHovered?0:side*(compact?attentionFanMotion.compactRotation:attentionFanMotion.rotation),y:isHovered?attentionFanMotion.hoverLift:isActive?0:attentionFanMotion.depth,scale:isHovered?attentionFanMotion.hoverScale:isActive?1:attentionFanMotion.scale}}
           transition={reduced?{duration:0}:{type:'spring',...attentionFanMotion.spring}}
@@ -32,7 +33,7 @@ export function AttentionFan({items,onOpen,onActiveChange,reduceMotion=false,dis
           onFocus={e=>{if(e.currentTarget.matches(':focus-visible'))setHovered(item.id);}} onBlur={()=>setHovered(null)}
           disabled={disabled} aria-label={item.title+(isActive||isHovered?' öffnen':' auswählen')} aria-current={isActive?'true':undefined}
           onClick={()=>{if(Date.now()<ignoreClick.current)return;isActive||isHovered?onOpen(item):select(i);}}>
-          <span className="attention-fan-kind"><Icon size={20} strokeWidth={undefined}/><span>{({request:'Rückfrage',notice:'Hinweis',report:'Ergebnis',chat:'Neue Antwort',prompt:'Mit dir'})[item.kind as 'request']}</span></span>
+          <span className="attention-fan-kind"><Icon size={20} strokeWidth={undefined}/><span>{({weather:'Wetter',artifact:'Letztes Erzeugnis',job:'Als Nächstes',request:'Rückfrage',notice:'Hinweis',report:'Ergebnis',chat:'Neue Antwort',prompt:'Mit dir'})[item.kind as 'request']}</span></span>
           <strong>{item.title}</strong><span className="attention-fan-description">{item.description}</span>
           <ArrowUpRight className="attention-fan-arrow" size={18} strokeWidth={undefined}/>
         </motion.button>;

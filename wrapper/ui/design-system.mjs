@@ -397,4 +397,4 @@ export const scrubberSprings = { pointer: { stiffness: 700, damping: 52, mass: .
 
 export const attentionFanMotion = {hoverLift: -10, hoverScale: 1.02, rotation: 12, compactRotation: 6, depth: 18, scale: 0.94, spring: {stiffness: 180, damping: 25, mass: 0.8}};
 
-export const chatHeadingMotion = {character: 65, punctuation: 260, hold: 11000, fade: 650};
+export const chatHeadingMotion = {character: 90, punctuation: 360, hold: 20000, fade: 900};
