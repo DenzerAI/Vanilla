@@ -158,7 +158,7 @@
   color-scheme: light;
   --particle-opacity: 0.48;
   --particle-layer-opacity: 0.12;
-  --workspace-backdrop: #e6e3da;
+  --workspace-backdrop: #f2f0e9;
   --sidebar-sheen: radial-gradient(ellipse at 90% 10%, #ffffff40, #ffffff00 65%), radial-gradient(ellipse at 10% 90%, #00000003, #00000000 60%);
   --sidebar-material-shadow: inset 0 0 0 1px #39352e20, inset 0 1px 0 #ffffff40, 0 4px 16px #39352e0a;
   --workspace-panel-bg: #e6e3da;
@@ -324,7 +324,7 @@
   color-scheme: light;
   --particle-opacity: 0.48;
   --particle-layer-opacity: 0.12;
-  --workspace-backdrop: #e6e3da;
+  --workspace-backdrop: #f2f0e9;
   --sidebar-sheen: radial-gradient(ellipse at 90% 10%, #ffffff40, #ffffff00 65%), radial-gradient(ellipse at 10% 90%, #00000003, #00000000 60%);
   --sidebar-material-shadow: inset 0 0 0 1px #39352e20, inset 0 1px 0 #ffffff40, 0 4px 16px #39352e0a;
   --workspace-panel-bg: #e6e3da;

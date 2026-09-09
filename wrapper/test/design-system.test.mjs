@@ -113,6 +113,7 @@ test('light surfaces retain visible depth in every color world', async () => {
   const {resolveDesign, designTones} = await import('../ui/design-system.mjs');
   for (const tone of designTones) {
     const p = resolveDesign('light', tone.id);
+    assert.equal(p['workspace-backdrop'], p.bg, 'actual app shell matches the paper background');
     for (const surface of ['sidebar', 'workspace-panel-bg']) {
       assert.ok(luminance(p.bg) - luminance(p[surface]) >= 0.08, `${tone.id}: ${surface} separates from chat`);
       assert.ok(luminance(p.glass) - luminance(p[surface]) >= 0.1, `${tone.id}: menu separates from ${surface}`);

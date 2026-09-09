@@ -227,7 +227,7 @@ export const themes = {
   light: {
     "particle-opacity": "0.48",
     "particle-layer-opacity": "0.12",
-    "workspace-backdrop": "#e6e3da",
+    "workspace-backdrop": "#f2f0e9",
     "sidebar-sheen": "radial-gradient(ellipse at 90% 10%, #ffffff40, #ffffff00 65%), radial-gradient(ellipse at 10% 90%, #00000003, #00000000 60%)",
     "sidebar-material-shadow": "inset 0 0 0 1px #39352e20, inset 0 1px 0 #ffffff40, 0 4px 16px #39352e0a",
     "workspace-panel-bg": "#e6e3da",
@@ -321,11 +321,11 @@ export const designAccents = [
 ];
 const toneSurfaces = {
   warm: {
-    light: {faint:'#5b554b', muted:'#554f45', bg:'#f2ede3', sidebar:'#e3dbce', surface:'#e9e2d6', raised:'#dcd3c4', input:'#e3dbce', composer:'#faf6ed', glass:'#faf6ed', 'workspace-backdrop':'#e4dccf', 'workspace-panel-bg':'#e4dccf', 'workspace-panel-glass':'#e4dccf'},
+    light: {faint:'#5b554b', muted:'#554f45', bg:'#f2ede3', sidebar:'#e3dbce', surface:'#e9e2d6', raised:'#dcd3c4', input:'#e3dbce', composer:'#faf6ed', glass:'#faf6ed', 'workspace-backdrop':'#f2ede3', 'workspace-panel-bg':'#e4dccf', 'workspace-panel-glass':'#e4dccf'},
     dark: {bg:'#201d19', sidebar:'#29251f', surface:'#28241f', raised:'#332e27', input:'#2c2721', composer:'#29251f', glass:'#332e27', 'workspace-backdrop':'#181511'},
   },
   neutral: {
-    light: {bg:'#f0f0ee', sidebar:'#dfdfdc', surface:'#e7e7e4', raised:'#d9d9d5', input:'#e0e0dc', composer:'#fafaf8', glass:'#fafaf8', text:'#262626', muted:'#50504e', faint:'#595956', 'workspace-backdrop':'#e1e1de', 'workspace-panel-bg':'#e1e1de', 'workspace-panel-glass':'#e1e1de'},
+    light: {bg:'#f0f0ee', sidebar:'#dfdfdc', surface:'#e7e7e4', raised:'#d9d9d5', input:'#e0e0dc', composer:'#fafaf8', glass:'#fafaf8', text:'#262626', muted:'#50504e', faint:'#595956', 'workspace-backdrop':'#f0f0ee', 'workspace-panel-bg':'#e1e1de', 'workspace-panel-glass':'#e1e1de'},
     dark: {bg:'#1b1b1b', sidebar:'#272727', surface:'#242424', raised:'#2e2e2e', input:'#292929', composer:'#272727', glass:'#2e2e2e', text:'#f1f1f1', muted:'#b2b2b2', faint:'#a0a0a0', 'workspace-backdrop':'#151515'},
   },
 };
