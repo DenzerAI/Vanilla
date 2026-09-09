@@ -7,7 +7,7 @@ from pathlib import Path
 from time import time
 from uuid import uuid4
 
-from .backups import verify_restore, snapshot_paths
+from .backups import verify_apply, snapshot_paths
 from .files import atomic_write, read_json
 
 
@@ -59,7 +59,7 @@ def apply_pending(config):
         base=Path(state['path']).resolve()
         if not base.is_relative_to((config.data/'restores').resolve()):
             raise ValueError('Wiederherstellung liegt außerhalb des geprüften Ordners.')
-        manifest=verify_restore(base)
+        manifest=verify_apply(base,config)
         id=uuid4().hex
         steps=[]
         sources=[(None,Path(str(config.data/'agent.sqlite3')+suffix)) for suffix in ('-wal','-shm')]
@@ -92,6 +92,9 @@ def apply_pending(config):
         journal.unlink()
     except Exception:
         if journal.exists():recover(config,journal)
+        elif pending.exists():
+            os.replace(pending,config.data/'restore-failed.json')
+            atomic_write(config.data/'restore-last.json',json.dumps({'ok':False,'unchanged':True,'at':time()}))
         raise
     finally:
         owner.close()

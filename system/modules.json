@@ -741,6 +741,7 @@
       "setup": "docs/CUSTOMER-SETUP.md#operations",
       "data": "Installationsdaten in data/control und workspaces; Code enthält keine Kundendaten.",
       "sources": [
+        "core/api.py",
         "core/backups.py",
         "core/operations.py",
         "core/restore.py",
@@ -812,7 +813,6 @@
         "backend/whatsapp-bridge.mjs",
         "core/__init__.py",
         "core/__main__.py",
-        "core/api.py",
         "core/app.py",
         "core/config.py",
         "core/database.py",

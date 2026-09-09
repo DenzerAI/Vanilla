@@ -248,3 +248,16 @@ def verify_restore(base):
         if manifest.get('schema',2)==3 and host['access_enabled'] and not {'provider-vault/system-access','provider-vault/system-api'} <= {k for k,_ in encrypted}:
             raise ValueError('Aktivierter Zugang ohne vollständige Zugangsdaten.')
     return manifest
+
+
+def verify_apply(base,config):
+    from .files import read_json
+    base=Path(base).resolve()
+    if not base.is_relative_to((config.data/'restores').resolve()):
+        raise ValueError('Wiederherstellung liegt außerhalb des geprüften Ordners.')
+    manifest=verify_restore(base)
+    current=read_json(config.data/'host.json',{})
+    restored=read_json(base/'host.json',{}) if manifest.get('schema',2)>=3 else {}
+    if current.get('access_enabled') and not restored.get('access_enabled'):
+        raise ValueError('Diese Sicherung enthält keine eigene App-Anmeldung. In einer neuen lokalen Installation wiederherstellen; der bestehende Zugang wird nicht abgeschaltet.')
+    return manifest

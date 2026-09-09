@@ -177,6 +177,8 @@ def routes(operations, queue):
             raise ValueError("Zuerst eine Sicherung wiederherstellen und prüfen.")
         if await o.runtime.has_active_work():
             raise ValueError("Bitte laufende Arbeit zuerst beenden.")
+        from .backups import verify_apply
+        await asyncio.to_thread(verify_apply, record["path"], o.config)
         atomic_write(o.config.data / "restore-pending.json", json.dumps(record))
         return await restart()
 

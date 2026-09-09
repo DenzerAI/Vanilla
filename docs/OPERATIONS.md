@@ -259,3 +259,9 @@ bewahren bis zu 100.000 Zeichen pro Nachricht in getrennten Turn-Dateien, damit
 Antwortenden nicht standardmäßig nach 1.400 Zeichen fehlen. Historische Auszüge
 werden nicht still überschrieben. Ausgeschlossene oder vergessene Chats sind über
 das Memory-Werkzeug gesperrt; ihr sichtbarer Originalchat bleibt nach Vertrag erhalten.
+
+Vor einer Restore-Aktivierung werden Prüfsummen, Tresorpaar und Zielpfad erneut
+geprüft. Eine Sicherung ohne App-Anmeldung darf einen bereits geschützten Zugang
+nicht abschalten; alte Stände werden dafür in einer neuen lokalen Installation
+geöffnet. Scheitert die Offline-Prüfung vor dem Austausch, bleibt der aktuelle
+Bestand erhalten und die fehlgeschlagene Anfrage wird nicht bei jedem Start wiederholt.

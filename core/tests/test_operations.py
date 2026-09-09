@@ -335,3 +335,24 @@ def test_original_memory_tail_stays_reachable_and_respects_forgetting(config,db)
     m.forget_chat('tailchat')
     with pytest.raises(ValueError):m.original('tailchat','turn1','default')
     asyncio.run(runtime.close())
+
+
+def test_invalid_pending_restore_keeps_current_data_and_stops_retrying(config,db):
+    from core.restore import apply_pending
+    from core.backups import verify_apply
+    from core.files import sha256
+    stage=config.data/'restores/legacy';stage.mkdir(parents=True)
+    db.backup(stage/'database.sqlite3')
+    with sqlite3.connect(stage/'database.sqlite3') as cx:cx.execute('PRAGMA journal_mode=DELETE')
+    manifest={'format':'agent-backup-v1','schema':2,'files':{'database.sqlite3':sha256(stage/'database.sqlite3')}}
+    (stage/'manifest.json').write_text(json.dumps(manifest))
+    (config.data/'host.json').write_text('{"access_enabled":true}')
+    with pytest.raises(ValueError,match='keine eigene App-Anmeldung'):verify_apply(stage,config)
+    (config.data/'restore-pending.json').write_text(json.dumps({'path':str(stage),'snapshot':'synthetic'}))
+    db.close()
+    with pytest.raises(ValueError,match='keine eigene App-Anmeldung'):apply_pending(config)
+    assert not (config.data/'restore-pending.json').exists()
+    assert (config.data/'restore-failed.json').exists()
+    # Opening/closing SQLite can checkpoint WAL; the original DB remains readable.
+    with sqlite3.connect(config.data/'agent.sqlite3') as cx:assert cx.execute('PRAGMA quick_check').fetchone()[0]=='ok'
+    apply_pending(config)
