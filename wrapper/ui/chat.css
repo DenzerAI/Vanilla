@@ -118,7 +118,7 @@
 .pill-composer { padding: 0; background: transparent; box-shadow: none; border-radius: 0; }
 .pill-composer:focus-within { background: transparent; }
 .composer-entry { display: flex; align-items: center; gap: var(--space-8); padding: var(--space-8); min-height: 52px; background: var(--composer); border: 0; border-radius: var(--radius-pill); }
-.composer-entry[data-multiline="true"], .composer-entry:has(.voice-strip) { border-radius: var(--radius-large); }
+.composer-entry[data-multiline="true"] { border-radius: var(--radius-large); }
 .composer-entry:focus-within { background: var(--composer); }
 .composer-entry textarea { flex: 1; width: 0; min-width: 0; min-height: 24px; max-height: 180px; padding: var(--space-2) 0 0; margin: 0; font-size: var(--text-control); overflow: hidden; overflow-wrap: anywhere; white-space: pre-wrap; }
 .composer-entry > .icon-button, .composer-entry .send-button { flex-shrink: 0; width: var(--control-target); height: var(--control-target); }
@@ -145,9 +145,15 @@
   .composer-options .mode-trigger, .composer-options .model-trigger { gap: var(--space-4); padding-inline: var(--space-4); }
   .composer-options .model-effort { gap: var(--space-4); }
 }
-.composer-entry:has(.voice-strip) { flex-wrap: wrap; }
-.composer-entry:has(.voice-strip) .dictation-control { flex-basis: 100%; order: 3; }
-.composer-entry .voice-strip { justify-content: flex-start; width: 100%; padding: var(--space-4) var(--space-8); }
+.composer-entry:has(.voice-strip) { border-radius: var(--radius-pill); }
+.composer-entry:has(.voice-strip) > :is(textarea, .icon-button, .composer-send-actions) { display: none; }
+.composer-entry:has(.voice-strip) .dictation-control { flex: 1; min-width: 0; }
+.composer-entry .voice-strip { justify-content: flex-start; width: 100%; min-width: 0; flex-wrap: nowrap; gap: var(--space-4); }
+.composer-entry .voice-strip > button { flex-shrink: 0; }
+.composer-entry .voice-strip .voice-wave { flex: 1; min-width: 12px; width: 0; }
+.composer-entry .voice-strip .voice-time { flex-shrink: 0; }
+.composer-entry .voice-strip .voice-phase { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.composer-entry .voice-strip[data-capturing="true"] .voice-phase { display: none; }
 @media (max-width: 600px) {
   .composer-entry { gap: var(--space-4); }
   .agent-actions .icon-button, .user-actions .icon-button { min-height: 36px; min-width: 36px; }
