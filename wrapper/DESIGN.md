@@ -521,3 +521,13 @@ konsistent; kein zweiter Komponentenordner an der Repositorywurzel.
 Tailwind 4 liegt in `ui/tailwind.css`, gemeinsame Styles in `ui/styles.css`,
 Buttonstyles in `ui/components/ui/glass-button.css`. TypeScript und Tailwind
 sind bereits eingerichtet; keine erneute CLI-Initialisierung nötig.
+
+Heute zeigt datierte Berichte als kompakte `BriefingRow`-Liste mit höchstens fünf
+Ergebnissen, Vorschau und Chevron. Der Baustein teilt Agenda-Typografie, Fokus und
+Abstände und steht in der Designreferenz. Datum und Uhrzeit stehen am Desktop in
+einer eigenen Spalte, mobil über dem Text. Tagesplan und offene Punkte stehen bei
+ausreichender Breite nebeneinander, sonst untereinander. Berichte öffnen ihren
+dauerhaften Chat mit dem Bericht als erster Assistentennachricht; kein Briefingmodal.
+Die globale Beispielunterzeile und ihr Schalter entfallen. Fiktive Einträge bleiben
+lokal gekennzeichnet; der Schalter liegt im Verknüpfungsdialog. Dessen Scrollleiste
+ist visuell verborgen, Rad, Touch und Tastatur bleiben bedienbar.

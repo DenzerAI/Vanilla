@@ -156,6 +156,8 @@ def test_notification_api_protects_writes_and_direct_send(config):
     app=create_app(config)
     with TestClient(app) as client:
         assert client.get('/api/notifications').json()['unread']==0
+        assert client.get('/api/planner/results').json()=={'items':[]}
+        assert client.post('/internal/planner/result',json={'id':'x'}).status_code==403
         assert client.post('/api/notifications/read',json={'id':'x'}).status_code==403
         assert client.post('/internal/jobs/attention',json={'id':'x'}).status_code==403
         token=client.get('/api/auth/session').json()['token']
@@ -178,3 +180,15 @@ def test_equivalent_once_timestamp_never_replays(config,db):
     p=config.workspace/'jobs/daily/job.yaml';data=json.loads(p.read_text());data['schedule']['at']='2026-09-08T06:00:00.000Z';p.write_text(json.dumps(data))
     q.schedule(datetime.fromisoformat('2026-09-08T08:01:00+02:00'))
     assert len(db.rows('SELECT * FROM executions'))==1
+
+
+def test_planner_results_keep_latest_five_completed_even_beyond_notification_page(config, db):
+    with db.transaction() as cx:
+        for index in range(65):
+            cx.execute('INSERT INTO job_notifications(id,job_id,title,body,status,created_at,target,delivery) VALUES(?,?,?,?,?,?,?,?)',
+                       (f'report-{index:02}', 'daily', 'Routine result', f'Report {index}', 'completed' if index < 10 else 'failed', index, 'app', 'app'))
+    notifications = Notifications(db)
+    assert all(row['status'] == 'failed' for row in notifications.list()['items'])
+    results = notifications.results()['items']
+    assert [row['id'] for row in results] == ['report-09', 'report-08', 'report-07', 'report-06', 'report-05']
+    assert all(row['read_at'] is None for row in results)

@@ -1,3 +1,5 @@
+import {briefingChatOpener} from './briefing-chat.mjs';
+import {demoBriefings} from './ui/planner-briefings.mjs';
 import {htmlPreviewPolicy, readHtmlPreview} from './html-preview.mjs';
 import {saveHandoff, joinHandoff, handoffInstructions} from "./chat-handoff.mjs";
 import { searchConversations } from './search.mjs';
@@ -626,6 +628,18 @@ route("GET", "/api/bootstrap", async () => {
     capabilities: workers.capability(workers.effectiveWorker),
     planAvailable: workers.routingOrder().some(id => workers.capability(id).plan),
   };
+});
+const openBriefingChat = briefingChatOpener({store, newChat, cache:threadCache, emit});
+route("POST", "/api/planner/chat", async b => {
+  let item;
+  if (b.demoDate) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(b.demoDate) || Number.isNaN(Date.parse(b.demoDate))) throw new Error("Ungültiges Berichtsdatum.");
+    item = demoBriefings(b.demoDate).find(entry => entry.id === b.id);
+  } else {
+    item = await coreRequest('planner/result', {id:b.id});
+  }
+  if (!item || item.id !== b.id) throw new Error("Bericht nicht verfügbar.");
+  return openBriefingChat(item);
 });
 route("POST", "/api/chats", async (b) => {
   const policy = runMode(b.mode);

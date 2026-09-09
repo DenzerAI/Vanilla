@@ -282,3 +282,11 @@ vergrößert denselben Workspace, ohne den iframe neu zu laden. Die vorhandene
 Kopfaktion führt zur kompakten Breite zurück. Bearbeiten ist eine getrennte Aktion.
 Die Bibliothek nutzt denselben HtmlPreview-Baustein und ihre bestehende Großansicht.
 Darstellung, Bearbeitung und Isolation führt [der Bibliotheksvertrag](library.md#html-dokumente-im-workspace-und-in-der-großansicht).
+
+## Gespräch aus einem Bericht
+
+Heute öffnet Routine-Ergebnisse und markierte Beispielbriefings im normalen Chat.
+Der gespeicherte Bericht steht als erste Assistentennachricht vor den Rückfragen.
+Der vorhandene Snapshot-/Kontextmechanismus erhält diesen Stand nach Reload und
+Anbieterwechsel. Öffnen löst keine Agentenarbeit aus; pro Bericht wird derselbe Chat
+wiederverwendet. Historische Berichte bleiben Daten, keine neuen Arbeitsregeln.

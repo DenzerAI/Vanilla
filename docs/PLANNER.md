@@ -11,7 +11,7 @@ steht unter `wrapper/surfaces/today.md`, Fähigkeiten unter `system/capabilities
 
 Die Beispielansicht beschreibt Termin → Kontakt → Anlass und eine explizite
 Terminänderung nach neuer Nachricht. Sie verwendet ausschließlich flüchtigen
-React-Zustand; keine Schreibanfrage, kein Import und keine Migration dieser Daten.
+React-Zustand; keine CRM-/Kalenderschreibanfrage, kein Import und keine Migration dieser Daten. Das ausdrückliche Öffnen eines Beispielbriefings speichert dessen gekennzeichneten Text in einem normalen Gespräch.
 Nur Ansichtspräferenzen werden lokal im Browser gespeichert.
 
 ## Anschlussvertrag für den nächsten Produktionsschritt
@@ -64,6 +64,16 @@ Aktionen. Bereits geladener Agentenkontext wird nicht rückwirkend entfernt.
 
 Noch offen: dauerhafte Kalendertermine/API, Anbieter-Sync mit Paging/Delta/Löschungen,
 Wiederholungen und Einladungen, Wetterquelle/Ortswahl, fachlich typisierte
-Briefing-Zuordnung, produktive Kontakte-/Entscheidungsmasken, vollständige
+Briefing-Zuordnung (die Liste zeigt aktuell alle abgeschlossenen Routine-Ergebnisse), produktive Kontakte-/Entscheidungsmasken, vollständige
 serverseitige Fälligkeitsabfrage statt begrenzter CRM-Leseseite. Die vorhandene
 Inbox bleibt eine separate Designstudie und liefert noch keine echten Nachrichten.
+
+## Berichtsliste und Fortsetzung
+
+`GET /api/planner/results` liefert die letzten fünf abgeschlossenen Ergebnisse aus
+der vorhandenen Benachrichtigungsablage. `POST /api/planner/chat` liest das Ergebnis
+serverseitig anhand seiner ID und erstellt oder öffnet seinen Gesprächskontext.
+Es akzeptiert keinen Berichtstext vom Browser. Beispiele werden aus dem gemeinsamen
+fiktiven Katalog aufgelöst. Snapshot und Kontext verwenden `chat-handoff.mjs`;
+Berichts-ID und Chatzuordnung liegen im bestehenden Chatbestand. Gleichzeitige
+Öffnungen werden zusammengefasst. Die Berichtsliste ist keine zweite Ergebnisablage.

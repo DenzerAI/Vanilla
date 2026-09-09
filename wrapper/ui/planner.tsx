@@ -27,6 +27,7 @@ import {
 } from "./planner-dates.mjs";
 import { demoContact, demoEvents, type PlannerEvent } from "./planner-demo";
 import "./planner.css";
+import { demoBriefings } from "./planner-briefings.mjs";
 import { dueCases } from "./planner-data.mjs";
 type Fact = {
   value: any;
@@ -57,6 +58,7 @@ type Props = {
   onNotifications: (id?: string) => void;
   onConnections: () => void;
   onJobs: () => void;
+  onBriefing: (item: any) => Promise<void>;
 };
 const formatDay = (
   key: string,
@@ -115,9 +117,18 @@ export function AgendaRow({
     </button>
   );
 }
+export function BriefingRow({item, today, busy = false, disabled = false, onOpen}: {item: any; today: string; busy?: boolean; disabled?: boolean; onOpen: () => void}) {
+  const date = dateKey(new Date(item.created_at * 1000));
+  const label = date === today ? "Heute" : date === addDays(today, -1) ? "Gestern" : formatDay(date, {day:"numeric", month:"short"});
+  return <button type="button" className="planner-briefing-row" onClick={onOpen} disabled={disabled} aria-label={`${item.title}, ${label}${item.demo ? ", Beispiel" : ""}, im Chat öffnen`} aria-busy={busy}>
+    <span className="planner-briefing-date"><strong>{label}</strong><span>{new Date(item.created_at * 1000).toLocaleTimeString("de-DE", {hour:"2-digit", minute:"2-digit"})}{item.demo ? " · Beispiel" : ""}</span></span>
+    <span className="planner-row-copy"><strong>{busy ? "Gespräch wird geöffnet …" : item.title.replace(/ · Fertig$/, "")}</strong><span>{item.body.replace(/[#*_`]/g, "")}</span></span>
+    <ChevronRight size={16} strokeWidth={undefined} />
+  </button>;
+}
 export function PlannerPatternPreview() {
   return (
-    <AgendaRow event={demoEvents(dateKey(new Date()))[0]} onOpen={() => {}} />
+    <><BriefingRow item={demoBriefings(dateKey(new Date()))[0]} today={dateKey(new Date())} onOpen={() => {}} /><AgendaRow event={demoEvents(dateKey(new Date()))[0]} onOpen={() => {}} /></>
   );
 }
 export function PlannerPage(props: Props) {
@@ -138,7 +149,7 @@ export function PlannerPage(props: Props) {
   const [detail, setDetail] = useState<PlannerEvent | null>(null),
     [draft, setDraft] = useState<PlannerEvent | null>(null),
     [modal, setModal] = useState<
-      "concept" | "contact" | "message" | "briefing" | null
+      "concept" | "contact" | "message" | null
     >(null);
   const [workflows, setWorkflows] = useState<any[]>([]);
   const [entities, setEntities] = useState<Entity[]>([]),
@@ -206,6 +217,31 @@ export function PlannerPage(props: Props) {
       window.removeEventListener("core/event", changed);
     };
   }, [reload]);
+  const [reports, setReports] = useState<any[]>([]);
+  const [reportsLoaded, setReportsLoaded] = useState(false);
+  const [reportsError, setReportsError] = useState("");
+  const [openingBriefing, setOpeningBriefing] = useState("");
+  const [briefingError, setBriefingError] = useState("");
+  const openingRef = useRef(false);
+  const loadReports = useCallback(async () => {
+    if (!props.notificationsEnabled) { setReportsLoaded(true); return; }
+    try {
+      const result = await api("/planner/results");
+      setReports(result.items);
+      setReportsError("");
+    } catch (error) { setReportsError((error as Error).message); }
+    finally { setReportsLoaded(true); }
+  }, [api, props.notificationsEnabled]);
+  useEffect(() => { loadReports(); }, [loadReports, props.notifications.data]);
+  const briefings = reports.length ? reports : demo ? demoBriefings(today) : [];
+  const openBriefing = async (item: any) => {
+    if (openingRef.current) return;
+    openingRef.current = true;
+    setOpeningBriefing(item.id); setBriefingError("");
+    try { await props.onBriefing({...item, demoDate:today}); }
+    catch (error) { setBriefingError((error as Error).message); }
+    finally { openingRef.current = false; setOpeningBriefing(""); }
+  };
   const chooseMode = (value: string) => {
     setMode(value);
     storePreference("planner.view", value);
@@ -338,7 +374,7 @@ export function PlannerPage(props: Props) {
     props.notifications.data?.items?.filter((item: any) => !item.read_at) || [];
   return (
     <div
-      className="page planner-page"
+      className={"page planner-page " + (section === "today" ? "planner-today" : "")}
       data-capability="planner.overview"
       onTouchStart={(e) => {
         const target = e.target as HTMLElement;
@@ -396,21 +432,7 @@ export function PlannerPage(props: Props) {
             Kalender
           </button>
         </div>
-        <button
-          type="button"
-          className="small-button"
-          aria-pressed={demo}
-          onClick={toggleDemo}
-        >
-          {demo ? "Beispielansicht an" : "Beispielansicht aus"}
-        </button>
       </div>
-      {demo && (
-        <p className="planner-demo-note">
-          Beispielansicht · Termine, Kontakt, Wetter und Briefing sind fiktiv.
-          Bearbeitungen gelten bis zum Verlassen von Heute und Kalender.
-        </p>
-      )}
       {section === "today" ? (
         <>
           <div className="planner-dateline">
@@ -437,48 +459,18 @@ export function PlannerPage(props: Props) {
             aria-labelledby="planner-briefing-title"
           >
             <div className="planner-section-heading">
-              <h2 id="planner-briefing-title">Dein Morgenbriefing</h2>
-              {demo && (
-                <span className="planner-meta">Heute, 07:00 · Beispiel</span>
-              )}
+              <h2 id="planner-briefing-title">Briefings & Ergebnisse</h2>
+              <button type="button" className="small-button" onClick={props.onJobs}>Routinen</button>
             </div>
-            {demo ? (
-              <>
-                <p>
-                  Heute geht es um das neue Projekt: Um 10 Uhr steht die
-                  Abstimmung an. Alex hat vorab eine Terminänderung geschickt.
-                  Prüfe sie, bevor du das Angebot am Nachmittag vorbereitest.
-                </p>
-                {demoResolved && (
-                  <p className="planner-meta">
-                    Seit dem Briefing: Terminänderung auf 11 Uhr bestätigt. Dein
-                    Tagesplan ist aktualisiert.
-                  </p>
-                )}
-                <button
-                  type="button"
-                  className="small-button"
-                  onClick={() => setModal("briefing")}
-                >
-                  Briefing & Quellen öffnen
-                </button>
-              </>
-            ) : (
-              <>
-                <p>
-                  Hier beginnt dein Tag mit Terminen, wichtigen Änderungen und
-                  nächsten Schritten.
-                </p>
-                <button
-                  type="button"
-                  className="small-button"
-                  onClick={props.onJobs}
-                >
-                  Morgenbriefing als Routine planen
-                </button>
-              </>
-            )}
+            {reportsError && <p role="alert" className="planner-error">Ergebnisse konnten nicht aktualisiert werden. <button type="button" onClick={loadReports}>Erneut laden</button></p>}
+            {!reportsLoaded && !demo && <Skeleton rows={3} label="Briefings werden geladen …" />}
+            <div className="planner-briefing-list">
+              {briefings.slice(0, 5).map(item => <BriefingRow key={item.id} item={item} today={today} busy={openingBriefing === item.id} disabled={!!openingBriefing} onOpen={() => openBriefing(item)} />)}
+            </div>
+            {reportsLoaded && !briefings.length && <p className="planner-empty">Noch kein Briefing. Plane dein Morgenbriefing als Routine, dann findest du die letzten Ergebnisse hier.</p>}
+            {briefingError && <p role="alert" className="planner-error">{briefingError}</p>}
           </section>
+          <div className="planner-day-grid">
           <section className="planner-section">
             <div className="planner-section-heading">
               <h2>Dein Tag</h2>
@@ -671,6 +663,7 @@ export function PlannerPage(props: Props) {
               Alle Benachrichtigungen
             </button>
           </section>
+          </div>
         </>
       ) : (
         <>
@@ -1092,46 +1085,10 @@ export function PlannerPage(props: Props) {
           </div>
         </Modal>
       )}
-      {modal === "briefing" && (
-        <Modal
-          wide={false}
-          title="Morgenbriefing"
-          onClose={() => setModal(null)}
-        >
-          <p className="planner-meta">
-            {formatDay(today)} · 07:00 · Beispielbericht
-          </p>
-          <p>
-            Die Projektabstimmung ist für 10 Uhr geplant. Bereite am Nachmittag
-            das Angebot vor.
-          </p>
-          <div className="settings-group">
-            <SettingRow
-              title="Nach dem Briefing eingegangen"
-              description={
-                demoResolved
-                  ? "Die Terminänderung auf 11 Uhr wurde inzwischen im Beispiel bestätigt. Der Tagesplan ist aktualisiert."
-                  : "Alex bittet um 11 Uhr. Der Tagesplan weist auf die nötige Prüfung hin."
-              }
-            />
-            <SettingRow
-              title="Quellen"
-              description="Kalendertermin, verknüpfter Kontakt und zugehörige Inbox-Nachricht."
-            >
-              <button type="button" onClick={() => setModal("message")}>
-                Änderung ansehen
-              </button>
-            </SettingRow>
-          </div>
-          <p className="planner-demo-note">
-            Ein Briefing bleibt ein datierter Bericht. Der aktuelle Tagesplan
-            und neue Hinweise entwickeln sich weiter.
-          </p>
-        </Modal>
-      )}
       {modal === "concept" && (
         <Modal
           wide={false}
+          className="planner-concept-modal"
           title="So hängt dein Tag zusammen"
           onClose={() => setModal(null)}
         >
@@ -1159,14 +1116,17 @@ export function PlannerPage(props: Props) {
             <SettingRow
               icon={<Bell size={20} strokeWidth={undefined} />}
               title="Briefing & Hinweise"
-              description="Morgenbriefings sollen als datierte Ergebnisse einer Routine hier landen. Echte Benachrichtigungen und Agentenrückfragen sind bereits angeschlossen."
+              description="Die letzten fünf abgeschlossenen Routine-Ergebnisse erscheinen als Liste. Jeder Bericht öffnet sein eigenes Gespräch, in dem du direkt weiterfragen kannst."
             />
             <SettingRow
               icon={<Link size={20} strokeWidth={undefined} />}
               title="Aktueller Ausbaustand"
-              description="Die Kalender-, Kontakt- und Inbox-Verknüpfung ist ein bedienbarer Entwurf. Externe Kalendersynchronisation, Wetterabruf und automatische Briefing-Zuordnung folgen. Beispieldaten werden niemals in das CRM geschrieben."
+              description="Die Kalender-, Kontakt- und Inbox-Verknüpfung ist ein bedienbarer Entwurf. Externe Kalendersynchronisation, Wetterabruf und eine gesonderte Zuordnung nach Berichtstyp folgen. Beispieldaten werden niemals in das CRM geschrieben."
             />
           </div>
+          <SettingRow title="Beispieldaten" description="Fiktive Termine und Briefings zur Vorschau.">
+            <button type="button" role="switch" className="apple-switch" aria-label="Beispieldaten anzeigen" aria-checked={demo} onClick={toggleDemo}><span /></button>
+          </SettingRow>
           <div className="row">
             <button
               type="button"

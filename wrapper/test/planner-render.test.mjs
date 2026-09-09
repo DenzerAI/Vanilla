@@ -46,6 +46,7 @@ test("planner renders both integrated views and keeps examples out of the real-d
       onNotifications: none,
       onConnections: none,
       onJobs: none,
+      onBriefing: async () => {},
     };
     const render = (section) =>
       renderToStaticMarkup(
@@ -55,10 +56,11 @@ test("planner renders both integrated views and keeps examples out of the real-d
       getItem: (key) => (key === "planner.demo" ? "true" : null),
     };
     const today = render("today");
-    assert.match(today, /Dein Morgenbriefing/);
+    assert.match(today, /Briefings &amp; Ergebnisse/);
     assert.match(today, /Braucht dich/);
     assert.match(today, /Terminänderung von Alex prüfen/);
-    assert.match(today, /Beispielansicht/);
+    assert.doesNotMatch(today, /Beispielansicht|Briefing &amp; Quellen öffnen/);
+    assert.equal((today.match(/class="planner-briefing-row"/g) || []).length, 4);
     const month = render("calendar");
     assert.match(month, /planner-month-week/);
     assert.match(month, /KW /);

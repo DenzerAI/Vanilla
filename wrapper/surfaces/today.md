@@ -51,7 +51,7 @@ Pflichtscrollen. Lange Namen/Titel wachsen, native Steuerungen bleiben erreichba
 ## Beispiele, Einstellungen und echte Daten
 
 Erster Einstieg zeigt den ausdrücklich beauftragten, klar markierten Entwurf.
-Beispielansicht lässt sich jederzeit abschalten. Nur die UI-Präferenzen
+Beispieldaten lassen sich im Verknüpfungsdialog abschalten. Die globale Beispielunterzeile und der bisherige Beispielansicht-Button entfallen. Einzelne fiktive Inhalte bleiben als Beispiel gekennzeichnet. Nur die UI-Präferenzen
 Beispielmodus, Kalenderansicht und Mo–Fr werden im Browser gespeichert; keine
 Termine, Personen, Quellen oder Nachrichten. Beispielbearbeitungen leben nur,
 solange Heute/Kalender geöffnet sind. Beim Wechsel zwischen beiden bleiben sie,
@@ -65,8 +65,7 @@ begrenzte Wirkung. Kein Versand, keine stillen CRM- oder Kalender-Schreibaktione
 Ohne Beispiele zeigt der Kalender einen ehrlichen leeren Anschlusszustand.
 „Kalender verbinden“ öffnet den vorhandenen Verbindungsbereich. Standort/Wetter
 öffnet den Konzeptstand, fordert keine Berechtigung an und verspricht keine
-aktive Wetterquelle. Der Briefing-Einstieg führt zu den bestehenden Routinen;
-automatische Zuordnung ihrer Ergebnisse ist noch nicht implementiert.
+aktive Wetterquelle. Die Liste „Briefings & Ergebnisse“ liest die letzten fünf abgeschlossenen Routine-Ergebnisse aus der bestehenden Benachrichtigungsablage, unabhängig vom Lesestatus. Es wird kein Berichtstyp aus Titeln geraten. Ohne echte Ergebnisse erscheinen im Beispielmodus vier datierte Beispielbriefings. Der Routinen-Button öffnet die bestehenden Aufträge.
 
 CRM-Schritte werden anhand der vorhandenen Workflowdefinitionen auf offene Zustände
 gefiltert und über die bestehenden validierten Lesewege geladen, beim Fokus,
@@ -85,6 +84,24 @@ Abstände und Radien aus design-system.mjs. Keine zusätzliche Motion oder Palet
 
 Prüfen: Datumsarithmetik (KW-Jahresgrenzen, Schaltjahr, Sommerzeit), Navigation,
 Wochentagsfilter, Ansichtpräferenzen nach Reload, Demo-Bestätigung und Terminänderung,
-keine Schreibanfrage aus Beispielen, echte Hinweise, Fehler, Tastatur, Desktop,
+keine CRM-/Kalenderschreibanfrage aus Beispielen, echte Hinweise, Fehler, Tastatur, Desktop,
 schmale Breite und große Schrift in Hell/Dunkel. Build ersetzt keine Sichtprüfung.
 Den späteren Anschlussvertrag führt [docs/PLANNER.md](../../docs/PLANNER.md).
+
+## Berichte im Gespräch
+
+BriefingRow zeigt Datum, Zeit, Titel, zweizeilige Vorschau und Chevron. Mobil
+steht das Datum über dem Text. Der ganze Eintrag öffnet den Bericht im normalen
+Chat mit Composer. Ein gespeicherter unveränderlicher Gesprächsausschnitt setzt
+den Bericht als erste Assistentennachricht und liefert seinen Inhalt bei jeder
+Fortsetzung als historischen Kontext. Kein Worker-Turn beim bloßen Öffnen.
+Pro Berichts-ID entsteht höchstens ein Gespräch; weitere Klicks öffnen es wieder,
+auch nach Reload. Laufende Öffnung sperrt die Liste; Fehler bleiben mit erneutem
+Klick wiederholbar. Das Öffnen markiert die Quellbenachrichtigung nicht als gelesen.
+Beispielberichte erzeugen ausschließlich auf Klick einen als Beispiel benannten
+Gesprächsinhalt, niemals CRM-/Kalenderdaten. Der Tagesplan kann sich unabhängig
+vom datierten Bericht ändern.
+
+Verknüpfungen behält das bestehende Modal. Seine native Scrollleiste ist visuell
+verborgen; Scrollen und Tastaturbedienung bleiben erhalten. Tagesplan und Braucht
+dich stehen auf breiten Ansichten nebeneinander, auf schmalen untereinander.

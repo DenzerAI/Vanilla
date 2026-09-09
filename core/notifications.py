@@ -35,6 +35,9 @@ class Notifications:
         rows = self.db.rows('SELECT * FROM job_notifications' + (' WHERE created_at<?' if before is not None else '') + ' ORDER BY created_at DESC,id DESC LIMIT 50', (before,) if before is not None else ())
         return {'items': rows, 'unread': self.db.rows('SELECT count(*) n FROM job_notifications WHERE read_at IS NULL')[0]['n'], 'next': rows[-1]['created_at'] if len(rows) == 50 else None}
 
+    def results(self):
+        return {'items': self.db.rows("SELECT * FROM job_notifications WHERE status='completed' ORDER BY created_at DESC,id DESC LIMIT 5")}
+
     def read(self, id):
         with self.db.transaction() as cx:
             cx.execute('UPDATE job_notifications SET read_at=coalesce(read_at,?) WHERE id=?', (time(), id))

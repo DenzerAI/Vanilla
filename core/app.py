@@ -306,6 +306,17 @@ def create_app(config=None):
     async def notifications(before: float | None = None):
         return runtime.notifications.list(before)
 
+    @app.get('/api/planner/results')
+    async def planner_results():
+        return runtime.notifications.results()
+
+    @app.post('/internal/planner/result')
+    async def planner_result(request: Request):
+        item = runtime.notifications.get((await request.json()).get('id', ''))
+        if item['status'] != 'completed':
+            raise ValueError('Dieser Bericht ist noch nicht abgeschlossen.')
+        return item
+
     @app.get('/api/notifications/preference')
     async def notification_preference():
         return db.get('notifications/preference')['value'] or {'target': 'app', 'when': 'always'}
