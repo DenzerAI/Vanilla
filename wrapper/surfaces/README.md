@@ -11,7 +11,7 @@ Diese Dateien sind verbindliche Bauanleitungen, keine Ideensammlung. Vor einer E
 | Verbindungen | [connections.md](connections.md) | app.jsx, connection-catalog.mjs, service-connection.jsx, service-catalog.mjs, brand-icon.jsx |
 | Bibliothek | [library.md](library.md) | library.jsx, file-content.jsx, filter-picker.jsx |
 | Skills | [skills.md](skills.md) | app.jsx, skill-details.jsx, filter-picker.jsx, skill-art.mjs |
-| Arbeitsnachweis | [work-evidence.md](work-evidence.md) | work-evidence.tsx, work-evidence.mjs, work-evidence.css |
+| Einstellungen → Service | [work-evidence.md](work-evidence.md) | work-evidence.tsx, work-evidence.mjs, work-evidence.css |
 | Module (entfallen) | [modules.md](modules.md) | Keine eigene Oberfläche |
 | Einstellungen | [settings.md](settings.md) | app.jsx, voice-settings.jsx, local-workers.jsx |
 
@@ -19,7 +19,7 @@ Diese Dateien sind verbindliche Bauanleitungen, keine Ideensammlung. Vor einer E
 
 Der gemeinsame Seitenleistenkopf zeigt AgentMenu mit konfiguriertem Avatar, Namen und integriertem Verbindungspunkt. Daneben stehen Suche als IconButton, Benachrichtigungen und Einklappen. Dies gilt auch für Inbox und Einstellungen. Der bisherige Agentenfuß und der separat bedienbare Serverstatus entfallen; Details und Neustart stehen im Agentenmenü. Aufbau und Tastaturbedienung führt chat.md.
 
-Heute, Inbox, Aufträge, Arbeitsnachweis und die verfügbare Bibliothek bilden das Hauptmenü; Die Gruppe „Workspace“ und ihre Chats folgen darunter. Verbindungen und Skills stehen in der vorhandenen Einstellungsnavigation mit ihren bisherigen Symbolen und Katalogansichten. Globale Suche und Querverweise öffnen den jeweiligen Einstellungsbereich direkt. Keine Modul-Platzhalter, zusätzliche Navigationsebene oder neue Seitengestaltung.
+Heute, Inbox, Aufträge und die verfügbare Bibliothek bilden das Hauptmenü; Die Gruppe „Workspace“ und ihre Chats folgen darunter. Verbindungen und Skills stehen in der vorhandenen Einstellungsnavigation mit ihren bisherigen Symbolen und Katalogansichten. Globale Suche und Querverweise öffnen den jeweiligen Einstellungsbereich direkt. Keine Modul-Platzhalter, zusätzliche Navigationsebene oder neue Seitengestaltung.
 
 ## Gemeinsamer Seitenkopf
 
@@ -113,3 +113,5 @@ konsistent; kein zweiter Komponentenordner an der Repositorywurzel.
 Tailwind 4 liegt in `ui/tailwind.css`, gemeinsame Styles in `ui/styles.css`,
 Buttonstyles in `ui/components/ui/glass-button.css`. TypeScript und Tailwind
 sind bereits eingerichtet; keine erneute CLI-Initialisierung nötig.
+
+Service steht als eigener Bereich in Einstellungen; Aufbau und Vorschaugrenzen führt [work-evidence.md](work-evidence.md).

@@ -1,7 +1,7 @@
-# Arbeitsnachweis
+# Service
 
-Beauftragt am 09.09.2026. Eigenständiger Menüpunkt für Betreuung am Kundensystem. Kein allgemeiner Module-Sammelpunkt.
+Stand 09.09.2026: Auf Nutzerwunsch unter Einstellungen → Service. Kein Eintrag im Hauptmenü. A2A ist ein geplanter Zugangsweg innerhalb des Servicebereichs.
 
-Aufbau: gemeinsamer PageHeading, Zeitraum und Beispieldaten-Schalter, ausdrücklicher Demo-Hinweis, getrennte Menschzeit/Agentlaufzeit, letzter Zugriff, Einsatzliste mit Details, kleine Meldungsliste mit Statusfilter. Keine Diagramme oder farbigen Karten. Alle Daten fiktiv; keine aktiven A2A-Aufrufe oder Zeitmessung. Meldungsaktionen ändern nur den lokalen Vorschauzustand bis zum Verlassen.
+Der gemeinsame Einstellungs-Seitenkopf zeigt Service genau einmal. Kurzer Hinweis auf fiktive Beispieldaten. Vorhandene SettingRow-Gruppen zeigen Zeitraum, Menschzeit und Agentlaufzeit als normale Zeilen. Einsätze und Meldungen sind standardmäßig geschlossen und werden über beschriftete Buttons geöffnet. Einzelne Details bleiben zusätzlich aufklappbar. Ausführliche Konzeptinformationen und der gemeinsame Beispieldaten-Schalter stehen unter Über diese Vorschau. Keine großen Kennzahlen oder dauerhaft ausgeklappten Listen.
 
-Quellen: ui/work-evidence.tsx, ui/work-evidence.css und ui/work-evidence.mjs. Fachkonzept und Einbaugrenzen: ../../docs/ARBEITSNACHWEIS.md. Bestehende Design-Tokens und PageHeading wiederverwenden, Texte umbrechen, Tastatur und schmale Breite prüfen.
+Quellen: ui/work-evidence.tsx (ServiceSettings), ui/work-evidence.css und ui/work-evidence.mjs. Fachkonzept: ../../docs/ARBEITSNACHWEIS.md. Einstieg über ?view=service; bisheriges ?view=work-evidence öffnet denselben Einstellungsbereich. Keine echten Arbeitszeiten oder Sends. Die spätere Bedienung über eine Session bleibt ausdrücklich zur Diskussion offen. Meldungsänderungen sind nur lokaler Vorschauzustand. Christian hat die Handyansicht selbst geprüft und verlangt keine weitere Handyprüfung für diesen Umbau.

@@ -172,3 +172,7 @@ Aussehen → Visuell → Flächenlicht bietet Aus, Ruhend und Sanft bewegt (Stan
 
 
 Settings-Skeletons rendern SettingRow innerhalb der settings-group, damit Innenkanten, Mindesthöhe, Zeilentrenner und Umbruch der echten Einstellungen gelten.
+
+## Service
+
+Service steht nach Dein Agent in der Einstellungsnavigation. Betreuung, Arbeitsnachweise und später A2A gehören hier zusammen. Normale SettingRow-Gruppen, kompakte Zeitangaben, Einsätze und Meldungen zunächst geschlossen. Kein Dashboard. Die Bedienung echter Einsätze über eine Session ist noch zu besprechen; die aktuelle Fassung bleibt als Vorschau erkennbar. Vertrag: work-evidence.md.
