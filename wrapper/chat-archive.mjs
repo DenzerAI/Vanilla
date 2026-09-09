@@ -14,12 +14,19 @@ export function chatArchiveUpdater({store, workers, active, turnLocks, voiceSess
     const previous = {...chat};
     try {
       if (archiveChanged) {
+        let localOnly = false;
         try {
-          await workers.call(change.archived ? 'thread/archive' : 'thread/unarchive', {threadId:id});
+          // A local-only archive never moved a native file. Unarchive would try
+          // to take another writer lock on an empty session that is still open.
+          if (change.archived || !chat.archiveLocalOnly)
+            await workers.call(change.archived ? 'thread/archive' : 'thread/unarchive', {threadId:id});
         } catch (error) {
           if (!/^no (?:archived )?rollout found for thread id\s+/i.test(error.message || '')) throw error;
+          localOnly = true;
         }
         chat.archived = change.archived;
+        if (change.archived && localOnly) chat.archiveLocalOnly = true;
+        else delete chat.archiveLocalOnly;
         loaded.delete(id);
       }
       if (change.title !== undefined) {
@@ -32,7 +39,7 @@ export function chatArchiveUpdater({store, workers, active, turnLocks, voiceSess
       emit({method:'wrapper/chats'});
       return chat;
     } catch (error) {
-      for (const key of ['archived', 'title', 'titleRevision', 'titleStatus', 'pinned']) {
+      for (const key of ['archived', 'archiveLocalOnly', 'title', 'titleRevision', 'titleStatus', 'pinned']) {
         if (Object.hasOwn(previous, key)) chat[key] = previous[key];
         else delete chat[key];
       }

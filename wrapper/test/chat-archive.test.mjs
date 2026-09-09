@@ -35,12 +35,26 @@ test('archive and restore synchronize native storage and persist across reloads'
 });
 
 test('empty and export-only chats can archive and restore without a native rollout', async () => {
-  const f = fixture({workers:{call:async method=>{throw Error('no ' + (method === 'thread/unarchive' ? 'archived ' : '') + 'rollout found for thread id chat-test');}}});
+  const f = fixture({workers:{call:async method=>{
+    assert.equal(method,'thread/archive','local-only restore must not acquire a second native writer');
+    throw Error('no rollout found for thread id chat-test');
+  }}});
   await f.update(f.chat.id,{archived:true});
   assert.equal(f.chat.archived,true);
+  assert.equal(f.chat.archiveLocalOnly,true);
+  // The marker also survives reconstructing the updater after a restart.
+  const restore = chatArchiveUpdater(f);
+  await restore(f.chat.id,{archived:false});
+  assert.equal(f.chat.archived,false);
+  assert.equal(f.chat.archiveLocalOnly,undefined);
+  assert.equal(f.events.length,2);
+});
+
+test('legacy archives without a native file can still be restored', async () => {
+  const f = fixture({workers:{call:async()=>{throw Error('no archived rollout found for thread id chat-test');}}});
+  f.chat.archived=true;
   await f.update(f.chat.id,{archived:false});
   assert.equal(f.chat.archived,false);
-  assert.equal(f.events.length,2);
 });
 
 test('unrelated failures never report archive success or partially rename the chat', async () => {
