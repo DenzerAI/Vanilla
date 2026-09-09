@@ -35,7 +35,7 @@ test('archive and restore synchronize native storage and persist across reloads'
 });
 
 test('empty and export-only chats can archive and restore without a native rollout', async () => {
-  const f = fixture({workers:{call:async()=>{throw Error('no rollout found for thread id chat-test');}}});
+  const f = fixture({workers:{call:async method=>{throw Error('no ' + (method === 'thread/unarchive' ? 'archived ' : '') + 'rollout found for thread id chat-test');}}});
   await f.update(f.chat.id,{archived:true});
   assert.equal(f.chat.archived,true);
   await f.update(f.chat.id,{archived:false});

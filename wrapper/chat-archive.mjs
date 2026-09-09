@@ -17,7 +17,7 @@ export function chatArchiveUpdater({store, workers, active, turnLocks, voiceSess
         try {
           await workers.call(change.archived ? 'thread/archive' : 'thread/unarchive', {threadId:id});
         } catch (error) {
-          if (!/^no rollout found for thread id\s+/i.test(error.message || '')) throw error;
+          if (!/^no (?:archived )?rollout found for thread id\s+/i.test(error.message || '')) throw error;
         }
         chat.archived = change.archived;
         loaded.delete(id);
