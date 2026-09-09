@@ -345,15 +345,21 @@ Alte Direkteinstiege mit ?view=today oder ?view=pipeline öffnen den neuen Chats
 ?view=calendar öffnet weiterhin den Kalender.
 
 
-Der Chatstart sitzt im verfügbaren Gesprächsraum unten mit Abstand oberhalb des
-Composers. Auf kleinen Fenstern bleibt er scrollbar. Seine Lesefläche hat keine
-Maskierung, die Avatar oder Karten ausblendet. Der mittlere Avatar ist 88 px groß;
-Avatarflächen tragen keinen Rand oder Schatten, auch im Agent-Menü.
-ChatStartHeading bezieht den tatsächlichen Titel und Status der vorderen Karte
-ein. Lokale Formulierung, keine zusätzliche Modellanfrage oder erfundene Zusammenfassung.
-Beim Kartenwechsel erscheint die Zeile einmal Wort für Wort, der Cursor läuft
-kurz nach und verschwindet. Die vollständige Textfläche reserviert den Umbruch;
-Screenreader erhalten die vollständige Zeile ohne einzelne Wortmeldungen.
-App-/Systemreduktion zeigt sofort den vollständigen Satz. Verborgene Seiten und
-außerhalb des Sichtbereichs liegende Überschriften stoppen ihre Zeitgeber.
-Bewegungswerte stehen in chatHeadingMotion; kein permanenter Texteffekt.
+Der leere Chat verwendet einen Composer im normalen Flexfluss unter dem separat
+scrollbaren Einstieg. Keine Karte oder Navigation liegt hinter der Eingabe.
+Avatar und Überschrift stehen in einer gemeinsamen Zeile. AttentionFan nutzt
+suggestion-glass, die gemeinsame Glaskante und 28 px Blur, mit deckenden Fallbacks.
+Maus-Hover hebt eine Karte in ihrer bestehenden Position an und betont ihre Kontur;
+kein Umsortieren unter dem Zeiger. Ein Klick öffnet die angehobene Karte, Touch
+behält Auswahl/Öffnen. Tastaturfokus bietet dieselbe Hervorhebung.
+
+ChatStartHeading formuliert aus Titel und Art der aktuellen Karte mehrere lokale
+Impulse. Langsame Zeichenfolge mit Satzzeichenpausen, elf Sekunden Lesezeit und
+weiches Ausblenden vor dem nächsten Impuls. Die Karten wechseln nie automatisch.
+Alle Varianten reservieren gemeinsam ihren Umbruch. Hover, Tastaturfokus oder
+Composer-Entwurf pausieren den Textwechsel; verborgene Ansichten stoppen Zeitgeber.
+Screenreader erhalten die vollständige Zeile ohne laufende Wortansagen. Reduzierte
+Bewegung zeigt einen statischen Satz. Aussehen → Visuell → Lebendiger Starttext
+schaltet den Effekt für diesen Browser dauerhaft ab; kein zusätzlicher Server nötig.
+Die Auswahl wird zwischen Tabs desselben Ursprungs synchronisiert und ein
+Speicherfehler angezeigt. Gemeinsame Werte: chatHeadingMotion und attentionFanMotion.

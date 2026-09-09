@@ -191,3 +191,10 @@ Komponente mit lokalem Vorschauzustand. Keine weiteren Kopf- oder Workspaceaktio
 
 
 Die helle Palette unter Aussehen verwendet die abgestuften Papierflächen aus DESIGN.md. Ausgewogen, Warm und Neutral halten Menüs, Steuerelemente und Workspace unterscheidbar; Unser Design zeigt dieselben zentralen Werte.
+
+
+Lebendiger Starttext unter Aussehen → Visuell verwendet StartTextMotionSetting.
+Die boolesche Auswahl wird als on/off im lokalen Browserspeicher gespeichert,
+zwischen offenen Tabs synchronisiert und als gerätebezogen beschriftet.
+Unbekannte Werte verwenden die ruhige aktivierte Voreinstellung; Speicherfehler
+bleiben sichtbar. Reduzierte Bewegung in App oder System hat Vorrang.

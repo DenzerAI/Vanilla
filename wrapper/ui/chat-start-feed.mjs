@@ -41,3 +41,13 @@ export function headlineForItem(item, fallback) {
   if(!title)return startHeadline(item.kind,fallback);
   return ({request:`Bei „${title}“ braucht es dich.`,notice:`Schauen wir auf „${title}“.`,report:`„${title}“ ist bereit. Was nehmen wir mit?`,chat:`Wie geht es mit „${title}“ weiter?`})[item.kind] || fallback;
 }
+
+export function headlinesForItem(item, fallback) {
+ const first=headlineForItem(item,fallback);
+ if(!item)return [first];
+ const title=String(item.title||'').trim();
+ if(item.kind==='prompt')return [first,`Lass uns mit „${title}“ anfangen.`, 'Du kannst auch einfach losschreiben.'];
+ if(item.kind==='request')return [first,`Was möchtest du bei „${title}“ entscheiden?`, 'Wir können die offene Frage gemeinsam durchgehen.'];
+ if(item.kind==='notice')return [first,`Was bedeutet „${title}“ für deinen nächsten Schritt?`, 'Öffne den Hinweis, dann schauen wir gemeinsam darauf.'];
+ return [first,`Was ist bei „${title}“ für dich wichtig?`, `Möchtest du „${title}“ gemeinsam durchgehen?`];
+}

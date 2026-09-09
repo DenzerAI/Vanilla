@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {chatStartFeed,startHeadline,headlineForItem,conversationStarters} from '../ui/chat-start-feed.mjs';
+import {chatStartFeed,startHeadline,headlineForItem,headlinesForItem,conversationStarters} from '../ui/chat-start-feed.mjs';
 import {build} from 'esbuild';
 import {mkdtemp,writeFile,rm} from 'node:fs/promises';
 import {fileURLToPath,pathToFileURL} from 'node:url';
@@ -33,4 +33,11 @@ test('heading reflects the selected content, with a neutral fallback',()=>{
  assert.equal(headlineForItem({kind:'chat',title:'Angebot prüfen'},'Hallo'),'Wie geht es mit „Angebot prüfen“ weiter?');
  assert.equal(headlineForItem({kind:'request',title:'Termin planen'},'Hallo'),'Bei „Termin planen“ braucht es dich.');
  assert.equal(headlineForItem(null,'Hallo'),'Hallo');
+});
+
+test('automatic phrases stay with the selected topic without inventing result contents',()=>{
+ const lines=headlinesForItem({kind:'chat',title:'Angebot prüfen'},'Hallo');
+ assert.equal(new Set(lines).size,3);
+ assert.ok(lines.every(line=>line.includes('Angebot prüfen')));
+ assert.deepEqual(headlinesForItem(null,'Hallo'),['Hallo']);
 });

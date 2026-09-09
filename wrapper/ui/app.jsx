@@ -1,3 +1,4 @@
+import { StartTextMotionSetting } from './chat-start-preferences';
 import { ServiceSettings } from "./work-evidence.tsx";
 import {useJobNotifications, JobNotifications, NotificationPreference} from "./job-notifications.jsx";
 import { ChapterScrubber } from "./components/ui/chapter-scrubber";
@@ -1920,7 +1921,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 {loading ? (
                   <Skeleton variant="chat" label="Gespräch wird geladen …"/>
                 ) : !thread?.turns?.length ? (
-                  <ChatStart greeting={greeting} profile={boot.settings} requests={requests} notifications={notificationState.data?.items || []} chats={chats} projectId={projectId} error={notificationState.error}
+                  <ChatStart composing={!!text.trim() || attachments.length>0} greeting={greeting} profile={boot.settings} requests={requests} notifications={notificationState.data?.items || []} chats={chats} projectId={projectId} error={notificationState.error}
                     onOpen={async item=>{
                       if(item.prompt){setText(item.prompt);inputRef.current?.focus();return;}
                       if(item.threadId){await openChat(item.threadId);return;}
@@ -2561,6 +2562,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                   <SettingRow title="Flächenlicht" description="Dezente Lichtverläufe in Seitenleiste und Workspace.">
                     <select aria-label="Flächenlicht" value={boot.settings.panelLight || "animated"} onChange={e => guard(() => saveSettings({panelLight: e.target.value}))()}>{appearanceOptions.panelLight.options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
                   </SettingRow>
+                  <StartTextMotionSetting/>
                   <SettingRow title="Reiseeffekt" description="Sanft wandernde Lichtpunkte auf der Startansicht oder in allen Chats.">
                     <select aria-label="Reiseeffekt" value={boot.settings.welcomeParticles || "on"} onChange={e => guard(() => saveSettings({welcomeParticles: e.target.value}))()}>{appearanceOptions.welcomeParticles.options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
                   </SettingRow>
