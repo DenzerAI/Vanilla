@@ -1,3 +1,4 @@
+import {Skeleton} from './skeleton';
 import {useChatStartData} from './chat-start-data';
 import {useMemo,useState,useCallback} from 'react';
 import {AttentionFan,type AttentionItem} from './components/ui/attention-fan';
@@ -15,7 +16,7 @@ export function ChatStart({greeting,profile,requests,notifications,chats,project
     <Avatar avatar={profile.avatar} color={profile.avatarColor} large/>
     <ChatStartHeading paused={composing || interacting || busy} texts={headlinesForItem(items.find(item=>item.id===selected) || items[0],greeting)} reduceMotion={profile.reduceMotion==='on'}/>
     </div>
-    <AttentionFan items={items} onOpen={open} onActiveChange={choose} reduceMotion={profile.reduceMotion==='on'} disabled={busy}/>
+    {api&&!data.loaded?<Skeleton rows={2} label="Deine Inhalte werden geladen …"/>:<AttentionFan items={items} onOpen={open} onActiveChange={choose} reduceMotion={profile.reduceMotion==='on'} disabled={busy}/>}
     {(failure || error || data.error)&&<p role="alert" className="chat-start-error">{failure || data.error || 'Neue Hinweise konnten gerade nicht geladen werden. Die Glocke bleibt erreichbar.'}</p>}
   </div>;
 }
