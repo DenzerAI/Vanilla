@@ -213,3 +213,9 @@ Explizite Anbieterübernahme: `POST /api/chat/provider` akzeptiert `id`, `worker
 ## Neutrale Kundenprofile
 
 Ein neuer Clone aktiviert keinen Worker automatisch und übernimmt keine Hostprofile. Die vorhandenen Programme sind ausschließlich ausführbare Werkzeuge. `npm run worker:login -- codex` beziehungsweise `claw-code`, `hermes` oder `openclaw` startet die native Anmeldung mit Installationsprofilen unter data/control. Danach den Worker im vorhandenen Dialog verbinden und eine echte Testnachricht prüfen. Der Launcher vererbt nur Betriebssystem-Grundwerte; fremde Provider-/Proxyzugänge werden nicht vererbt. Eigene Profile mit externen Verknüpfungen werden zurückgewiesen. Bestehende lokale Profildaten werden weder gelöscht noch automatisch migriert. Weitere Einrichtung: docs/CUSTOMER-SETUP.md#workers.
+
+Der frühere Host-Import in `prepareCodexHome` ist entfernt. Auch ein neuer Aufrufer
+kann über `sourceHome` keine persönlichen Konten, Plugins oder Gesprächsdateien
+übernehmen; der alte Parameter führt zu einem konkreten Einrichtungsfehler.
+Bereits eigene Dateien bleiben beim Start erhalten. Datenumzug erfolgt über die
+vollständige Sicherung, die native Anbieteranmeldung am Ziel über den eigenen Login.
