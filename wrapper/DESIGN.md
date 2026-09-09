@@ -543,3 +543,14 @@ den bestehenden Composer- und Iconbutton-Tokens; die Wellenform nutzt die
 verbleibende Breite. Den vollständigen Ablauf führt surfaces/chat.md.
 
 Service verwendet unter Einstellungen normale SettingRow-Gruppen. Zeiten stehen als kompakte Zeilenwerte; Einsätze, Meldungen und Konzeptdetails werden erst auf Nachfrage aufgeklappt. Kein zusätzlicher Hauptmenüpunkt oder Kennzahlen-Dashboard.
+
+
+Die Sprachleiste verwendet VoiceWave und VoiceStatus aus voice-visual.tsx.
+Der Pegel bleibt maximal 240 px breit, mit feinen, nicht mitskalierenden Strichen
+und an die verfügbare Breite angepasster Anzahl. Höhe und Verstärkung liegen
+in voiceWaveGeometry; die Übergänge verwenden motion-feedback-duration.
+Es werden ausschließlich gemessene Pegel gezeigt, ohne künstliche Sprachbewegung.
+Reduzierte Bewegung deaktiviert die Übergänge. Die Erkennung zeigt mittig
+„Wird erkannt“ neben dem gewählten AppLoader; Schließen bleibt rechts erreichbar.
+Die kompakte Höhe und alle Aufnahme-/Sendeaktionen bleiben erhalten.
+Unser Design zeigt beide gemeinsamen Bausteine ohne echten Mikrofonzugriff.

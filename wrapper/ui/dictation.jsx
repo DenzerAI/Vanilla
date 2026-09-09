@@ -3,11 +3,13 @@ import {Mic,ArrowUp,Pause,Play,Trash2,Check,X,Square,Volume2,Download} from './i
 import {write,sync,all,downloadLocal} from './dictation-storage.mjs';
 import {microphone,microphoneError} from './dictation-audio.mjs';
 import {SpeechPlayback} from './speech-playback.mjs';
+import {VoiceWave,VoiceStatus} from './voice-visual';
+import {voiceWaveGeometry} from './design-system.mjs';
 import './dictation.css';
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 export function Dictation({api,notify,onText,onVoiceText,onSendText,chatId,reply,running=false,enabled=true,openSettings}) {
   const [awaitingId,setAwaitingId]=useState(null);
-  const [phase,setPhase]=useState('idle'),[seconds,setSeconds]=useState(0),[levels,setLevels]=useState(Array(30).fill(0)),[sessionActive,setSessionActive]=useState(false),[output,setOutput]=useState('idle'),[issue,setIssue]=useState('');
+  const [phase,setPhase]=useState('idle'),[seconds,setSeconds]=useState(0),[levels,setLevels]=useState(Array(voiceWaveGeometry.samples).fill(0)),[sessionActive,setSessionActive]=useState(false),[output,setOutput]=useState('idle'),[issue,setIssue]=useState('');
   const current=useRef(null),mounted=useRef(true),stopRef=useRef(null),startRef=useRef(null),generation=useRef(0),session=useRef(null),playback=useRef(null),latest=useRef({reply,chatId});latest.current={reply,chatId,onSendText};
   if(!playback.current)playback.current=new SpeechPlayback(api,s=>{if(mounted.current)setOutput(s);});
   const phaseRef=useRef(phase);phaseRef.current=phase;
@@ -78,7 +80,7 @@ export function Dictation({api,notify,onText,onVoiceText,onSendText,chatId,reply
       context.createMediaStreamSource(stream).connect(node);node.connect(context.destination);
       stream.getTracks().forEach(t=>t.addEventListener('ended',()=>{setIssue('Mikrofon getrennt. Audio ist gesichert.');void stopRef.current?.(false,false);}));
       context.onstatechange=()=>{if(context.state==='suspended' && current.current===s && !s.stopping){node.port.postMessage('pause');setPhase('paused');}};
-      setSeconds(0);setLevels(Array(30).fill(0));setPhase('recording');
+      setSeconds(0);setLevels(Array(voiceWaveGeometry.samples).fill(0));setPhase('recording');
     }catch(e){stream?.getTracks().forEach(t=>t.stop());await context?.close();if(mounted.current){setPhase('idle');report(new Error(microphoneError(e)));}}
   }
   startRef.current=start;
@@ -136,12 +138,12 @@ export function Dictation({api,notify,onText,onVoiceText,onSendText,chatId,reply
   const action=(label,Icon,fn,disabled=false)=><button type="button" className="icon-button" title={label} aria-label={label} disabled={disabled} onClick={()=>Promise.resolve(fn()).catch(report)}><Icon size={18}/></button>;
   const active=phase!=='idle' || sessionActive || output!=='idle';
   const capturing=phase==='recording' || phase==='paused';
-  const label=output==='playing'?'Spricht':output==='loading'?'Stimme wird vorbereitet':phase==='recording'?(sessionActive?'Hört zu':'Diktat'):phase==='paused'?'Pausiert':phase==='starting'?'Mikrofon …':phase==='saving'?'Sichern …':phase==='recognizing'?'Erkennen …':phase==='waiting'?'Senden …':'Sprachchat';
+  const label=output==='playing'?'Spricht':output==='loading'?'Stimme wird vorbereitet':phase==='recording'?(sessionActive?'Hört zu':'Diktat'):phase==='paused'?'Pausiert':phase==='starting'?'Mikrofon …':phase==='saving'?'Sichern …':phase==='recognizing'?'Wird erkannt':phase==='waiting'?'Senden …':'Sprachchat';
   return <div className="dictation-control">
     {!active && action('Diktieren',Mic,start)}
     {active && <div className="voice-strip" data-capturing={capturing} role="group" aria-label={label}>
-      <span className="voice-phase" role="status">{label}</span>
-      {capturing && <><svg className="voice-wave" viewBox="0 0 120 24" preserveAspectRatio="none" aria-label="Mikrofonpegel" role="img">{levels.map((v,i)=><line key={i} x1={i*4+2} x2={i*4+2} y1={12-Math.max(1,Math.min(11,v*60))} y2={12+Math.max(1,Math.min(11,v*60))}/>)}</svg><span className="voice-time">{Math.floor(seconds/60)}:{String(Math.floor(seconds%60)).padStart(2,'0')}</span>{action(phase==='paused'?'Fortsetzen':'Pause',phase==='paused'?Play:Pause,pause)}{action('Aufnahme verwerfen',Trash2,()=>stop(true,false))}{action(sessionActive?'Senden':'Diktat übernehmen',Check,()=>stop(false,true))}{!sessionActive && onSendText && <button type="button" className="send-button" title="Diktat direkt senden" aria-label="Diktat direkt senden" disabled={running} onClick={()=>void stop(false,true,true)}><ArrowUp size={21}/></button>}</>}
+      <VoiceStatus label={label} busy={['starting','saving','recognizing','waiting'].includes(phase)}/>
+      {capturing && <><VoiceWave levels={levels}/><span className="voice-time">{Math.floor(seconds/60)}:{String(Math.floor(seconds%60)).padStart(2,'0')}</span>{action(phase==='paused'?'Fortsetzen':'Pause',phase==='paused'?Play:Pause,pause)}{action('Aufnahme verwerfen',Trash2,()=>stop(true,false))}{action(sessionActive?'Senden':'Diktat übernehmen',Check,()=>stop(false,true))}{!sessionActive && onSendText && <button type="button" className="send-button" title="Diktat direkt senden" aria-label="Diktat direkt senden" disabled={running} onClick={()=>void stop(false,true,true)}><ArrowUp size={21}/></button>}</>}
       {phase==='idle' && sessionActive && output==='idle' && <>{action('Weiter sprechen',Mic,start,running)}{reply?.text && action('Antwort vorlesen',Volume2,()=>playback.current.speak(reply.text))}</>}
       {output!=='idle' && action('Wiedergabe stoppen',Square,()=>playback.current.cancel())}
       {(!capturing || sessionActive) && action('Sprachsteuerung schließen',X,end)}

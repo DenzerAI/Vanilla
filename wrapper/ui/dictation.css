@@ -1,8 +1,13 @@
 .dictation-control { position: relative; display: flex; align-items: center; gap: var(--space-4); }
 .voice-strip { display: flex; align-items: center; flex-wrap: wrap; justify-content: flex-end; gap: var(--space-8); }
 .voice-phase { font-size: var(--text-small); color: var(--muted); }
-.voice-wave { width: 100px; height: var(--space-24); color: var(--text); }
-.voice-wave line { stroke: currentColor; stroke-width: 2; stroke-linecap: round; }
+.voice-wave-slot { display: flex; align-items: center; justify-content: center; flex: 1; min-width: 0; overflow: hidden; }
+.voice-wave { width: 100%; height: var(--space-24); color: var(--muted); }
+.voice-wave line { stroke: currentColor; stroke-linecap: round; transition: transform var(--motion-feedback-duration) ease-out; }
+.voice-status { display: flex; align-items: center; justify-content: center; flex: 1; min-width: 0; gap: var(--space-8); font-size: var(--text-small); color: var(--muted); }
+.voice-status > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+@media (prefers-reduced-motion: reduce) { .voice-wave line { transition: none; } }
+:root[data-reduce-motion="on"] .voice-wave line { transition: none; }
 .voice-time { font-size: var(--text-caption); font-variant-numeric: tabular-nums; color: var(--muted); }
 .voice-issue { position: absolute; bottom: calc(100% + var(--space-12)); right: 0; z-index: 30; width: min(360px, calc(100vw - 64px)); display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-8); padding: var(--space-16); background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-control); font-size: var(--text-small); }
 .voice-issue > span { flex-basis: 100%; }
@@ -16,4 +21,4 @@
 .voice-recording summary { cursor: pointer; color: var(--muted); }
 .connection-brand { display: flex; align-items: center; gap: var(--space-12); margin-bottom: var(--space-24); }
 .brand-groq { background: var(--brand-asset-bg); }
-@media(max-width:600px) { .voice-wave { width: 64px; } .voice-strip { gap: var(--space-4); } .voice-issue { position: fixed; left: var(--space-16); right: var(--space-16); width: auto; bottom: 100px; } }
+@media(max-width:600px) { .voice-strip { gap: var(--space-4); } .voice-issue { position: fixed; left: var(--space-16); right: var(--space-16); width: auto; bottom: 100px; } }

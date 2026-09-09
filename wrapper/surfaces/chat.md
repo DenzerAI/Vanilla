@@ -290,3 +290,14 @@ Der gespeicherte Bericht steht als erste Assistentennachricht vor den Rückfrage
 Der vorhandene Snapshot-/Kontextmechanismus erhält diesen Stand nach Reload und
 Anbieterwechsel. Öffnen löst keine Agentenarbeit aus; pro Bericht wird derselbe Chat
 wiederverwendet. Historische Berichte bleiben Daten, keine neuen Arbeitsregeln.
+
+
+Die Sprachleiste verwendet VoiceWave und VoiceStatus aus voice-visual.tsx.
+Der Pegel bleibt maximal 240 px breit, mit feinen, nicht mitskalierenden Strichen
+und an die verfügbare Breite angepasster Anzahl. Höhe und Verstärkung liegen
+in voiceWaveGeometry; die Übergänge verwenden motion-feedback-duration.
+Es werden ausschließlich gemessene Pegel gezeigt, ohne künstliche Sprachbewegung.
+Reduzierte Bewegung deaktiviert die Übergänge. Die Erkennung zeigt mittig
+„Wird erkannt“ neben dem gewählten AppLoader; Schließen bleibt rechts erreichbar.
+Die kompakte Höhe und alle Aufnahme-/Sendeaktionen bleiben erhalten.
+Unser Design zeigt beide gemeinsamen Bausteine ohne echten Mikrofonzugriff.

@@ -1,3 +1,4 @@
+import {VoiceWave,VoiceStatus} from "./voice-visual";
 import { AvatarMotionSetting } from "./avatar-motion-setting.jsx";
 import { AvatarChoices } from "./avatar-picker.jsx";
 import GlassButtonDemo from "./components/ui/glass-button-demo";
@@ -62,6 +63,10 @@ export function DesignReference({ theme, tone, accent }) {
       <h3 className="section-heading">Startvorschläge · Glaspillen</h3>
       <WelcomeSuggestions onSelect={setSuggestionDraft}/>
       <p className="page-note">Flache, vollständig runde Vorschläge mit transparenter Glasfläche. Auf schmalen Ansichten kleiner und ohne Pfeile; die Trefferfläche bleibt auf Touchgeräten gut erreichbar. Die Auswahl füllt die Vorschau darunter.</p>
+      <h3 className="section-heading">Sprache · Pegel und Erkennung</h3>
+      <div className="composer-entry"><VoiceWave levels={Array.from({length:60},(_,i)=> i>18 && i<45 ? (1+Math.sin(i*.7))*.08 : 0)}/></div>
+      <div className="composer-entry"><VoiceStatus label="Wird erkannt" busy/></div>
+      <p className="page-note">Statischer Beispielpegel und gemeinsame Ladeanzeige. Kein Mikrofonzugriff.</p>
       <h3 className="section-heading">Composer · Glasfläche</h3>
       <div className="composer pill-composer"><div className="composer-entry"><textarea aria-label="Nachricht · Designvorschau" placeholder="Nachricht" value={suggestionDraft} rows={1} readOnly/></div></div>
       <p className="page-note">Einzeilige Pille mit gedämpftem Platzhalter, transparenter Tönung, Hintergrundunschärfe und feiner innerer Glaskante. Mehrzeiliger Text erweitert die Schreibfläche; reduzierte Transparenz erhält einen deckenden Hintergrund.</p>

@@ -150,10 +150,9 @@
 .composer-entry:has(.voice-strip) .dictation-control { flex: 1; min-width: 0; }
 .composer-entry .voice-strip { justify-content: flex-start; width: 100%; min-width: 0; flex-wrap: nowrap; gap: var(--space-4); }
 .composer-entry .voice-strip > button { flex-shrink: 0; }
-.composer-entry .voice-strip .voice-wave { flex: 1; min-width: 12px; width: 0; }
+.composer-entry .voice-strip .voice-wave-slot { min-width: 12px; }
 .composer-entry .voice-strip .voice-time { flex-shrink: 0; }
-.composer-entry .voice-strip .voice-phase { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.composer-entry .voice-strip[data-capturing="true"] .voice-phase { display: none; }
+.composer-entry .voice-strip[data-capturing="true"] .voice-status { display: none; }
 @media (max-width: 600px) {
   .composer-entry { gap: var(--space-4); }
   .agent-actions .icon-button, .user-actions .icon-button { min-height: 36px; min-width: 36px; }
