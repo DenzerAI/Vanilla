@@ -28,8 +28,7 @@ function StartSpeech({texts,reduceMotion=false,paused=false,pauseAdvance=false}:
   return()=>{if(timer)clearTimeout(timer);};
  },[signature,reduced,enabled,onscreen,pageVisible,paused,pauseAdvance]);
  const text=texts[frame.index]||texts[0]||'',staticText=reduced || !enabled;
- return <h1 ref={ref} className="chat-start-heading agent-speech" aria-label={text}>
-  <span className="chat-heading-measure" aria-hidden="true">{text}<span className="chat-heading-cursor"/></span>
+ return <h1 ref={ref} className="chat-start-heading" aria-label={text}>
   <motion.span className="chat-heading-writing" aria-hidden="true" animate={{opacity:frame.fading?0:1}} transition={{duration:staticText?0:chatHeadingMotion.fade/1000}}>{staticText?text:Array.from(text).slice(0,frame.count).join('')}<span className={'chat-heading-cursor'+(!staticText&&onscreen&&pageVisible&&!paused&&frame.count<Array.from(text).length?' is-writing':'')}/></motion.span>
  </h1>;
 }

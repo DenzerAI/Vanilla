@@ -2060,21 +2060,9 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                     </div>
                   </div>
                   <div className="composer-options" role="group" aria-label="Nachrichtenoptionen">
-                      <ChatMenu
-                        label={`Arbeitsmodus: ${mode === "plan" ? "Planen" : "Ausführen"}`}
-                        className={"mode-trigger " + (mode === "plan" ? "planning" : "")}
-                        disabled={running || busy}
-                        placement="above"
-                        selected={mode}
-                        items={[
-                          { id: "default", label: "Ausführen", icon: icon(Play, 16), action: () => setMode("default") },
-                          { id: "plan", label: "Planen", icon: icon(SquarePen, 16), disabled: current ? current.capabilities?.plan === false : draftWorker !== "auto" ? boot.workers?.find(w => w.id === draftWorker)?.capabilities?.plan === false : boot.planAvailable === false, action: () => setMode("plan") },
-                        ]}
-                      >
-                        <span>{mode === "plan" ? "Planen" : "Ausführen"}</span>
-                        {icon(ChevronDown, 14)}
-                      </ChatMenu>
                       <ModelPicker
+                        mode={mode} onModeChange={setMode} modeDisabled={running || busy}
+                        planAvailable={current ? current.capabilities?.plan !== false : draftWorker !== "auto" ? boot.workers?.find(w => w.id === draftWorker)?.capabilities?.plan !== false : boot.planAvailable !== false}
                         models={pickerModels} model={pickerModel} effort={pickerEffort} reduceMotion={boot.settings.reduceMotion === "on"}
                         workerId={pickerWorker} workers={boot.workers || []}
                         hasConversation={!!chatId} disabled={busy} providerDisabled={!!current?.jobId || !!current?.channelOnly}

@@ -124,11 +124,9 @@
 .composer-entry > .icon-button, .composer-entry .send-button { flex-shrink: 0; width: var(--control-target); height: var(--control-target); }
 .composer-send-actions { display: flex; align-items: center; gap: var(--space-4); }
 .composer-send-actions:has([aria-label="Antwort stoppen"]) .send-button:disabled { display: none; }
-.composer-options { display: flex; align-items: center; justify-content: flex-start; gap: var(--space-8); padding: var(--space-8) var(--space-12) 0; min-width: 0; }
-.composer-options .mode-trigger, .composer-options .model-trigger { display: inline-flex; align-items: center; justify-content: flex-start; gap: var(--space-8); min-height: var(--control-height); padding: var(--space-4) var(--space-12); border: 0; border-radius: var(--radius-button); background: transparent; color: var(--muted); font-size: var(--text-small); font-weight: var(--weight-medium); line-height: var(--leading-normal); white-space: nowrap; }
-.composer-options .mode-trigger { flex-shrink: 0; }
-.composer-options .mode-trigger:hover, .composer-options .model-trigger:hover, .composer-options [aria-expanded="true"] { background: var(--hover); color: var(--text); }
-.composer-options .mode-trigger.planning { color: var(--text); background: var(--selected); }
+.composer-options { display: flex; align-items: center; justify-content: flex-start; gap: var(--space-4); padding: var(--space-2) var(--space-12) 0; min-width: 0; }
+.composer-options .model-trigger { display: inline-flex; align-items: center; justify-content: flex-start; gap: var(--space-4); min-height: var(--control-height); padding: var(--space-2) var(--space-8); border: 0; border-radius: var(--radius-button); background: transparent; color: var(--muted); font-size: var(--text-caption); font-weight: var(--weight-medium); line-height: var(--leading-normal); white-space: nowrap; }
+.composer-options .model-trigger:hover, .composer-options [aria-expanded="true"] { background: var(--hover); color: var(--text); }
 .composer-options .model-picker { min-width: 0; }
 .composer-options .model-trigger { max-width: 100%; animation: none; }
 .composer-options .model-trigger .model-name { min-width: 0; max-width: none; }
@@ -137,12 +135,12 @@
 .composer-options .model-effort::before { content: "·"; }
 @media (pointer: coarse) {
   .composer-entry .icon-button, .composer-entry .send-button { width: var(--control-touch); height: var(--control-touch); }
-  .composer-options .mode-trigger, .composer-options .model-trigger { min-height: 44px; }
+  .composer-options .model-trigger { min-height: 44px; }
 }
 .model-context { margin: var(--space-8); color: var(--muted); font-size: var(--text-small); }
 @container (max-width: 400px) {
   .composer-options { gap: var(--space-4); padding-inline: var(--space-4); }
-  .composer-options .mode-trigger, .composer-options .model-trigger { gap: var(--space-4); padding-inline: var(--space-4); }
+  .composer-options .model-trigger { gap: var(--space-4); padding-inline: var(--space-4); }
   .composer-options .model-effort { gap: var(--space-4); }
 }
 .composer-entry:has(.voice-strip) { border-radius: var(--radius-pill); }
@@ -185,7 +183,7 @@
 .chat-main > .conversation { padding-bottom: calc(var(--composer-height, var(--control-composer-fallback)) + var(--space-24)); scroll-padding-bottom: calc(var(--composer-height, 112px) + var(--space-24)); }
 .chat-main > .composer-area { position: absolute; bottom: 0; z-index: 6; max-height: calc(100% - var(--space-48)); overflow: visible; }
 .composer-entry, .composer-entry:focus-within { background: var(--composer-blur); backdrop-filter: blur(40px) saturate(1.5); -webkit-backdrop-filter: blur(40px) saturate(1.5); box-shadow: var(--composer-glass-shadow); }
-.composer-options { position: relative; max-width: 100%; padding-bottom: var(--space-8); background: transparent; }
+.composer-options { position: relative; max-width: 100%; padding-bottom: var(--space-2); background: transparent; }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
   .composer-entry, .composer-entry:focus-within { background: var(--composer); }
 }

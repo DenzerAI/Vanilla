@@ -2,7 +2,7 @@ import React, {useEffect, useRef, useState} from 'react';
 import './skeleton.css';
 import {SettingRow} from './settings-row.jsx';
 
-type Variant = 'list' | 'settings' | 'chat' | 'document' | 'media' | 'shell';
+type Variant = 'list' | 'settings' | 'chat' | 'document' | 'media' | 'shell' | 'attention';
 type Layout = 'rows' | 'connections' | 'skills' | 'jobs' | 'search' | 'library-list' | 'library-grid';
 type Props = {variant?: Variant; rows?: number; label?: string; announce?: boolean; compact?: boolean; layout?: Layout};
 
@@ -23,7 +23,8 @@ export function Skeleton({variant = 'list', rows = 4, label = 'Inhalt wird gelad
     return () => {observer.disconnect(); document.removeEventListener('visibilitychange', sync);};
   }, []);
   const count = Math.max(1, Math.min(8, Math.floor(rows) || 4));
-  const content = variant === 'media' ? <div className="skeleton-media"/> :
+  const content = variant === 'attention' ? <div className="attention-fan"><div className="attention-fan-track">{[-1,1,0].map(side=><div key={side} className={'attention-fan-card'+(side===0?' is-active':'')} data-side={side}><div className="attention-fan-kind"><Mark/><Bar short/></div><Lines/><span className="attention-fan-action"><Bar short/></span></div>)}</div><div className="attention-fan-navigation"><Bar short/></div></div> :
+    variant === 'media' ? <div className="skeleton-media"/> :
     variant === 'chat' ? <div className="chat-turn"><div className="user-message-row"><div className="user-message skeleton-user"><Bar/><Bar short/></div><div className="user-actions"><Bar short/></div></div><div className="skeleton-author"><Mark/><Bar short/></div><div className="agent-message"><div className="markdown"><p><Bar/><Bar/><Bar short/></p><p><Bar/><Bar short/></p></div></div></div> :
     variant === 'shell' ? <><div className="skeleton-sidebar"><Bar short/>{Array.from({length:5}, (_, i)=><Lines key={i}/>)}</div><div className="skeleton-main"><Bar short/><div className="skeleton-shell-body"><Lines/><Lines/></div><div className="skeleton-composer"/></div></> :
     Array.from({length:count}, (_, i) => {

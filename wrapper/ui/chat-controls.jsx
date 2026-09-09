@@ -21,6 +21,7 @@ export function ChatMenu({
   menuClassName = "",
   disabled = false,
   placement = "auto",
+  menuRef = null,
 }) {
   const [open, setOpen] = useState(false),
     [position, setPosition] = useState({});
@@ -99,7 +100,7 @@ export function ChatMenu({
       {open &&
         createPortal(
           <div
-            ref={popup}
+            ref={node => { popup.current = node; if (menuRef) menuRef.current = node; }}
             id={id}
             role="menu"
             aria-label={label}

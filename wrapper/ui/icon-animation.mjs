@@ -170,6 +170,8 @@ export function createIcon(item, { confirmation = false } = {}) {
   };
   let frame;
   if (item.kind === "lucide") {
+    if (item.motion === "Wrench")
+      frame = (t) => tr(root, 0, 0, -25 * B(t));
     if (item.motion === "RotateCcw")
       frame = (t) => tr(root, 0, 0, -360 * ramp(t));
     if (item.motion === "Moon")

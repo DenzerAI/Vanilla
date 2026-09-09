@@ -1,3 +1,4 @@
+import {installWeatherRoutes} from './weather.mjs';
 import {chatArchiveUpdater} from './chat-archive.mjs';
 import {briefingChatOpener} from './briefing-chat.mjs';
 import {demoBriefings} from './ui/planner-briefings.mjs';
@@ -554,6 +555,7 @@ const mime = {
 };
 const routes = new Map();
 const route = (method, url, fn) => routes.set(method + " " + url, fn);
+installWeatherRoutes(route);
 const restartGate = createRestartGate({
   sessions: () => [...new Set([...active].map(([id,turn])=>`${id}:${turn}`).concat([...turnLocks].map(id=>`${id}:starting`), [...voiceSessions].map(id=>`${id}:voice`), liveBrowserSessions()))],
   restart: async () => {

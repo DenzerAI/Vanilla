@@ -10,7 +10,7 @@ Die bisherige Projektgruppe heißt in der Seitenleiste „Workspace“. Hinzufü
 
 Die Agentenidentität oben links öffnet als ganzer Avatar-/Namensbutton das Agent-Menü. AgentMenu verwendet Avatar und das gemeinsame ChatMenu; der Verbindungspunkt ist Teil des Buttons, sein zugänglicher Name nennt den Zustand. Der konfigurierte Name wird nicht durch einen festen Produktnamen ersetzt. ServerDetails zeigt im geöffneten Menü Verbindung, Serveradresse, tatsächlich gemeldete Engine und gemessene HTTP-Antwortzeit. Fehler und fehlende Werte bleiben ausdrücklich sichtbar. Danach folgen Nutzung, Einstellungen, Archivierte Chats und Server neu starten. Kein separater Statusbutton und keine Agentenzeile am Fuß. Auch in Einstellungen und Inbox bleibt der Kopf erreichbar.
 
-Die Projekt-/Chatnavigation liegt in der Seitenleiste. Ein unbenannter neuer Chat zeigt oben keinen Titel und keinen separaten Einstieg „Bestehenden Chat öffnen“. Benannte Entwürfe und bestehende Chats behalten ihr kompaktes Chatmenü. Bei mehreren Panels gehört jedes Drei-Punkte-Menü zum jeweiligen Panel. Die globale Chatleiste enthält die Ansichts- und Workspace-Aktionen ohne untere Trennlinie. Chatfläche zeigt Nutzereingaben, Antworten und kompakte Werkzeugaktivität. Der Composer besteht aus einer pillenförmigen Schreibzeile: Anhängen, Eingabe, genau ein Mikrofon für Diktat, Senden/Stoppen. Arbeitsmodus und Modellwahl stehen direkt nebeneinander, links ausgerichtet auf einer gemeinsamen horizontalen Linie außerhalb der Pille darunter. Beide Menüs verwenden dieselbe Höhe, Schriftrolle und Chevron-Darstellung. Modellname und Denkaufwand bleiben gemeinsam auswählbar. Keine separate Worker-Beschriftung oder Computer-Use-Schaltfläche im Composer. Bei mehrzeiligen Entwürfen wächst die Schreibfläche; ihre Rundung bleibt erhalten. Zusätzliche direkt benötigte Aktionen sind knappe Iconbuttons mit Tooltip und zugänglichem Namen. Keine Konfiguration oder Verlaufsverwaltung im Composer.
+Die Projekt-/Chatnavigation liegt in der Seitenleiste. Ein unbenannter neuer Chat zeigt oben keinen Titel und keinen separaten Einstieg „Bestehenden Chat öffnen“. Benannte Entwürfe und bestehende Chats behalten ihr kompaktes Chatmenü. Bei mehreren Panels gehört jedes Drei-Punkte-Menü zum jeweiligen Panel. Die globale Chatleiste enthält die Ansichts- und Workspace-Aktionen ohne untere Trennlinie. Chatfläche zeigt Nutzereingaben, Antworten und kompakte Werkzeugaktivität. Der Composer besteht aus einer pillenförmigen Schreibzeile: Anhängen, Eingabe, genau ein Mikrofon für Diktat, Senden/Stoppen. Unter der Pille steht nur die Modellwahl, links ausgerichtet in der kompakten Schriftrolle caption und mit je 2 px Abstand oben und unten. Arbeitsmodus und Fast liegen im geöffneten Modellfenster: links der Fast-Blitz, rechts Wrench oder SquarePen mit Chevron. Das gemeinsame ChatMenu bietet Umsetzen und Planen ausgeschrieben mit Auswahlhaken. Tooltip und zugänglicher Name nennen den aktiven Modus. Planen bleibt ohne wirksamen Schreibschutz deaktiviert; während laufender Arbeit ist die Moduswahl gesperrt. Fokus, Escape und Klicks im Untermenü erhalten das übergeordnete Modellfenster. Im geschlossenen Modelltrigger kennzeichnet ein kleines Planicon den Planmodus. Fast verwendet aktiv Terrakotta (brand-accent), eine stärkere Kontur und den gemeinsamen Auswahlring. Touchziele bleiben mindestens 44 px hoch. Modellname und Denkaufwand bleiben gemeinsam auswählbar. Keine separate Worker-Beschriftung oder Computer-Use-Schaltfläche im Composer. Bei mehrzeiligen Entwürfen wächst die Schreibfläche; ihre Rundung bleibt erhalten. Zusätzliche direkt benötigte Aktionen sind knappe Iconbuttons mit Tooltip und zugänglichem Namen. Keine Konfiguration oder Verlaufsverwaltung im Composer.
 
 Projekte werden über das Plus an „Workspace“ ergänzt; Chats über das Plus am Projekt. Kontextmenüs und bestehende Dialoge für Bearbeiten verwenden. „Workspace bearbeiten …“ öffnet den gemeinsamen Projektdialog. Unter dem Projektsymbol folgt eine vordefinierte Farbauswahl mit Farbnamen, Auswahlhaken und Tastaturfokus. Die Farbe gilt für das Projektsymbol in Seitenleiste und Chatkopf; „Standard“ verwendet die bisherige neutrale Darstellung. Neue Projekte nutzen denselben Dialog, bestehende Projekte ohne Farbwert bleiben neutral. Der kompakte Projektdialog zeigt eine gemeinsame Vorschau von Symbol und Farbe neben dem Namen, darunter rahmenlos gruppierte Radioauswahlen und eine flache, stets erreichbare Aktionsleiste. Der Dialog nutzt die zentrale transparente Glasfläche mit Hintergrundunschärfe. Nur der Inhalt scrollt, ohne sichtbare Scrollleiste; Kopf und Aktionen bleiben stehen. Bei reduzierter Transparenz oder fehlender Blur-Unterstützung ist die Fläche deckend. Speichern überträgt Name, Symbol und Farbe gemeinsam; erneutes Öffnen und Neuladen erhalten die Auswahl. Mehrfachansichten behalten unabhängige Entwürfe und die gemeinsame Eventverbindung.
 
@@ -378,7 +378,7 @@ Alte Direkteinstiege mit ?view=today oder ?view=pipeline öffnen den neuen Chats
 
 Der leere Chat verwendet einen Composer im normalen Flexfluss unter dem separat
 scrollbaren Einstieg. Keine Karte oder Navigation liegt hinter der Eingabe.
-Avatar und Sprechblase stehen dicht als zentrierte Gruppe in einer gemeinsamen Zeile. ChatStartHeading nutzt eine feine Kontur, warme suggestion-glass-Fläche und eine kleine untere linke Rundung, ohne aufgesetzte Spitze. Nur der aktuelle vollständige Satz bestimmt die Fläche; während seiner Schreibanimation bleibt sie stabil. Der Avatar schrumpft nicht. AttentionFan nutzt
+Der größere Avatar steht mittig über dem rahmenlosen Text. Zwei feste Textzeilen halten den Einstieg beim Schreiben und beim Satzwechsel stabil. AttentionFan nutzt
 suggestion-glass, die gemeinsame Glaskante und 28 px Blur, mit deckenden Fallbacks.
 Maus-Hover hebt eine Karte in ihrer bestehenden Position an und betont ihre Kontur;
 kein Umsortieren unter dem Zeiger. Ein Klick öffnet die angehobene Karte, Touch
@@ -388,7 +388,7 @@ ChatStartHeading ordnet den belegten Zustand der Karte kurz ein, ohne Titel als
 Fragen zu wiederholen. Langsame Zeichenfolge, zwanzig Sekunden Lesezeit und
 höchstens eine sachliche Vertiefung aus dem vorhandenen Inhalt. Danach steht der
 Text still. Die Karten wechseln nie automatisch.
-Der jeweils aktuelle Satz reserviert seinen vollständigen Umbruch. Hover und Tastaturfokus pausieren nur den späteren Satzwechsel; die RPG-Schreibanimation läuft weiter. Ein Composer-Entwurf pausiert auch das Schreiben, ohne den Satz vorzeitig zu vervollständigen. Verborgene Ansichten stoppen Zeitgeber.
+Der Textplatz bleibt auf zwei Zeilen begrenzt. Hover und Tastaturfokus pausieren nur den späteren Satzwechsel; die RPG-Schreibanimation läuft weiter. Ein Composer-Entwurf pausiert auch das Schreiben, ohne den Satz vorzeitig zu vervollständigen. Verborgene Ansichten stoppen Zeitgeber.
 Screenreader erhalten die vollständige Zeile ohne laufende Wortansagen. Reduzierte
 Bewegung zeigt einen statischen Satz. Aussehen → Visuell → Lebendiger Starttext
 schaltet den Effekt für diesen Browser dauerhaft ab; kein zusätzlicher Server nötig.
@@ -396,23 +396,20 @@ Die Auswahl wird zwischen Tabs desselben Ursprungs synchronisiert und ein
 Speicherfehler angezeigt. Gemeinsame Werte: chatHeadingMotion und attentionFanMotion.
 
 
-Der kompakte Startfächer mischt bis zu fünf Karten. Rückfragen und Probleme kommen
-zuerst, danach die letzte vorhandene Datei, der nächste aktive Benutzerauftrag mit
-serverseitigem nextRun, das neueste Routine-Ergebnis und ungelesene Chatantworten.
-Eine Wetterkarte bleibt reserviert; ohne Einrichtung benennt sie den fehlenden Ort
-und die fehlende Wetterquelle, statt Beispieldaten als Wetter auszugeben.
-Dateien öffnen LibraryPreview, Jobs ihren vorhandenen Dialog, Ergebnisse den
-bestehenden Berichtschat. Keine Aktion startet beim Anzeigen automatisch Arbeit.
-Datei und Routine-Ergebnis mit derselben job_id werden nicht doppelt gezeigt.
-Einzelne Feed-Fehler erhalten übrige Daten und werden benannt. Quellen sind die
-vorhandenen GET /jobs, /library und /planner/results; Fokus und relevante Ereignisse
-aktualisieren die Daten. Kleinere Rollen: Überschrift subheading, Kartentitel control.
+Der Startfächer bietet konkrete Anschlussaktionen: offene Rückfragen und Probleme,
+ungelesene Antworten, Routine-Ergebnisse, das letzte abgeschlossene Gespräch im
+Workspace und den nächsten geplanten Auftrag. Jede Karte benennt ihre Aktion.
+Beliebige zuletzt geänderte Dateien und nicht angebundenes Wetter werden nicht
+als Arbeitsanlass angeboten. Gespräche führen in ihren Chat, Ergebnisse in den
+Berichtschat, Aufträge in den bestehenden Dialog. Öffnen startet keine Arbeit.
+Ohne Anschluss bleibt ein Vorschlag, der nur den Entwurf vorbereitet.
 
-
-Die letzte Datei im Startfächer verwendet LibraryThumbnail und die Aktion „Vorschau öffnen“ für LibraryPreview. HTML und nicht unterstützte Formate zeigen das vorhandene Formatsymbol; keine automatisch laufende HTML-Seite in der Miniatur. Die Wetterkarte zeigt ohne Einrichtung ein Ortssymbol, „Dein Ort ist noch nicht eingerichtet.“ und „Ort einstellen“. Die Aktion öffnet direkt Einstellungen → Dein Profil. Nach Speicherung zeigt sie den Ort; fehlender Wetterabruf wird ausdrücklich benannt. Ladefehler werden nicht als fehlende Einrichtung ausgegeben. Die Sprechblase steht als Produktionsbaustein in Unser Design.
-
-MD-Miniaturen im Startfächer nutzen die Kartenvariante von LibraryThumbnail mit der ganzen Dokumentbreite, normal lesbarer kleiner Schrift und ohne große Endungsplakette. Die Bibliotheksdarstellung bleibt unverändert.
-
+Der gemeinsame Skeleton mit Variante `attention` reserviert dieselbe Kartenhöhe,
+Fächerbreite und Navigation wie AttentionFan. Der Einstieg bleibt oben verankert;
+Laden, Satzwechsel und Composer-Anhänge zentrieren ihn nicht neu. Der leere
+Startbildschirm folgt nicht der Scrollautomatik für neue Chatnachrichten.
+Bei Platzmangel scrollt der Einstieg manuell, während der Composer erreichbar bleibt.
+Unser Design zeigt den Karten-Ladezustand neben den gemeinsamen Skeletons.
 
 Die rechte Seitenleiste öffnet manuell die zuletzt verwendete verfügbare Ansicht
 (Dateien, Änderungen oder Befehle), auch nach erneutem Laden. Ohne gespeicherte
@@ -422,3 +419,16 @@ Kopf und navigiert höchstens bis zu dessen Wurzel zurück. Workspace-Wechsel
 verwerfen vorherige Dateiauswahl und Ordnerziele. Ausdrückliche Auftragslinks
 können weiterhin ihren zugehörigen Ordner öffnen. Technische Installationsnamen
 sind keine Workspace-Titel. Geschützte Einträge sind zunächst ausgeblendet.
+
+
+### Persönlicher Heute-Einstieg
+
+Avatar, Text und Karten besitzen feste Plätze. Der größere gewählte Avatar steht mittig über zwei reservierten Textzeilen ohne Sprechblasenfläche oder Rahmen. Die vorhandene Schreibanimation bleibt; längere Texte ändern weder die Höhe des Einstiegs noch die Position der Karten. Kurze, belegte Anschlussfragen greifen die gewählte Karte auf. Dateinamen dienen nur als Thema; keine erfundene Erinnerung oder unbelegte Zeitangabe.
+
+Alle Fächerkarten sind einschließlich Innenabständen 224 px hoch. Titel und
+Beschreibung bleiben auf je zwei Zeilen begrenzt. Die Navigation reserviert auch
+bei einer einzelnen Karte ihre Höhe. Die Startreferenz zeigt denselben Avatar,
+Textbaustein und Fächer.
+
+
+Die angeschlossene Wetterkarte bleibt im Startfächer reserviert. Open-Meteo liefert Temperatur und Wetterlage; Quelle und Datenstand sind sichtbar. Ortssuche und bestätigte Koordinaten stehen unter Dein Profil. Speichern, erneutes Öffnen, Fokus und zehn Minuten im sichtbaren Chatstart aktualisieren das Wetter. Eindeutig passende alte Ortsnamen werden aufgelöst; mehrdeutige Orte erfordern Auswahl. Lade- und Abruffehler ersetzen keine Wetterwerte durch Beispiele. Wetter & Ort öffnet das Profil mit Aktualisieren-Aktion.

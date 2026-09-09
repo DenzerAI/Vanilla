@@ -49,7 +49,7 @@ function browser(t, name = 'Plus') {
 }
 
 test('every actual icon and secondary variant has its own timed motion entry', () => {
-  assert.equal(iconCatalog.length,81); assert.equal(new Set(iconCatalog.map(i=>i.name)).size,81);
+  assert.equal(iconCatalog.length,82); assert.equal(new Set(iconCatalog.map(i=>i.name)).size,82);
   assert.equal(iconCatalog.filter(i=>i.source==='Framework7').length,73);
   for (const i of iconCatalog) { assert(iconMotion.durations[i.name] >= 1000); assert(iconMotion.durations[i.name] <= 2100); }
 });

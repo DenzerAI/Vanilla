@@ -53,6 +53,7 @@ export const Pin = wrap("Pin");
 export const Archive = wrap("Archive");
 export const RotateCcw = wrap("RotateCcw");
 export const Download = wrap("Download");
+export const Wrench = wrap("Wrench");
 export const Play = wrap("Play");
 export const Pause = wrap("Pause");
 export const Workflow = wrap("Workflow");

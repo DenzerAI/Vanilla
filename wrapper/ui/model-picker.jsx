@@ -1,6 +1,7 @@
 import React, { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, Check, ChevronDown, RotateCcw, Zap } from "./icons.jsx";
+import { ArrowLeft, Check, ChevronDown, RotateCcw, SquarePen, Wrench, Zap } from "./icons.jsx";
+import { ChatMenu } from "./chat-controls.jsx";
 import { BrandIcon } from "./brand-icon.jsx";
 import { AppLoader } from "./app-loader";
 import { ReasoningSlider, reasoningLabel } from "./components/ui/amount-slider";
@@ -11,12 +12,12 @@ import "./model-picker.css";
 const modelName = model => (model?.displayName || model?.model || "Modell auswählen")
   .replace(/^(GPT-\d+(?:\.\d+)?)-/, "$1 ").replace(/(?<=\w)-(?=[A-Za-z])/g, " ");
 
-export function ModelPicker({ models = [], model, effort, onChange, context, workerId = "codex", workers = [], onProviderChange, onRefresh, hasConversation = false, disabled = false, providerDisabled = false, running = false, serviceTier = null, onSpeedChange, reduceMotion = false }) {
+export function ModelPicker({ models = [], model, effort, onChange, context, workerId = "codex", workers = [], onProviderChange, onRefresh, hasConversation = false, disabled = false, providerDisabled = false, running = false, serviceTier = null, onSpeedChange, reduceMotion = false, mode = "default", onModeChange, modeDisabled = false, planAvailable = true }) {
   const [details, setDetails] = useState(false);
   const content = useRef(null);
   const [open, setOpen] = useState(false), [position, setPosition] = useState({});
   const [provider, setProvider] = useState(workerId), [pending, setPending] = useState(false), [error, setError] = useState("");
-  const trigger = useRef(null), popup = useRef(null), operation = useRef(false);
+  const trigger = useRef(null), popup = useRef(null), modeMenu = useRef(null), operation = useRef(false);
   const id = useId();
   const choices = visibleModels(models, workerId);
   const selected = models.find(m => m.model === model);
@@ -61,18 +62,29 @@ export function ModelPicker({ models = [], model, effort, onChange, context, wor
     popup.current?.querySelector(expanded ? ".model-back" : ".model-summary")?.focus();
   }, [open, expanded]);
   const showCompact = () => { setProvider(workerId); setDetails(false); setError(""); };
+  const modeLabel = mode === "plan" ? "Planen" : "Umsetzen";
+  const ModeIcon = mode === "plan" ? SquarePen : Wrench;
   const heading = ({ current, reset, automatic, onReset } = {}) => <div className="model-compact-heading">
     <div className="model-header-side">{speed && onSpeedChange && <button type="button" className="icon-button model-fast"
       disabled={disabled || pending} aria-label="Fast" aria-pressed={serviceTier === speed.id}
       title="Fast · höherer Verbrauch. Gilt ab der nächsten Nachricht."
-      onClick={() => void act(() => onSpeedChange(serviceTier === speed.id ? null : speed.id))}><Zap size={16}/></button>}</div>
+      onClick={() => void act(() => onSpeedChange(serviceTier === speed.id ? null : speed.id))}><Zap size={18}/></button>}</div>
     <button type="button" className="model-summary" aria-label="Modell und Anbieter auswählen" aria-expanded={false}
       onClick={() => setDetails(true)}>
       {current && <output aria-live="off" title={current.description}><span key={current.value}>{reasoningLabel(current.label)}</span><ChevronDown size={12}/></output>}
       <span className={current ? "model-summary-name" : ""}>{modelName(selected)}{!current && <ChevronDown size={12}/>}</span>
     </button>
-    <div className="model-header-side">{pending ? <span className="model-loading" role="status" aria-label="Auswahl wird geladen"><AppLoader size={14}/></span> : reset && <button type="button" className="icon-button model-reset" disabled={disabled || pending || automatic}
-      aria-label={reasoningLabel(reset.label) + " wiederherstellen"} title="Auf native Voreinstellung zurücksetzen" onClick={onReset}><RotateCcw size={14}/></button>}</div>
+    <div className="model-header-side">{pending ? <span className="model-loading" role="status" aria-label="Auswahl wird geladen"><AppLoader size={14}/></span> : onModeChange && <ChatMenu
+      label={`Arbeitsmodus: ${modeLabel}`} className="icon-button model-mode" menuRef={modeMenu} placement="above"
+      disabled={disabled || pending || modeDisabled} selected={mode}
+      items={[
+        { id: "default", label: "Umsetzen", icon: <Wrench size={16}/>, action: () => void act(() => onModeChange("default")) },
+        { id: "plan", label: "Planen", icon: <SquarePen size={16}/>, disabled: !planAvailable, action: () => void act(() => onModeChange("plan")) },
+      ]}>
+      <ModeIcon size={16}/><ChevronDown size={10}/>
+    </ChatMenu>}</div>
+    {reset && <div className="model-heading-status"><button type="button" className="model-reset" disabled={disabled || pending || automatic}
+      title="Auf native Voreinstellung zurücksetzen" onClick={onReset}><RotateCcw size={14}/>{reasoningLabel(reset.label)} wiederherstellen</button></div>}
   </div>;
   useEffect(() => { setProvider(workerId); setError(""); }, [workerId]);
   useEffect(() => {
@@ -90,7 +102,7 @@ export function ModelPicker({ models = [], model, effort, onChange, context, wor
     };
     place();
     popup.current?.querySelector(".model-summary, .model-back, [aria-pressed=true], button")?.focus();
-    const outside = e => { if (!popup.current?.contains(e.target) && !trigger.current?.contains(e.target)) setOpen(false); };
+    const outside = e => { if (!popup.current?.contains(e.target) && !modeMenu.current?.contains(e.target) && !trigger.current?.contains(e.target)) setOpen(false); };
     const escape = e => { if (e.key === "Escape") { e.preventDefault(); close(); } };
     document.addEventListener("pointerdown", outside);
     document.addEventListener("keydown", escape);
@@ -106,16 +118,16 @@ export function ModelPicker({ models = [], model, effort, onChange, context, wor
   return <div className="model-picker">
     <button type="button" ref={trigger} className={"model-trigger " + (open ? "selected" : "")}
       title={`${workerName(workerId)} · ${modelName(selected)}${efforts.length ? ` · ${effortLabel}` : ""}`}
-      aria-label={`Modell und Denkaufwand: ${workerName(workerId)}, ${modelName(selected)}${efforts.length ? `, ${effortLabel}` : ""}`}
+      aria-label={`Modell und Denkaufwand: ${workerName(workerId)}, ${modelName(selected)}${efforts.length ? `, ${effortLabel}` : ""}, Arbeitsmodus: ${modeLabel}`}
       aria-haspopup="dialog" disabled={disabled} aria-expanded={open} aria-controls={open ? id : undefined}
       onClick={() => { setProvider(workerId); setDetails(false); setPosition({}); setError(""); setOpen(!open); if (!open) onRefresh?.(); }}>
       <span className="model-name">{selected ? modelName(selected) : workerName(workerId)}</span>
-      {!!efforts.length && <span className="model-effort">{effortLabel}</span>}{speed && serviceTier === speed.id && <Zap size={12}/>}<ChevronDown size={14}/>
+      {!!efforts.length && <span className="model-effort">{effortLabel}</span>}{speed && serviceTier === speed.id && <Zap className="model-fast-indicator" size={12}/>}{mode === "plan" && <SquarePen size={12}/>}<ChevronDown size={14}/>
     </button>
     {open && createPortal(<div ref={popup} id={id} role="dialog" aria-label="Modell und Denkaufwand" aria-busy={pending}
       className="model-popover glass" data-reduce-motion={reduceMotion} data-view={expanded ? "models" : "compact"} style={position}
       onKeyDown={e => { if (e.key === "Escape") { e.preventDefault(); e.stopPropagation(); if (expanded && choices.length) showCompact(); else close(); } }}
-      onBlur={e => { if (e.relatedTarget && !e.currentTarget.contains(e.relatedTarget) && e.relatedTarget !== trigger.current) setOpen(false); }}>
+      onBlur={e => { if (e.relatedTarget && !e.currentTarget.contains(e.relatedTarget) && !modeMenu.current?.contains(e.relatedTarget) && e.relatedTarget !== trigger.current) setOpen(false); }}>
       <div ref={content} className="model-picker-content" key={expanded ? "models" : "compact"}>
       {expanded ? <>
         {!!choices.length && <button type="button" className="model-back" aria-label="Zurück zum Regler" onClick={showCompact}><ArrowLeft size={14}/><span>{modelName(selected)}</span></button>}

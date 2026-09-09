@@ -409,6 +409,7 @@ export const iconMotion = {
     "RotateCcw": 1400,
     "Download": 1550,
     "Play": 1150,
+    "Wrench": 1150,
     "Pause": 1250,
     "Workflow": 1800,
     "Blocks": 1550,

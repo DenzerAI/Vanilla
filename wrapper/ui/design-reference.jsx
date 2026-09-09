@@ -33,6 +33,7 @@ import interLicense from "./assets/fonts/Inter-LICENSE.txt";
 import monoLicense from "./assets/fonts/IBMPlexMono-LICENSE.txt";
 
 export function DesignReference({ theme, tone, accent }) {
+  const [modePreview, setModePreview] = useState("default");
   const [modelPreview, setModelPreview] = useState(["gpt-6-astra", "medium"]);
   const [avatarPreview, setAvatarPreview] = useState("kibo");
   const [avatarMotionPreview, setAvatarMotionPreview] = useState("face");
@@ -69,7 +70,7 @@ export function DesignReference({ theme, tone, accent }) {
       <h3 className="section-heading">Benachrichtigung · Beispiel</h3>
       <div className="settings-group"><NotificationRow item={{title:'Tagesüberblick · Fertig',created_at:1788854400,read_at:null}} onClick={()=>{}}/></div>
       <h3 className="section-heading">Gesprächseinstieg · Fächer</h3>
-      <div className="welcome agent-chat-welcome chat-start"><div className="chat-start-intro"><Avatar avatar="nori" color="neutral" large/><ChatStartHeading texts={['Hier kannst du direkt weitermachen.','Deine letzte Datei liegt hier für dich bereit.']}/></div></div>
+      <div className="welcome agent-chat-welcome chat-start"><div className="chat-start-intro"><Avatar avatar="nori" color="neutral" large/><ChatStartHeading texts={['Was möchtest du heute mit mir angehen?','Wir können mit einer kleinen Idee anfangen.']}/></div></div>
       <AttentionFan items={conversationStarters} onOpen={item=>setSuggestionDraft(item.prompt)}/>
       <p className="page-note">Ein kompakter Fächer für Hinweise und Gesprächseinstiege. Seitliche Karten wählen aus, die vordere öffnet den Inhalt. Die Vorschau füllt nur den Entwurf darunter.</p>
       <h3 className="section-heading">Sprache · Pegel und Erkennung</h3>
@@ -81,7 +82,7 @@ export function DesignReference({ theme, tone, accent }) {
       <p className="page-note">Einzeilige Pille mit gedämpftem Platzhalter, transparenter Tönung, Hintergrundunschärfe und feiner innerer Glaskante. Mehrzeiliger Text erweitert die Schreibfläche; reduzierte Transparenz erhält einen deckenden Hintergrund.</p>
       <h3 className="section-heading">Modellwahl · Anbieter und Denkaufwand</h3>
       <ChapterScrubber chapters={[{id:"example-one",title:"Erste Eingabe",description:"Eine Frage im Gespräch",meta:"Beispiel"},{id:"example-two",title:"Zweite Eingabe",description:"Eine weitere Nachricht",meta:"Beispiel"}]} />
-      <ModelPicker serviceTier={modelPreview[2]} onSpeedChange={tier => setModelPreview(old => [old[0], old[1], tier])} model={modelPreview[0]} effort={modelPreview[1]} onChange={(model, effort) => setModelPreview(old => [model, effort, old[2]])}
+      <ModelPicker mode={modePreview} onModeChange={setModePreview} serviceTier={modelPreview[2]} onSpeedChange={tier => setModelPreview(old => [old[0], old[1], tier])} model={modelPreview[0]} effort={modelPreview[1]} onChange={(model, effort) => setModelPreview(old => [model, effort, old[2]])}
         models={[{model:"gpt-6-astra",displayName:"GPT-6 Astra",serviceTiers:[{id:"priority",name:"Fast"}],defaultReasoningEffort:"medium",supportedReasoningEfforts:["low","medium","high","xhigh","max","ultra"].map(reasoningEffort => ({reasoningEffort}))}]}
         hasConversation onProviderChange={async () => { throw new Error("Lokale Designvorschau. Anbieter im Chat auswählen."); }}/>
       <p className="page-note">Kompakter Glasregler mit mittiger Stufe und Fast-Blitz. Klick auf die Mitte öffnet Modell- und Anbieterwahl mit Original-Icons. Das Terrakotta-Quadratfeld wird je nativer Stufe dichter, breiter und lebhafter und bleibt bei reduzierter Bewegung statisch. Die Beispieldaten bleiben lokal; im Chat liefert der Anbieter seine verfügbaren Werte.</p>
@@ -113,6 +114,7 @@ export function DesignReference({ theme, tone, accent }) {
       <Skeleton variant="chat" announce={false}/>
       <Skeleton variant="document" rows={2} announce={false}/>
       <Skeleton variant="media" announce={false}/>
+      <Skeleton variant="attention" announce={false}/>
       </>}
       {section === "type" && <>
       <h3 className="section-heading">Schriften</h3>

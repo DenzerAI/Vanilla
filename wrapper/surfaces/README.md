@@ -121,7 +121,7 @@ Service steht als eigener Bereich in Einstellungen; Aufbau und Vorschaugrenzen f
 Für alle Bereiche gilt [die gemeinsame Iconrückmeldung](../DESIGN.md#gemeinsame-iconrückmeldung).
 `MotionGlyph`, `IconButton`, `CopyButton`, `NotificationBell` und `icon-motion.tsx`
 sind die Produktionsbausteine. `icon-catalog.mjs` und `icon-animation.mjs` führen
-die 81 freigegebenen Formen und ihre individuellen Zeitlinien. Die Auswahl
+die 82 freigegebenen Formen und ihre individuellen Zeitlinien. Die Auswahl
 steht unter Aussehen → Visuell, die Sammlung unter Unser Design → Icons.
 Aktionsicons reagieren auf Bedienung, bestehende Chevron- und Ladebewegungen
 bleiben eigenständig. Neue Ausnahmen verwenden `data-icon-motion="off"`.

@@ -13,18 +13,29 @@ export function createChatScroll(element, following, onAway, Observer = ResizeOb
   const observer = new Observer(() => sync());
   observer.observe(element);
   function sync() {
-    if (content !== element.firstElementChild) {
+    const changed = content !== element.firstElementChild;
+    if (changed) {
       if (content) observer.unobserve(content);
       content = element.firstElementChild;
       if (content) observer.observe(content);
     }
     // Hidden panes retain their position and resume when measurable again.
     if (!element.clientHeight) return;
+    // The start screen has no latest message to follow. Keep its top stable
+    // when cards load or attachments increase the composer height.
+    if (content?.matches?.('.chat-start')) {
+      element.style.overflowAnchor = 'none';
+      onAway(false);
+      if (changed) element.scrollTop = 0;
+      lastTop = element.scrollTop;
+      return;
+    }
     setFollowing(following.current);
     if (following.current) element.scrollTop = maxTop();
     lastTop = element.scrollTop;
   }
   function scroll() {
+    if (content?.matches?.('.chat-start')) return;
     const top = element.scrollTop;
     // Shrinking tool output can clamp scrollTop without any user input.
     const expected = Math.min(lastTop, maxTop());
@@ -32,7 +43,7 @@ export function createChatScroll(element, following, onAway, Observer = ResizeOb
     else if (top > lastTop + 1 && maxTop() - top <= 24) setFollowing(true);
     lastTop = top;
   }
-  const pause = () => setFollowing(false);
+  const pause = () => { if (!content?.matches?.('.chat-start')) setFollowing(false); };
   const wheel = (event) => { if (event.deltaY < 0) pause(); };
   const touchStart = (event) => { touchY = event.touches[0]?.clientY; };
   const touchMove = (event) => {

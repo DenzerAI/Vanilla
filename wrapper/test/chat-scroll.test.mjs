@@ -88,3 +88,25 @@ test('resizing and restoring hidden panes follows only when enabled; disposal re
   assert.deepEqual(p.events, {});
   assert.equal(p.observer.disconnected, true);
 });
+
+
+test('start screen stays at the top while loading cards and growing attachments, then follows real messages', () => {
+  const p = pane();
+  p.element.firstElementChild = {matches: selector => selector === '.chat-start'};
+  p.controller.sync();
+  assert.equal(p.element.scrollTop, 0);
+  p.element.scrollHeight = 2200;
+  p.element.clientHeight = 260;
+  p.observer.resize();
+  assert.equal(p.element.scrollTop, 0);
+  p.events.wheel({deltaY: -10});
+  assert.equal(p.following.current, true);
+  p.element.scrollTop = 100;
+  p.events.scroll();
+  p.observer.resize();
+  assert.equal(p.element.scrollTop, 100);
+  assert.equal(p.away.at(-1), false);
+  p.element.firstElementChild = {};
+  p.controller.sync();
+  assert.equal(p.element.scrollTop, 1940);
+});
