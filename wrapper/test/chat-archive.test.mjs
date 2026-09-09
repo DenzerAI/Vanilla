@@ -47,6 +47,7 @@ test('empty and export-only chats can archive and restore without a native rollo
   await restore(f.chat.id,{archived:false});
   assert.equal(f.chat.archived,false);
   assert.equal(f.chat.archiveLocalOnly,undefined);
+  assert.equal(f.loaded.has(f.chat.id),true,'the existing empty session remains usable');
   assert.equal(f.events.length,2);
 });
 

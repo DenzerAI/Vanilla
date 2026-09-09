@@ -15,11 +15,14 @@ export function chatArchiveUpdater({store, workers, active, turnLocks, voiceSess
     try {
       if (archiveChanged) {
         let localOnly = false;
+        let nativeChanged = false;
         try {
           // A local-only archive never moved a native file. Unarchive would try
           // to take another writer lock on an empty session that is still open.
-          if (change.archived || !chat.archiveLocalOnly)
+          if (change.archived || !chat.archiveLocalOnly) {
             await workers.call(change.archived ? 'thread/archive' : 'thread/unarchive', {threadId:id});
+            nativeChanged = true;
+          }
         } catch (error) {
           if (!/^no (?:archived )?rollout found for thread id\s+/i.test(error.message || '')) throw error;
           localOnly = true;
@@ -27,7 +30,7 @@ export function chatArchiveUpdater({store, workers, active, turnLocks, voiceSess
         chat.archived = change.archived;
         if (change.archived && localOnly) chat.archiveLocalOnly = true;
         else delete chat.archiveLocalOnly;
-        loaded.delete(id);
+        if (nativeChanged) loaded.delete(id);
       }
       if (change.title !== undefined) {
         chat.title = String(change.title).trim().slice(0, 160) || 'Neuer Chat';
