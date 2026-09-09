@@ -41,6 +41,6 @@ export function ServiceSettings() {
       <p>Die Bedienung über eine Session und der begrenzte A2A-Anschluss sind noch offen. Meldungsänderungen gelten nur bis zum Verlassen dieser Ansicht.</p>
       <div className="settings-group"><SettingRow title="Beispieldaten anzeigen" action={<button type="button" role="switch" className="apple-switch" aria-label="Beispieldaten anzeigen" aria-checked={showDemo} onClick={()=>setShowDemo(v=>!v)}><span/></button>}/></div>
     </details>
-    {!showDemo&&<p className="work-evidence-note" role="status">Die echte Erfassung ist noch nicht eingerichtet.</p>}
+    {!showDemo&&<p className="work-evidence-note" role="status">Die echte Erfassung ist noch nicht implementiert.</p>}
   </div>;
 }

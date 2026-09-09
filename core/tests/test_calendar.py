@@ -20,12 +20,14 @@ def event(id='meeting',start='2026-10-25T00:30:00',end='2026-10-25T02:30:00',**f
 
 def test_calendar_window_dst_recurrence_deletion_failure_and_projects(config,db):
     adapter=Adapter();c=Calendar(db,config,adapter,lambda project:None)
+    db.put('control/state.json',{'connections':[{**adapter.source,'kind':'service'}]})
     body={'id':'calendar-test','projectId':'default','start':'2026-10-01','end':'2026-11-01'}
     async def scenario():
         assert c.read('default',body['start'],body['end'])['feeds']==[]
         adapter.events=[event(seriesMasterId='series'),event('cancelled',isCancelled=True)]
         await c.sync(body)
         e=c.read('default',body['start'],body['end'])['events'][0]
+        assert not c.read('default',body['start'],body['end'])['feeds'][0]['error']
         assert e['start']=='02:30' and e['end']=='03:30' and e['seriesId']=='series'
         again=Calendar(db,config,adapter,lambda project:None)
         assert again.read('default',body['start'],body['end'])['events'][0]['id']==e['id']
@@ -39,6 +41,8 @@ def test_calendar_window_dst_recurrence_deletion_failure_and_projects(config,db)
         assert c.read('default',body['start'],body['end'])['events']==[]
         with pytest.raises(ValueError):await c.sync({**body,'projectId':'other'})
         assert c.read('other',body['start'],body['end'])['feeds']==[]
+        db.put('control/state.json',{'connections':[]})
+        assert 'nicht mehr eingerichtet' in c.read('default',body['start'],body['end'])['feeds'][0]['error']
     asyncio.run(scenario())
 
 

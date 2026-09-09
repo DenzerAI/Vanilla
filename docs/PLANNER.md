@@ -108,3 +108,8 @@ Es akzeptiert keinen Berichtstext vom Browser. Beispiele werden aus dem gemeinsa
 fiktiven Katalog aufgelöst. Snapshot und Kontext verwenden `chat-handoff.mjs`;
 Berichts-ID und Chatzuordnung liegen im bestehenden Chatbestand. Gleichzeitige
 Öffnungen werden zusammengefasst. Die Berichtsliste ist keine zweite Ergebnisablage.
+
+Beim Entfernen oder Umhängen des Serviceanschlusses bleiben bereits empfangene
+Termine als historische Projektion erhalten und werden ausdrücklich als nicht mehr
+verbunden gekennzeichnet. Führend ist die vorhandene gemeinsame Verbindungsablage
+`control/state.json`; die Kalenderprojektion erzeugt keine zweite Kontoverwaltung.

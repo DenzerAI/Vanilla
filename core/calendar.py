@@ -121,6 +121,13 @@ class Calendar:
     def read(self, project, start, end):
         self.project(project);window(start,end)
         feeds=self.db.rows('SELECT * FROM calendar_windows WHERE project=?',(project,))
+        # control/state.json is the existing shared connection registry. Removing
+        # a connection preserves its historical projection but ends its readiness.
+        state=self.db.get('control/state.json')['value'] or {}
+        connected={c['id'] for c in state.get('connections',[]) if c.get('kind')=='service' and c.get('provider')=='microsoft-graph' and c.get('projectId','default')==project}
+        for feed in feeds:
+            if feed['connection'] not in connected:
+                feed['error']=feed['error'] or 'Kalenderanschluss nicht mehr eingerichtet; gespeicherter historischer Stand.'
         return {'events':sorted([e for f in feeds for e in json.loads(f['data']) if start<=e['date']<end],key=lambda e:(e['date'],not e['allDay'],e['start'],e['id'])),
                 'feeds':[{k:v for k,v in f.items() if k!='data'}|{'covered':f['start']<=start and f['end']>=end} for f in feeds],
                 'start':start,'end':end,'timezone':self.config.timezone,'readOnly':True}
