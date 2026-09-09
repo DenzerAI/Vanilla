@@ -14,6 +14,14 @@ Grenzen: Stromausfall oder Browserabsturz können noch nicht persistierte Sample
 
 ## Lokal als Standard
 
+Vor dem Mikrofonzugriff stellt der gemeinsame Browserhelfer eine vorhandene
+AudioSession auf `play-and-record`. Sobald die Anfrage erfolgreich oder
+fehlgeschlagen beendet ist, übernimmt wieder `auto`; ein zuvor aktiver reiner
+Wiedergabemodus darf Diktat und Mikrofontest nicht blockieren. Browser ohne diese
+optionale API verwenden weiterhin den normalen Mikrofonzugriff. Berechtigungsfehler
+werden nicht automatisch wiederholt. Regressionstests simulieren die
+WebKit-Kategoriesperre, Gerätefallback und verweigerte Berechtigungen.
+
 `npm start` installiert vor dem ersten Start automatisch eine isolierte Python-Laufzeit mit faster-whisper 1.2.1 sowie das mehrsprachige Modell Whisper Small. Voraussetzung ist Python 3.9 oder neuer mit venv/pip; `UWE_PYTHON` kann den Interpreter wählen. Der einmalige Paket-/Modelldownload braucht Internet und Speicherplatz. Manueller Installationsbefehl: `npm run setup:dictation`. Im Entwicklungsstart wird dieselbe Einrichtung verwendet.
 
 Die Laufzeit und das Modell liegen unter `UWE_DATA_ROOT` beziehungsweise `data/control/`. Erkennung läuft mit CPU/int8, deutscher Sprache, Sprachaktivitätserkennung und ohne Übersetzung. Inferenz verwendet ausschließlich lokale Modelldateien und setzt `HF_HUB_OFFLINE=1`. Es gibt keinen Cloud-Fallback. Eine Erkennung läuft gleichzeitig; ihr Ergebnis und Fehler werden dauerhaft gespeichert. Das Zeitlimit beträgt 30 Minuten. Small ist der initiale Kompromiss zwischen Größe und Qualität, keine Zusicherung perfekter Erkennung von Eigennamen oder Fachwörtern.
