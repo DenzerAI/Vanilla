@@ -1,12 +1,13 @@
+import {weatherDescription} from './weather-client.mjs';
 import {libraryTimestamp} from './library-order.mjs';
 export const conversationStarters = [
   {id:'plan',kind:'prompt',title:'Gemeinsam planen',description:'Aus einer Idee den nächsten Schritt machen.',prompt:'Lass uns gemeinsam planen. Frage mich zuerst, was ich erreichen möchte.'},
   {id:'file',kind:'prompt',title:'Eine Datei verstehen',description:'Das Wesentliche finden und besprechen.',prompt:'Ich möchte eine Datei mit dir besprechen. Bitte warte, bis ich sie angehängt habe.'},
   {id:'project',kind:'prompt',title:'Projekt erkunden',description:'Überblick gewinnen und weiterkommen.',prompt:'Gib mir einen kurzen Überblick über dieses Projekt und seine nächsten Schritte.'},
 ];
-/** @param {{requests?: any[], notifications?: any[], chats?: any[], projectId?: string, jobs?: any[], entries?: any[], reports?: any[], now?: number, includeWeather?: boolean, userProfile?: {name?:string,location?:string}, profileError?: boolean}} options
+/** @param {{requests?: any[], notifications?: any[], chats?: any[], projectId?: string, jobs?: any[], entries?: any[], reports?: any[], now?: number, includeWeather?: boolean, userProfile?: {name?:string,location?:string}, profileError?: boolean, weather?:any}} options
  * @returns {any[]} */
-export function chatStartFeed({requests=[],notifications=[],chats=[],projectId='default',jobs:scheduledJobs=[],entries=[],reports=[],now=Date.now(),includeWeather=false,userProfile={},profileError=false}={}) {
+export function chatStartFeed({requests=[],notifications=[],chats=[],projectId='default',jobs:scheduledJobs=[],entries=[],reports=[],now=Date.now(),includeWeather=false,userProfile={},profileError=false,weather=null}={}) {
   const result=[], seen=new Set();
   for(const request of requests) {
     const threadId=request.params?.threadId;
@@ -41,7 +42,7 @@ export function chatStartFeed({requests=[],notifications=[],chats=[],projectId='
   const unique=new Set();const mixed=candidates.filter(item=>{if(unique.has(item.id))return false;unique.add(item.id);return true;});
   if(!mixed.length)mixed.push(conversationStarters[0]);
   const chosen=mixed.slice(0,includeWeather?4:5);
-  if(includeWeather)chosen.push({id:'weather',kind:'weather',title:userProfile.location||'Dein Wetter',description:profileError?'Dein Wetterort konnte nicht geladen werden.':userProfile.location?'Dein Ort ist gespeichert. Wetterdaten sind noch nicht verbunden.':'Dein Ort ist noch nicht eingerichtet.'});
+  if(includeWeather)chosen.push({id:'weather',kind:'weather',title:userProfile.location||'Dein Wetter',weather:profileError?null:weather,weatherConfigured:!!userProfile.location,description:profileError?'Dein Wetterort konnte nicht geladen werden.':userProfile.location?weatherDescription(weather):'Dein Ort ist noch nicht eingerichtet.'});
   return chosen;
 }
 export function startHeadline(kind, fallback) {

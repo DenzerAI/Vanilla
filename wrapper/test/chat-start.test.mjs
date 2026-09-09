@@ -57,7 +57,7 @@ test('weather card opens deterministic settings and reflects only the saved loca
  assert.equal(unset.prompt,undefined);
  const saved=chatStartFeed({includeWeather:true,userProfile:{location:'Beispielstadt'}}).find(i=>i.kind==='weather');
  assert.equal(saved.title,'Beispielstadt');
- assert.match(saved.description,/noch nicht verbunden/);
+ assert.match(saved.description,/wird geladen/);
  const failed=chatStartFeed({includeWeather:true,profileError:true}).find(i=>i.kind==='weather');
  assert.match(failed.description,/nicht geladen/);
 });

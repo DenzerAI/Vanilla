@@ -671,7 +671,7 @@ Der kompakte Startfächer mischt bis zu fünf Karten. Rückfragen und Probleme k
 zuerst, danach die letzte vorhandene Datei, der nächste aktive Benutzerauftrag mit
 serverseitigem nextRun, das neueste Routine-Ergebnis und ungelesene Chatantworten.
 Eine Wetterkarte bleibt reserviert; ohne Einrichtung benennt sie den fehlenden Ort
-und die fehlende Wetterquelle, statt Beispieldaten als Wetter auszugeben.
+statt Beispieldaten als Wetter auszugeben.
 Dateien öffnen LibraryPreview, Jobs ihren vorhandenen Dialog, Ergebnisse den
 bestehenden Berichtschat. Keine Aktion startet beim Anzeigen automatisch Arbeit.
 Datei und Routine-Ergebnis mit derselben job_id werden nicht doppelt gezeigt.
@@ -680,7 +680,7 @@ vorhandenen GET /jobs, /library und /planner/results; Fokus und relevante Ereign
 aktualisieren die Daten. Kleinere Rollen: Überschrift subheading, Kartentitel control.
 
 
-Die letzte Datei im Startfächer verwendet LibraryThumbnail und die Aktion „Vorschau öffnen“ für LibraryPreview. HTML und nicht unterstützte Formate zeigen das vorhandene Formatsymbol; keine automatisch laufende HTML-Seite in der Miniatur. Die Wetterkarte zeigt ohne Einrichtung ein Ortssymbol, „Dein Ort ist noch nicht eingerichtet.“ und „Ort einstellen“. Die Aktion öffnet direkt Einstellungen → Dein Profil. Nach Speicherung zeigt sie den Ort; fehlender Wetterabruf wird ausdrücklich benannt. Ladefehler werden nicht als fehlende Einrichtung ausgegeben. Die Sprechblase steht als Produktionsbaustein in Unser Design.
+Die letzte Datei im Startfächer verwendet LibraryThumbnail und die Aktion „Vorschau öffnen“ für LibraryPreview. HTML und nicht unterstützte Formate zeigen das vorhandene Formatsymbol; keine automatisch laufende HTML-Seite in der Miniatur. Die Wetterkarte zeigt ohne Einrichtung ein Ortssymbol, „Dein Ort ist noch nicht eingerichtet.“ und „Ort einstellen“. Die Aktion öffnet direkt Einstellungen → Dein Profil. Nach Speicherung lädt sie über Open-Meteo Temperatur und Wetterlage für die bestätigten Koordinaten und zeigt Quelle sowie Datenstand. Sichtbarer Chatstart aktualisiert alle zehn Minuten, bei Fokus und nach Profilspeicherung. Lade-, Fehler- und noch nicht bestätigte Ortszustände bleiben unterscheidbar. Wetter & Ort öffnet das Profil mit Aktualisieren-Aktion. Ladefehler werden nicht als fehlende Einrichtung ausgegeben. Die Sprechblase steht als Produktionsbaustein in Unser Design.
 
 MD-Miniaturen im Startfächer nutzen die Kartenvariante von LibraryThumbnail mit der ganzen Dokumentbreite, normal lesbarer kleiner Schrift und ohne große Endungsplakette. Die Bibliotheksdarstellung bleibt unverändert.
 
