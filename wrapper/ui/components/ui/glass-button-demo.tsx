@@ -1,4 +1,4 @@
-import { RotateCcw, Zap } from "lucide-react";
+import { LucideRotateCcw as RotateCcw, LucideZap as Zap } from "../../icon-variants.jsx";
 import { GlassButton } from "@/components/ui/glass-button";
 
 export default function GlassButtonDemo() {

@@ -7,7 +7,7 @@ from pathlib import Path
 from time import time
 from uuid import uuid4
 
-from .backups import verify_restore
+from .backups import verify_restore, snapshot_paths
 from .files import atomic_write, read_json
 
 
@@ -26,7 +26,7 @@ def recover(config, journal):
         (config.data / 'restore-pending.json').unlink(missing_ok=True)
         journal.unlink()
         return
-    allowed = {config.workspace, config.data/'agent.sqlite3', config.data/'vault.git', config.data/'codex/sessions', config.data/'codex/archived_sessions', *[Path(str(config.data/'agent.sqlite3')+s) for s in ('-wal','-shm')]}
+    allowed = {*(target for _,target in snapshot_paths(config)), config.data/'host.json',config.data/'agent.sqlite3', *[Path(str(config.data/'agent.sqlite3')+s) for s in ('-wal','-shm')]}
     for step in reversed(state['steps']):
         target, old, prepared = (Path(step[k]) if step.get(k) else None for k in ('target','old','prepared'))
         if target not in allowed or old.parent != target.parent or not old.name.startswith('.agent-restore-'):
@@ -59,11 +59,14 @@ def apply_pending(config):
         base=Path(state['path']).resolve()
         if not base.is_relative_to((config.data/'restores').resolve()):
             raise ValueError('Wiederherstellung liegt außerhalb des geprüften Ordners.')
-        verify_restore(base)
+        manifest=verify_restore(base)
         id=uuid4().hex
         steps=[]
         sources=[(None,Path(str(config.data/'agent.sqlite3')+suffix)) for suffix in ('-wal','-shm')]
-        sources += [(base/'workspace',config.workspace),(base/'database.sqlite3',config.data/'agent.sqlite3'),(base/'vault.git',config.data/'vault.git'),(base/'worker-sessions',config.data/'codex/sessions'),(base/'archived-sessions',config.data/'codex/archived_sessions')]
+        sources += [(base/'database.sqlite3',config.data/'agent.sqlite3')]
+        sources += [(base/name,target) for name,target in snapshot_paths(config) if manifest.get('schema',2)>=3 or name not in {'company','dictations'}]
+        if manifest.get('schema',2)>=3:
+            sources.append((base/'host.json',config.data/'host.json'))
         record={'steps':steps,'snapshot':state['snapshot'],'created_at':time()}
         # Prepare every copy before modifying the live workspace or database.
         for source,target in sources:

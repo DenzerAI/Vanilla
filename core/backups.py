@@ -20,6 +20,16 @@ from .secrets import read_secret, save_secret, register_secret
 EXCLUDE_DIRS = {"node_modules", ".venv", ".git", "__pycache__", "secrets", "cache", "models"}
 
 
+def snapshot_paths(config):
+    from .isolation import inside
+    company = inside(config.root, os.environ.get('COMPANY_BASE') or 'firmenbasis')
+    return [('workspace',config.workspace),('vault.git',config.data/'vault.git'),
+            ('provider-vault',config.data/'provider-vault'),('company',company),
+            ('dictations',config.data/'dictations'),
+            ('worker-sessions',config.data/'codex/sessions'),
+            ('archived-sessions',config.data/'codex/archived_sessions')]
+
+
 def inventory(source):
     files = {}
     for folder, dirs, names in os.walk(source, followlinks=False):
@@ -57,7 +67,7 @@ def copy_stable(source, target):
 class Backups:
     def __init__(self, db, config, settings, memory, password=None):
         self.db, self.config, self.settings, self.memory = db, config, settings, memory
-        self.password = password or (lambda: read_secret("system-backup"))
+        self.password = password or (lambda: read_secret("system-backup", self.config, self.db))
         self.lock = threading.Lock()
 
     @property
@@ -70,10 +80,13 @@ class Backups:
         value = self.settings.values["backup"]["target"]
         if not value or not Path(value).is_absolute():
             raise ValueError("Bitte einen absoluten Sicherungsordner einrichten.")
-        from .isolation import inside
-        target = inside(self.config.root, value)
-        if target.is_relative_to(self.config.workspace) or self.config.workspace.is_relative_to(target) or target.is_relative_to(self.config.data):
+        target = Path(value).resolve()
+        if Path(value).is_symlink():
+            raise ValueError('Sicherungsziel darf keine Verknüpfung sein.')
+        if target.is_relative_to(self.config.workspace) or self.config.workspace.is_relative_to(target) or target.is_relative_to(self.config.data) or self.config.data.is_relative_to(target):
             raise ValueError("Sicherungsziel muss außerhalb des Workspace und der laufenden Systemdaten liegen.")
+        if not target.is_relative_to(self.config.root) and not target.parent.is_dir():
+            raise ValueError('Das externe Ziel ist nicht erreichbar. Laufwerk zuerst verbinden und Zielordner prüfen.')
         return target
 
     def command(self, *args, cwd=None, timeout=180, password=None):
@@ -100,7 +113,7 @@ class Backups:
                     try:
                         password = self.password()
                     except ValueError:
-                        password = secrets.token_urlsafe(48)
+                        raise ValueError('Bitte einen eigenen Sicherungsschlüssel eingeben und getrennt vom Gerät aufbewahren.') from None
                 directory.mkdir(parents=True, exist_ok=True, mode=0o700)
                 self.command("init", password=password)
             self.command("snapshots", "--json", password=password)
@@ -113,9 +126,9 @@ class Backups:
                 if old_password and old_password != password and previous['values']['backup']['target']:
                     import hashlib
                     archive_id = 'system-backup-' + hashlib.sha256(previous['values']['backup']['target'].encode()).hexdigest()[:12]
-                    save_secret(archive_id, old_password)
+                    save_secret(archive_id, old_password, self.config, self.db)
                     register_secret(self.db, archive_id, 'Sicherung · vorheriges Ziel')
-                save_secret("system-backup", password)
+                save_secret("system-backup", password, self.config, self.db)
             register_secret(self.db, "system-backup", "System · Sicherung")
             self.settings.set_group("backup", enabled=True)
             return {"ok": True, "target": str(directory)}
@@ -138,15 +151,15 @@ class Backups:
             # Serialize app writes while copying DB and the corresponding files.
             with self.memory.lock, self.memory.knowledge.lock, self.db.lock:
                 self.db.backup(stage / "database.sqlite3")
-                copy_stable(self.config.workspace, stage / "workspace")
-                if self.memory.git_dir.exists():
-                    copy_stable(self.memory.git_dir, stage / "vault.git")
-                sessions = self.config.data / "codex/sessions"
-                if sessions.exists():
-                    copy_stable(sessions, stage / "worker-sessions")
-                archived = self.config.data / "codex/archived_sessions"
-                if archived.exists():
-                    copy_stable(archived, stage / "archived-sessions")
+                for name,source in snapshot_paths(self.config):
+                    (stage/name).mkdir(mode=0o700)
+                    if source.exists(): copy_stable(source,stage/name)
+                    elif name=='company' and os.environ.get('COMPANY_BASE'):
+                        raise ValueError('Die konfigurierte Firmenbasis fehlt; Sicherung wurde nicht erstellt.')
+                # Host-specific addresses/services are re-established on the new host.
+                from .files import read_json
+                host=read_json(self.config.data/'host.json',{})
+                atomic_write(stage/'host.json',json.dumps({'access_enabled':bool(host.get('access_enabled'))}))
             # Vectors can be regenerated locally; exclude them from each snapshot.
             with closing(sqlite3.connect(stage / "database.sqlite3")) as cx:
                 cx.execute("PRAGMA journal_mode=DELETE")
@@ -154,7 +167,7 @@ class Backups:
                 cx.commit()
                 cx.execute("VACUUM")
             files = {p.relative_to(stage).as_posix(): sha256(p) for p in sorted(stage.rglob("*")) if p.is_file()}
-            manifest = {"format": "agent-backup-v1", "created_at": time(), "schema": 2, "files": files, "models": "rebuild", "secrets": "keychain-reconnect"}
+            manifest = {"format": "agent-backup-v1", "created_at": time(), "schema": 3, "files": files, "models": "rebuild", "secrets": "installation-vault; native worker login reconnect", "roots":[name for name,_ in snapshot_paths(self.config)]}
             atomic_write(stage / "manifest.json", json.dumps(manifest, indent=2))
             output = self.command("backup", ".", "--json", "--tag", "agent-core", cwd=stage)
             summaries = [json.loads(line) for line in output.splitlines() if line.startswith("{")]
@@ -201,6 +214,14 @@ def verify_restore(base):
     manifest = json.loads((base / "manifest.json").read_text())
     if manifest.get("format") != "agent-backup-v1":
         raise ValueError("Unbekanntes Sicherungsformat.")
+    if manifest.get('schema',2) not in {2,3}:
+        raise ValueError('Unbekannte Sicherungsversion.')
+    if manifest.get('schema',2)==3:
+        if not (base/'host.json').is_file() or not (base/'workspace').is_dir() or not (base/'company').is_dir():
+            raise ValueError('Sicherung enthält nicht alle erforderlichen Installationsbestandteile.')
+        host=json.loads((base/'host.json').read_text())
+        if set(host)!={'access_enabled'} or not isinstance(host['access_enabled'],bool):
+            raise ValueError('Ungültige Zugangseinstellungen in der Sicherung.')
     actual = set()
     for p in base.rglob('*'):
         if p.is_symlink():
@@ -216,4 +237,14 @@ def verify_restore(base):
     with closing(sqlite3.connect(f"file:{base / 'database.sqlite3'}?mode=ro&immutable=1", uri=True)) as cx:
         if cx.execute("PRAGMA quick_check").fetchone()[0] != "ok":
             raise ValueError("Gesicherte Datenbank ist nicht intakt.")
+        encrypted=cx.execute("SELECT key,value FROM records WHERE key LIKE 'provider-vault/%'").fetchall()
+        if encrypted:
+            from cryptography.fernet import Fernet, InvalidToken
+            try:
+                cipher=Fernet((base/'provider-vault/provider.key').read_bytes())
+                for _,value in encrypted: cipher.decrypt(json.loads(value).encode())
+            except (OSError, ValueError, InvalidToken):
+                raise ValueError('Tresorschlüssel und gesicherte Zugänge passen nicht zusammen.') from None
+        if manifest.get('schema',2)==3 and host['access_enabled'] and not {'provider-vault/system-access','provider-vault/system-api'} <= {k for k,_ in encrypted}:
+            raise ValueError('Aktivierter Zugang ohne vollständige Zugangsdaten.')
     return manifest

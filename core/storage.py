@@ -10,6 +10,7 @@ from .database import dump
 from .routines import validate_schedule
 
 CONTROL_FILES = {
+    "message-delivery.json",
     "state.json",
     "workers.json",
     "library.json",

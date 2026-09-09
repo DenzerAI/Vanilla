@@ -17,6 +17,9 @@ const args = mode === 'push' ? ['--push'] : mode === 'message' ? ['--message', p
 const privacy = spawnSync(python, ['scripts/security-scan.py', ...args], {cwd:root, input, stdio:[input ? 'pipe' : 'inherit','inherit','inherit']});
 if (privacy.status !== 0) process.exit(privacy.status || 1);
 if (mode !== 'message') {
+  const revisionArgs = mode === 'push' ? ['--revision','HEAD'] : ['--index','--base','HEAD'];
+  const modules = spawnSync(python, ['scripts/verify-modules.py', ...revisionArgs], {cwd:root, stdio:'inherit'});
+  if (modules.status !== 0) process.exit(modules.status || 1);
   const design = spawnSync(process.execPath, ['scripts/verify-design-adoption.mjs', mode], {cwd:root, input, stdio:[input ? 'pipe' : 'inherit','inherit','inherit']});
   if (before !== git('write-tree')) throw Error('Der vorgemerkte Git-Inhalt hat sich während der Prüfung verändert. Commit oder Push wurde gestoppt.');
   process.exit(design.status ?? 1);

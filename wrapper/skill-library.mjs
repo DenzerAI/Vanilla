@@ -9,7 +9,7 @@ import {sharedSkills} from './shared-skills.mjs';
 const digest = value=>createHash('sha256').update(value).digest('hex');
 const within=(root,file)=>file===root||file.startsWith(root+path.sep);
 export class SkillLibrary {
-  constructor({store,companyRoot,workers,home=os.homedir(),hermesHome=process.env.HERMES_HOME||path.join(home,'.hermes')}) {
+  constructor({store,companyRoot,workers,home=path.join(store.dataRoot,'worker-home'),hermesHome=path.join(store.dataRoot,'hermes')}) {
     Object.assign(this,{store,companyRoot,workers,home,hermesHome});this.cache=new Map();this.queue=Promise.resolve();
   }
   async scan(root,source,owner,{hub=false}={}) {
@@ -40,9 +40,9 @@ export class SkillLibrary {
     this.cache.clear();const results=[],warnings=[];
     const roots=[
       [path.join(this.store.root,'skills'),'Eigene Skills','shared'],
-      [path.join(this.home,'.codex','skills'),'Codex','codex'],
-      [path.join(this.home,'.codex','skills','.system'),'Codex · System','codex'],
-      [path.join(this.home,'.claude','skills'),'Claude Code','claude'],
+      [path.join(this.store.dataRoot,'codex','skills'),'Codex','codex'],
+      [path.join(this.store.dataRoot,'codex','skills','.system'),'Codex · System','codex'],
+      [path.join(this.store.dataRoot,'claude','skills'),'Claude Code','claude'],
       [path.join(this.home,'.agents','skills'),'Gemeinsame lokale Skills','shared'],
       [path.join(this.hermesHome,'skills'),'Hermes','hermes'],
     ];

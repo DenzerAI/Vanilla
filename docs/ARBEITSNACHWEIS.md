@@ -28,4 +28,4 @@ Die verbindliche Vanilla-CI und Bereichsverträge gelten. Eine Überschrift, fla
 
 ## Weiter zu besprechen
 
-Wie echte Einsätze aus einer Session begonnen, pausiert, zugeordnet und beendet werden, ist ausdrücklich noch offen. Dieser Umbau nimmt diese Bedienentscheidung nicht vorweg. Die mobile Ansicht wurde von Christian selbst geprüft; auf seinen Wunsch keine erneute Geräteprüfung in diesem Umbau.
+Wie echte Einsätze aus einer Session begonnen, pausiert, zugeordnet und beendet werden, ist ausdrücklich noch offen. Dieser Umbau nimmt diese Bedienentscheidung nicht vorweg.

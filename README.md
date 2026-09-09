@@ -4,17 +4,29 @@ Neutrale, weiterentwickelbare Basis mit Python/FastAPI, SQLite, React, dateibasi
 
 Öffentlicher Quellcode: [DenzerAI/Vanilla](https://github.com/DenzerAI/Vanilla). Dieses Projekt heißt Vanilla. Das Repository enthält die Anwendungsquellen; Installationsdaten und Zugangsdaten bleiben lokal.
 
-## Aktueller Abnahmestand, 07.09.2026
+## Kundenbasis
 
-Die neutrale Entwicklungsvorschau läuft auf Port **21989**, der private Adapter auf **21990**. Die gebaute Oberfläche und ihre Assets sind über Tailscale-HTTPS erreichbar. Ein eigener Supervisor startet den Dienst nach einem Prozessende erneut; der geregelte App-Neustart wurde geprüft. Automatischer Start nach einem Host-Neustart ist noch nicht abgenommen. Konkrete Hostadressen und Betriebswege stehen in der zentralen privaten Infrastrukturakte.
+Neue Installationen beginnen ohne verbundene Worker, Postfächer oder persönliche
+Profile. Ein eigener Worker wird ausdrücklich für diese Installation angemeldet
+und verbunden. Einrichtung, Modulgrenzen und Erweiterungsregeln stehen in
+[docs/CUSTOMER-SETUP.md](docs/CUSTOMER-SETUP.md) und [system/MODULES.md](system/MODULES.md).
+Die Trennung von Profilen und Daten ist keine Betriebssystem-Sandbox.
 
-Entwicklung und Runtime sind eigenständige Clones dieses Repositories. Sie verwenden eigene Datenordner und importieren keine Kundendaten. Das ist eine Trennung der Anwendung und Daten, keine harte Betriebssystem-Sandbox. Eigene KI-Zugänge und eine zusätzliche App-Anmeldung sind noch nicht eingerichtet.
+Mail/Inbox, Kalenderprojektion, CRM-Belege, Routinen, lokale Zugänge und Sicherung
+besitzen ausführbare Anschlüsse. Anbieterabhängige Konten, Freigaben und ein echter
+Modellaufruf werden mit dem Kundenkonto abgenommen. Service-Arbeitszeiterfassung,
+Wetter und weitere ausdrücklich als Vorschau geführte Funktionen bleiben Ausbau.
+`GET /api/system/readiness` trennt Prozess, lokale Basis und Worker-Ausführbarkeit.
+Der Zielhost benötigt seine eigene Installation und Betriebsprüfung. Windows wird
+wegen der vorhandenen POSIX-Prozess-/Dateisperren derzeit nicht nativ unterstützt;
+Linux und macOS sind die vorgesehenen Plattformen.
 
 ## Lokaler Start
 
 Voraussetzungen: Python ab 3.12, Node ab 22.12. Aus dem Vanilla-Projektordner:
 
 ```sh
+npm run source:setup
 npm run setup:system
 npm start
 ```
@@ -43,7 +55,7 @@ Die führende Quelle ist jetzt ein eigenständiger Entwicklungsclone von **Denze
 Änderungen entstehen in einem Feature-Branch, werden gebaut und geprüft, anschließend per Commit und normalem Push gesichert. Die Runtime übernimmt den geprüften Commit ohne eigene Quellcodeänderungen. Neue Instanzen klonen dasselbe Repository und erhalten eigene Daten, Identität und Zugänge. Betriebsdaten, Dependencies und Secrets bleiben außerhalb von Git; neue Dateitypen müssen bewusst in `.gitignore` aufgenommen werden.
 
 Der verbindliche Ablauf steht in [Code zwischen Installationen austauschen](docs/CODE-SYNC.md).
-`npm run source:setup` aktiviert Datenschutz- und Design-Hooks und richtet einmalig
+`npm run source:setup` aktiviert Datenschutz-, Modul- und Design-Hooks und richtet einmalig
 die lokale, ausgeschlossene `firmenbasis/` aus neutralen Vorlagen ein. `npm ci`
 aktiviert die Git-Hooks ebenfalls. Commit und Push prüfen die tatsächlichen
 Git-Inhalte; Push prüft auch alle erreichbaren früheren Commits. Fremden Code nach
@@ -54,7 +66,7 @@ die Aktivierung der laufenden Anwendung bleibt ein eigener Schritt.
 
 ## Alternative macOS-Installation aus stabilem Clone
 
-Die folgenden `host-service.py`-Befehle beschreiben den launchd-Installationsweg auf einem entsprechend berechtigten Zielhost. Sie sind nicht der aktuelle Supervisor-Betriebsweg der Entwicklungsvorschau auf 21989. Sie setzen freie Ports 1989/1990 und die funktionierende native Tailscale-CLI voraus.
+Die folgenden `host-service.py`-Befehle beschreiben den launchd-Installationsweg auf einem entsprechend berechtigten Zielhost. Sie setzen freie Ports 1989/1990 und die funktionierende native Tailscale-CLI voraus.
 
 Dieser Abschnitt ist ein Operator-Ablauf für einen regulär berechtigten Host-Prozess. Er ist keine Umgehung einer Worker-Sandbox. Die Web-App darf weiterhin weder Dienste installieren noch Serve oder Schlüsselbund ändern.
 
@@ -125,7 +137,7 @@ npm run control:build
 .venv/bin/python scripts/verify-start.py
 ```
 
-`verify-start.py` benötigt freie 1989/1990 und benutzt ausschließlich temporäre eigene Daten. Es prüft HTTP → FastAPI → Adapter und vollständiges Herunterfahren. Der Integrationstest prüft zusätzlich SSE und persistierte Wiederaufnahme mit einem simulierten Worker. Die Entwicklungsvorschau auf 21989 ist separat über HTTPS und mit geregeltem Wiederanlauf geprüft. Eine neue Zielinstallation braucht ihre eigene Betriebsabnahme. Ein bestehender Altprozess gilt niemals als Abnahme.
+`verify-start.py` benötigt freie 1989/1990 und benutzt ausschließlich temporäre eigene Daten. Es prüft HTTP → FastAPI → Adapter und vollständiges Herunterfahren. Der Integrationstest prüft zusätzlich SSE und persistierte Wiederaufnahme mit einem simulierten Worker. Eine neue Zielinstallation braucht ihre eigene Betriebsabnahme. Ein bestehender Altprozess gilt niemals als Abnahme.
 
 Der getrennte Skilltree ist fertig gebaut und wird bereits über die bestehende Bibliothek als eigenständige Vorschau ausgeliefert. Die Übernahme seines Quellstands steht noch aus. Dieser Betriebsauftrag verändert oder exportiert ihn nicht; die spätere Anbindung an den stabilen App-Zugang bleibt offen.
 

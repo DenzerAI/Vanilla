@@ -136,9 +136,9 @@ class Operations:
     def configure_access(self, password):
         if len(password) < 8:
             raise ValueError("Bitte mindestens acht Zeichen verwenden.")
-        save_secret("system-access", password)
+        save_secret("system-access", password, self.config, self.db)
         api_token = secrets.token_urlsafe(48)
-        save_secret("system-api", api_token)
+        save_secret("system-api", api_token, self.config, self.db)
         register_secret(self.db, "system-access", "System · Anmeldung")
         register_secret(self.db, "system-api", "System · Lokale Werkzeuge")
         host = read_json(self.config.data / "host.json", {})

@@ -1,4 +1,4 @@
-> Vanilla-Abweichungen und Abnahmestand: siehe ../README.md. Globale Dienste, Schlüsselbund und Tailscale-Freigaben sind in dieser Distribution deaktiviert.
+> Vanilla-Abweichungen und Abnahmestand: siehe ../README.md. Hostdienste und HTTPS werden gesondert vom Operator eingerichtet. Zugänge liegen im lokalen Installationstresor.
 
 # Betrieb, Memory und Sicherungen
 
@@ -19,21 +19,14 @@ werden dabei nicht aktiviert. Die Sprachpakete und Modellprüfsummen führen
 Modelle und Laufzeiten werden einmal pro Installation gespeichert.
 
 `npm start` öffnet den Kern auf Loopback-Port 1989. Unter **Zugang** einen
-Anmeldeschlüssel setzen, anschließend unter **Verbindungen → Tailscale** Serve
-aktivieren. Tailscale muss auf Mac und Mobilgerät im selben Tailnet angemeldet
-sein. Die Freigabe ist privat; Funnel wird nicht eingerichtet. Vorhandene
-Serve-Ziele werden nicht überschrieben. Falls das Konto noch keine HTTPS-Zertifikate
-erlaubt, muss die HTTPS-Freigabe im Tailscale-Konto erfolgen.
+eigenen Anmeldeschlüssel setzen. HTTPS und Tailscale werden über den dokumentierten
+Operator-Weg in README.md eingerichtet; die Web-App verändert keine Hostdienste.
 
-Unter **Speicher & Sicherung** den Ordner verbinden und eine Sicherung starten.
-Der Standard `data/backups` liegt außerhalb der laufenden Systemdaten. Ein
-externes Laufwerk schützt zusätzlich vor Ausfall der internen Platte. Bestehende
-restic-Archive benötigen ihren Schlüssel. Neue Archive erhalten einen zufälligen
-Schlüssel im macOS-Schlüsselbund. Den Sicherungsschlüssel für Gerätewechsel
-separat sicher verwahren; er wird nicht als Klartextdatei exportiert. In der
-Schlüsselbundverwaltung liegt er unter `local.vanilla.control.system-backup`, Konto
-`Agent`. Bei Schlüsselwechsel bleibt der bisherige Schlüssel mit einem
-`system-backup-…`-Archivnamen erhalten.
+Unter **Speicher & Sicherung** einen erreichbaren Ordner und einen eigenen
+Wiederherstellungsschlüssel angeben. Ein externes Laufwerk schützt zusätzlich vor
+Geräteausfall. Schlüssel getrennt vom Gerät aufbewahren. Er wird im lokalen Tresor
+gehalten; eine Sicherung kann ohne ihn nicht geöffnet werden. Ein neuer Clone
+verwendet keine Zugänge oder Sicherungsarchive der Entwicklungsinstallation.
 
 ## macOS-Dienste und Heartbeat
 
@@ -135,7 +128,7 @@ Der neue Claude-Code-Anschluss nutzt den fest installierten offiziellen
 ersetzt keine Anmeldung beim jeweiligen Modellanbieter. Extern gestartete Worker
 bekommen die Konfiguration über **Memory → Konfiguration kopieren**. Geheimnisse
 stehen nicht in dieser Konfiguration; der lokale Prozess verwendet den bestehenden
-Schlüsselbund bzw. das interne Dienstgeheimnis. Projekt-ID und Versionshash sind
+interne Dienstgeheimnis oder einen ausdrücklich eingerichteten lokalen API-Zugang. Projekt-ID und Versionshash sind
 Teil der Werkzeugaufrufe. Gefundene Inhalte bleiben untrusted data.
 
 „Aus Memory entfernen“ löscht aktive Ableitungen und sperrt die erneute Aufnahme.
@@ -160,9 +153,9 @@ Versionen bleiben verfügbar; das UI benennt diese Grenze vor der Aktion.
 Eine Sicherung erzeugt über die SQLite-Backup-API eine abgeschlossene DB-Datei
 und erfasst dazu Dateien mit Schreibkoordination und Prüfsummen. Modelle,
 virtuelle Umgebungen, Node-Pakete, Vektoren und Cache werden nicht pro Snapshot
-mitgesichert. Workspace, Notiz-Git und lokale Codex-Sitzungen werden mitgesichert.
-Native Zustände anderer Anbieter außerhalb dieser Installation bleiben beim
-Anbieter. Schlüsselbund-Geheimnisse sind ausdrücklich nicht im Datenbackup.
+mitgesichert. Workspace, Firmenbasis, Aufnahmen, Notiz-Git, eigene Codex-Sitzungen
+und der zu SQLite passende lokale Tresorschlüssel werden gemeinsam gesichert.
+Native Worker-Anmeldungen werden am Ziel ausdrücklich neu eingerichtet.
 
 Aufbewahrung: zunächst sieben tägliche, vier wöchentliche und drei monatliche
 Stände. Restic prüft nach dem Backup Struktur und einen Datenanteil. Die
@@ -247,3 +240,22 @@ Routine-Werkzeug → echten Python-/Node-Anschluss → simulierten Worker →
 Benachrichtigung einschließlich Neustart aus. `job-notifications.test.mjs`
 prüft erlaubte Ziele und dass Laufabschluss keine aktuelle Bearbeitung oder
 Pause überschreibt. Diese Prüfungen versenden keine echten Nachrichten.
+
+## Kundenbasis: Zugang und Sicherung
+
+Systemzugänge und Anbieterwerte verwenden den installationsgebundenen Fernet-Tresor in data/control/provider-vault und verschlüsselte Datensätze in SQLite. Keine Hostschlüsselbund-Fallbacks. App-Anmeldung ist über den bestehenden Einstellungsweg aktivierbar. Vor einem neuen Backup einen eigenen Wiederherstellungsschlüssel eingeben und getrennt vom Gerät aufbewahren. Ein ausdrücklich gewählter erreichbarer externer Ordner ist zulässig; Workspace und laufende Daten bleiben als Ziel ausgeschlossen.
+
+Sicherungsschema 3 enthält Firmenbasis, Workspace einschließlich Identität und Ergebnisse, SQLite, Memory-Git-Historie, Diktataufnahmen, Provider-/Systemtresorschlüssel und eigene Codex-Verläufe. Modellgewichte und Caches werden neu aufgebaut; native Worker-Anmeldungen werden am Ziel erneut eingerichtet. Hostadressen und Dienstdefinitionen werden am Ziel neu bestimmt. Restore prüft den Bestand vor dem Ersetzen und führt die bisherige Rückkehrsicherung fort. Alte Sicherungen ohne Firmenbasis/Aufnahmen stellen diese Bestandteile nicht wieder her. Healthchecks sind keine vollständige Kundenauslieferungsabnahme.
+
+
+`GET /api/system/readiness` meldet Prozess, vollständige lokale Basis und tatsächliche
+Worker-Ausführbarkeit getrennt. `/healthz` prüft den laufenden Prozess und ersetzt
+keinen Kundenabnahmetest. `system_module_status` liest den tatsächlichen Fachstatus.
+
+`memory_original` macht öffentliche Originalturns anhand von Chat-/Turn-ID aus einer
+Memory-Quelle gezielt und paginiert lesbar, auch bei älteren kurzen Erfassungen.
+Zugangsdaten, Code und interne Werkzeuge werden herausgefiltert. Neue Erfassungen
+bewahren bis zu 100.000 Zeichen pro Nachricht in getrennten Turn-Dateien, damit
+Antwortenden nicht standardmäßig nach 1.400 Zeichen fehlen. Historische Auszüge
+werden nicht still überschrieben. Ausgeschlossene oder vergessene Chats sind über
+das Memory-Werkzeug gesperrt; ihr sichtbarer Originalchat bleibt nach Vertrag erhalten.

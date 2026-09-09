@@ -159,7 +159,7 @@ test('image output is validated and registered through the configured provider',
 test('skills keep provenance, install optional reference files and do not modify original installations',async t=>{
   const f=await fixture(t),home=path.join(f.root,'home'),hermesHome=path.join(home,'.hermes'),company=path.join(f.root,'company');await mkdir(company);
   const original='---\nname: sample\ndescription: A sample\n---\n\nRead references/info.txt.';
-  for(const dir of [path.join(home,'.codex/skills/codex-one'),path.join(hermesHome,'skills/hermes-one'),path.join(hermesHome,'hermes-agent/optional-skills/test/optional-one')]){await mkdir(path.join(dir,'references'),{recursive:true});await writeFile(path.join(dir,'SKILL.md'),original);await writeFile(path.join(dir,'references/info.txt'),'Supporting file');}
+  for(const dir of [path.join(f.store.dataRoot,'codex/skills/codex-one'),path.join(hermesHome,'skills/hermes-one'),path.join(hermesHome,'hermes-agent/optional-skills/test/optional-one')]){await mkdir(path.join(dir,'references'),{recursive:true});await writeFile(path.join(dir,'SKILL.md'),original);await writeFile(path.join(dir,'references/info.txt'),'Supporting file');}
   await writeFile(path.join(hermesHome,'hermes-agent/LICENSE'),'Test license');
   const skills=new SkillLibrary({store:f.store,companyRoot:company,workers:f.workers,home,hermesHome});
   const listed=(await skills.list()).data[0].skills;assert.deepEqual(new Set(listed.map(s=>s.owner)),new Set(['codex','hermes']));
@@ -191,4 +191,22 @@ test('stopping Telegram during a media download prevents a late worker dispatch'
   f.runtime.telegramAttachments=async()=>{downloadStarted();return new Promise(resolve=>releaseDownload=resolve);};
   await f.runtime.start(c.id);await started;await f.runtime.stop(c.id);releaseDownload([]);
   await new Promise(resolve=>setImmediate(resolve));assert.equal(f.calls.length,0);
+});
+
+test('Microsoft calendar follows complete bounded pages and rejects foreign continuations',async t=>{
+  let foreign=false,calls=[];
+  const f=await fixture(t,{request:async(url,options)=>{
+    calls.push(String(url));
+    if(String(url).includes('/oauth2/'))return {ok:true,text:async()=>JSON.stringify({access_token:'synthetic-access'})};
+    const next='https://graph.microsoft.com/v1.0/users/inbox%40example.test/calendar/calendarView?$skiptoken=next';
+    return {ok:true,text:async()=>JSON.stringify(String(url).includes('$skiptoken')?{value:[{id:'second'}]}:{value:[{id:'first'}],'@odata.nextLink':foreign?'https://example.test/private':next})};
+  }});
+  const c=await connection(f,'microsoft-graph',{tenantId:'00000000-0000-4000-8000-000000000001',clientId:'00000000-0000-4000-8000-000000000002',mailbox:'inbox@example.test'},{clientSecret:'synthetic-application-secret'});
+  const bounds={start:'2026-10-01T00:00:00+02:00',end:'2026-11-01T00:00:00+01:00'};
+  const result=await f.services.action(c.id,'calendar',bounds);
+  assert.equal(result.complete,true);assert.deepEqual(result.value.map(e=>e.id),['first','second']);
+  foreign=true;calls=[];
+  await assert.rejects(f.services.action(c.id,'calendar',bounds),/Paginierung/);
+  assert.ok(calls.every(url=>!url.startsWith('https://example.test')));
+  await assert.rejects(f.services.action(c.id,'calendar',{}),/Zeitraum|zeitraum/);
 });

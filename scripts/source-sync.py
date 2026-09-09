@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import shutil
 import subprocess
+import sys
 import tempfile
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -87,6 +88,9 @@ def merge(root, target, check_only=False):
     scanner.tree(candidate)
     if scanner.findings:
         return {'merged': False, 'findings': scanner.findings}
+    validation = subprocess.run([sys.executable,str(root/'scripts/verify-modules.py'),'--root',str(root),'--revision',candidate,'--base',head],capture_output=True,text=True)
+    if validation.returncode:
+        raise ValueError('Modulvertrag der Quellübernahme ist unvollständig. Mit modules:verify prüfen.')
     if check_only:
         return {'checked': True, 'tree': candidate, 'findings': []}
     if subprocess.run(['git', '-C', str(root), 'merge-base', '--is-ancestor', target, head], capture_output=True).returncode == 0:

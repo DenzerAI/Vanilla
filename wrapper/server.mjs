@@ -1,8 +1,11 @@
+import {installationEnvironment} from './worker-environment.mjs';
+import {chatArchiveUpdater} from './chat-archive.mjs';
 import {briefingChatOpener} from './briefing-chat.mjs';
 import {demoBriefings} from './ui/planner-briefings.mjs';
 import {htmlPreviewPolicy, readHtmlPreview} from './html-preview.mjs';
 import {saveHandoff, joinHandoff, handoffInstructions} from "./chat-handoff.mjs";
 import { searchConversations } from './search.mjs';
+import { MessageDelivery } from "./message-delivery.mjs";
 import {localPath, localPort} from './isolation.mjs';
 import {sharedMemoryCodexConfig} from './shared-memory.mjs';
 import {notificationTargets, sendJobNotification, routineInstructions} from './job-notifications.mjs';
@@ -65,15 +68,9 @@ const token = process.env.AGENT_INTERNAL_TOKEN || randomBytes(32).toString("hex"
 const store = new Storage(workspace, dataRoot);
 await store.init();
 const secrets = createSecretStore(store);
-// The private Codex home only isolates runtime state. Account, config and
-// extensions come from the host user's Codex login, exactly like a customer
-// who ran `codex login` once on their Mac. `UWE_CODEX_SOURCE_HOME=` disables it.
-const codexSourceHome = "UWE_CODEX_SOURCE_HOME" in process.env
-  ? process.env.UWE_CODEX_SOURCE_HOME || null
-  : process.env.CODEX_HOME || path.join(os.homedir(), ".codex");
+// Profiles belong to this installation. Host accounts and extensions are never adopted.
 const runtime = await prepareCodexHome({
   home: path.join(dataRoot, "codex"),
-  sourceHome: codexSourceHome,
   chats: store.state.chats.filter(c => !c.workerId || c.workerId === "codex"),
 });
 const nativeCodex = new Codex({
@@ -81,7 +78,7 @@ const nativeCodex = new Codex({
   home: runtime.home,
   config: {...runtime.config,...sharedMemoryCodexConfig()},
   binary: await findWorkerCommand(workerCatalog.find(w => w.id === "codex")) || "codex",
-  contextEnv: { COMPANY_BASE: companyRoot(root), SYSTEM_BASE: systemRoot() },
+  contextEnv: { ...await installationEnvironment(dataRoot), AGENT_INTERNAL_TOKEN: process.env.AGENT_INTERNAL_TOKEN || "", COMPANY_BASE: companyRoot(root), SYSTEM_BASE: systemRoot() },
 });
 const workers = new Workers({ store, root, codex: nativeCodex });
 await workers.init();
@@ -138,6 +135,25 @@ const channels = await new ChannelRuntime({store,services,
   interrupt:async id=>{if(id&&active.has(id))await workers.call('turn/interrupt',{threadId:id,turnId:active.get(id)});},
 }).init();
 services.runtime=channels;
+const deliveryFile = path.join(dataRoot, 'message-delivery.json');
+const finishedTurns = new Set();
+function observeDeliveryThread(id, thread) {
+  for (const turn of thread.turns || []) if (['completed','failed','interrupted'].includes(turn.status)) {
+    finishedTurns.add(id + ':' + turn.id);
+    if (active.get(id) === turn.id) active.delete(id);
+  }
+  const live = thread.turns?.find(t => t.status === 'inProgress');
+  if (live && !active.has(id) && !finishedTurns.has(id + ':' + live.id)) active.set(id, live.id);
+}
+
+const deliveries = await new MessageDelivery({
+  read: () => jsonFile(deliveryFile, null), write: state => atomic(deliveryFile, state, {durable:true}),
+  active: id => active.get(id), canSteer: id => workers.capability(workers.owner(id)).steer,
+  send: (id, payload, delivery) => sendTurn(id, payload, delivery),
+  emit: () => emit({ method: 'wrapper/deliveries' }),
+  onError: error => emit({ method: 'wrapper/error', params: { message: error.message } }),
+}).init();
+
 workers.on("notification", (msg) => {
   if (["thread/realtime/closed", "thread/realtime/error"].includes(msg.method)) voiceSessions.delete(msg.params?.threadId);
   eventNames.add(msg.method);
@@ -181,7 +197,9 @@ workers.on("notification", (msg) => {
     touch(id);
   }
   if (msg.method === "turn/completed") {
-    active.delete(id);
+    finishedTurns.add(id + ':' + p.turn.id);
+    if (active.get(id) === p.turn.id) active.delete(id);
+    void deliveries.finished(id, p.turn).catch(e => emit({method:'wrapper/error',params:{message:e.message}}));
     if (own(id)) { store.chat(id).lastTurnStatus = p.turn.status; if (p.turn.status === "completed") store.chat(id).lastCompletedTurnId = p.turn.id; }
     emit({ method: "wrapper/chats" });
     for (const [key, request] of workers.requests) {
@@ -229,6 +247,7 @@ workers.on("request", (msg) => {
 workers.on("disconnected", (error) => {
   for (const c of store.state.chats) if (workers.owner(c.id) === error.workerId) {
     loaded.delete(c.id);
+    void deliveries.disconnected(c.id).catch(e => emit({method:'wrapper/error',params:{message:e.message}}));
     if (active.has(c.id)) {
       const turnId=active.get(c.id);
       active.delete(c.id); c.lastTurnStatus = "failed";
@@ -385,13 +404,28 @@ async function finishThread(id, turn) {
   }
 }
 const turnLocks = new Set();
-async function sendTurn(id, b) {
-  if (turnLocks.has(id)) throw new Error("Eine Nachricht wird gerade übergeben. Bitte kurz warten.");
-  if (restartGate.restarting) throw new Error("Der Server wird neu gestartet. Bitte kurz warten.");
+const deliveryReads = new Set();
+const deliveryRecovery = setInterval(() => {
+  for (const id of new Set(deliveries.state.messages.filter(m => m.status === 'waiting').map(m => m.chatId))) {
+    if (!own(id)) continue;
+    if (!deliveries.state.gates[id]) deliveries.kick(id);
+    else if (!deliveryReads.has(id) && deliveries.state.gates[id].blocked && !deliveries.state.messages.some(m => m.chatId === id && m.status === 'unknown')) {
+      deliveryReads.add(id);
+      void workers.call('thread/read', {threadId:id, includeTurns:true})
+        .then(r => { observeDeliveryThread(id, r.thread); return deliveries.reconcile(id, r.thread); })
+        .catch(() => {}).finally(() => deliveryReads.delete(id));
+    }
+  }
+}, 5000);
+deliveryRecovery.unref();
+
+async function sendTurn(id, b, delivery) {
+  if (turnLocks.has(id)) throw Object.assign(new Error("Eine Nachricht wird gerade übergeben. Bitte kurz warten."), {deliveryPaused:true});
+  if (restartGate.restarting) throw Object.assign(new Error("Der Server wird neu gestartet. Bitte kurz warten."), {deliveryPaused:true});
   turnLocks.add(id);
-  try { return await sendTurnUnlocked(id, b); } finally { turnLocks.delete(id); }
+  try { return await sendTurnUnlocked(id, b, delivery); } finally { turnLocks.delete(id); deliveries.kick(id); }
 }
-async function sendTurnUnlocked(id, b) {
+async function sendTurnUnlocked(id, b, delivery) {
   const c = await ensure(id);
   const input = [];
   if (b.text?.trim()) input.push({ type: "text", text: b.text });
@@ -416,6 +450,13 @@ async function sendTurnUnlocked(id, b) {
     textCharacters: b.text?.length || 0,
     attachments: (b.attachments || []).length,
   });
+  const checkDelivery = () => {
+    if (delivery && (active.get(id) || null) !== delivery.targetTurnId)
+      throw Object.assign(new Error('Aufgabe wurde während der Vorbereitung abgeschlossen.'), { deliveryRace: true });
+    delivery?.beforeCall();
+  };
+  if (delivery && (active.get(id) || null) !== delivery.targetTurnId)
+    throw Object.assign(new Error('Aufgabe wurde während der Vorbereitung abgeschlossen.'), { deliveryRace: true });
   if (active.has(id)) {
     if (b.nextSelection) throw new Error("Die vorgemerkte Modellwahl gilt für die nächste Antwort. Bitte die laufende Antwort abwarten oder stoppen.");
     if (b.mode && b.mode !== (c.mode || "default"))
@@ -423,6 +464,7 @@ async function sendTurnUnlocked(id, b) {
         "Bitte zuerst die laufende Aufgabe stoppen, bevor du den Modus wechselst.",
       );
     if (!workers.capability(workers.owner(id)).steer) throw new Error("Bitte zuerst die laufende Antwort abwarten oder stoppen.");
+    checkDelivery();
     return workers.call("turn/steer", {
       threadId: id,
       expectedTurnId: active.get(id),
@@ -506,8 +548,10 @@ async function sendTurnUnlocked(id, b) {
         developer_instructions: conversationInstructions() + "\n\n" + companyContext,
       },
     };
+  if (delivery?.continuation) p.collaborationMode.settings.developer_instructions += '\nDiese Nachricht wurde als Ergänzung des vorherigen Auftrags gesendet, der inzwischen endete. Bearbeite sie im Zusammenhang mit diesem Auftrag und behalte unerledigte Arbeit bei.';
+  checkDelivery();
   const r = await workers.call("turn/start", p);
-  active.set(id, r.turn.id);
+  if (!finishedTurns.has(id + ':' + r.turn.id)) active.set(id, r.turn.id);
   // Title work runs independently and never delays or pollutes the conversation.
   void assignChatTitle({ chat: c, text: b.text, adapter: workers.adapters.get(workers.owner(id)),
     save: () => store.save(), emit }).catch(() => {});
@@ -629,7 +673,8 @@ route("GET", "/api/bootstrap", async () => {
     planAvailable: workers.routingOrder().some(id => workers.capability(id).plan),
   };
 });
-const openBriefingChat = briefingChatOpener({store, newChat, cache:threadCache, emit});
+const updateChat = chatArchiveUpdater({store, workers, active, turnLocks, voiceSessions, loaded, restartGate, emit});
+const openBriefingChat = briefingChatOpener({store, newChat, cache:threadCache, emit, updateChat});
 route("POST", "/api/planner/chat", async b => {
   let item;
   if (b.demoDate) {
@@ -695,6 +740,8 @@ route("GET", "/api/thread", async (b, u) => {
     });
     r.thread = mergeTools(r.thread, toolsByThread.get(id));
     threadCache.set(id, r.thread);
+    observeDeliveryThread(id, r.thread);
+    await deliveries.reconcile(id, r.thread);
     const lastStatus = r.thread.turns.at(-1)?.status;
     const completedId = r.thread.turns.findLast(t => t.status === "completed")?.id;
     if (lastStatus && (store.chat(id).lastTurnStatus !== lastStatus || store.chat(id).lastCompletedTurnId !== completedId)) {
@@ -791,7 +838,39 @@ route("POST", "/api/worker-session", async b => {
     return result;
   } finally { turnLocks.delete(id); }
 });
-route("POST", "/api/turn", (b) => sendTurn(b.id, b));
+route("POST", "/api/turn", async b => {
+  if(!b.messageId)return sendTurn(b.id,b);
+  store.chat(b.id);
+  if(restartGate.restarting)throw Error('Der Server wird neu gestartet.');
+  await deliveries.enqueue(b.id,b);
+  await deliveries.settle(b.id);
+  const status=await deliveries.list(b.id);
+  const message=status.messages.find(m=>m.id===b.messageId);
+  return {message,blocked:status.blocked,turn:message?.turnId?{id:message.turnId}:undefined};
+});
+route("GET", "/api/messages", async (_b, u) => {
+  const id = u.searchParams.get('id'); store.chat(id);
+  return deliveries.list(id);
+});
+route("POST", "/api/messages", async b => {
+  store.chat(b.id);
+  if (restartGate.restarting) throw new Error('Der Server wird neu gestartet.');
+  return { message: await deliveries.enqueue(b.id, b) };
+});
+route("POST", "/api/messages/resume", async b => {
+  store.chat(b.id);
+  if (restartGate.restarting) throw new Error('Der Server wird neu gestartet.');
+  // Read-only verification: no cached transcript can prove a worker is idle.
+  const r = await workers.call('thread/read', {threadId:b.id,includeTurns:true});
+  if (!Array.isArray(r.thread?.turns) || r.thread.turns.some(t => t.status === 'inProgress')) throw new Error('Die vorherige Arbeit läuft noch. Bitte Abschluss abwarten.');
+  observeDeliveryThread(b.id, r.thread);
+  await deliveries.resume(b.id, b.pauseToken);
+  return deliveries.list(b.id);
+});
+route("POST", "/api/messages/edit", async b => {
+  store.chat(b.id);
+  return { message: await deliveries.edit(b.id, b.messageId, b.revision, b.text, b.remove === true) };
+});
 route("POST", "/api/stop", async (b) => {
   await ensure(b.id);
   for (let attempt = 0; attempt < 15; attempt++) {
@@ -872,28 +951,7 @@ route("POST", "/api/chat/read", async (b) => {
   }
   return { readTurnId: chat.readTurnId || null };
 });
-route("POST", "/api/chat/update", async (b) => {
-  const c = store.chat(b.id);
-  if (b.title !== undefined) {
-    c.title = String(b.title).trim().slice(0, 160) || "Neuer Chat";
-    c.titleRevision = (c.titleRevision || 0) + 1;
-    c.titleStatus = "manual";
-  }
-  if (b.pinned !== undefined) c.pinned = !!b.pinned;
-  if (b.archived !== undefined) {
-    if (active.has(b.id))
-      throw new Error("Bitte zuerst die laufende Antwort stoppen.");
-    await engine(workers.owner(b.id));
-    await workers.call(b.archived ? "thread/archive" : "thread/unarchive", {
-      threadId: b.id,
-    });
-    c.archived = !!b.archived;
-    loaded.delete(b.id);
-  }
-  await store.save();
-  emit({ method: "wrapper/chats" });
-  return c;
-});
+route("POST", "/api/chat/update", b => updateChat(b.id, b));
 route("POST", "/api/turn/delete", async (b) => {
   if (turnLocks.has(b.id)) throw new Error("Bitte die laufende Übertragung abwarten.");
   await ensure(b.id);

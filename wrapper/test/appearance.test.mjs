@@ -121,3 +121,16 @@ test('agent motion modes persist and reject invalid choices', async () => {
     for (const avatarMotion of [null, true, 'invalid']) assert.throws(() => validateAppearance({avatarMotion}));
   } finally { await rm(dir, {recursive: true, force: true}); }
 });
+
+test('icon animation preferences persist across reloads and reject invalid values', async () => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'icon-appearance-'));
+  try {
+    const store = new Storage(path.join(dir, 'workspace'), path.join(dir, 'data')); await store.init();
+    for (const iconAnimation of ['hover', 'press', 'off']) {
+      Object.assign(store.state.settings, validateAppearance({iconAnimation})); await store.save();
+      const restored = new Storage(path.join(dir, 'workspace'), path.join(dir, 'data')); await restored.init();
+      assert.equal(restored.state.settings.iconAnimation, iconAnimation);
+    }
+    for (const iconAnimation of [null, true, 'always']) assert.throws(() => validateAppearance({iconAnimation}));
+  } finally { await rm(dir, {recursive: true, force: true}); }
+});

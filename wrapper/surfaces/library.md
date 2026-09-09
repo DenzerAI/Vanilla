@@ -46,7 +46,7 @@ während des anfänglichen Such-Debounce.
 
 ## Feinschliff der Vorschau
 
-Der Ansichtswechsel verwendet eine Pille mit runden Iconbuttons und betont das aktive Symbol über die Textfarbe, ohne separate Auswahlfläche. Markdown wird im Bibliotheks-Lesemodus von FileContent über den vorhandenen bereinigten Markdown-Renderer dargestellt. Andere Text-/Codedateien erscheinen als lesbarer schreibgeschützter Text, editierbare FileContent-Aufrufer behalten ihren Editor. Im Workspace scrollt der gesamte Inhalt, ohne verschachteltes Textfeld. Die große Vorschau nutzt die verfügbare Fensterhöhe; lange Dokumente scrollen, Bilder bleiben vollständig sichtbar.
+Der Ansichtswechsel verwendet die gemeinsamen runden Iconbuttons: transparent im Ruhezustand, feiner Kreisrand und betontes Symbol bei Auswahl, einmalige Hoveranimation auf Desktop. Keine eigene Gruppenfüllung oder Auswahlkachel. Markdown wird im Bibliotheks-Lesemodus von FileContent über den vorhandenen bereinigten Markdown-Renderer dargestellt. Andere Text-/Codedateien erscheinen als lesbarer schreibgeschützter Text, editierbare FileContent-Aufrufer behalten ihren Editor. Im Workspace scrollt der gesamte Inhalt, ohne verschachteltes Textfeld. Die große Vorschau nutzt die verfügbare Fensterhöhe; lange Dokumente scrollen, Bilder bleiben vollständig sichtbar.
 
 ## Vorschau nach Dateityp
 
@@ -88,3 +88,9 @@ HTML-Dateien gedacht; sie synchronisiert noch keine externen Dateiänderungen li
 
 
 Der helle Workspace verwendet dieselbe dunkler abgesetzte Papierfläche wie im Chat, auch in Dateivorschau und Bibliothek. Menüs und Dialoge folgen der hellen Materialhierarchie aus DESIGN.md; es gibt keine eigene Bibliothekspalette.
+
+
+Codeblöcke im gemeinsamen Markdown-Renderer verwenden ebenfalls CopyButton.
+Die bereinigte Toolbar enthält nur den Portalplatz; React rendert darin dieselbe
+zugängliche Kopieraktion mit Haken und Fehlerzustand. Kopiert wird ausschließlich
+der Text des zugehörigen Codeblocks, ohne die letzte Formatierungszeile.

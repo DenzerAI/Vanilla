@@ -1,3 +1,4 @@
+import {workerEnvironment} from './worker-environment.mjs';
 import { EventEmitter } from "node:events";
 import { spawn } from "node:child_process";
 
@@ -9,7 +10,7 @@ export class WorkerRPC extends EventEmitter {
   }
   start() {
     if (this.proc) return;
-    const proc = spawn(this.command, this.args, { cwd: this.cwd, stdio: ["pipe", "pipe", "pipe"], env: { ...process.env, ...this.env, NO_COLOR: "1" } });
+    const proc = spawn(this.command, this.args, { cwd: this.cwd, stdio: ["pipe", "pipe", "pipe"], env: { ...workerEnvironment(), ...this.env, NO_COLOR: "1" } });
     this.proc = proc;
     let buffer = "";
     proc.stdout.setEncoding("utf8");

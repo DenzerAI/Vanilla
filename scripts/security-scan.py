@@ -23,7 +23,7 @@ PATTERNS = [
     'backend/*.mjs', 'frontend/*.js', 'frontend/*.css', 'frontend/index.html',
     'scripts/*.py', 'scripts/*.mjs', 'test/*.mjs', 'core/*.py',
     'core/tests/*.py', 'core/tests/*.cjs', 'jobs/briefings/*.py',
-    'system/*.md', 'system/*.mjs', 'system/source-policy.json', 'docs/*.md',
+    'system/*.md', 'system/*.mjs', 'system/source-policy.json', 'system/modules.json', 'docs/*.md',
     'examples/*.py', '.githooks/pre-commit', '.githooks/commit-msg',
     '.githooks/pre-merge-commit', '.githooks/pre-push', '.github/workflows/*.yml',
     'wrapper/*.mjs', 'wrapper/*.md', 'wrapper/*.ts', 'wrapper/.gitignore',

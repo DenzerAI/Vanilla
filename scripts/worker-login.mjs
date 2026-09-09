@@ -1,0 +1,24 @@
+import {spawn} from 'node:child_process';
+import path from 'node:path';
+import {mkdir} from 'node:fs/promises';
+import {fileURLToPath} from 'node:url';
+import {installationEnvironment,workerEnvironment} from '../wrapper/worker-environment.mjs';
+import {findWorkerCommand} from '../wrapper/workers.mjs';
+import {workerCatalog} from '../system/worker-catalog.mjs';
+import {localPath} from '../wrapper/isolation.mjs';
+
+const root=fileURLToPath(new URL('../',import.meta.url));
+process.chdir(root);
+const id=process.argv[2];
+const native={codex:['codex',['login']], 'claw-code':['claude',['auth','login']], hermes:['hermes',['setup']],openclaw:['openclaw',['onboard']]};
+if (!native[id]) throw Error('Worker angeben: codex, claw-code, hermes oder openclaw.');
+const entry=workerCatalog.find(w=>w.id===id);
+const command=await findWorkerCommand({...entry,command:native[id][0], ...(id==='claw-code'?{env:'UWE_CLAUDE_BINARY',adapter:'native'}:{})});
+if (!command) throw Error(`${native[id][0]} ist noch nicht installiert. Siehe wrapper/WORKERS.md.`);
+const data=localPath(process.env.UWE_DATA_ROOT || 'data/control');
+await mkdir(data,{recursive:true,mode:0o700});
+const scoped=await installationEnvironment(data);
+console.log('Anmeldung für diese Vanilla-Installation. Es werden keine vorhandenen Hostprofile übernommen.');
+const child=spawn(command,native[id][1],{cwd:root,stdio:'inherit',env:{...workerEnvironment(),...scoped}});
+child.on('error',()=>{console.error('Worker konnte nicht gestartet werden. Programmpfad prüfen.');process.exitCode=1;});
+child.on('exit',code=>{process.exitCode=code??1;});

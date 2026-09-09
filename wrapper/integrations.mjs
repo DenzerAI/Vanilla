@@ -7,11 +7,15 @@ import { randomUUID } from "node:crypto";
 import { safeName, jsonFile } from "./storage.mjs";
 import path from "node:path";
 const exec = promisify(execFile);
-const unavailable = () => {throw new Error("System-Schlüsselbund ist in der isolierten Vanilla-Basis deaktiviert.");};
-export async function saveSecret(id, value) { unavailable(); }
-export async function readSecret(id) { unavailable(); }
-export async function hasSecret(id) { return false; }
-export async function deleteSecret(id) { unavailable(); }
+async function providerSecretAction(action,id,value) {
+  const {coreEnabled,coreRequest} = await import('./core-client.mjs');
+  if(!coreEnabled) throw new Error('Anbieterzugänge benötigen den laufenden Vanilla-Kern.');
+  return coreRequest('provider-secrets',{action,id,...(value===undefined?{}:{value})});
+}
+export async function saveSecret(id,value) { await providerSecretAction('save',id,value); }
+export async function readSecret(id) { return (await providerSecretAction('read',id)).value; }
+export async function hasSecret(id) { if(id.startsWith('system-'))return false; return (await providerSecretAction('has',id)).found; }
+export async function deleteSecret(id) { await providerSecretAction('remove',id); }
 const providerSecrets = [
   { id: "dictation-groq", name: "Groq", file: "dictation-settings.json", flag: "groq" },
   { id: "speech-elevenlabs", name: "ElevenLabs", file: "speech-settings.json", flag: "elevenlabs" },

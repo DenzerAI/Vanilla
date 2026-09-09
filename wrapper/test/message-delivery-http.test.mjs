@@ -1,0 +1,46 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp, rm, readFile, writeFile } from 'node:fs/promises';
+import { spawn } from 'node:child_process';
+import { once } from 'node:events';
+import path from 'node:path';
+import net from 'node:net';
+import { fileURLToPath } from 'node:url';
+const root=fileURLToPath(new URL('../../',import.meta.url));
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+async function until(fn) {for(let i=0;i<200;i++){const value=await fn();if(value)return value;await delay(25);}throw Error('Timed out');}
+test('HTTP → durable ledger → worker protocol: tools, FIFO, duplicate HTTP, completion race, socket loss and restart', {timeout:30000}, async t=>{
+  const dir=await mkdtemp(path.join(root,'.verify-delivery-'));
+  const reservation=net.createServer().listen(0,'127.0.0.1');await once(reservation,'listening');const port=reservation.address().port;await new Promise(r=>reservation.close(r));
+  let child,exit,token,logs='';const base=`http://127.0.0.1:${port}/api`, state=path.join(dir,'worker.json');
+  const get=async route=>{const r=await fetch(base+route);if(!r.ok)throw Error(await r.text());return r.json();};
+  const post=async(route,body)=>{const r=await fetch(base+route,{method:'POST',headers:{'content-type':'application/json','x-uwe-token':token},body:JSON.stringify(body)});const result=await r.json();assert.equal(r.status,200,JSON.stringify(result));return result;};
+  const binary=path.join(dir,'worker.mjs');
+  await writeFile(binary, '#!'+process.execPath+'\n'+(await readFile(path.join(root,'wrapper/test/message-delivery-worker.fixture.mjs'),'utf8')).replace(/^#![^\n]*\n/,'').replace('process.env.DELIVERY_FIXTURE_STATE',JSON.stringify(state)),{mode:0o700});
+  const start=async()=>{
+    child=spawn(process.execPath,['wrapper/server.mjs'],{cwd:root,env:{...process.env,AGENT_CORE_URL:'',COMPANY_BASE:path.join(root,'firmenbasis'),SYSTEM_BASE:path.join(root,'system'),UWE_CODEX_SOURCE_HOME:'',UWE_PORT:String(port),UWE_WORKSPACE:path.join(dir,'workspace'),UWE_DATA_ROOT:path.join(dir,'control'),UWE_CODEX_BINARY:binary,DELIVERY_FIXTURE_STATE:state},stdio:['ignore','pipe','pipe']});exit=once(child,'exit');child.stderr.on('data',b=>logs+=b);child.stdout.on('data',b=>logs+=b);
+    await until(async()=>{if(child.exitCode!==null)throw Error(logs);try{return await get('/chats');}catch{return false;}});token=(await get('/bootstrap')).token;
+  };
+  const stop=async()=>{child.kill();await exit;};
+  t.after(async()=>{if(child?.exitCode===null)await stop();await rm(dir,{recursive:true,force:true});});
+  await start();await post('/workers/connect',{id:'codex'});const id=(await post('/chats',{title:'Delivery test'})).thread.id;
+  const add=(messageId,text,intent='send')=>post('/messages',{id,messageId,text,intent});
+  const list=async()=> (await get('/messages?id='+id)).messages;
+  const status=async(mid,s)=>(await list()).some(m=>m.id===mid&&m.status===s);
+  await add('tool-message','tool');await until(()=>status('tool-message','delivered'));
+  await Promise.all(Array.from({length:8},()=>add('after-message','later','after')));
+  const waiting=(await list()).find(m=>m.id==='after-message');await post('/messages/edit',{id,messageId:waiting.id,revision:waiting.revision,text:'edited task'});
+  await add('steer-message','keep original goal');await until(()=>status('steer-message','delivered'));
+  let disk=JSON.parse(await readFile(state,'utf8'));assert.deepEqual(disk.calls.map(c=>c.method),['turn/start','turn/steer']);assert.equal(disk.calls[1].params.expectedTurnId,disk.threads[id].turns[0].id);
+  await writeFile(state+'.release','yes');await until(()=>status('after-message','delivered'));
+  await until(async()=>(await list()).find(m=>m.id==='after-message')?.outcome==='completed');
+  disk=JSON.parse(await readFile(state,'utf8'));assert.equal(disk.calls.length,3);assert.equal(disk.calls[2].params.input[0].text,'edited task');
+  await add('fast-message','fast');await until(async()=>(await list()).find(m=>m.id==='fast-message')?.outcome==='completed');
+  await until(async()=>!(await get('/chats')).active?.[id]);
+  await rm(state+'.release');
+  await add('lost-message','disconnect');await until(()=>status('lost-message','unknown'));
+  await add('blocked-message','must wait','after');await stop();await start();
+  assert.equal(await status('lost-message','unknown'),true);assert.equal(await status('blocked-message','waiting'),true);
+  await add('lost-message','disconnect');await delay(200);
+  disk=JSON.parse(await readFile(state,'utf8'));assert.equal(disk.calls.filter(c=>c.params.input?.[0]?.text==='disconnect').length,1);
+});

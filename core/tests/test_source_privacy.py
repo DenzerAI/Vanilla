@@ -62,6 +62,8 @@ def repo(tmp_path, monkeypatch):
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(ROOT / name, target)
     shutil.copytree(ROOT / 'templates', root / 'templates')
+    # This fixture isolates privacy and index protection; module behavior has its own real-tree tests.
+    write(root, 'scripts/verify-modules.py', 'raise SystemExit(0)\n')
     write(root, 'core/example.py', 'VERSION = 1\n')
     git(root, 'add', '.')
     commit(root, 'Synthetic base')
