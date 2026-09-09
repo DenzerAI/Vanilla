@@ -622,7 +622,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const systemNoticeRef = useRef(null);
   const [boot, setBoot] = useState(null),
     [audioConnections, setAudioConnections] = useState({Groq:false, ElevenLabs:false}),
-    [view, setView] = useState(() => !embedded && ["inbox", "today", "calendar", "pipeline", "jobs", "work-evidence", "service"].includes(new URLSearchParams(window.location.search).get("view")) ? (["work-evidence", "service"].includes(new URLSearchParams(window.location.search).get("view")) ? "settings" : new URLSearchParams(window.location.search).get("view") === "pipeline" ? "today" : new URLSearchParams(window.location.search).get("view")) : "chat"),
+    [view, setView] = useState(() => !embedded && ["inbox", "today", "calendar", "pipeline", "jobs", "work-evidence", "service"].includes(new URLSearchParams(window.location.search).get("view")) ? (["work-evidence", "service"].includes(new URLSearchParams(window.location.search).get("view")) ? "settings" : ["today", "pipeline"].includes(new URLSearchParams(window.location.search).get("view")) ? "chat" : new URLSearchParams(window.location.search).get("view")) : "chat"),
     [chatId, setChatId] = useState(null),
     [thread, setThread] = useState(null),
     [chats, setChats] = useState([]),

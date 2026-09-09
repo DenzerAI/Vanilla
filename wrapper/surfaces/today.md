@@ -110,3 +110,6 @@ dich stehen auf breiten Ansichten nebeneinander, auf schmalen untereinander.
 Der Standardstart ist jetzt der leere Chat mit kontextabhängiger Begrüßung und
 AttentionFan. Heute entfällt im Hauptmenü; Kalender und bestehende Direktlinks
 bleiben über die Suche nutzbar. Aufbau und Verhalten führt [chat.md](chat.md).
+
+Alte Direkteinstiege mit ?view=today oder ?view=pipeline öffnen den neuen Chatstart.
+?view=calendar öffnet weiterhin den Kalender.

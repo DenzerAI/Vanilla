@@ -340,3 +340,6 @@ vertikales Scrollen bleibt möglich. Keine automatische Rotation oder dauerhafte
 Zusatzanimation. App-/Systemreduktion unterbindet den Federübergang. Karten wachsen
 mit Text, Themefarben und Bewegung stammen aus design-system.mjs. Unser Design
 zeigt denselben AttentionFan. Keine zusätzliche Wetter- oder Dashboardfläche.
+
+Alte Direkteinstiege mit ?view=today oder ?view=pipeline öffnen den neuen Chatstart.
+?view=calendar öffnet weiterhin den Kalender.
