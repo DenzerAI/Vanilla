@@ -439,7 +439,7 @@ Inbox verwendet das offene Ablagefach `Tray` aus Framework7 Icons über den geme
 
 Die Inbox übernimmt wie Einstellungen die bestehende linke Seitenleiste mit Zurück-Einstieg, Suche und kompakter Gesprächsliste. Kanal-Icon, Name, Uhrzeit und Ungelesen-Punkt genügen; Betreff-/Vorschauunterzeilen entfallen. Die volle Hauptfläche zeigt Verlauf und eine automatisch wachsende, ausschließlich vertikal scrollende Antwortzeile. Bis 650 px Fensterbreite wechseln Liste und Verlauf in voller Breite. Beispiele und Speichergrenzen werden ausschließlich im Konzeptdialog erklärt. PageHeading, FilterPicker, BrandIcon, Modal und zentrale Tokens bleiben gemeinsam; InboxConversationRow steht unter Unser Design. Aufbau und Verhalten führt [surfaces/inbox.md](surfaces/inbox.md).
 
-Bibliotheks-Quick-Look bleibt eine reine Großansicht ohne doppelte Dateiverwaltung. Dateiaktionen stehen im rechten Workspace. Markdown nutzt dort den bestehenden bereinigten Renderer mit kompakten Dokumentrollen statt Editorfläche. Der Liste/Raster-Umschalter verwendet Symbolbetonung ohne rechteckige Auswahlfüllung; sämtliche Iconbuttons bleiben rund.
+Bibliotheks-Quick-Look bleibt eine reine Großansicht ohne doppelte Dateiverwaltung. Dateiaktionen stehen im rechten Workspace. Markdown nutzt dort den bestehenden bereinigten Renderer mit kompakten Dokumentrollen statt Editorfläche. Der Liste/Raster-Umschalter verwendet die gemeinsame runde Iconauswahl ohne rechteckige Auswahlfüllung; sämtliche Iconbuttons bleiben rund.
 
 
 Der leere Composer zeigt auf Desktop und Handy nur „Nachricht“ in der zurückhaltenden Rolle `faint`, vertikal zentriert mit 2 px optischer Absenkung. Die leere Schreibzeile bleibt eine volle Pille; ausschließlich tatsächlicher mehrzeiliger Text oder die aktive Aufnahme erweitern die Rundung. Die Höhenmessung berücksichtigt den Textinnenabstand und ignoriert Platzhalterumbrüche für den Mehrzeilenzustand.
@@ -475,7 +475,7 @@ Originalstufen und Verfügbarkeit stammen aus dem jeweiligen nativen Anschluss, 
 
 ## Heute und Kalender
 
-Heute ist der Start ohne Chat-Direktlink und bündelt Morgenbriefing, Tagesplan und
+Heute bleibt eine über die Suche erreichbare Detailansicht und bündelt Morgenbriefing, Tagesplan und
 „Braucht dich“. Kalender ist über denselben Seitenkopfbereich und die Suche
 zugänglich: Tag, Woche und Monatsliste mit ISO-Kalenderwochen, optional Mo–Fr.
 Die Pipeline-Designstudie entfällt; der gemeinsame CRM-Kern bleibt bestehen.
@@ -578,3 +578,116 @@ auf hellem Papier sichtbar bleiben. Bewegung und Abschaltmöglichkeiten bleiben
 bestehen. Dunkle Farbwerte bleiben unverändert. Visuelle Inspiration: warme
 Flächenhierarchie der Claude-Chatoberfläche, keine behauptete Übernahme originaler
 Vendor-Tokens (Referenz: https://www.bluestacks.com/blog/bluestacks-roundups/ai-tools-like-chatgpt-en.html).
+
+## Gemeinsame Iconrückmeldung
+
+`ui/icon-catalog.mjs` führt alle 73 bestehenden Systemicons und acht weitere
+UI-Varianten (vier Lucide- und vier Spaltensymbole). Ihre freigegebenen Formen
+bleiben erhalten; Framework7- und Lucide-Lizenzen liegen unter `ui/assets/icons/`.
+`MotionGlyph` rendert die gemeinsame SVG-Geometrie, `icon-animation.mjs` die
+individuellen Bewegungen ihrer Bestandteile: beispielsweise Glockenkörper und
+Klöppel, Uhrzeiger, Blätter, Regler und Konturen. Kein pauschales Aufpoppen.
+`iconMotion` in der zentralen Designquelle hält die Dauern. Die gemeinsamen
+weichen Zeitkurven beginnen und enden ohne Geschwindigkeit; Ausgangsgeometrie
+und Endzustand stimmen überein.
+
+`ui/icon-motion.tsx` steuert Klick, Touch, native Tastaturaktivierung und
+Desktop-Hover. Aussehen → Visuell → Iconanimationen bietet **Hover und Drücken**
+(Standard), **Nur beim Drücken** und **Aus**. Die vorhandene Settings-API validiert
+und speichert die Auswahl. App- und Systemvorgaben für reduzierte Bewegung haben
+Vorrang, auch in der Designreferenz. Versteckte, entfernte und außerhalb des
+sichtbaren Bereichs liegende Icons laufen nicht weiter. Eine laufende Geste
+wird durch Hover/Klick nicht unterbrochen oder neu gestartet; native Aktionen
+bleiben unverzögert. Hover verändert weder Auswahl noch Systemzustand.
+
+Nur ein geeignetes Icon je Bedienelement bewegt sich. Trefferfläche, Fokus,
+Text und äußere SVG-Zustandstransformationen bleiben stabil. Zustandsabhängige
+Disclosure-Chevrons und echte Ladeanzeigen behalten ihre eigenen Animationen.
+Markenassets und bereits eigenständige Schalter bleiben eigenständig;
+`data-icon-motion="off"` kennzeichnet weitere begründete Ausnahmen. Keine
+Leerlaufschleifen und kein künstlicher Ladefortschritt. Die Iconsammlung unter
+Aussehen → Unser Design → Icons nutzt dieselben Komponenten und Zeitlinien,
+mit Suche, beschrifteter Auswahl und großer Vorschau im aktiven Theme.
+
+`IconButton` liegt gemeinsam in `ui/icon-button.tsx`. `CopyButton` zeigt erst nach
+bestätigtem Schreiben in die Zwischenablage einen kurz erscheinenden Haken und
+eine zugängliche Kopiert-Meldung. Fehler zeigen keinen Haken und erlauben einen
+erneuten Versuch. Wiederholtes Kopieren, Textwechsel und Entfernen des Bausteins
+räumen alte Zeitgeber auf. Nachrichtenaktionen behalten Hover-, Fokus- und
+Touch-Verhalten. Die globale Glocke reagiert einmal auf neue Benachrichtigungs-
+ereignisse oder neu hinzugekommene Rückfragen, nicht auf Lesen oder wiederholtes
+Rendern; bei mehreren sichtbaren Glocken bewegt sich nur die erste. Initialer
+Glockenaufbau spielt keine alten Hinweise ab. Unser Design zeigt dieselben
+Bausteine als lokale, beschriftete Beispiele. Beim normalen Copy-Hover bewegen
+sich nur die Papierblätter. Ein simulierter Haken ist ausschließlich in der
+als Beispiel gekennzeichneten Iconsammlung zulässig.
+
+
+Codeblöcke im gemeinsamen Markdown-Renderer verwenden ebenfalls CopyButton.
+Die bereinigte Toolbar enthält nur den Portalplatz; React rendert darin dieselbe
+zugängliche Kopieraktion mit Haken und Fehlerzustand. Kopiert wird ausschließlich
+der Text des zugehörigen Codeblocks, ohne die letzte Formatierungszeile.
+
+
+Einzelne Iconaktionen verwenden systemweit `IconButton` beziehungsweise die
+vorhandene `icon-button`-Klasse: flach, kreisrund, ohne Schatten. Inaktive Buttons
+bleiben transparent; Desktop-Hover erhält die feine gemeinsame Hoverfläche.
+Auswahl (`aria-pressed`/`selected`) und geöffnetes Menü/Dialog (`aria-expanded`)
+zeigen einen dünnen runden Rand aus `border-strong` und das betonte Icon auf
+transparentem Grund. Ein transparenter Rand gleicher Stärke reserviert den Platz
+auch ohne Auswahl. Fokus bleibt zusätzlich sichtbar, im erzwungenen Kontrast
+verwendet der Auswahlring Highlight. Textnavigation, Listenzeilen, Schalter und
+primäre Sendeaktionen behalten ihren jeweiligen Aufbau. Bibliotheks-Ansichtswechsel,
+Fast, Workspace und Menüs verwenden keine eigenen Auswahlfarben oder Kacheln.
+Unser Design zeigt zusätzlich einen schaltbaren Einzelicon-Auswahlzustand.
+
+
+Der Standardstart ist jetzt der leere Chat mit kontextabhängiger Begrüßung und
+AttentionFan. Heute entfällt im Hauptmenü; Kalender und bestehende Direktlinks
+bleiben über die Suche nutzbar. Aufbau und Verhalten führt [surfaces/chat.md](surfaces/chat.md).
+
+
+Der leere Chat verwendet einen Composer im normalen Flexfluss unter dem separat
+scrollbaren Einstieg. Keine Karte oder Navigation liegt hinter der Eingabe.
+Avatar und Sprechblase stehen als zentrierte Gruppe in einer gemeinsamen Zeile. Die linksbündige ChatStartHeading nutzt eine feine Kontur, warme suggestion-glass-Fläche und eine kleine Spitze zum Avatar. Der sichtbare Text sitzt mittig im für beide Sätze reservierten Platz; der Avatar schrumpft nicht. AttentionFan nutzt
+suggestion-glass, die gemeinsame Glaskante und 28 px Blur, mit deckenden Fallbacks.
+Maus-Hover hebt eine Karte in ihrer bestehenden Position an und betont ihre Kontur;
+kein Umsortieren unter dem Zeiger. Ein Klick öffnet die angehobene Karte, Touch
+behält Auswahl/Öffnen. Tastaturfokus bietet dieselbe Hervorhebung.
+
+ChatStartHeading ordnet den belegten Zustand der Karte kurz ein, ohne Titel als
+Fragen zu wiederholen. Langsame Zeichenfolge, zwanzig Sekunden Lesezeit und
+höchstens eine sachliche Vertiefung aus dem vorhandenen Inhalt. Danach steht der
+Text still. Die Karten wechseln nie automatisch.
+Alle Varianten reservieren gemeinsam ihren Umbruch. Hover und Tastaturfokus pausieren nur den späteren Satzwechsel; die RPG-Schreibanimation läuft weiter. Ein Composer-Entwurf pausiert auch das Schreiben, ohne den Satz vorzeitig zu vervollständigen. Verborgene Ansichten stoppen Zeitgeber.
+Screenreader erhalten die vollständige Zeile ohne laufende Wortansagen. Reduzierte
+Bewegung zeigt einen statischen Satz. Aussehen → Visuell → Lebendiger Starttext
+schaltet den Effekt für diesen Browser dauerhaft ab; kein zusätzlicher Server nötig.
+Die Auswahl wird zwischen Tabs desselben Ursprungs synchronisiert und ein
+Speicherfehler angezeigt. Gemeinsame Werte: chatHeadingMotion und attentionFanMotion.
+
+
+Der kompakte Startfächer mischt bis zu fünf Karten. Rückfragen und Probleme kommen
+zuerst, danach die letzte vorhandene Datei, der nächste aktive Benutzerauftrag mit
+serverseitigem nextRun, das neueste Routine-Ergebnis und ungelesene Chatantworten.
+Eine Wetterkarte bleibt reserviert; ohne Einrichtung benennt sie den fehlenden Ort
+und die fehlende Wetterquelle, statt Beispieldaten als Wetter auszugeben.
+Dateien öffnen LibraryPreview, Jobs ihren vorhandenen Dialog, Ergebnisse den
+bestehenden Berichtschat. Keine Aktion startet beim Anzeigen automatisch Arbeit.
+Datei und Routine-Ergebnis mit derselben job_id werden nicht doppelt gezeigt.
+Einzelne Feed-Fehler erhalten übrige Daten und werden benannt. Quellen sind die
+vorhandenen GET /jobs, /library und /planner/results; Fokus und relevante Ereignisse
+aktualisieren die Daten. Kleinere Rollen: Überschrift subheading, Kartentitel control.
+
+
+Die letzte Datei im Startfächer verwendet LibraryThumbnail und die Aktion „Vorschau öffnen“ für LibraryPreview. HTML und nicht unterstützte Formate zeigen das vorhandene Formatsymbol; keine automatisch laufende HTML-Seite in der Miniatur. Die Wetterkarte zeigt ohne Einrichtung ein Ortssymbol, „Dein Ort ist noch nicht eingerichtet.“ und „Im Chat besprechen“. Sie behauptet weder Wetterdaten noch eine bereits vorhandene Ortseinstellung. Die Sprechblase steht als Produktionsbaustein in Unser Design.
+
+
+Die rechte Seitenleiste öffnet manuell die zuletzt verwendete verfügbare Ansicht
+(Dateien, Änderungen oder Befehle), auch nach erneutem Laden. Ohne gespeicherte
+Auswahl beginnt sie mit Dateien; Ergebnisse öffnen direkt ihre Vorschau.
+Die Dateiliste beginnt beim gewählten Workspace, zeigt dessen Namen einmal im
+Kopf und navigiert höchstens bis zu dessen Wurzel zurück. Workspace-Wechsel
+verwerfen vorherige Dateiauswahl und Ordnerziele. Ausdrückliche Auftragslinks
+können weiterhin ihren zugehörigen Ordner öffnen. Technische Installationsnamen
+sind keine Workspace-Titel. Geschützte Einträge sind zunächst ausgeblendet.

@@ -2,16 +2,14 @@ import {saveHandoff, joinHandoff} from './chat-handoff.mjs';
 import {briefingText} from './ui/planner-briefings.mjs';
 
 // One durable conversation per report, including simultaneous clicks in two windows.
-export function briefingChatOpener({store, newChat, cache, emit}) {
+export function briefingChatOpener({store, newChat, cache, emit, updateChat}) {
   const pending = new Map();
   return function open(item) {
     if (pending.has(item.id)) return pending.get(item.id);
     const work = (async () => {
       const existing = store.state.chats.find(c => c.briefingId === item.id);
       if (existing) {
-        existing.archived = false;
-        await store.save();
-        emit({method:'wrapper/chats'});
+        if (existing.archived) await updateChat(existing.id, {archived:false});
         return {thread:{id:existing.id}};
       }
       const result = await newChat({title:item.title + (item.demo ? ' · Beispiel' : '') + ' · ' + new Date(item.created_at*1000).toLocaleDateString('de-DE'),

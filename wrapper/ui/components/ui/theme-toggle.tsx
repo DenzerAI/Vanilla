@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Moon, Sun } from "lucide-react"
+import { LucideMoon as Moon, LucideSun as Sun } from "../../icon-variants.jsx"
 import { cn } from "@/lib/utils"
 import "./theme-toggle.css"
 
@@ -34,7 +34,7 @@ export function ThemeToggle({ className, theme, onThemeChange, disabled, menuIte
     }
   }
 
-  return <span className="theme-toggle-control">
+  return <span className="theme-toggle-control" data-icon-motion="off">
     <button type="button" className={cn("theme-toggle", className)}
       role={menuItem ? "menuitemcheckbox" : "switch"} aria-label="Dunkles Erscheinungsbild"
       aria-checked={isDark} aria-busy={busy || undefined} disabled={disabled || busy}

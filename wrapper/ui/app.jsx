@@ -1,9 +1,14 @@
+import { StartTextMotionSetting } from './chat-start-preferences';
+import { IconMotionSetting } from './icon-motion-setting';
+import { IconButton } from './icon-button';
+import { CopyButton } from './copy-button';
+import { NotificationBell } from './notification-bell';
 import { ServiceSettings } from "./work-evidence.tsx";
 import {useJobNotifications, JobNotifications, NotificationPreference} from "./job-notifications.jsx";
 import { ChapterScrubber } from "./components/ui/chapter-scrubber";
 import { PlannerPage } from "./planner";
 import { InboxPage } from "./inbox";
-import { WelcomeSuggestions } from "./welcome-suggestions";
+import { ChatStart } from "./chat-start";
 import { PanelLight } from "./panel-light";
 import {Skeleton} from './skeleton.tsx';
 import { MessageSpeech } from "./message-speech";
@@ -180,20 +185,6 @@ async function api(url, data, retry = true) {
   return j;
 }
 const icon = (Icon, size = 18) => <Icon size={size} strokeWidth={1.55} />;
-function IconButton({ label, onClick, children, active, disabled, ...props }) {
-  return (
-    <button {...props}
-      type="button"
-      className={"icon-button " + (active ? "selected" : "")}
-      title={label}
-      aria-label={label}
-      onClick={onClick}
-      disabled={disabled}
-    >
-      {children}
-    </button>
-  );
-}
 function PageHeading({ title, onShowSidebar, children }) {
   return <header className="page-heading">
     <div className="page-heading-title">
@@ -411,12 +402,6 @@ function ChatTurn({ turn, running, waiting, visible, actionsDisabled, paneNumber
   </section>;
 }
 function Item({ item, beforeActions, agentProfile, workerId, onFork, onEdit, onRetry, onDelete, onFile, running, sentAt, completedAt, workspace, directory }) {
-  const [copied, setCopied] = useState(false);
-  async function copy(t) {
-    await navigator.clipboard.writeText(t);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 1600);
-  }
   const i = item;
   if (i.type === "userMessage")
     return (
@@ -447,19 +432,7 @@ function Item({ item, beforeActions, agentProfile, workerId, onFork, onEdit, onR
           >
             {icon(SquarePen, 14)}
           </IconButton>
-          <IconButton
-            label="Nachricht kopieren"
-            onClick={() =>
-              copy(
-                (i.content || [])
-                  .filter((c) => c.type === "text")
-                  .map((c) => c.text)
-                  .join("\n"),
-              )
-            }
-          >
-            {icon(copied ? Check : Copy, 14)}
-          </IconButton>
+          <CopyButton label="Nachricht kopieren" size={14} text={(i.content || []).filter(c => c.type === "text").map(c => c.text).join("\n")} />
           <IconButton label="Nachricht löschen" disabled={running} onClick={onDelete}>{icon(Trash2,14)}</IconButton>
           <MessageTime value={sentAt} />
         </div>
@@ -478,9 +451,7 @@ function Item({ item, beforeActions, agentProfile, workerId, onFork, onEdit, onR
         {beforeActions}
         <div className="message-actions agent-actions">
           {i.type === "agentMessage" && i.phase !== "commentary" && <MessageSpeech text={i.text} disabled={running} api={api} Button={IconButton} />}
-          <IconButton label="Antwort kopieren" onClick={() => copy(i.text)}>
-            {icon(copied ? Check : Copy, 15)}
-          </IconButton>
+          <CopyButton label="Antwort kopieren" size={15} text={i.text} />
           <IconButton label="Ab dieser Antwort verzweigen" disabled={running} onClick={onFork}>
             {icon(GitBranch, 15)}
           </IconButton>
@@ -564,7 +535,12 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const [agentFolderTarget, setAgentFolderTarget] = useState(null);
   const [workspaceWidth, setWorkspaceWidth] = useState(null);
   const [workspaceExpanded, setWorkspaceExpanded] = useState(false);
+  const lastWorkspaceView = useRef(null);
   function setPanel(next) {
+    if (next) {
+      lastWorkspaceView.current = next;
+      try { localStorage.setItem("workspace-last-view", next); } catch {}
+    }
     if (next && !panel) { setWorkspaceWidth(null); setWorkspaceExpanded(false); }
     setWorkspacePanel(next);
   }
@@ -622,7 +598,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const systemNoticeRef = useRef(null);
   const [boot, setBoot] = useState(null),
     [audioConnections, setAudioConnections] = useState({Groq:false, ElevenLabs:false}),
-    [view, setView] = useState(() => !embedded && ["inbox", "today", "calendar", "pipeline", "jobs", "work-evidence", "service"].includes(new URLSearchParams(window.location.search).get("view")) ? (["work-evidence", "service"].includes(new URLSearchParams(window.location.search).get("view")) ? "settings" : new URLSearchParams(window.location.search).get("view") === "pipeline" ? "today" : new URLSearchParams(window.location.search).get("view")) : (embedded || new URLSearchParams(window.location.search).has("chat") ? "chat" : "today")),
+    [view, setView] = useState(() => !embedded && ["inbox", "today", "calendar", "pipeline", "jobs", "work-evidence", "service"].includes(new URLSearchParams(window.location.search).get("view")) ? (["work-evidence", "service"].includes(new URLSearchParams(window.location.search).get("view")) ? "settings" : ["today", "pipeline"].includes(new URLSearchParams(window.location.search).get("view")) ? "chat" : new URLSearchParams(window.location.search).get("view")) : "chat"),
     [chatId, setChatId] = useState(null),
     [thread, setThread] = useState(null),
     [chats, setChats] = useState([]),
@@ -794,6 +770,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     for (const role of typography) root.style.setProperty(`--text-${role.id}`, `${role.size * scale / 16}rem`);
     root.style.setProperty("--font-ui", settings.uiFont === "system" ? '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' : fonts.find(font => font.token === "font-ui").value);
     root.dataset.reduceMotion = settings.reduceMotion || "system";
+    root.dataset.iconAnimation = settings.iconAnimation || "hover";
     root.dataset.avatarStyle = settings.avatarMotion || "face";
     for (const [key, value] of Object.entries(designVariables(settings.theme, settings.designTone, settings.highlightColor))) root.style.setProperty(key, value);
   }, [boot?.settings]);
@@ -1121,6 +1098,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   function chooseProject(id) {
     projectRef.current = id;
     setProjectId(id);
+    setAgentFolderTarget(null);
     setExpandedProject(id);
     const chosen = boot?.projects?.find((p) => p.id === id);
     setSelectedFile(null);
@@ -1144,6 +1122,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     // Keyboard handlers use refs so a new draft never inherits an old thread.
     projectRef.current = id;
     setProjectId(id);
+    setAgentFolderTarget(null);
     setExpandedProject(id);
     chatRef.current = null;
     followScroll.current = true;
@@ -1453,11 +1432,26 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     setSelectedFile(relative);
   }
 
+  const chatUpdateLocks = useRef(new Set());
+  const [updatingChats, setUpdatingChats] = useState({});
+  const archivedChats = chats.filter(c => c.archived);
+  const matchingArchivedChats = archivedChats.filter(c =>
+    (c.title || "Neuer Chat").toLocaleLowerCase("de").includes(search.trim().toLocaleLowerCase("de")),
+  ).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
   async function updateChat(c, change) {
-    await api("/chat/update", { id: c.id, ...change });
-    await refreshChats();
-    setChatMenu(null);
-    if (change.archived && chatId === c.id) newDraft();
+    if (chatUpdateLocks.current.has(c.id)) return;
+    chatUpdateLocks.current.add(c.id);
+    setUpdatingChats(old => ({...old, [c.id]:true}));
+    try {
+      const updated = await api("/chat/update", { id: c.id, ...change });
+      setChats(old => old.map(chat => chat.id === c.id ? {...chat, ...updated} : chat));
+      setChatMenu(null);
+      if (change.archived && chatId === c.id) newDraft();
+      await refreshChats();
+    } finally {
+      chatUpdateLocks.current.delete(c.id);
+      setUpdatingChats(old => { const next = {...old}; delete next[c.id]; return next; });
+    }
   }
   async function fork(turn) {
     const index = turn ? thread.turns.findIndex(t => t.id === turn.id) : -1;
@@ -1598,7 +1592,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       {id:"export",label:"Als Markdown exportieren",icon:icon(Download),disabled:!thread?.turns?.length,action:exportChat},
       {id:"switch",label:"Chat öffnen …",icon:icon(MessageCircle),action:()=>{setSearch("");setModal("search")}},
       {id:"new",label:"Neuer Chat",icon:icon(Plus),action:()=>newDraft(projectId)},
-      {id:"archive",label:"Archivieren",icon:icon(Archive),disabled:!current || running || busy,action:guard(()=>updateChat(current,{archived:true}))},
+      {id:"archive",label:"Archivieren",icon:icon(Archive),disabled:!current || running || busy || !!updatingChats[current?.id],action:guard(()=>updateChat(current,{archived:true}))},
     ],
   };
   (sessionRef || sessions.current[0]).current = localSession;
@@ -1633,7 +1627,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       j.name.toLowerCase().includes(search.toLowerCase()),
   );
   const nav = [
-      ["today", Sun, "Heute"],
       ["inbox", Inbox, "Inbox"],
       ["jobs", Clock, "Aufträge"],
       ...(boot?.features?.library?[["library", FileText, "Bibliothek"]]:[]),
@@ -1677,6 +1670,16 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     return () => clearTimeout(timer);
   }, [foreground, view, readablePane, awayFromBottom, running, thread, chatId, current?.lastCompletedTurnId, current?.readTurnId]);
   const notificationState = useJobNotifications(api, !!boot?.features?.routines && !embedded, notify);
+  const [requestSignal, setRequestSignal] = useState(0);
+  const previousRequests = useRef(null);
+  useEffect(() => {
+    if (!boot) return;
+    const ids = new Set(requests.map(request => request.id));
+    if (previousRequests.current && [...ids].some(id => !previousRequests.current.has(id))) setRequestSignal(value => value + 1);
+    previousRequests.current = ids;
+  }, [requests, !!boot]);
+  const bellSignal = notificationState.signal + requestSignal;
+
   useEffect(()=>{
     if(embedded)return;
     const open=()=>setModal('notifications');
@@ -1708,8 +1711,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         <div className="sidebar-resizer"><PaneDivider label="Seitenleistenbreite ändern" value={sidebarWidth} min={220} max={400} onReset={()=>setSidebarWidth(268)} onResize={delta=>setSidebarWidth(width=>Math.max(220,Math.min(400,width+delta)))}/></div>
         <div className="sidebar-topbar">
           <AgentMenu theme={boot.settings.theme} onThemeChange={theme=>saveSettings({theme})} name={boot.settings.name} avatar={boot.settings.avatar} avatarColor={boot.settings.avatarColor} connectionState={connectionState} restartBusy={serverRestartBusy} onNavigate={tab=>{setSettingsTab(tab);setView("settings");}} onRestart={()=>systemNoticeRef.current?.restart()} />
-          <IconButton label="System durchsuchen (⌘/Strg K)" aria-keyshortcuts="Meta+K Control+K" onClick={()=>{setSearch("");setModal("search");}}>{icon(Search,18)}</IconButton>
-          {boot.features?.routines ? <IconButton label={`Benachrichtigungen${notificationState.data?.unread ? ` · ${notificationState.data.unread} ungelesen` : ''}${requests.length ? ` · ${requests.length} Rückfragen` : ''}`} onClick={()=>setModal("notifications")}>{icon(Bell,17)}{(notificationState.data?.unread>0||requests.length>0)&&<i className="notification-dot"/>}</IconButton> : requests.length > 0 && <IconButton label="Offene Rückfragen" onClick={()=>setModal("activity")}>{icon(Bell,17)}<i className="notification-dot"/></IconButton>}
+          <IconButton label="System durchsuchen (⌘/Strg K)" aria-keyshortcuts="Meta+K Control+K" aria-haspopup="dialog" aria-expanded={modal === "search"} onClick={()=>{setSearch("");setModal("search");}}>{icon(Search,18)}</IconButton>
+          {boot.features?.routines ? <IconButton label={`Benachrichtigungen${notificationState.data?.unread ? ` · ${notificationState.data.unread} ungelesen` : ''}${requests.length ? ` · ${requests.length} Rückfragen` : ''}`} aria-haspopup="dialog" aria-expanded={modal === "notifications" || modal?.type === "notifications"} onClick={()=>setModal("notifications")}><NotificationBell signal={bellSignal} />{(notificationState.data?.unread>0||requests.length>0)&&<i className="notification-dot"/>}</IconButton> : requests.length > 0 && <IconButton label="Offene Rückfragen" aria-haspopup="dialog" aria-expanded={modal === "activity"} onClick={()=>setModal("activity")}><NotificationBell signal={bellSignal} /><i className="notification-dot"/></IconButton>}
           <IconButton
             label="Seitenleiste ausblenden"
             onClick={() => setSidebar(false)}
@@ -1838,6 +1841,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                                 {c.pinned ? "Lösen" : "Anheften"}
                               </button>
                               <button
+                                disabled={!!active[c.id] || !!updatingChats[c.id]}
                                 onClick={guard(() =>
                                   updateChat(c, { archived: true }),
                                 )}
@@ -1873,7 +1877,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               <div className="row">
                 {paneOrder.length === 1 && headerSession?.hasTitle && <ChatTitle session={headerSession} compact/>}
                 <LayoutPicker count={paneOrder.length} onChange={changePaneCount}/>
-                <IconButton label={panel ? "Workspace schließen" : "Workspace öffnen"} active={!!panel} aria-expanded={!!panel} aria-controls="workspace-panel" onClick={() => { if (!panel) setSelectedFile(null); setPanel(panel ? null : "files"); }}>{icon(PanelRight)}</IconButton>
+                <IconButton label={panel ? "Workspace schließen" : "Workspace öffnen"} active={!!panel} aria-expanded={!!panel} aria-controls="workspace-panel" onClick={() => { if (!panel) setSelectedFile(null); let last = lastWorkspaceView.current; try { last ||= localStorage.getItem("workspace-last-view"); } catch {} setPanel(panel ? null : (["files", "review", ...(boot.capabilities?.terminal ? ["terminal"] : [])].includes(last) ? last : "files")); }}>{icon(PanelRight)}</IconButton>
               </div>
             </header>}
 
@@ -1921,14 +1925,20 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 {loading ? (
                   <Skeleton variant="chat" label="Gespräch wird geladen …"/>
                 ) : !thread?.turns?.length ? (
-                  <div className="welcome agent-chat-welcome">
-                    <Avatar avatar={boot.settings.avatar} color={boot.settings.avatarColor} large />
-                    <h1>{greeting}</h1>
-                    <WelcomeSuggestions onSelect={prompt => {
-                      setText(prompt);
-                      inputRef.current.focus();
-                    }} />
-                  </div>
+                  <ChatStart api={api} routines={!!boot.features?.routines} revision={libraryRevision} composing={!!text.trim() || attachments.length>0} greeting={greeting} profile={boot.settings} requests={requests} notifications={notificationState.data?.items || []} chats={chats} projectId={projectId} error={notificationState.error}
+                    onOpen={async item=>{
+                      if(item.prompt){setText(item.prompt);inputRef.current?.focus();return;}
+                      if(item.entry){setModal({type:'library-file',entry:item.entry,entries:[item.entry]});return;}
+                      if(item.job){setModal({type:'job',job:item.job});return;}
+                      if(item.threadId){await openChat(item.threadId);return;}
+                      if(item.kind==='request'){setModal("activity");return;}
+                      if(item.kind==='report'){
+                        const result=await api("/planner/chat",{id:item.noticeId});await refreshChats();await openChat(result.thread.id);
+                        await api("/notifications/read",{id:item.noticeId});await notificationState.refresh();return;
+                      }
+                      if(item.noticeId){setModal({type:"notifications",id:item.noticeId});}
+                    }}/>
+
                 ) : (
                   <div className="message-column">
                     {thread.turns?.map((t, index) => {
@@ -2147,7 +2157,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                             <FileContent key={selectedFile} path={selectedFile} api={api} onEnlarge={()=>setWorkspaceExpanded(true)} />
                           </>
                         ) : (
-                          boot.workspaceToolsVersion ? <AgentFiles api={api} initialFolder={agentFolderTarget} onPreview={()=>setWorkspaceExpanded(true)}/> : <p role="status">Die neue Agent-Dateiansicht wird nach dem nächsten Serverstart verfügbar. Laufende Aufträge können zuerst fertig werden.</p>
+                          boot.workspaceToolsVersion ? <AgentFiles key={`${projectId}:${agentFolderTarget || ""}`} projectId={agentFolderTarget ? undefined : projectId} projectName={agentFolderTarget ? undefined : project?.name} api={api} initialFolder={agentFolderTarget || `${boot.workspace}/${project?.path || ""}`.replace(/\/$/, "")} onPreview={()=>setWorkspaceExpanded(true)}/> : <p role="status">Die neue Agent-Dateiansicht wird nach dem nächsten Serverstart verfügbar. Laufende Aufträge können zuerst fertig werden.</p>
                         )}
                       </div>
                     ) : panel === "terminal" ? (
@@ -2221,7 +2231,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         ) : view === "jobs" ? (
           <div className="page">
             <PageHeading title="Aufträge" onShowSidebar={!sidebar ? () => setSidebar(true) : undefined}>
-              {boot.features?.routines&&<IconButton label="Benachrichtigungen öffnen" onClick={()=>setModal("notifications")}>{icon(Bell,17)}{notificationState.data?.unread>0&&<i className="notification-dot"/>}</IconButton>}
+              {boot.features?.routines&&<IconButton label="Benachrichtigungen öffnen" aria-haspopup="dialog" aria-expanded={modal === "notifications" || modal?.type === "notifications"} onClick={()=>setModal("notifications")}><NotificationBell signal={bellSignal} />{notificationState.data?.unread>0&&<i className="notification-dot"/>}</IconButton>}
               <button className="primary small-button" onClick={() => setModal({ type: "job" })}>{icon(Plus, 16)}Erstellen</button>
             </PageHeading>
             <p className="section-intro">
@@ -2554,10 +2564,12 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 <LoaderSettings settings={boot.settings} onChange={saveSettings} />
                 <h3 className="section-heading">Visuell</h3>
                 <div className="settings-group">
+                  <IconMotionSetting value={boot.settings.iconAnimation || "hover"} onChange={value => guard(() => saveSettings({iconAnimation: value}))()} />
                   <AvatarMotionSetting value={boot.settings.avatarMotion || "face"} onChange={value => guard(() => saveSettings({avatarMotion: value}))()} avatar={boot.settings.avatar} color={boot.settings.avatarColor} />
                   <SettingRow title="Flächenlicht" description="Dezente Lichtverläufe in Seitenleiste und Workspace.">
                     <select aria-label="Flächenlicht" value={boot.settings.panelLight || "animated"} onChange={e => guard(() => saveSettings({panelLight: e.target.value}))()}>{appearanceOptions.panelLight.options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
                   </SettingRow>
+                  <StartTextMotionSetting/>
                   <SettingRow title="Reiseeffekt" description="Sanft wandernde Lichtpunkte auf der Startansicht oder in allen Chats.">
                     <select aria-label="Reiseeffekt" value={boot.settings.welcomeParticles || "on"} onChange={e => guard(() => saveSettings({welcomeParticles: e.target.value}))()}>{appearanceOptions.welcomeParticles.options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
                   </SettingRow>
@@ -2752,13 +2764,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                   onChange={setSearch}
                   placeholder="Archivierte Chats durchsuchen"
                 />
-                {chats
-                  .filter(
-                    (c) =>
-                      c.archived &&
-                      c.title.toLowerCase().includes(search.toLowerCase()),
-                  )
-                  .map((c) => (
+                {matchingArchivedChats.map((c) => (
                     <div className="archive-row" key={c.id}>
                       <div>
                         <strong>{c.title}</strong>
@@ -2767,15 +2773,22 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                         </p>
                       </div>
                       <button
+                        disabled={!!updatingChats[c.id] || !!active[c.id]}
+                        aria-label={"Chat wiederherstellen: " + c.title}
                         onClick={guard(() =>
                           updateChat(c, { archived: false }),
                         )}
                       >
-                        Dearchivieren
+                        {updatingChats[c.id] ? "Wiederherstellen …" : "Wiederherstellen"}
                       </button>
                     </div>
                   ))}
-                {!chats.some((c) => c.archived) && (
+                {archivedChats.length > 0 && matchingArchivedChats.length === 0 && (
+                  <Empty Icon={Search} title="Keine archivierten Chats gefunden">
+                    Versuche einen anderen Suchbegriff.
+                  </Empty>
+                )}
+                {archivedChats.length === 0 && (
                   <Empty Icon={Archive} title="Dein Archiv ist leer">
                     Archivierte Gespräche kannst du hier wiederherstellen.
                   </Empty>

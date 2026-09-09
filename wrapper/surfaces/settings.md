@@ -191,3 +191,45 @@ Komponente mit lokalem Vorschauzustand. Keine weiteren Kopf- oder Workspaceaktio
 
 
 Die helle Palette unter Aussehen verwendet die abgestuften Papierflächen aus DESIGN.md. Ausgewogen, Warm und Neutral halten Menüs, Steuerelemente und Workspace unterscheidbar; Unser Design zeigt dieselben zentralen Werte.
+
+
+## Iconaktionen
+
+Aussehen → Visuell enthält eine gemeinsame SettingRow „Iconanimationen“ mit
+Hover und Drücken (Standard), Nur beim Drücken und Aus. Sie verwendet die
+bestehende validierte Settings-Speicherung; reduzierte Bewegung hat Vorrang.
+Keine Galerie in der normalen Einstellungsseite. Unser Design ergänzt den
+kompakten Reiter Icons mit allen 81 Einträgen aus dem gemeinsamen Katalog,
+Suche und beschrifteter Detailvorschau im aktiven Theme. Dieselben MotionGlyph-
+Bausteine und Zeitlinien laufen in der App. Die Referenz respektiert ebenfalls
+die gespeicherte Auswahl und reduzierte Bewegung. Simulierter Kopiererfolg wird
+nur in den gekennzeichneten Galeriebeispielen gezeigt. Daneben erlauben der
+produktive CopyButton und NotificationBell reale lokale Beispielaktionen;
+Kopieren schreibt den ausdrücklich gekennzeichneten Beispieltext.
+
+
+Einzelicons folgen der [gemeinsamen Auswahl- und Hoverregel](../DESIGN.md#gemeinsame-iconrückmeldung). Auswahl bleibt als dünner Kreisrand
+erkennbar; Hover animiert einmal, Klick bestätigt die Bedienung. Textzeilen
+und native Schalter werden nicht in Iconbuttons umgeformt.
+
+
+## Archivierte Chats
+
+Archivieren im Chatmenü und Wiederherstellen unter Einstellungen → Archivierte Chats
+verwenden denselben gespeicherten Status. Auch leere Chats und gespeicherte
+Berichte ohne native Sitzungsdatei können archiviert und wiederhergestellt werden;
+Gesprächsexporte und Berichte bleiben erhalten. Andere Anbieter- und Speicherfehler
+werden angezeigt und ändern den angezeigten Status nicht. Während einer Antwort,
+Übergabe oder Sprachsession wird nicht archiviert; doppelte Aktionen sind gesperrt.
+Erneutes Öffnen eines archivierten Berichts verwendet denselben Wiederherstellungsweg.
+Die Archivliste bleibt projektübergreifend, neueste Gespräche zuerst. Suchfilter ohne
+Treffer und ein vollständig leeres Archiv zeigen verschiedene vorhandene Empty-Zustände.
+Der bestehende Aktionsbutton zeigt Wiederherstellen und während der Anfrage
+Wiederherstellen …; erst bestätigter Erfolg entfernt die Zeile.
+
+
+Lebendiger Starttext unter Aussehen → Visuell verwendet StartTextMotionSetting.
+Die boolesche Auswahl wird als on/off im lokalen Browserspeicher gespeichert,
+zwischen offenen Tabs synchronisiert und als gerätebezogen beschriftet.
+Unbekannte Werte verwenden die ruhige aktivierte Voreinstellung; Speicherfehler
+bleiben sichtbar. Reduzierte Bewegung in App oder System hat Vorrang.

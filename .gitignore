@@ -79,6 +79,8 @@ backup*/
 !/wrapper/ui/assets/fonts/
 !/wrapper/ui/assets/fonts/*.woff2
 !/wrapper/ui/assets/fonts/*-LICENSE.txt
+!/wrapper/ui/assets/icons/
+!/wrapper/ui/assets/icons/*-LICENSE.txt
 !/wrapper/ui/assets/fonts/sources.json
 
 # Security audit: private baseline, findings and runtime permission inventory stay local.

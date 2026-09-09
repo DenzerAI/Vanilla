@@ -5,7 +5,7 @@ export function chatMarkup(text, workspace = '', directory = workspace) {
   const renderer = new Renderer();
   const renderCode = renderer.code, renderTable = renderer.table;
   renderer.code = function(token) {
-    return `<div class="chat-code"><div class="chat-code-toolbar"><span>${escape(token.lang?.split(/\s/)[0] || 'Code')}</span><button type="button" data-copy-code="true" aria-label="Code kopieren">Kopieren</button></div>${renderCode.call(this,token)}</div>`;
+    return `<div class="chat-code"><div class="chat-code-toolbar"><span>${escape(token.lang?.split(/\s/)[0] || 'Code')}</span><span data-copy-code="true"></span></div>${renderCode.call(this,token)}</div>`;
   };
   renderer.table = function(token) {
     return `<div class="chat-table" role="region" aria-label="Tabelle" tabindex="0">${renderTable.call(this,token)}</div>`;

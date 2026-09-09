@@ -1,3 +1,4 @@
+import {chatArchiveUpdater} from './chat-archive.mjs';
 import {briefingChatOpener} from './briefing-chat.mjs';
 import {demoBriefings} from './ui/planner-briefings.mjs';
 import {htmlPreviewPolicy, readHtmlPreview} from './html-preview.mjs';
@@ -629,7 +630,8 @@ route("GET", "/api/bootstrap", async () => {
     planAvailable: workers.routingOrder().some(id => workers.capability(id).plan),
   };
 });
-const openBriefingChat = briefingChatOpener({store, newChat, cache:threadCache, emit});
+const updateChat = chatArchiveUpdater({store, workers, active, turnLocks, voiceSessions, loaded, restartGate, emit});
+const openBriefingChat = briefingChatOpener({store, newChat, cache:threadCache, emit, updateChat});
 route("POST", "/api/planner/chat", async b => {
   let item;
   if (b.demoDate) {
@@ -872,28 +874,7 @@ route("POST", "/api/chat/read", async (b) => {
   }
   return { readTurnId: chat.readTurnId || null };
 });
-route("POST", "/api/chat/update", async (b) => {
-  const c = store.chat(b.id);
-  if (b.title !== undefined) {
-    c.title = String(b.title).trim().slice(0, 160) || "Neuer Chat";
-    c.titleRevision = (c.titleRevision || 0) + 1;
-    c.titleStatus = "manual";
-  }
-  if (b.pinned !== undefined) c.pinned = !!b.pinned;
-  if (b.archived !== undefined) {
-    if (active.has(b.id))
-      throw new Error("Bitte zuerst die laufende Antwort stoppen.");
-    await engine(workers.owner(b.id));
-    await workers.call(b.archived ? "thread/archive" : "thread/unarchive", {
-      threadId: b.id,
-    });
-    c.archived = !!b.archived;
-    loaded.delete(b.id);
-  }
-  await store.save();
-  emit({ method: "wrapper/chats" });
-  return c;
-});
+route("POST", "/api/chat/update", b => updateChat(b.id, b));
 route("POST", "/api/turn/delete", async (b) => {
   if (turnLocks.has(b.id)) throw new Error("Bitte die laufende Übertragung abwarten.");
   await ensure(b.id);

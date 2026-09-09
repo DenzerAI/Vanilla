@@ -406,7 +406,7 @@ nav {
 .chat-row .icon-button {
   opacity: 0;
   width: 26px;
-  height: 27px;
+  height: 26px;
   flex-shrink: 0;
   margin-right: var(--space-2);
 }
@@ -455,9 +455,11 @@ nav {
 .identity-avatar {
   display: grid;
   place-items: center;
-  background: var(--surface);
+  background: transparent;
   color: var(--text);
-  border: 1px solid var(--border);
+  border: 0;
+  box-shadow: none;
+  overflow: visible;
 }
 .profile-button .status-dot {
   margin-left: auto;
@@ -558,17 +560,35 @@ nav {
   justify-content: space-between;
 }
 .icon-button {
-  border: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  border: 1px solid transparent;
   padding: var(--space-4);
   width: var(--control-target);
   height: var(--control-target);
   flex-shrink: 0;
   position: relative;
-  border-radius: var(--radius-button);
+  border-radius: var(--radius-pill);
+  background: transparent;
   color: var(--muted);
 }
-.icon-button:hover {
+.icon-button:is(.selected, [aria-pressed="true"], [aria-expanded="true"]) {
+  background: transparent;
+  border-color: var(--border-strong);
   color: var(--text);
+}
+.icon-button:hover { background: transparent; }
+@media (hover: hover) and (pointer: fine) {
+  .icon-button:not(:disabled):not([aria-disabled="true"]):hover {
+    background: var(--hover);
+    color: var(--text);
+  }
+}
+.icon-button:is(:disabled, [aria-disabled="true"]):hover { background: transparent; }
+@media (forced-colors: active) {
+  .icon-button:is(.selected, [aria-pressed="true"], [aria-expanded="true"]) { border-color: Highlight; }
 }
 .selected {
   background: var(--selected);
