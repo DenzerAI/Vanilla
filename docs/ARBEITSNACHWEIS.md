@@ -1,14 +1,14 @@
-# Arbeitsnachweis
+# Service: Arbeitsnachweis
 
 Stand: 09.09.2026. Beauftragte erste Konzeptfassung im Vanilla Agent.
 
 ## Zweck
 
-Der Kunde sieht Betreuung an seinem System: wer, wann, über welchen Weg und mit welchem Ergebnis. Der Menüpunkt heißt Arbeitsnachweis. Eine eigene fachliche Ansicht zeigt Menschzeit, Agentlaufzeit, Einsätze und eine kleine modulbezogene Meldungsliste.
+Der Kunde sieht Betreuung an seinem System: wer, wann, über welchen Weg und mit welchem Ergebnis. Der Bereich heißt Service und steht unter Einstellungen. Eine eigene fachliche Ansicht zeigt Menschzeit, Agentlaufzeit, Einsätze und eine kleine modulbezogene Meldungsliste.
 
 ## Diese Fassung
 
-Fiktive, ausdrücklich markierte Beispiele, Zeitraumwahl, letzter beispielhafter Zugriff, aufklappbare Einsatzdetails, offene und erledigte Meldungen. Der Schalter für Beispieldaten zeigt auch den leeren Zustand. Meldungen können im Beispiel erledigt und wieder geöffnet werden. Diese Änderungen bleiben nur bis zum Verlassen der Ansicht erhalten. Es wird keine echte Arbeitszeit erfasst, keine Kundendatenbank verändert und keine Nachricht gesendet.
+Fiktive, ausdrücklich markierte Beispiele, Zeitraumwahl, kompakte Zeitangaben, letzter beispielhafter Zugriff, standardmäßig geschlossene Einsatz- und Meldungslisten mit aufklappbaren Details. Der Schalter für Beispieldaten zeigt auch den leeren Zustand. Meldungen können im Beispiel erledigt und wieder geöffnet werden. Diese Änderungen bleiben nur bis zum Verlassen der Ansicht erhalten. Es wird keine echte Arbeitszeit erfasst, keine Kundendatenbank verändert und keine Nachricht gesendet.
 
 ## Messung später
 
@@ -20,8 +20,12 @@ Wir können Einsätze mit Klartext melden und modulbezogene Meldungen abfragen/b
 
 ## Replizierbarkeit
 
-Bausteine: wrapper/ui/work-evidence.tsx (Ansicht), work-evidence.css (lokale Struktur über vorhandene Design-Tokens), work-evidence.mjs (isolierte Beispieldaten und Summen/Filter), wrapper/test/work-evidence.test.mjs (Fachprüfungen). Einbau in wrapper/ui/app.jsx über einen Import, Navigationseintrag und Renderzweig. Gemeinsamer PageHeading und native Bedienelemente nutzen das vorhandene UI. Entfernen benötigt diese drei Shell-Anschlüsse und die Moduldateien. Für ein fremdes System müssen Navigation, Design und später Speicher/Authentifizierung angebunden werden; vollständige Abhängigkeitfreiheit wird nicht behauptet. Kein neues Plugin-Framework.
+Bausteine: wrapper/ui/work-evidence.tsx (Ansicht), work-evidence.css (lokale Struktur über vorhandene Design-Tokens), work-evidence.mjs (isolierte Beispieldaten und Summen/Filter), wrapper/test/work-evidence.test.mjs (Fachprüfungen). Einbau in wrapper/ui/app.jsx über Import, Einstellungsnavigation, Service-Renderzweig und Linkzuordnung. ?view=service und der frühere ?view=work-evidence führen nach Einstellungen → Service. Gemeinsamer PageHeading und native Bedienelemente nutzen das vorhandene UI. Entfernen benötigt diese Shell-Anschlüsse und die Moduldateien. Für ein fremdes System müssen Navigation, Design und später Speicher/Authentifizierung angebunden werden; vollständige Abhängigkeitfreiheit wird nicht behauptet. Kein neues Plugin-Framework.
 
 ## Gestaltung und Kontrolle
 
 Die verbindliche Vanilla-CI und Bereichsverträge gelten. Eine Überschrift, flache Listen, gemeinsame Schrift-/Farb-/Abstandstokens, umbrechende Bedienelemente, tastaturbedienbare Details und stabile Zahlen. Vorhandenes React und Intl genügen für diese Konzeptfassung; keine zusätzliche Zeiterfassungsbibliothek notwendig.
+
+## Weiter zu besprechen
+
+Wie echte Einsätze aus einer Session begonnen, pausiert, zugeordnet und beendet werden, ist ausdrücklich noch offen. Dieser Umbau nimmt diese Bedienentscheidung nicht vorweg. Die mobile Ansicht wurde von Christian selbst geprüft; auf seinen Wunsch keine erneute Geräteprüfung in diesem Umbau.

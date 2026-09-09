@@ -1,4 +1,4 @@
-import { WorkEvidencePage } from "./work-evidence.tsx";
+import { ServiceSettings } from "./work-evidence.tsx";
 import {useJobNotifications, JobNotifications, NotificationPreference} from "./job-notifications.jsx";
 import { ChapterScrubber } from "./components/ui/chapter-scrubber";
 import { PlannerPage } from "./planner";
@@ -622,7 +622,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const systemNoticeRef = useRef(null);
   const [boot, setBoot] = useState(null),
     [audioConnections, setAudioConnections] = useState({Groq:false, ElevenLabs:false}),
-    [view, setView] = useState(() => !embedded && ["inbox", "today", "calendar", "pipeline", "jobs", "work-evidence"].includes(new URLSearchParams(window.location.search).get("view")) ? (new URLSearchParams(window.location.search).get("view") === "pipeline" ? "today" : new URLSearchParams(window.location.search).get("view")) : (embedded || new URLSearchParams(window.location.search).has("chat") ? "chat" : "today")),
+    [view, setView] = useState(() => !embedded && ["inbox", "today", "calendar", "pipeline", "jobs", "work-evidence", "service"].includes(new URLSearchParams(window.location.search).get("view")) ? (["work-evidence", "service"].includes(new URLSearchParams(window.location.search).get("view")) ? "settings" : new URLSearchParams(window.location.search).get("view") === "pipeline" ? "today" : new URLSearchParams(window.location.search).get("view")) : (embedded || new URLSearchParams(window.location.search).has("chat") ? "chat" : "today")),
     [chatId, setChatId] = useState(null),
     [thread, setThread] = useState(null),
     [chats, setChats] = useState([]),
@@ -647,7 +647,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     [modal, setModal] = useState(null),
     [welcome, setWelcome] = useState(false),
     [search, setSearch] = useState(""),
-    [settingsTab, setSettingsTab] = useState("general"),
+    [settingsTab, setSettingsTab] = useState(() => ["work-evidence", "service"].includes(new URLSearchParams(window.location.search).get("view")) ? "service" : "general"),
     [selectedFile, setSelectedFile] = useState(null),
     [jobs, setJobs] = useState([]),
     [jobsLoading, setJobsLoading] = useState(true),
@@ -1636,7 +1636,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       ["today", Sun, "Heute"],
       ["inbox", Inbox, "Inbox"],
       ["jobs", Clock, "Aufträge"],
-      ["work-evidence", ShieldCheck, "Arbeitsnachweis"],
       ...(boot?.features?.library?[["library", FileText, "Bibliothek"]]:[]),
     ];
   const settingNav = [
@@ -1645,6 +1644,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     ["appearance", Sun, "Aussehen"],
     ["voice", Mic, "Stimme"],
     ["identity", User, "Dein Agent"],
+    ["service", ShieldCheck, "Service"],
     ["connections", Plug, "Verbindungen"],
     ["skills", Sparkles, "Skills"],
     ["secrets", KeyRound, "Secrets"],
@@ -2214,9 +2214,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
             )}
           </div>
         )}
-        {view === "chat" ? null : view === "work-evidence" ? (
-          <WorkEvidencePage PageHeading={PageHeading} onShowSidebar={!sidebar ? () => setSidebar(true) : undefined}/>
-        ) : view === "inbox" ? (
+        {view === "chat" ? null : view === "inbox" ? (
           <InboxPage PageHeading={PageHeading} sidebarHost={inboxSidebarHost} sidebarVisible={sidebar} onShowSidebar={() => setSidebar(true)} onHideSidebar={() => setSidebar(false)} onBack={() => setView("chat")}/>
         ) : view === "today" || view === "calendar" ? (
           <PlannerPage PageHeading={PageHeading} section={view} onSection={setView} onShowSidebar={!sidebar ? () => setSidebar(true) : undefined} api={api} crmEnabled={!!boot.features?.crmCore} notifications={notificationState} notificationsEnabled={!!boot.features?.routines} requests={requests.length} onRequests={()=>setModal("activity")} onNotifications={id=>setModal(id?{type:"notifications",id}:"notifications")} onConnections={()=>{setSettingsTab("connections");setView("settings");}} onJobs={()=>setView("jobs")} onBriefing={async item=>{const result=await api("/planner/chat", {id:item.id, ...(item.demo?{demoDate:item.demoDate}: {})});await refreshChats();await openChat(result.thread.id);}}/>
@@ -2510,7 +2508,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         ) : (
           <div className={"page settings-page" + (settingsTab === "identity" ? " agent-settings-page" : "")}>
             <PageHeading title={settingsTab === "design" ? "Unser Design" : settingNav.find((s) => s[0] === settingsTab)?.[2]} onShowSidebar={!sidebar ? () => setSidebar(true) : undefined}/>
-            {['system','memory','storage','access'].includes(settingsTab) && boot.features.operations ? <SystemSettings key={settingsTab} api={api} section={settingsTab} chats={chats} onJobs={()=>setView('jobs')} onLibrary={()=>setView('library')} onConnections={()=>openSettings('connections')}/> : settingsTab === "general" ? (
+            {settingsTab === 'service' ? <ServiceSettings/> : ['system','memory','storage','access'].includes(settingsTab) && boot.features.operations ? <SystemSettings key={settingsTab} api={api} section={settingsTab} chats={chats} onJobs={()=>setView('jobs')} onLibrary={()=>setView('library')} onConnections={()=>openSettings('connections')}/> : settingsTab === "general" ? (
               <>
                 <h3 className="section-heading">Schaltzentrale</h3>
                 <div className="settings-group">
