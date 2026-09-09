@@ -100,10 +100,23 @@ test('all selectable color worlds and accents keep readable text and distinct su
   const {resolveDesign, designTones, designAccents} = await import('../ui/design-system.mjs');
   for (const mode of ['light','dark']) for (const tone of designTones) for (const accent of designAccents) {
     const palette=resolveDesign(mode,tone.id,accent.id);
-    for (const text of ['text','muted','faint','accent','blue']) for(const surface of ['bg','sidebar','surface','raised','input','composer'])
+    for (const text of ['text','muted','faint','accent','blue']) for(const surface of ['bg','sidebar','surface','raised','input','composer','workspace-panel-bg','glass'])
       assert.ok(contrast(palette[text],palette[surface])>=4.5,`${mode}/${tone.id}/${accent.id}: ${text} on ${surface}`);
     assert.notEqual(palette.bg,palette.surface);
     assert.equal(palette['switch-on'],themes[mode]['switch-on']);
   }
   assert.deepEqual(resolveDesign('invalid','invalid','invalid'),resolveDesign());
+});
+
+
+test('light surfaces retain visible depth in every color world', async () => {
+  const {resolveDesign, designTones} = await import('../ui/design-system.mjs');
+  for (const tone of designTones) {
+    const p = resolveDesign('light', tone.id);
+    for (const surface of ['sidebar', 'workspace-panel-bg']) {
+      assert.ok(luminance(p.bg) - luminance(p[surface]) >= 0.08, `${tone.id}: ${surface} separates from chat`);
+      assert.ok(luminance(p.glass) - luminance(p[surface]) >= 0.1, `${tone.id}: menu separates from ${surface}`);
+    }
+    assert.ok(Number(p['particle-opacity']) > Number(themes.dark['particle-opacity']));
+  }
 });

@@ -12,6 +12,8 @@ export function WelcomeParticles({ reduceMotion, theme }: { reduceMotion: boolea
     const media = matchMedia('(prefers-reduced-motion: reduce)');
     const style = getComputedStyle(canvas);
     const colors = ['--muted', '--project-blue', '--project-purple', '--project-yellow'].map(key => style.getPropertyValue(key).trim());
+    const opacity = Number(style.getPropertyValue('--particle-opacity'));
+    const layerOpacity = Number(style.getPropertyValue('--particle-layer-opacity'));
     let width = 0, height = 0, frame = 0, previous = 0, elapsed = 0, visible = false;
     const points = Array.from({ length: 165 }, (_, index) => ({
       angle: Math.random() * Math.PI * 2,
@@ -30,7 +32,7 @@ export function WelcomeParticles({ reduceMotion, theme }: { reduceMotion: boolea
         const distance = radius * (Math.exp(point.progress * 2) - 1) / (Math.exp(2) - 1);
         const fade = Math.min(1, point.progress * 9, (1 - point.progress) * 8);
         const pulse = 0.8 + 0.2 * Math.sin(elapsed * 0.65 + point.phase);
-        context.globalAlpha = fade * pulse * (0.27 + point.layer * 0.10);
+        context.globalAlpha = fade * pulse * (opacity + point.layer * layerOpacity);
         context.fillStyle = colors[point.color];
         context.beginPath();
         context.arc(width / 2 + Math.cos(point.angle) * distance, height * 0.46 + Math.sin(point.angle) * distance,

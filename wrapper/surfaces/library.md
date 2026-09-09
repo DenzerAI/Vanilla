@@ -85,3 +85,6 @@ Skripte, CSS, Bilder und Fonts, sperrt aber API-Zugriff, externe Ressourcen,
 Formularversand und eingebettete Unterseiten. Die CSP der App und der geschützte
 Raw-/Download-Weg bleiben unverändert. Diese erste Vorschau ist für eigenständige
 HTML-Dateien gedacht; sie synchronisiert noch keine externen Dateiänderungen live.
+
+
+Der helle Workspace verwendet dieselbe dunkler abgesetzte Papierfläche wie im Chat, auch in Dateivorschau und Bibliothek. Menüs und Dialoge folgen der hellen Materialhierarchie aus DESIGN.md; es gibt keine eigene Bibliothekspalette.

@@ -566,3 +566,15 @@ Buttonbedienung, sichtbarer Fokus, 44-px-Treffhöhe und reduzierte Bewegung
 sind berücksichtigt. Im Menü gilt menuitemcheckbox, sonst switch. Farben
 und Bewegung folgen vorhandenen zentralen Tokens. Unser Design zeigt dieselbe
 Komponente mit lokalem Vorschauzustand. Keine weiteren Kopf- oder Workspaceaktionen.
+
+
+Das helle Erscheinungsbild verwendet eine gedämpfte Papierfläche, dunkler
+abgesetzte Seitenleiste und Workspace sowie helle, klar konturierte Menüs
+und Eingabe. Die Abstufung gilt in Ausgewogen, Warm und Neutral über die
+zentrale Palette und resolveDesign. Popover und Dialoge sind im hellen Modus
+weniger durchscheinend; Text, Fokus und Auswahl bleiben kontrastreich.
+Die Lichtpunkte nutzen eigene zentrale Deckkraftrollen je Theme, damit sie
+auf hellem Papier sichtbar bleiben. Bewegung und Abschaltmöglichkeiten bleiben
+bestehen. Dunkle Farbwerte bleiben unverändert. Visuelle Inspiration: warme
+Flächenhierarchie der Claude-Chatoberfläche, keine behauptete Übernahme originaler
+Vendor-Tokens (Referenz: https://www.bluestacks.com/blog/bluestacks-roundups/ai-tools-like-chatgpt-en.html).

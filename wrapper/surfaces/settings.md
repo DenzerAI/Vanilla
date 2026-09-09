@@ -188,3 +188,6 @@ Buttonbedienung, sichtbarer Fokus, 44-px-Treffhöhe und reduzierte Bewegung
 sind berücksichtigt. Im Menü gilt menuitemcheckbox, sonst switch. Farben
 und Bewegung folgen vorhandenen zentralen Tokens. Unser Design zeigt dieselbe
 Komponente mit lokalem Vorschauzustand. Keine weiteren Kopf- oder Workspaceaktionen.
+
+
+Die helle Palette unter Aussehen verwendet die abgestuften Papierflächen aus DESIGN.md. Ausgewogen, Warm und Neutral halten Menüs, Steuerelemente und Workspace unterscheidbar; Unser Design zeigt dieselben zentralen Werte.

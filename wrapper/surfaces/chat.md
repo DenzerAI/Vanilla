@@ -313,3 +313,6 @@ Buttonbedienung, sichtbarer Fokus, 44-px-Treffhöhe und reduzierte Bewegung
 sind berücksichtigt. Im Menü gilt menuitemcheckbox, sonst switch. Farben
 und Bewegung folgen vorhandenen zentralen Tokens. Unser Design zeigt dieselbe
 Komponente mit lokalem Vorschauzustand. Keine weiteren Kopf- oder Workspaceaktionen.
+
+
+Im hellen Theme setzen sich Sidebar und Workspace dunkler von der Papierfläche ab. Menüs und Composer erhalten helle, klar konturierte Flächen. Die Sterne nutzen die zentralen Theme-Deckkraftrollen; Reduzierung und Abschalten des Reiseeffekts bleiben erhalten. Palette und Referenz stehen in DESIGN.md.
