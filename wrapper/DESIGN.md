@@ -554,3 +554,15 @@ Reduzierte Bewegung deaktiviert die Übergänge. Die Erkennung zeigt mittig
 „Wird erkannt“ neben dem gewählten AppLoader; Schließen bleibt rechts erreichbar.
 Die kompakte Höhe und alle Aufnahme-/Sendeaktionen bleiben erhalten.
 Unser Design zeigt beide gemeinsamen Bausteine ohne echten Mikrofonzugriff.
+
+
+Der gemeinsame `ThemeToggle` unter `ui/components/ui/theme-toggle.tsx` zeigt Mond
+und Sonne in einer kompakten Pille mit gleitendem Auswahlkreis. Er ersetzt
+Hell/Dunkel unter Aussehen und steht als eigene Abschlusszeile „Erscheinungsbild“
+im Agent-Menü. Beide verwenden dieselbe bestätigte, serverseitig gespeicherte
+Theme-Einstellung. Während der Speicherung ist der Schalter gesperrt; Fehler
+lassen die bisherige Auswahl bestehen und werden direkt angezeigt. Native
+Buttonbedienung, sichtbarer Fokus, 44-px-Treffhöhe und reduzierte Bewegung
+sind berücksichtigt. Im Menü gilt menuitemcheckbox, sonst switch. Farben
+und Bewegung folgen vorhandenen zentralen Tokens. Unser Design zeigt dieselbe
+Komponente mit lokalem Vorschauzustand. Keine weiteren Kopf- oder Workspaceaktionen.

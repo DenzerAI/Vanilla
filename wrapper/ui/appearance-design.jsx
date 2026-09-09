@@ -1,3 +1,4 @@
+import {ThemeToggle} from "./components/ui/theme-toggle";
 import React, {useState} from 'react';
 import {designTones, designAccents, designVariables} from './design-system.mjs';
 import {SettingRow} from './settings-row.jsx';
@@ -8,7 +9,7 @@ export function AppearanceDesign({settings, onChange}) {
   async function change(value) {setBusy(true);setError('');try {await onChange(value);} catch(e) {setError(e.message || 'Aussehen konnte nicht gespeichert werden.');} finally {setBusy(false);}}
   return <section className="appearance-design" aria-label="Farbwelt">
     <fieldset disabled={busy}>
-      <div className="settings-group"><SettingRow title="Erscheinungsbild"><div className="design-segments" role="group" aria-label="Erscheinungsbild">{[['light','Hell'],['dark','Dunkel']].map(([value,label])=><button type="button" key={value} aria-pressed={settings.theme===value} onClick={()=>change({theme:value})}>{label}</button>)}</div></SettingRow></div>
+      <div className="settings-group"><SettingRow title="Erscheinungsbild"><ThemeToggle theme={settings.theme} onThemeChange={theme=>onChange({theme})} disabled={busy}/></SettingRow></div>
       <h3 className="section-heading">Farbwelt</h3>
       <div className="design-tone-options" role="radiogroup" aria-label="Farbwelt">
         {designTones.map(tone=><label className="design-tone-option" key={tone.id}>

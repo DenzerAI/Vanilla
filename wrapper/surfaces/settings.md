@@ -176,3 +176,15 @@ Settings-Skeletons rendern SettingRow innerhalb der settings-group, damit Innenk
 ## Service
 
 Service steht nach Dein Agent in der Einstellungsnavigation. Betreuung, Arbeitsnachweise und später A2A gehören hier zusammen. Normale SettingRow-Gruppen, kompakte Zeitangaben, Einsätze und Meldungen zunächst geschlossen. Kein Dashboard. Die Bedienung echter Einsätze über eine Session ist noch zu besprechen; die aktuelle Fassung bleibt als Vorschau erkennbar. Vertrag: work-evidence.md.
+
+
+Der gemeinsame `ThemeToggle` unter `ui/components/ui/theme-toggle.tsx` zeigt Mond
+und Sonne in einer kompakten Pille mit gleitendem Auswahlkreis. Er ersetzt
+Hell/Dunkel unter Aussehen und steht als eigene Abschlusszeile „Erscheinungsbild“
+im Agent-Menü. Beide verwenden dieselbe bestätigte, serverseitig gespeicherte
+Theme-Einstellung. Während der Speicherung ist der Schalter gesperrt; Fehler
+lassen die bisherige Auswahl bestehen und werden direkt angezeigt. Native
+Buttonbedienung, sichtbarer Fokus, 44-px-Treffhöhe und reduzierte Bewegung
+sind berücksichtigt. Im Menü gilt menuitemcheckbox, sonst switch. Farben
+und Bewegung folgen vorhandenen zentralen Tokens. Unser Design zeigt dieselbe
+Komponente mit lokalem Vorschauzustand. Keine weiteren Kopf- oder Workspaceaktionen.

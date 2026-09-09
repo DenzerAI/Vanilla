@@ -1,0 +1,18 @@
+.theme-toggle-control { display: inline-flex; flex-direction: column; align-items: flex-end; gap: var(--space-8); }
+.theme-toggle-control .theme-toggle { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: 64px; min-height: var(--control-touch); padding: 0; border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--text); cursor: pointer; }
+.theme-toggle-track { position: relative; display: block; width: 64px; height: 32px; box-sizing: border-box; border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--bg); }
+.theme-toggle-thumb { position: absolute; top: 3px; left: 3px; width: 24px; height: 24px; border-radius: var(--radius-pill); background: var(--raised); transition: transform var(--motion-picker-duration) var(--motion-picker-easing); }
+.theme-toggle-track svg { position: absolute; top: 7px; color: var(--muted); }
+.theme-toggle-moon { left: 7px; }
+.theme-toggle-sun { right: 7px; }
+.theme-toggle[data-theme-choice="light"] .theme-toggle-thumb { transform: translateX(32px); }
+.theme-toggle[data-theme-choice="dark"] .theme-toggle-moon, .theme-toggle[data-theme-choice="light"] .theme-toggle-sun { color: var(--text); }
+.theme-toggle-control .theme-toggle:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.theme-toggle-control .theme-toggle:hover .theme-toggle-track { border-color: var(--muted); }
+.theme-toggle-control .theme-toggle:disabled { cursor: wait; opacity: .6; }
+.theme-toggle-error { max-width: 240px; font-size: var(--text-small); color: var(--danger); }
+.agent-theme-row { display: flex; justify-content: space-between; align-items: center; gap: var(--space-16); color: var(--text); font-size: var(--text-control); }
+.agent-menu .dropdown-note { border-top: 1px solid var(--border); margin-top: var(--space-4); padding-top: var(--space-8); }
+@media (prefers-reduced-motion: reduce) { .theme-toggle-thumb { transition: none; } }
+:root[data-reduce-motion="on"] .theme-toggle-thumb { transition: none; }
+@media (forced-colors: active) { .theme-toggle-track { border-color: ButtonText; } .theme-toggle-thumb { background: Highlight; } .theme-toggle-track svg { color: ButtonText; } }

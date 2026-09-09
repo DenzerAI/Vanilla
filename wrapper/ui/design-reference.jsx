@@ -1,6 +1,7 @@
 import {VoiceWave,VoiceStatus} from "./voice-visual";
 import { AvatarMotionSetting } from "./avatar-motion-setting.jsx";
 import { AvatarChoices } from "./avatar-picker.jsx";
+import { DefaultToggle } from "./components/ui/theme-toggle-demo";
 import GlassButtonDemo from "./components/ui/glass-button-demo";
 import { AgentMenu } from "./agent-menu";
 import {NotificationRow} from "./job-notifications.jsx";
@@ -50,6 +51,8 @@ export function DesignReference({ theme, tone, accent }) {
       <SettingsPatterns/>
       <h3 className="section-heading">Glasbutton · Beispiel</h3>
       <GlassButtonDemo/>
+      <h3 className="section-heading">Erscheinungsbild · Beispiel</h3>
+      <DefaultToggle/>
       <h3 className="section-heading">Agent-Menü · Beispiel</h3>
       <div className="sidebar-topbar agent-menu-preview"><AgentMenu name="Agent" avatar="nori" connectionState="online" preview onNavigate={()=>{}} onRestart={()=>{}} /></div>
       <p className="page-note">Avatar und Name öffnen das gemeinsame Menü. Der Verbindungspunkt gehört zur Identität; Serverdetails stehen im geöffneten Menü. Die Vorschau verändert keine Einstellungen und startet keinen Server neu.</p>

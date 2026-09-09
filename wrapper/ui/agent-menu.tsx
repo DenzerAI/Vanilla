@@ -3,7 +3,11 @@ import { ChatMenu } from "./chat-controls.jsx";
 import { Avatar } from "./avatar.jsx";
 import { Activity, Archive, RotateCcw, Settings } from "./icons.jsx";
 
+import { ThemeToggle } from "./components/ui/theme-toggle";
+
 type Props = {
+  theme?: "dark" | "light";
+  onThemeChange?: (theme: "dark" | "light") => void | Promise<void>;
   name: string;
   avatar?: string;
   avatarColor?: string;
@@ -51,14 +55,14 @@ function ServerDetails({ connectionState, preview }: Pick<Props, "connectionStat
   </div>;
 }
 
-export function AgentMenu({ name, avatar, avatarColor, connectionState, restartBusy = false, onNavigate, onRestart, preview = false }: Props) {
+export function AgentMenu({ theme, onThemeChange, name, avatar, avatarColor, connectionState, restartBusy = false, onNavigate, onRestart, preview = false }: Props) {
   const state = restartBusy ? "Startet neu …" : connectionState === "online" ? "Verbunden" : ["connecting", "reconnecting"].includes(connectionState) ? "Verbindet …" : "Verbindung unterbrochen";
   return <ChatMenu
     label={`${name || "Agent"} · Agent-Menü · ${state}`}
     className="profile-button agent-menu-trigger"
     menuClassName="agent-menu"
     selected={undefined}
-    footer={undefined}
+    footer={<span className="agent-theme-row"><span>Erscheinungsbild</span><ThemeToggle theme={theme} onThemeChange={onThemeChange} menuItem /></span>}
     header={<ServerDetails connectionState={connectionState} preview={preview} />}
     items={[
       { id: "usage", label: "Nutzung", icon: <Activity size={18} strokeWidth={1.55} />, action: () => onNavigate("usage") },
