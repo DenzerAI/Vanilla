@@ -119,6 +119,7 @@ import "./multi-chat.css";
 import { createEventSubscription } from "./chat-events.mjs";
 import { ChatMenu, ChatTitle, LayoutPicker, PaneDivider } from "./chat-controls.jsx";
 import { MIN_CHAT_WIDTH, visiblePanes, selectPaneCount, conversationText } from "./chat-layout.mjs";
+import { UserPreferences } from "./user-preferences";
 import { AgentPreferences } from "./agent-preferences.jsx";
 import { AgentWelcome } from "./avatar-picker.jsx";
 import { Modal } from "./modal.jsx";
@@ -1637,6 +1638,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     ["appearance", Sun, "Aussehen"],
     ["voice", Mic, "Stimme"],
     ["identity", User, "Dein Agent"],
+    ["user", User, "Dein Profil"],
     ["service", ShieldCheck, "Service"],
     ["connections", Plug, "Verbindungen"],
     ["skills", Sparkles, "Skills"],
@@ -1927,6 +1929,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 ) : !thread?.turns?.length ? (
                   <ChatStart api={api} routines={!!boot.features?.routines} revision={libraryRevision} composing={!!text.trim() || attachments.length>0} greeting={greeting} profile={boot.settings} requests={requests} notifications={notificationState.data?.items || []} chats={chats} projectId={projectId} error={notificationState.error}
                     onOpen={async item=>{
+                      if(item.kind==='weather'){openSettings('user');return;}
                       if(item.prompt){setText(item.prompt);inputRef.current?.focus();return;}
                       if(item.entry){setModal({type:'library-file',entry:item.entry,entries:[item.entry]});return;}
                       if(item.job){setModal({type:'job',job:item.job});return;}
@@ -2578,6 +2581,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               </>
             ) : settingsTab === "design" ? (
               <><button className="design-back" onClick={()=>setSettingsTab("appearance")}>{icon(ArrowLeft,16)}Aussehen</button><DesignReference theme={boot.settings.theme} tone={boot.settings.designTone} accent={boot.settings.highlightColor}/></>
+            ) : settingsTab === "user" ? (
+              <UserPreferences api={api}/>
             ) : settingsTab === "identity" ? (
               <>
                 <AgentPreferences api={api} onSaved={profile=>{setBoot(old=>({...old,settings:{...old.settings,name:profile.name,avatar:profile.avatar,avatarColor:profile.avatarColor,avatarConfigured:true}}));notify("Dein Agent wurde gespeichert.")}} />

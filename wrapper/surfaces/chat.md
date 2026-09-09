@@ -378,7 +378,7 @@ Alte Direkteinstiege mit ?view=today oder ?view=pipeline öffnen den neuen Chats
 
 Der leere Chat verwendet einen Composer im normalen Flexfluss unter dem separat
 scrollbaren Einstieg. Keine Karte oder Navigation liegt hinter der Eingabe.
-Avatar und Sprechblase stehen als zentrierte Gruppe in einer gemeinsamen Zeile. Die linksbündige ChatStartHeading nutzt eine feine Kontur, warme suggestion-glass-Fläche und eine kleine Spitze zum Avatar. Der sichtbare Text sitzt mittig im für beide Sätze reservierten Platz; der Avatar schrumpft nicht. AttentionFan nutzt
+Avatar und Sprechblase stehen dicht als zentrierte Gruppe in einer gemeinsamen Zeile. ChatStartHeading nutzt eine feine Kontur, warme suggestion-glass-Fläche und eine kleine untere linke Rundung, ohne aufgesetzte Spitze. Nur der aktuelle vollständige Satz bestimmt die Fläche; während seiner Schreibanimation bleibt sie stabil. Der Avatar schrumpft nicht. AttentionFan nutzt
 suggestion-glass, die gemeinsame Glaskante und 28 px Blur, mit deckenden Fallbacks.
 Maus-Hover hebt eine Karte in ihrer bestehenden Position an und betont ihre Kontur;
 kein Umsortieren unter dem Zeiger. Ein Klick öffnet die angehobene Karte, Touch
@@ -388,7 +388,7 @@ ChatStartHeading ordnet den belegten Zustand der Karte kurz ein, ohne Titel als
 Fragen zu wiederholen. Langsame Zeichenfolge, zwanzig Sekunden Lesezeit und
 höchstens eine sachliche Vertiefung aus dem vorhandenen Inhalt. Danach steht der
 Text still. Die Karten wechseln nie automatisch.
-Alle Varianten reservieren gemeinsam ihren Umbruch. Hover und Tastaturfokus pausieren nur den späteren Satzwechsel; die RPG-Schreibanimation läuft weiter. Ein Composer-Entwurf pausiert auch das Schreiben, ohne den Satz vorzeitig zu vervollständigen. Verborgene Ansichten stoppen Zeitgeber.
+Der jeweils aktuelle Satz reserviert seinen vollständigen Umbruch. Hover und Tastaturfokus pausieren nur den späteren Satzwechsel; die RPG-Schreibanimation läuft weiter. Ein Composer-Entwurf pausiert auch das Schreiben, ohne den Satz vorzeitig zu vervollständigen. Verborgene Ansichten stoppen Zeitgeber.
 Screenreader erhalten die vollständige Zeile ohne laufende Wortansagen. Reduzierte
 Bewegung zeigt einen statischen Satz. Aussehen → Visuell → Lebendiger Starttext
 schaltet den Effekt für diesen Browser dauerhaft ab; kein zusätzlicher Server nötig.
@@ -409,7 +409,9 @@ vorhandenen GET /jobs, /library und /planner/results; Fokus und relevante Ereign
 aktualisieren die Daten. Kleinere Rollen: Überschrift subheading, Kartentitel control.
 
 
-Die letzte Datei im Startfächer verwendet LibraryThumbnail und die Aktion „Vorschau öffnen“ für LibraryPreview. HTML und nicht unterstützte Formate zeigen das vorhandene Formatsymbol; keine automatisch laufende HTML-Seite in der Miniatur. Die Wetterkarte zeigt ohne Einrichtung ein Ortssymbol, „Dein Ort ist noch nicht eingerichtet.“ und „Im Chat besprechen“. Sie behauptet weder Wetterdaten noch eine bereits vorhandene Ortseinstellung. Die Sprechblase steht als Produktionsbaustein in Unser Design.
+Die letzte Datei im Startfächer verwendet LibraryThumbnail und die Aktion „Vorschau öffnen“ für LibraryPreview. HTML und nicht unterstützte Formate zeigen das vorhandene Formatsymbol; keine automatisch laufende HTML-Seite in der Miniatur. Die Wetterkarte zeigt ohne Einrichtung ein Ortssymbol, „Dein Ort ist noch nicht eingerichtet.“ und „Ort einstellen“. Die Aktion öffnet direkt Einstellungen → Dein Profil. Nach Speicherung zeigt sie den Ort; fehlender Wetterabruf wird ausdrücklich benannt. Ladefehler werden nicht als fehlende Einrichtung ausgegeben. Die Sprechblase steht als Produktionsbaustein in Unser Design.
+
+MD-Miniaturen im Startfächer nutzen die Kartenvariante von LibraryThumbnail mit der ganzen Dokumentbreite, normal lesbarer kleiner Schrift und ohne große Endungsplakette. Die Bibliotheksdarstellung bleibt unverändert.
 
 
 Die rechte Seitenleiste öffnet manuell die zuletzt verwendete verfügbare Ansicht

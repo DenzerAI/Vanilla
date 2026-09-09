@@ -233,3 +233,10 @@ Die boolesche Auswahl wird als on/off im lokalen Browserspeicher gespeichert,
 zwischen offenen Tabs synchronisiert und als gerätebezogen beschriftet.
 Unbekannte Werte verwenden die ruhige aktivierte Voreinstellung; Speicherfehler
 bleiben sichtbar. Reduzierte Bewegung in App oder System hat Vorrang.
+
+
+## Dein Profil
+
+Direkt nach Dein Agent steht Dein Profil mit der vorhandenen Speicherzeile und SettingRow-Gruppen. Über dich enthält den Anzeigenamen des Nutzers; Wetter enthält Stadt/Land als frei eingegebenen Wetterort und den ehrlichen Status des noch nicht angeschlossenen Abrufs. Die Wetterkarte öffnet diesen Bereich direkt. Leere Werte sind erlaubt, maximal 100 Zeichen je Feld.
+
+UserPreferences liest und speichert soul/USER.md über die vorhandenen Workspace-Dateiendpunkte. Der Agentenname bleibt in IDENTITY.md. Andere Markdown-Abschnitte in USER.md werden erhalten. Vor jedem Speichern wird der geladene Text verglichen; bei Konflikt oder Fehler bleibt der Entwurf erhalten. Browser mit Web Locks koordinieren gleichzeitige Profil-Speicherungen desselben Ursprungs. Der allgemeine Datei-Endpunkt bietet keine atomare Versionsprüfung gegen externe Dateieditoren. Neue Arbeitsbereiche erhalten eine leere USER.md ohne erfundene Nutzerdaten.
