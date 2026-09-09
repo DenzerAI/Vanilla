@@ -6,6 +6,7 @@ export const capabilities = {
   schemaVersion: 1,
   availability: 'Query the referenced status endpoint at runtime; source presence is not readiness.',
   domains: [
+    {id:"work-evidence", sources:["wrapper/ui/work-evidence.tsx","wrapper/ui/work-evidence.mjs","wrapper/ui/work-evidence.css"], contract:"wrapper/surfaces/work-evidence.md", status:"explicit fictional demo only", backend:"none; real time capture and scoped A2A planned"},
     {id:'crm-core', sources:['core/crm.py','core/crm_schema.py','core/crm_models.py','core/crm_mapping.py','core/crm_api.py','core/mcp.py'], contract:'docs/CRM.md', status:'/api/crm/schema', backend:'FastAPI and existing SQLite; no connector sync enabled'},
     {id:'planner', sources:['wrapper/ui/planner.tsx','wrapper/ui/planner.css','wrapper/ui/planner-dates.mjs','wrapper/ui/planner-data.mjs','wrapper/ui/planner-demo.ts'], contract:'wrapper/surfaces/today.md', status:'interactive concept with live CRM reads and existing notifications', backend:'existing CRM and notification APIs; calendar, weather and briefing feeds pending'},
     {id:'source-privacy', sources:['scripts/security-scan.py','scripts/source-sync.py','scripts/verify-source-adoption.mjs','scripts/install-git-hooks.mjs','backend/company-base.mjs','system/source-policy.json'], contract:'docs/CODE-SYNC.md', status:'npm run source:check; local hooks require source:setup', backend:'local Git CLI', surface:null},
