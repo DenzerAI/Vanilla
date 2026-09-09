@@ -1,14 +1,14 @@
 import React, {useState,useRef,useEffect} from 'react';
-import {Mic,AudioLines,Pause,Play,Trash2,Check,X,Square,Volume2,Download} from './icons.jsx';
+import {Mic,ArrowUp,Pause,Play,Trash2,Check,X,Square,Volume2,Download} from './icons.jsx';
 import {write,sync,all,downloadLocal} from './dictation-storage.mjs';
 import {microphone,microphoneError} from './dictation-audio.mjs';
 import {SpeechPlayback} from './speech-playback.mjs';
 import './dictation.css';
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-export function Dictation({api,notify,onText,onVoiceText,chatId,reply,running=false,enabled=true,openSettings}) {
+export function Dictation({api,notify,onText,onVoiceText,onSendText,chatId,reply,running=false,enabled=true,openSettings}) {
   const [awaitingId,setAwaitingId]=useState(null);
   const [phase,setPhase]=useState('idle'),[seconds,setSeconds]=useState(0),[levels,setLevels]=useState(Array(30).fill(0)),[sessionActive,setSessionActive]=useState(false),[output,setOutput]=useState('idle'),[issue,setIssue]=useState('');
-  const current=useRef(null),mounted=useRef(true),stopRef=useRef(null),startRef=useRef(null),generation=useRef(0),session=useRef(null),playback=useRef(null),latest=useRef({reply,chatId});latest.current={reply,chatId};
+  const current=useRef(null),mounted=useRef(true),stopRef=useRef(null),startRef=useRef(null),generation=useRef(0),session=useRef(null),playback=useRef(null),latest=useRef({reply,chatId});latest.current={reply,chatId,onSendText};
   if(!playback.current)playback.current=new SpeechPlayback(api,s=>{if(mounted.current)setOutput(s);});
   const phaseRef=useRef(phase);phaseRef.current=phase;
   function report(e){if(mounted.current){setIssue(e.message);notify(e.message);}}
@@ -82,7 +82,7 @@ export function Dictation({api,notify,onText,onVoiceText,chatId,reply,running=fa
     }catch(e){stream?.getTracks().forEach(t=>t.stop());await context?.close();if(mounted.current){setPhase('idle');report(new Error(microphoneError(e)));}}
   }
   startRef.current=start;
-  async function transcribe(id,g,conversation){
+  async function transcribe(id,g,conversation,direct=false){
     setPhase('recognizing');
     await api('/dictation/transcribe',{id});
     for(let i=0;i<1800;i++){
@@ -92,7 +92,11 @@ export function Dictation({api,notify,onText,onVoiceText,chatId,reply,running=fa
       if(r.processing)continue;
       if(r.error)throw new Error(r.error);
       if(!r.text?.trim()){setPhase('idle');setIssue('Keine Sprache erkannt.');return;}
-      if(conversation && session.current===conversation){
+      if(direct){
+        setPhase('waiting');
+        await latest.current.onSendText(r.text);
+        if(mounted.current && g===generation.current)setPhase('idle');
+      }else if(conversation && session.current===conversation){
         conversation.sending=true;setPhase('waiting');
         try{const result=await onVoiceText(r.text);conversation.chatId=result.id;conversation.waiting=true;setAwaitingId(crypto.randomUUID());}
         finally{conversation.sending=false;}
@@ -101,7 +105,7 @@ export function Dictation({api,notify,onText,onVoiceText,chatId,reply,running=fa
     }
     throw new Error('Erkennung dauert länger. Die Aufnahme bleibt unter Stimme verfügbar.');
   }
-  async function stop(trash=false,recognize=true){
+  async function stop(trash=false,recognize=true,direct=false){
     const s=current.current;if(!s || s.stopping)return;
     s.stopping=true;const g=generation.current,conversation=session.current;
     if(mounted.current)setPhase('saving');
@@ -113,7 +117,7 @@ export function Dictation({api,notify,onText,onVoiceText,chatId,reply,running=fa
       s.stream.getTracks().forEach(t=>t.stop());await s.context.close();current.current=null;
       if(!s.seq){if(mounted.current)setPhase('idle');return;}
       await sync(api);
-      if(mounted.current && g===generation.current && !trash && recognize)await transcribe(s.r.id,g,conversation);
+      if(mounted.current && g===generation.current && !trash && recognize)await transcribe(s.r.id,g,conversation,direct);
       else if(mounted.current)setPhase('idle');
     }catch(e){
       if(!secured){s.stopping=false;s.failed=true;if(mounted.current){setPhase('paused');setIssue('Audio noch im Speicher. Sicherheitskopie herunterladen.');}}
@@ -131,15 +135,16 @@ export function Dictation({api,notify,onText,onVoiceText,chatId,reply,running=fa
   async function end(){generation.current++;session.current=null;setSessionActive(false);playback.current.cancel();await stop(false,false);if(mounted.current){if(current.current?.failed){setPhase('paused');setIssue('Audio noch im Speicher. Sicherheitskopie herunterladen.');}else{setPhase('idle');setIssue('');}}}
   const action=(label,Icon,fn,disabled=false)=><button type="button" className="icon-button" title={label} aria-label={label} disabled={disabled} onClick={()=>Promise.resolve(fn()).catch(report)}><Icon size={18}/></button>;
   const active=phase!=='idle' || sessionActive || output!=='idle';
-  const label=output==='playing'?'Spricht':output==='loading'?'Stimme wird vorbereitet':phase==='recording'?(sessionActive?'Hört zu':'Diktat'):phase==='paused'?'Pausiert':phase==='starting'?'Mikrofon …':phase==='saving'?'Sichern …':phase==='recognizing'?'Erkennen …':phase==='waiting'?'Antwortet …':'Sprachchat';
+  const capturing=phase==='recording' || phase==='paused';
+  const label=output==='playing'?'Spricht':output==='loading'?'Stimme wird vorbereitet':phase==='recording'?(sessionActive?'Hört zu':'Diktat'):phase==='paused'?'Pausiert':phase==='starting'?'Mikrofon …':phase==='saving'?'Sichern …':phase==='recognizing'?'Erkennen …':phase==='waiting'?'Senden …':'Sprachchat';
   return <div className="dictation-control">
     {!active && action('Diktieren',Mic,start)}
-    {active && <div className="voice-strip" role="group" aria-label="Sprachsteuerung">
+    {active && <div className="voice-strip" data-capturing={capturing} role="group" aria-label={label}>
       <span className="voice-phase" role="status">{label}</span>
-      {(phase==='recording' || phase==='paused') && <><svg className="voice-wave" viewBox="0 0 120 24" aria-label="Mikrofonpegel" role="img">{levels.map((v,i)=><line key={i} x1={i*4+2} x2={i*4+2} y1={12-Math.max(1,Math.min(11,v*60))} y2={12+Math.max(1,Math.min(11,v*60))}/>)}</svg><span className="voice-time">{Math.floor(seconds/60)}:{String(Math.floor(seconds%60)).padStart(2,'0')}</span>{action(phase==='paused'?'Fortsetzen':'Pause',phase==='paused'?Play:Pause,pause)}{action('Verwerfen',Trash2,()=>stop(true,false))}{action(sessionActive?'Senden':'Diktat übernehmen',Check,()=>stop(false,true))}</>}
+      {capturing && <><svg className="voice-wave" viewBox="0 0 120 24" preserveAspectRatio="none" aria-label="Mikrofonpegel" role="img">{levels.map((v,i)=><line key={i} x1={i*4+2} x2={i*4+2} y1={12-Math.max(1,Math.min(11,v*60))} y2={12+Math.max(1,Math.min(11,v*60))}/>)}</svg><span className="voice-time">{Math.floor(seconds/60)}:{String(Math.floor(seconds%60)).padStart(2,'0')}</span>{action(phase==='paused'?'Fortsetzen':'Pause',phase==='paused'?Play:Pause,pause)}{action('Aufnahme verwerfen',Trash2,()=>stop(true,false))}{action(sessionActive?'Senden':'Diktat übernehmen',Check,()=>stop(false,true))}{!sessionActive && onSendText && <button type="button" className="send-button" title="Diktat direkt senden" aria-label="Diktat direkt senden" disabled={running} onClick={()=>void stop(false,true,true)}><ArrowUp size={21}/></button>}</>}
       {phase==='idle' && sessionActive && output==='idle' && <>{action('Weiter sprechen',Mic,start,running)}{reply?.text && action('Antwort vorlesen',Volume2,()=>playback.current.speak(reply.text))}</>}
       {output!=='idle' && action('Wiedergabe stoppen',Square,()=>playback.current.cancel())}
-      {action('Sprachsteuerung schließen',X,end)}
+      {(!capturing || sessionActive) && action('Sprachsteuerung schließen',X,end)}
     </div>}
     {issue && <div className="voice-issue" role="alert"><span>{issue}</span>{current.current?.failed? action('Sicherheitskopie herunterladen',Download,()=>downloadLocal(current.current.r.id,current.current.unsaved)):<button type="button" onClick={openSettings}>Stimme öffnen</button>}{action('Hinweis schließen',X,()=>setIssue(''))}</div>}
   </div>;

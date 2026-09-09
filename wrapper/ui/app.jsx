@@ -1303,22 +1303,28 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       setChats(old => old.map(c => c.id === id ? {...c, model: selection.model, models: selection.models, effort: selection.effort} : c));
     } finally { setBusy(false); }
   }
-  async function submit(e, voiceText) {
+  async function submit(e, voiceText, includeDraft = false) {
     e?.preventDefault();
-    if ((!(voiceText ?? text).trim() && !attachments.length) || busy) { if (voiceText) throw new Error("Chat ist beschäftigt."); return; }
+    const msg = includeDraft ? [text, voiceText].filter(Boolean).join("\n") : voiceText ?? text;
+    const rejectVoice = message => {
+      if (voiceText) {
+        if (includeDraft) setText(msg);
+        throw new Error(message);
+      }
+      notify(message);
+    };
+    if ((!msg.trim() && !attachments.length) || busy) { if (voiceText) rejectVoice("Chat ist beschäftigt."); return; }
     if (running && nextSelection) {
       const message = "Die Modellwahl gilt für die nächste Antwort. Bitte die laufende Antwort abwarten oder stoppen.";
-      if (voiceText) throw new Error(message);
-      notify(message); return;
+      rejectVoice(message); return;
     }
-    if (uploadCounts.current.get(draftKey())) { notify("Dateien werden noch angeheftet."); return; }
+    if (uploadCounts.current.get(draftKey())) { rejectVoice("Dateien werden noch angeheftet."); return; }
     setBusy(true);
     const originalText = text,
       originalAttachments = attachments;
     try {
       let id = chatId, selectedModel = pickerModel;
-      const msg = voiceText ?? text,
-        files = voiceText ? [] : attachments;
+      const files = voiceText && !includeDraft ? [] : attachments;
       followScroll.current = true;
       if (!id) {
         const r = await api("/chats", {
@@ -1338,7 +1344,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         setModel(r.model || "");
         await refreshChats();
       }
-      if (!voiceText) { setText(""); setAttachments([]); }
+      if (!voiceText || includeDraft) { setText(""); setAttachments([]); }
       const optimisticItem = {
         id: "pending-" + crypto.randomUUID(),
         type: "userMessage",
@@ -1396,7 +1402,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
             }
           : previous,
       );
-      if (voiceText) setText(previous => previous ? previous + "\n" + voiceText : voiceText);
+      if (includeDraft) { setText(msg); setAttachments(originalAttachments); }
+      else if (voiceText) setText(previous => previous ? previous + "\n" + voiceText : voiceText);
       else { setText(originalText); setAttachments(originalAttachments); }
       notify(e.message);
       if (voiceText) throw e;
@@ -2006,7 +2013,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       }
                     }}
                   />
-                      <Dictation api={api} notify={notify} chatId={chatId || "draft:" + projectId} enabled={embedded ? paneVisible : visible.includes(0)} running={running || busy} onText={(transcript) => setText(previous => previous ? previous + "\n" + transcript : transcript)} onVoiceText={transcript => submit(undefined, transcript)} reply={(() => { const t = thread?.turns?.filter(t => !t.clientPending && t.status !== "inProgress").at(-1); return t ? { id:t.id, chatId, status:t.status, text:t.items?.filter(i => i.type === "agentMessage" && i.phase !== "commentary").map(i => i.text || "").join("\n") || "" } : null; })()} openSettings={() => { setSettingsTab("voice"); setView("settings"); }} />
+                      <Dictation api={api} notify={notify} chatId={chatId || "draft:" + projectId} enabled={embedded ? paneVisible : visible.includes(0)} running={running || busy || !!uploadCounts.current.get(chatId || `new:${projectId}`)} onText={(transcript) => setText(previous => previous ? previous + "\n" + transcript : transcript)} onVoiceText={transcript => submit(undefined, transcript)} onSendText={transcript => submit(undefined, transcript, true)} reply={(() => { const t = thread?.turns?.filter(t => !t.clientPending && t.status !== "inProgress").at(-1); return t ? { id:t.id, chatId, status:t.status, text:t.items?.filter(i => i.type === "agentMessage" && i.phase !== "commentary").map(i => i.text || "").join("\n") || "" } : null; })()} openSettings={() => { setSettingsTab("voice"); setView("settings"); }} />
                     <div className="composer-send-actions">
                       {running ? (
                         <>
