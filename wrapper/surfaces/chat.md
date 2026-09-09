@@ -316,3 +316,99 @@ Komponente mit lokalem Vorschauzustand. Keine weiteren Kopf- oder Workspaceaktio
 
 
 Im hellen Theme setzen sich Sidebar und Workspace dunkler von der Papierfläche ab. Menüs und Composer erhalten helle, klar konturierte Flächen. Die Sterne nutzen die zentralen Theme-Deckkraftrollen; Reduzierung und Abschalten des Reiseeffekts bleiben erhalten. Palette und Referenz stehen in DESIGN.md.
+
+
+## Iconaktionen
+
+Nachrichten verwenden CopyButton mit bestätigtem Erfolg und sichtbarem Fehler. Plus, Drei-Punkte-Menüs und weitere Iconaktionen folgen der gemeinsamen Iconrückmeldung in README.md; vorhandene Aufklappbewegungen bleiben erhalten.
+
+
+Codeblöcke im gemeinsamen Markdown-Renderer verwenden ebenfalls CopyButton.
+Die bereinigte Toolbar enthält nur den Portalplatz; React rendert darin dieselbe
+zugängliche Kopieraktion mit Haken und Fehlerzustand. Kopiert wird ausschließlich
+der Text des zugehörigen Codeblocks, ohne die letzte Formatierungszeile.
+
+
+Einzelicons folgen der [gemeinsamen Auswahl- und Hoverregel](../DESIGN.md#gemeinsame-iconrückmeldung). Auswahl bleibt als dünner Kreisrand
+erkennbar; Hover animiert einmal, Klick bestätigt die Bedienung. Textzeilen
+und native Schalter werden nicht in Iconbuttons umgeformt.
+
+
+## Archivierte Chats
+
+Archivieren im Chatmenü und Wiederherstellen unter Einstellungen → Archivierte Chats
+verwenden denselben gespeicherten Status. Auch leere Chats und gespeicherte
+Berichte ohne native Sitzungsdatei können archiviert und wiederhergestellt werden;
+Gesprächsexporte und Berichte bleiben erhalten. Andere Anbieter- und Speicherfehler
+werden angezeigt und ändern den angezeigten Status nicht. Während einer Antwort,
+Übergabe oder Sprachsession wird nicht archiviert; doppelte Aktionen sind gesperrt.
+Erneutes Öffnen eines archivierten Berichts verwendet denselben Wiederherstellungsweg.
+Die Archivliste bleibt projektübergreifend, neueste Gespräche zuerst. Suchfilter ohne
+Treffer und ein vollständig leeres Archiv zeigen verschiedene vorhandene Empty-Zustände.
+Der bestehende Aktionsbutton zeigt Wiederherstellen und während der Anfrage
+Wiederherstellen …; erst bestätigter Erfolg entfernt die Zeile.
+
+
+## Gespräch als Startpunkt
+
+Der Standardstart und das Plus am Workspace öffnen den leeren Chat. Heute steht
+nicht mehr im Hauptmenü. Vorhandene Heute-/Kalender-Direktlinks sowie die Suche
+bleiben nutzbar; die bestehende Kalenderansicht wird nicht gelöscht.
+ChatStart ersetzt die starren Startvorschläge: Avatar, kontextabhängige erste Zeile,
+ein kleiner AttentionFan und die unveränderte Nachrichteneingabe. Rückfragen haben
+Vorrang vor ungelesenen Hinweisen, aktuellen Routine-Ergebnissen und fertigen Chats.
+Pro Routine erscheint höchstens das neueste Ergebnis, auch wenn ältere ungelesen
+sind. Routine-Chats werden nicht zusätzlich angeboten. Ohne Anlass stehen drei
+Gesprächsvorschläge bereit; sie füllen nur den Entwurf und senden nichts.
+
+Maximal fünf Einträge, drei aufgefächerte Karten gleichzeitig. Seitliche Karten
+wählen aus; Klick auf die vordere öffnet den bestehenden Chat oder Berichtschat.
+Rückfragen ohne zugeordneten Chat und technische Hinweise verwenden ihre bisherigen
+Dialoge und Freigaben. Kein Auftrag startet durch die Vorschau. Erst erfolgreiches
+Öffnen eines Berichts markiert dessen Hinweis gelesen. Die gewählte ID bleibt bei
+Feed-Updates erhalten. Pfeile, Tastatur und horizontaler Touch-Wisch wechseln;
+vertikales Scrollen bleibt möglich. Keine automatische Rotation oder dauerhafte
+Zusatzanimation. App-/Systemreduktion unterbindet den Federübergang. Karten wachsen
+mit Text, Themefarben und Bewegung stammen aus design-system.mjs. Unser Design
+zeigt denselben AttentionFan. Wetter ist eine Karte im gemeinsamen Fächer, kein zusätzlicher Bereich.
+
+Alte Direkteinstiege mit ?view=today oder ?view=pipeline öffnen den neuen Chatstart.
+?view=calendar öffnet weiterhin den Kalender.
+
+
+Der leere Chat verwendet einen Composer im normalen Flexfluss unter dem separat
+scrollbaren Einstieg. Keine Karte oder Navigation liegt hinter der Eingabe.
+Avatar und Sprechblase stehen dicht als zentrierte Gruppe in einer gemeinsamen Zeile. ChatStartHeading nutzt eine feine Kontur, warme suggestion-glass-Fläche und eine kleine untere linke Rundung, ohne aufgesetzte Spitze. Nur der aktuelle vollständige Satz bestimmt die Fläche; während seiner Schreibanimation bleibt sie stabil. Der Avatar schrumpft nicht. AttentionFan nutzt
+suggestion-glass, die gemeinsame Glaskante und 28 px Blur, mit deckenden Fallbacks.
+Maus-Hover hebt eine Karte in ihrer bestehenden Position an und betont ihre Kontur;
+kein Umsortieren unter dem Zeiger. Ein Klick öffnet die angehobene Karte, Touch
+behält Auswahl/Öffnen. Tastaturfokus bietet dieselbe Hervorhebung.
+
+ChatStartHeading ordnet den belegten Zustand der Karte kurz ein, ohne Titel als
+Fragen zu wiederholen. Langsame Zeichenfolge, zwanzig Sekunden Lesezeit und
+höchstens eine sachliche Vertiefung aus dem vorhandenen Inhalt. Danach steht der
+Text still. Die Karten wechseln nie automatisch.
+Der jeweils aktuelle Satz reserviert seinen vollständigen Umbruch. Hover und Tastaturfokus pausieren nur den späteren Satzwechsel; die RPG-Schreibanimation läuft weiter. Ein Composer-Entwurf pausiert auch das Schreiben, ohne den Satz vorzeitig zu vervollständigen. Verborgene Ansichten stoppen Zeitgeber.
+Screenreader erhalten die vollständige Zeile ohne laufende Wortansagen. Reduzierte
+Bewegung zeigt einen statischen Satz. Aussehen → Visuell → Lebendiger Starttext
+schaltet den Effekt für diesen Browser dauerhaft ab; kein zusätzlicher Server nötig.
+Die Auswahl wird zwischen Tabs desselben Ursprungs synchronisiert und ein
+Speicherfehler angezeigt. Gemeinsame Werte: chatHeadingMotion und attentionFanMotion.
+
+
+Der kompakte Startfächer mischt bis zu fünf Karten. Rückfragen und Probleme kommen
+zuerst, danach die letzte vorhandene Datei, der nächste aktive Benutzerauftrag mit
+serverseitigem nextRun, das neueste Routine-Ergebnis und ungelesene Chatantworten.
+Eine Wetterkarte bleibt reserviert; ohne Einrichtung benennt sie den fehlenden Ort
+und die fehlende Wetterquelle, statt Beispieldaten als Wetter auszugeben.
+Dateien öffnen LibraryPreview, Jobs ihren vorhandenen Dialog, Ergebnisse den
+bestehenden Berichtschat. Keine Aktion startet beim Anzeigen automatisch Arbeit.
+Datei und Routine-Ergebnis mit derselben job_id werden nicht doppelt gezeigt.
+Einzelne Feed-Fehler erhalten übrige Daten und werden benannt. Quellen sind die
+vorhandenen GET /jobs, /library und /planner/results; Fokus und relevante Ereignisse
+aktualisieren die Daten. Kleinere Rollen: Überschrift subheading, Kartentitel control.
+
+
+Die letzte Datei im Startfächer verwendet LibraryThumbnail und die Aktion „Vorschau öffnen“ für LibraryPreview. HTML und nicht unterstützte Formate zeigen das vorhandene Formatsymbol; keine automatisch laufende HTML-Seite in der Miniatur. Die Wetterkarte zeigt ohne Einrichtung ein Ortssymbol, „Dein Ort ist noch nicht eingerichtet.“ und „Ort einstellen“. Die Aktion öffnet direkt Einstellungen → Dein Profil. Nach Speicherung zeigt sie den Ort; fehlender Wetterabruf wird ausdrücklich benannt. Ladefehler werden nicht als fehlende Einrichtung ausgegeben. Die Sprechblase steht als Produktionsbaustein in Unser Design.
+
+MD-Miniaturen im Startfächer nutzen die Kartenvariante von LibraryThumbnail mit der ganzen Dokumentbreite, normal lesbarer kleiner Schrift und ohne große Endungsplakette. Die Bibliotheksdarstellung bleibt unverändert.

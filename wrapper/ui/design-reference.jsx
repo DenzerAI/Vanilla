@@ -1,3 +1,4 @@
+import { IconMotionPreview } from './icon-motion-preview';
 import {VoiceWave,VoiceStatus} from "./voice-visual";
 import { AvatarMotionSetting } from "./avatar-motion-setting.jsx";
 import { AvatarChoices } from "./avatar-picker.jsx";
@@ -9,7 +10,10 @@ import { ChapterScrubber } from "./components/ui/chapter-scrubber";
 import { PlannerPatternPreview } from "./planner";
 import { ModelPicker } from "./model-picker.jsx";
 import { InboxPatternPreview } from "./inbox";
-import { WelcomeSuggestions } from "./welcome-suggestions";
+import {Avatar} from './avatar.jsx';
+import { ChatStartHeading } from './chat-start-heading';
+import { AttentionFan } from "./components/ui/attention-fan";
+import { conversationStarters } from "./chat-start-feed.mjs";
 import { PanelLight } from "./panel-light";
 import {LibraryThumbnail} from './library-thumbnail.jsx';
 import {LibraryPreview} from './library.jsx';
@@ -45,7 +49,8 @@ export function DesignReference({ theme, tone, accent }) {
       <p className="ci-intro">
         {identity.description} Diese Vorgaben gelten im gesamten Arbeitsbereich.
       </p>
-      <div className="design-segments" role="group" aria-label="Designbereich">{[['components','Bausteine'],['colors','Farben'],['type','Schrift'],['layout','Formen'],['rules','Grundlage']].map(([id,label])=><button key={id} type="button" aria-pressed={section===id} onClick={()=>setSection(id)}>{label}</button>)}</div>
+      <div className="design-segments" role="group" aria-label="Designbereich">{[['components','Bausteine'],['icons','Icons'],['colors','Farben'],['type','Schrift'],['layout','Formen'],['rules','Grundlage']].map(([id,label])=><button key={id} type="button" aria-pressed={section===id} onClick={()=>setSection(id)}>{label}</button>)}</div>
+      {section === 'icons' && <><h3 className="section-heading">Systemicons</h3><IconMotionPreview/></>}
       {section === 'components' && <>
       <h3 className="section-heading">Bedienelemente & Seitenaufbau</h3>
       <SettingsPatterns/>
@@ -63,9 +68,10 @@ export function DesignReference({ theme, tone, accent }) {
       </div>
       <h3 className="section-heading">Benachrichtigung · Beispiel</h3>
       <div className="settings-group"><NotificationRow item={{title:'Tagesüberblick · Fertig',created_at:1788854400,read_at:null}} onClick={()=>{}}/></div>
-      <h3 className="section-heading">Startvorschläge · Glaspillen</h3>
-      <WelcomeSuggestions onSelect={setSuggestionDraft}/>
-      <p className="page-note">Flache, vollständig runde Vorschläge mit transparenter Glasfläche. Auf schmalen Ansichten kleiner und ohne Pfeile; die Trefferfläche bleibt auf Touchgeräten gut erreichbar. Die Auswahl füllt die Vorschau darunter.</p>
+      <h3 className="section-heading">Gesprächseinstieg · Fächer</h3>
+      <div className="welcome agent-chat-welcome chat-start"><div className="chat-start-intro"><Avatar avatar="nori" color="neutral" large/><ChatStartHeading texts={['Hier kannst du direkt weitermachen.','Deine letzte Datei liegt hier für dich bereit.']}/></div></div>
+      <AttentionFan items={conversationStarters} onOpen={item=>setSuggestionDraft(item.prompt)}/>
+      <p className="page-note">Ein kompakter Fächer für Hinweise und Gesprächseinstiege. Seitliche Karten wählen aus, die vordere öffnet den Inhalt. Die Vorschau füllt nur den Entwurf darunter.</p>
       <h3 className="section-heading">Sprache · Pegel und Erkennung</h3>
       <div className="composer-entry"><VoiceWave levels={Array.from({length:60},(_,i)=> i>18 && i<45 ? (1+Math.sin(i*.7))*.08 : 0)}/></div>
       <div className="composer-entry"><VoiceStatus label="Wird erkannt" busy/></div>

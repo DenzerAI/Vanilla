@@ -97,3 +97,8 @@ Der Host muss wach und der Kern aktiv sein. Reale Geräte-/Anbieterzustellung
 wird separat von simulierten Funktionstests geprüft.
 
 Wochentage verwenden die bestehende row mit Umbruch, damit auf Handybreite alle sieben Tage erreichbar bleiben.
+
+
+## Iconaktionen
+
+NotificationBell bewegt die erste sichtbare Glocke kurz bei einem neuen notification.created-Ereignis oder einer neuen Rückfrage. Gelesen-Markierungen und wiederholtes Laden lösen keine Bewegung aus. Der Ungelesen-Punkt und die zugängliche Beschriftung bleiben unabhängig von Animation verständlich.

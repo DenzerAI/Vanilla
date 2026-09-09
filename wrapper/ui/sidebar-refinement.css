@@ -31,7 +31,7 @@
 .workspace-chats .new-chat { margin-left: var(--space-8); margin-right: var(--space-8); padding-left: var(--control-nav-text-inset); width: calc(100% - var(--space-16)); }
 .workspace-chats .chat-list-expand { margin-left: var(--space-8); padding-left: var(--control-nav-text-inset); }
 .workspace-chats > .sidebar-section-label.small { padding-left: var(--control-nav-group-inset); }
-.chat-row > .icon-button, .chat-row .chat-state { position: absolute; right: var(--space-2); top: 50%; transform: translateY(-50%); width: 26px; height: 27px; margin: 0; }
+.chat-row > .icon-button, .chat-row .chat-state { position: absolute; right: var(--space-2); top: 50%; transform: translateY(-50%); width: 26px; height: 26px; margin: 0; }
 .chat-row .chat-state { pointer-events: none; }
 .chat-row:hover .chat-state, .chat-row:focus-within .chat-state, .chat-row.menu-open .chat-state { visibility: hidden; }
 .chat-row.menu-open > .icon-button { opacity: 1; }

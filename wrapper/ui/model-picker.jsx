@@ -62,7 +62,7 @@ export function ModelPicker({ models = [], model, effort, onChange, context, wor
   }, [open, expanded]);
   const showCompact = () => { setProvider(workerId); setDetails(false); setError(""); };
   const heading = ({ current, reset, automatic, onReset } = {}) => <div className="model-compact-heading">
-    <div className="model-header-side">{speed && onSpeedChange && <button type="button" className="model-fast"
+    <div className="model-header-side">{speed && onSpeedChange && <button type="button" className="icon-button model-fast"
       disabled={disabled || pending} aria-label="Fast" aria-pressed={serviceTier === speed.id}
       title="Fast · höherer Verbrauch. Gilt ab der nächsten Nachricht."
       onClick={() => void act(() => onSpeedChange(serviceTier === speed.id ? null : speed.id))}><Zap size={16}/></button>}</div>
@@ -71,7 +71,7 @@ export function ModelPicker({ models = [], model, effort, onChange, context, wor
       {current && <output aria-live="off" title={current.description}><span key={current.value}>{reasoningLabel(current.label)}</span><ChevronDown size={12}/></output>}
       <span className={current ? "model-summary-name" : ""}>{modelName(selected)}{!current && <ChevronDown size={12}/>}</span>
     </button>
-    <div className="model-header-side">{pending ? <span className="model-loading" role="status" aria-label="Auswahl wird geladen"><AppLoader size={14}/></span> : reset && <button type="button" className="model-reset" disabled={disabled || pending || automatic}
+    <div className="model-header-side">{pending ? <span className="model-loading" role="status" aria-label="Auswahl wird geladen"><AppLoader size={14}/></span> : reset && <button type="button" className="icon-button model-reset" disabled={disabled || pending || automatic}
       aria-label={reasoningLabel(reset.label) + " wiederherstellen"} title="Auf native Voreinstellung zurücksetzen" onClick={onReset}><RotateCcw size={14}/></button>}</div>
   </div>;
   useEffect(() => { setProvider(workerId); setError(""); }, [workerId]);

@@ -1,4 +1,6 @@
-import React, {useMemo, useState} from 'react';
+import React, {useMemo, useState, useRef, useLayoutEffect} from 'react';
+import {createPortal} from 'react-dom';
+import {CopyButton} from './copy-button';
 import DOMPurify from 'dompurify';
 import {chatMarkup} from './chat-rich-content.mjs';
 import {localFilePath} from './artifact-content.mjs';
@@ -10,20 +12,20 @@ const Markup = React.memo(function Markup({html}) {
   return <div dangerouslySetInnerHTML={{__html:html}}/>;
 });
 export function Markdown({text = '', onFile, workspace = '', directory = workspace}) {
-  const [notice,setNotice] = useState('');
+  const root = useRef(null);
+  const [copyTargets, setCopyTargets] = useState([]);
   const html = useMemo(()=>DOMPurify.sanitize(chatMarkup(text,workspace,directory)),[text,workspace,directory]);
-  return <div className="markdown" onClick={async e=>{
-    const button = e.target.closest('[data-copy-code]');
-    if (button) {
-      try { await navigator.clipboard.writeText(button.closest('.chat-code').querySelector('pre code').textContent.replace(/\n$/,'')); setNotice('Code kopiert'); }
-      catch { setNotice('Kopieren nicht möglich. Code markieren und kopieren.'); }
-      return;
-    }
+  useLayoutEffect(() => {
+    setCopyTargets([...root.current.querySelectorAll('[data-copy-code]')].map(node => ({
+      node, text: node.closest('.chat-code').querySelector('pre code').textContent.replace(/\n$/, ''),
+    })));
+  }, [html]);
+  return <div ref={root} className="markdown" onClick={e=>{
     const a=e.target.closest('a'); if (!a) return;
     const href=a.getAttribute('href'), local=localFilePath(href,workspace,directory);
     if (local && onFile) {e.preventDefault();onFile(local);}
     else if (/^https?:/i.test(href)) {e.preventDefault();window.open(href,'_blank','noopener,noreferrer');}
-  }}><Markup html={html}/>{notice && <span className="copy-notice" role="status">{notice}</span>}</div>;
+  }}><Markup html={html}/>{copyTargets.map(({node, text}, index) => createPortal(<CopyButton text={text} label="Code kopieren" />, node, String(index)))}</div>;
 }
 function ToolImage({block,index}) {
   const [failed,setFailed]=useState(false);

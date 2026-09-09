@@ -5,7 +5,7 @@ import {Skeleton} from './skeleton.tsx';
 import {Markdown} from './chat-rich-content.jsx';
 
 export function useJobNotifications(api, enabled, notify) {
-  const [data,setData]=useState(null), [error,setError]=useState('');
+  const [data,setData]=useState(null), [error,setError]=useState(''), [signal,setSignal]=useState(0);
   const refresh=useCallback(async()=>{
     if(!enabled) return;
     try {setData(await api('/notifications'));setError('');} catch(e) {setError(e.message);}
@@ -20,6 +20,7 @@ export function useJobNotifications(api, enabled, notify) {
       refresh();
       if(p.kind==='notification.created' && !seen.current.has(p.entity_id)) {
         seen.current.add(p.entity_id);
+        setSignal(value => value + 1);
         notify(p.payload?.title || 'Neues Ergebnis');
         if(globalThis.Notification?.permission==='granted' && document.visibilityState==='hidden') {
           try {const n=new Notification(p.payload?.title || 'Neues Ergebnis',{body:'In der Schaltzentrale öffnen.',tag:p.entity_id});n.onclick=()=>{window.focus();window.dispatchEvent(new Event('open-job-notifications'));n.close();};} catch { /* The durable app receipt remains available on unsupported devices. */ }
@@ -33,7 +34,7 @@ export function useJobNotifications(api, enabled, notify) {
     const timer=setInterval(refresh,30000);
     return()=>{window.removeEventListener('core/event',event);window.removeEventListener('focus',refresh);document.removeEventListener('visibilitychange',visible);clearInterval(timer);};
   },[enabled,refresh,notify]);
-  return {data,error,refresh};
+  return {data,error,refresh,signal};
 }
 
 export function NotificationRow({item,onClick}) {

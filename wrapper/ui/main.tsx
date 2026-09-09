@@ -1,3 +1,5 @@
+import { installIconMotion } from './icon-motion';
+import './icon-motion.css';
 import './tailwind.css';
 import './app.jsx';
 
@@ -7,3 +9,6 @@ if ('serviceWorker' in navigator && import.meta.env.PROD) {
     navigator.serviceWorker.register('/sw.js').catch(() => {});
   });
 }
+
+const disposeIconMotion = installIconMotion();
+if (import.meta.hot) import.meta.hot.dispose(disposeIconMotion);

@@ -17,7 +17,7 @@ Vor jeder Änderung an einer Oberfläche:
 Zusätzliche verbindliche Regeln:
 
 - Neue externe Anbieter stehen ausschließlich in **Einstellungen → Verbindungen → Weitere Dienste einrichten**, mit Original-Markenasset und Plus. Dasselbe Dialogmuster für Hinzufügen/Bearbeiten; nach Einrichtung unter **Eingerichtet**. Keine eigenständigen Schlüsselblöcke oben auf Übersichtsseiten oder in anderen Einstellungsbereichen.
-- Einstellungen bündeln Konfiguration, Skills und Verbindungen. Anbieterzugänge bleiben im Verbindungsbereich; private Schlüssel werden nie als normale Einstellungen gespeichert. Das Hauptmenü enthält Heute mit Kalender, Inbox, Aufträge und die verfügbare Bibliothek, gefolgt von Projekten und Chats. Keine Platzhalter für künftige Module.
+- Einstellungen bündeln Konfiguration, Skills und Verbindungen. Anbieterzugänge bleiben im Verbindungsbereich; private Schlüssel werden nie als normale Einstellungen gespeichert. Das Hauptmenü enthält Inbox, Aufträge und die verfügbare Bibliothek, gefolgt von Projekten und Chats. Der leere Chat ist der Standardstart; Heute und Kalender bleiben über die Suche erreichbar. Keine Platzhalter für künftige Module.
 - Im Chat stehen unmittelbar benötigte Aktionen. Aufnahmearchiv, Anbieterwahl und ausführliche Erklärungen gehören in **Einstellungen → Stimme**.
 - Audio darf weder durch Verwerfen noch durch einen Erkennungsfehler gelöscht werden. Die Wiederherstellung ist Teil jeder Änderung an Aufnahme/Speicherung.
 - Mikrofon erst auf Benutzeraktion starten. Automodus läuft ausschließlich innerhalb eines vom Nutzer gestarteten Sprachchats. Kein automatischer Wechsel zu einem Cloudanbieter.

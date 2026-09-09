@@ -77,8 +77,7 @@
 .page.library-browser { max-width: none; width: 100%; padding: var(--space-20); display: flex; flex-direction: column; min-height: 0; height: 100%; overflow: hidden; }
 .library-browser .page-heading { margin-bottom: var(--space-12); }
 .library-browser .page-heading h1 { font-size: var(--text-subheading); }
-.library-view-switch { display: flex; gap: var(--space-2); background: var(--surface); border-radius: var(--radius-pill); padding: var(--space-2); }
-.library-view-switch button[aria-pressed="true"] { background: var(--selected); }
+.library-view-switch { display: flex; gap: var(--space-2); padding: var(--space-2); }
 .library-controls { display: flex; align-items: center; flex-wrap: wrap; gap: var(--space-8); margin-bottom: var(--space-12); }
 .library-controls .search-box { flex: 1; min-width: 160px; margin: 0; height: var(--control-height); padding: 0 var(--space-12); }
 .library-controls .search-box input { font-size: var(--text-control); }
@@ -128,10 +127,7 @@
 }
 @media (pointer: coarse) { .library-entries .library-entry { min-height: var(--control-touch); } }
 
-/* The view switch uses icon emphasis, without a second selected tile. */
-.library-view-switch .icon-button { border: 0; border-radius: var(--radius-pill); color: var(--muted); background: transparent; }
-.library-view-switch .icon-button[aria-pressed="true"] { background: transparent; color: var(--text); }
-.library-view-switch .icon-button[aria-pressed="true"] svg { stroke-width: 2; }
+/* View actions share the global circular icon selection. */
 .file-document { font-family: var(--font-sans); font-size: var(--text-control); line-height: var(--leading-reading); overflow-wrap: anywhere; }
 .file-document .markdown { font-family: inherit; font-size: inherit; line-height: inherit; }
 .file-document .markdown h1 { font-size: var(--text-subheading); }
@@ -148,7 +144,6 @@
 :root[data-theme] .modal.library-quicklook { height: calc(100dvh - var(--space-32)); display: flex; flex-direction: column; overflow: hidden; padding: var(--space-16); }
 :root[data-theme] .modal.library-quicklook:not([open]) { display: none; }
 .library-quicklook .modal-head { flex-shrink: 0; margin: 0; }
-.library-quicklook .modal-head .icon-button { border: 0; border-radius: var(--radius-pill); background: transparent; }
 .library-quicklook .library-preview-toolbar { flex-shrink: 0; }
 .library-quicklook .library-preview { min-height: 0; flex: 1; overflow: auto; margin: var(--space-8) 0 0; }
 .library-quicklook .file-media-loading { height: 100%; min-height: 0; }

@@ -1,161 +1,88 @@
 import React from "react";
-import BoltGlyph from "framework7-icons/react/esm/Bolt.js";
-import MaximizeGlyph from "framework7-icons/react/esm/ArrowUpLeftArrowDownRight.js";
-import MinimizeGlyph from "framework7-icons/react/esm/ArrowDownRightArrowUpLeft.js";
-import BriefcaseGlyph from "framework7-icons/react/esm/Briefcase.js";
-import ArchiveboxGlyph from "framework7-icons/react/esm/Archivebox.js";
-import Arrow2CirclepathGlyph from "framework7-icons/react/esm/Arrow2Circlepath.js";
-import ArrowBranchGlyph from "framework7-icons/react/esm/ArrowBranch.js";
-import ArrowClockwiseGlyph from "framework7-icons/react/esm/ArrowClockwise.js";
-import ArrowCounterclockwiseGlyph from "framework7-icons/react/esm/ArrowCounterclockwise.js";
-import ArrowDownToLineGlyph from "framework7-icons/react/esm/ArrowDownToLine.js";
-import ArrowLeftGlyph from "framework7-icons/react/esm/ArrowLeft.js";
-import ArrowRightSquareGlyph from "framework7-icons/react/esm/ArrowRightSquare.js";
-import ArrowUpGlyph from "framework7-icons/react/esm/ArrowUp.js";
-import ArrowUpRightGlyph from "framework7-icons/react/esm/ArrowUpRight.js";
-import ArrowUpRightSquareGlyph from "framework7-icons/react/esm/ArrowUpRightSquare.js";
-import BellGlyph from "framework7-icons/react/esm/Bell.js";
-import CalendarGlyph from "framework7-icons/react/esm/Calendar.js";
-import ChatBubbleGlyph from "framework7-icons/react/esm/ChatBubble.js";
-import CheckmarkGlyph from "framework7-icons/react/esm/Checkmark.js";
-import CheckmarkCircleGlyph from "framework7-icons/react/esm/CheckmarkCircle.js";
-import CheckmarkShieldGlyph from "framework7-icons/react/esm/CheckmarkShield.js";
-import ChevronDownGlyph from "framework7-icons/react/esm/ChevronDown.js";
-import ChevronLeftGlyph from "framework7-icons/react/esm/ChevronLeft.js";
-import ChevronLeftSlashChevronRightGlyph from "framework7-icons/react/esm/ChevronLeftSlashChevronRight.js";
-import ChevronRightGlyph from "framework7-icons/react/esm/ChevronRight.js";
-import ClockGlyph from "framework7-icons/react/esm/Clock.js";
-import CommandGlyph from "framework7-icons/react/esm/Command.js";
-import DocOnDocGlyph from "framework7-icons/react/esm/DocOnDoc.js";
-import DocTextGlyph from "framework7-icons/react/esm/DocText.js";
-import EllipsisGlyph from "framework7-icons/react/esm/Ellipsis.js";
-import EnvelopeGlyph from "framework7-icons/react/esm/Envelope.js";
-import ExclamationmarkCircleGlyph from "framework7-icons/react/esm/ExclamationmarkCircle.js";
-import FlowchartGlyph from "framework7-icons/react/esm/Flowchart.js";
-import FolderGlyph from "framework7-icons/react/esm/Folder.js";
-import GearAltGlyph from "framework7-icons/react/esm/GearAlt.js";
-import GlobeGlyph from "framework7-icons/react/esm/Globe.js";
-import KeyboardGlyph from "framework7-icons/react/esm/Keyboard.js";
-import LightbulbGlyph from "framework7-icons/react/esm/Lightbulb.js";
-import LinkGlyph from "framework7-icons/react/esm/Link.js";
-import LockGlyph from "framework7-icons/react/esm/Lock.js";
-import LockShieldGlyph from "framework7-icons/react/esm/LockShield.js";
-import MicGlyph from "framework7-icons/react/esm/Mic.js";
-import MoonGlyph from "framework7-icons/react/esm/Moon.js";
-import PaperclipGlyph from "framework7-icons/react/esm/Paperclip.js";
-import PaperplaneGlyph from "framework7-icons/react/esm/Paperplane.js";
-import PauseGlyph from "framework7-icons/react/esm/Pause.js";
-import PersonCropCircleGlyph from "framework7-icons/react/esm/PersonCropCircle.js";
-import PhoneDownGlyph from "framework7-icons/react/esm/PhoneDown.js";
-import PhotoGlyph from "framework7-icons/react/esm/Photo.js";
-import PinGlyph from "framework7-icons/react/esm/Pin.js";
-import PlayGlyph from "framework7-icons/react/esm/Play.js";
-import PlusGlyph from "framework7-icons/react/esm/Plus.js";
-import SearchGlyph from "framework7-icons/react/esm/Search.js";
-import ShieldGlyph from "framework7-icons/react/esm/Shield.js";
-import SidebarLeftGlyph from "framework7-icons/react/esm/SidebarLeft.js";
-import SidebarRightGlyph from "framework7-icons/react/esm/SidebarRight.js";
-import SliderHorizontal3Glyph from "framework7-icons/react/esm/SliderHorizontal3.js";
-import Speaker2Glyph from "framework7-icons/react/esm/Speaker2.js";
-import SquareGrid2x2Glyph from "framework7-icons/react/esm/SquareGrid2x2.js";
-import SquarePencilGlyph from "framework7-icons/react/esm/SquarePencil.js";
-import StopFillGlyph from "framework7-icons/react/esm/StopFill.js";
-import SunMaxGlyph from "framework7-icons/react/esm/SunMax.js";
-import TrashGlyph from "framework7-icons/react/esm/Trash.js";
-import TrayGlyph from "framework7-icons/react/esm/Tray.js";
-import Tray2Glyph from "framework7-icons/react/esm/Tray2.js";
-import WandStarsGlyph from "framework7-icons/react/esm/WandStars.js";
-import WaveformGlyph from "framework7-icons/react/esm/Waveform.js";
-import WaveformPathEcgGlyph from "framework7-icons/react/esm/WaveformPathEcg.js";
-import XmarkGlyph from "framework7-icons/react/esm/Xmark.js";
-import ChevronRightSquareGlyph from "framework7-icons/react/esm/ChevronRightSquare.js";
-
-// Framework7 Icons (MIT): regular Apple-style glyphs, no icon-font loading.
-const wrap = (Glyph, extraClass = "") =>
-  function Icon({ size = 18, strokeWidth, className = "", ...props }) {
+import { MotionGlyph } from "./motion-glyph";
+// Public names and sizes stay stable; all shapes and motion come from the shared catalog.
+const wrap = (name, extraClass = "") =>
+  function Icon({ size = 18, strokeWidth = 1.55, className = "", ...props }) {
     return (
-      <Glyph
-        width={size}
-        height={size}
-        aria-hidden="true"
-        focusable="false"
-        className={"ui-icon " + extraClass + " " + className}
+      <MotionGlyph
         {...props}
+        name={name}
+        size={size}
+        strokeWidth={strokeWidth}
+        className={extraClass + " " + className}
       />
     );
   };
-export const PanelLeft = wrap(SidebarLeftGlyph);
-export const PanelRight = wrap(SidebarRightGlyph);
-export const Maximize = wrap(MaximizeGlyph);
-export const Minimize = wrap(MinimizeGlyph);
-export const ChevronDown = wrap(ChevronDownGlyph);
-export const ChevronRight = wrap(ChevronRightGlyph);
-export const ChevronLeft = wrap(ChevronLeftGlyph);
-export const ArrowLeft = wrap(ArrowLeftGlyph);
-export const ArrowUp = wrap(ArrowUpGlyph);
-export const ArrowUpRight = wrap(ArrowUpRightGlyph);
-export const Plus = wrap(PlusGlyph);
-export const Search = wrap(SearchGlyph);
-export const Bell = wrap(BellGlyph);
-export const Settings = wrap(GearAltGlyph);
-export const SquarePen = wrap(SquarePencilGlyph);
-export const Clock = wrap(ClockGlyph);
-export const Plug = wrap(LinkGlyph);
-export const Folder = wrap(FolderGlyph);
-export const FolderOpen = wrap(FolderGlyph);
-export const FileText = wrap(DocTextGlyph);
-export const Terminal = wrap(ChevronRightSquareGlyph);
-export const Globe = wrap(GlobeGlyph);
-export const GitBranch = wrap(ArrowBranchGlyph);
-export const MoreHorizontal = wrap(EllipsisGlyph);
-export const Command = wrap(CommandGlyph);
-export const Shield = wrap(ShieldGlyph);
-export const ShieldCheck = wrap(CheckmarkShieldGlyph);
-export const KeyRound = wrap(LockShieldGlyph);
-export const Sun = wrap(SunMaxGlyph);
-export const Moon = wrap(MoonGlyph);
-export const Mic = wrap(MicGlyph);
-export const Square = wrap(StopFillGlyph);
-export const Copy = wrap(DocOnDocGlyph);
-export const Check = wrap(CheckmarkGlyph);
-export const X = wrap(XmarkGlyph);
-export const LoaderCircle = wrap(Arrow2CirclepathGlyph, "ui-icon-spinner");
-export const Pin = wrap(PinGlyph);
-export const Archive = wrap(ArchiveboxGlyph);
-export const RotateCcw = wrap(ArrowCounterclockwiseGlyph);
-export const Download = wrap(ArrowDownToLineGlyph);
-export const Play = wrap(PlayGlyph);
-export const Pause = wrap(PauseGlyph);
-export const Workflow = wrap(FlowchartGlyph);
-export const Blocks = wrap(SquareGrid2x2Glyph);
-export const Link = wrap(LinkGlyph);
-export const ExternalLink = wrap(ArrowUpRightSquareGlyph);
-export const BrainCircuit = wrap(LightbulbGlyph);
-export const Paperclip = wrap(PaperclipGlyph);
-export const Send = wrap(PaperplaneGlyph);
-export const SlidersHorizontal = wrap(SliderHorizontal3Glyph);
-export const Ellipsis = wrap(EllipsisGlyph);
-export const Activity = wrap(WaveformPathEcgGlyph);
-export const User = wrap(PersonCropCircleGlyph);
-export const Trash2 = wrap(TrashGlyph);
-export const RefreshCw = wrap(ArrowClockwiseGlyph);
-export const Keyboard = wrap(KeyboardGlyph);
-export const Image = wrap(PhotoGlyph);
-export const Volume2 = wrap(Speaker2Glyph);
-export const Inbox = wrap(TrayGlyph);
-export const Mail = wrap(EnvelopeGlyph);
-export const Calendar = wrap(CalendarGlyph);
-export const MessageCircle = wrap(ChatBubbleGlyph);
-export const Braces = wrap(ChevronLeftSlashChevronRightGlyph);
-export const Sparkles = wrap(WandStarsGlyph);
-export const CheckCircle2 = wrap(CheckmarkCircleGlyph);
-export const AlertCircle = wrap(ExclamationmarkCircleGlyph);
-export const LogIn = wrap(ArrowRightSquareGlyph);
-export const HardDrive = wrap(Tray2Glyph);
-export const Lock = wrap(LockGlyph);
-export const PhoneOff = wrap(PhoneDownGlyph);
-export const AudioLines = wrap(WaveformGlyph);
-
-export const Briefcase = wrap(BriefcaseGlyph);
-
-export const Zap = wrap(BoltGlyph);
+export const PanelLeft = wrap("PanelLeft");
+export const PanelRight = wrap("PanelRight");
+export const Maximize = wrap("Maximize");
+export const Minimize = wrap("Minimize");
+export const ChevronDown = wrap("ChevronDown");
+export const ChevronRight = wrap("ChevronRight");
+export const ChevronLeft = wrap("ChevronLeft");
+export const ArrowLeft = wrap("ArrowLeft");
+export const ArrowUp = wrap("ArrowUp");
+export const ArrowUpRight = wrap("ArrowUpRight");
+export const Plus = wrap("Plus");
+export const Search = wrap("Search");
+export const Bell = wrap("Bell");
+export const Settings = wrap("Settings");
+export const SquarePen = wrap("SquarePen");
+export const Clock = wrap("Clock");
+export const Plug = wrap("Plug");
+export const Folder = wrap("Folder");
+export const FolderOpen = wrap("FolderOpen");
+export const FileText = wrap("FileText");
+export const Terminal = wrap("Terminal");
+export const Globe = wrap("Globe");
+export const GitBranch = wrap("GitBranch");
+export const MoreHorizontal = wrap("MoreHorizontal");
+export const Command = wrap("Command");
+export const Shield = wrap("Shield");
+export const ShieldCheck = wrap("ShieldCheck");
+export const KeyRound = wrap("KeyRound");
+export const Sun = wrap("Sun");
+export const Moon = wrap("Moon");
+export const Mic = wrap("Mic");
+export const Square = wrap("Square");
+export const Copy = wrap("Copy");
+export const Check = wrap("Check");
+export const X = wrap("X");
+export const LoaderCircle = wrap("LoaderCircle", "ui-icon-spinner");
+export const Pin = wrap("Pin");
+export const Archive = wrap("Archive");
+export const RotateCcw = wrap("RotateCcw");
+export const Download = wrap("Download");
+export const Play = wrap("Play");
+export const Pause = wrap("Pause");
+export const Workflow = wrap("Workflow");
+export const Blocks = wrap("Blocks");
+export const Link = wrap("Link");
+export const ExternalLink = wrap("ExternalLink");
+export const BrainCircuit = wrap("BrainCircuit");
+export const Paperclip = wrap("Paperclip");
+export const Send = wrap("Send");
+export const SlidersHorizontal = wrap("SlidersHorizontal");
+export const Ellipsis = wrap("Ellipsis");
+export const Activity = wrap("Activity");
+export const User = wrap("User");
+export const Trash2 = wrap("Trash2");
+export const RefreshCw = wrap("RefreshCw");
+export const Keyboard = wrap("Keyboard");
+export const Image = wrap("Image");
+export const Volume2 = wrap("Volume2");
+export const Inbox = wrap("Inbox");
+export const Mail = wrap("Mail");
+export const Calendar = wrap("Calendar");
+export const MessageCircle = wrap("MessageCircle");
+export const Braces = wrap("Braces");
+export const Sparkles = wrap("Sparkles");
+export const CheckCircle2 = wrap("CheckCircle2");
+export const AlertCircle = wrap("AlertCircle");
+export const LogIn = wrap("LogIn");
+export const HardDrive = wrap("HardDrive");
+export const Lock = wrap("Lock");
+export const PhoneOff = wrap("PhoneOff");
+export const AudioLines = wrap("AudioLines");
+export const Briefcase = wrap("Briefcase");
+export const Zap = wrap("Zap");

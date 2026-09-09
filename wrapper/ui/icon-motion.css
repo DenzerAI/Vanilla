@@ -1,0 +1,93 @@
+/* Independent scale/rotate properties leave disclosure and layout transforms intact. */
+svg.ui-icon {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.copy-feedback {
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+}
+.copy-feedback > .icon-button {
+  flex-shrink: 0;
+}
+.copy-feedback .copy-notice {
+  margin-inline-start: var(--space-4);
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.icon-motion-preview {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-8);
+}
+/* The shape driver animates SVG groups; existing outer disclosure transforms remain independent. */
+svg[data-icon-name] {
+  overflow: visible;
+}
+.icon-reference {
+  min-width: 0;
+}
+.icon-reference-detail {
+  display: flex;
+  align-items: center;
+  gap: var(--space-16);
+  min-height: var(--control-heading-height);
+  margin-block-end: var(--space-16);
+}
+.icon-reference-detail > .icon-button {
+  width: var(--control-row-height);
+  height: var(--control-row-height);
+  flex-shrink: 0;
+}
+.icon-reference-detail strong {
+  font-size: var(--text-body);
+  font-weight: var(--weight-medium);
+}
+.icon-reference-detail p {
+  margin: var(--space-4) 0 0;
+  color: var(--muted);
+  font-size: var(--text-caption);
+}
+.icon-reference-search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-12);
+  margin-block-end: var(--space-12);
+}
+.icon-reference-search input {
+  flex: 1;
+  min-width: 0;
+}
+.icon-reference-search > span:not(.sr-only) {
+  color: var(--muted);
+  font-size: var(--text-caption);
+  white-space: nowrap;
+}
+.icon-reference-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(var(--control-touch), 1fr));
+  gap: var(--space-8);
+  padding: var(--space-12);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+}
+.icon-reference-grid > .icon-button {
+  width: var(--control-touch);
+  height: var(--control-touch);
+  justify-self: center;
+}
+.icon-reference-licenses {
+  margin-block-start: var(--space-16);
+  color: var(--muted);
+  font-size: var(--text-caption);
+}
+.icon-reference-licenses summary {
+  cursor: pointer;
+}
+.icon-reference-licenses pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font: inherit;
+}

@@ -2,7 +2,7 @@ import React,{useEffect,useRef,useState} from 'react';
 import {FileText,Image,Volume2} from './icons.jsx';
 import {PdfPreview} from './pdf-preview.jsx';
 
-export function LibraryThumbnail({entry}) {
+export function LibraryThumbnail({entry,variant="default"}) {
   const holder=useRef(null),[visible,setVisible]=useState(false),[failed,setFailed]=useState(false),[text,setText]=useState('');
   const url='/api/file/raw?path='+encodeURIComponent(entry.path)+'&scope='+encodeURIComponent(entry.scope||'workspace');
   const format=(entry.name.split('.').pop()||'Datei').slice(0,8).toUpperCase();
@@ -17,11 +17,11 @@ export function LibraryThumbnail({entry}) {
     return()=>{controller.abort();clearTimeout(timer);};
   },[visible,entry.path,entry.scope,entry.kind]);
   const preview=visible&&!failed&&!entry.missing;
-  return <span ref={holder} className={'library-thumbnail library-thumbnail-'+entry.kind} aria-hidden="true">
+  return <span ref={holder} className={'library-thumbnail library-thumbnail-'+entry.kind+(variant==='card'?' library-thumbnail-card':'')} aria-hidden="true">
     {preview&&entry.kind==='image'?<img src={url} alt="" loading="lazy" onError={()=>setFailed(true)}/>:
     preview&&entry.kind==='pdf'&&entry.size<=24*1024*1024?<PdfPreview url={url} thumbnail onFailure={()=>setFailed(true)}/>:
     preview&&entry.kind==='video'?<video src={url+'#t=0.1'} muted playsInline preload="metadata" onError={()=>setFailed(true)}/>:
-    preview&&text?<span className="library-document-mini"><span className="library-document-excerpt">{text}</span><span className="library-format">{format}</span></span>:
+    preview&&text?<span className="library-document-mini"><span className="library-document-excerpt">{variant==='card' && /\.md$/i.test(entry.name)?text.replace(/^#{1,6}\s+/gm,'').replace(/\*\*([^*]+)\*\*/g,'$1').replace(/\[([^\]]+)\]\([^)]+\)/g,'$1'):text}</span><span className="library-format">{format}</span></span>:
     <span className="library-format-icon">{entry.kind==='audio'?<Volume2 size={24}/>:entry.kind==='image'?<Image size={24}/>:<FileText size={24}/>}<span className="library-format">{format}</span></span>}
   </span>;
 }

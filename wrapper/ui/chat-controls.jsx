@@ -1,3 +1,5 @@
+import { LayoutGlyph } from './icon-variants.jsx';
+export { LayoutGlyph } from './icon-variants.jsx';
 import React, {
   useEffect,
   useLayoutEffect,
@@ -157,24 +159,6 @@ export function ChatMenu({
           document.body,
         )}
     </>
-  );
-}
-export function LayoutGlyph({ count = 2 }) {
-  return (
-    <svg
-      width="20"
-      height="18"
-      viewBox="0 0 24 20"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      aria-hidden="true"
-    >
-      <rect x="2" y="2" width="20" height="16" rx="2" />
-      {Array.from({ length: count - 1 }, (_, i) => (
-        <path key={i} d={`M${2 + (20 * (i + 1)) / count} 2v16`} />
-      ))}
-    </svg>
   );
 }
 export function LayoutPicker({ count, onChange }) {

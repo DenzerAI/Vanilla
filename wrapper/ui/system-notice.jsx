@@ -1,7 +1,7 @@
 import React, { useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Modal } from './modal.jsx';
 import { X } from './icons.jsx';
-import { RotateCcw } from 'lucide-react';
+import { LucideRotateCcw as RotateCcw } from './icon-variants.jsx';
 import { GlassButton } from './components/ui/glass-button';
 import { reconnectEventStream } from './chat-events.mjs';
 import './system-notice.css';

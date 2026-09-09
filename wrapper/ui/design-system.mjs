@@ -364,6 +364,94 @@ export const colorRoles = {
 };
 export const avatarMotion = { blink: 26, blinkVariance: 6, gaze: 38, gazeVariance: 8, expression: 32, expressionVariance: 8, gesture: 29, delay: 2, delayVariance: 4 };
 export const voiceWaveGeometry = {width:240, samples:60, spacing:4, height:7, rest:0.5, stroke:1.25, gain:36};
+// Shared, finite icon feedback. Values never represent measured progress.
+export const iconMotion = {
+  hoverCooldown: 650, successHold: 1800, copyHoverDuration: 1300,
+  durations: {
+    "PanelLeft": 1200,
+    "PanelRight": 1250,
+    "Maximize": 1050,
+    "Minimize": 1100,
+    "ChevronDown": 1050,
+    "ChevronRight": 1100,
+    "ChevronLeft": 1100,
+    "ArrowLeft": 1000,
+    "ArrowUp": 1050,
+    "ArrowUpRight": 1150,
+    "Plus": 1100,
+    "Search": 1450,
+    "Bell": 1550,
+    "Settings": 1300,
+    "SquarePen": 1450,
+    "Clock": 1550,
+    "Plug": 1350,
+    "Folder": 1300,
+    "FolderOpen": 1550,
+    "FileText": 1500,
+    "Terminal": 1350,
+    "Globe": 1800,
+    "GitBranch": 1650,
+    "MoreHorizontal": 1300,
+    "Command": 1650,
+    "Shield": 1600,
+    "ShieldCheck": 1450,
+    "KeyRound": 1450,
+    "Sun": 1550,
+    "Moon": 1650,
+    "Mic": 1450,
+    "Square": 1000,
+    "Copy": 2100,
+    "Check": 1250,
+    "X": 1050,
+    "LoaderCircle": 1800,
+    "Pin": 1400,
+    "Archive": 1600,
+    "RotateCcw": 1400,
+    "Download": 1550,
+    "Play": 1150,
+    "Pause": 1250,
+    "Workflow": 1800,
+    "Blocks": 1550,
+    "Link": 1400,
+    "ExternalLink": 1300,
+    "BrainCircuit": 1650,
+    "Paperclip": 1800,
+    "Send": 1750,
+    "SlidersHorizontal": 1650,
+    "Ellipsis": 1250,
+    "Activity": 1650,
+    "User": 1400,
+    "Trash2": 1600,
+    "RefreshCw": 1600,
+    "Keyboard": 1750,
+    "Image": 1550,
+    "Volume2": 1450,
+    "Inbox": 1600,
+    "Mail": 1700,
+    "Calendar": 1700,
+    "MessageCircle": 1750,
+    "Braces": 1400,
+    "Sparkles": 1800,
+    "CheckCircle2": 1500,
+    "AlertCircle": 1250,
+    "LogIn": 1400,
+    "HardDrive": 1650,
+    "Lock": 1650,
+    "PhoneOff": 1450,
+    "AudioLines": 1900,
+    "Briefcase": 1500,
+    "Zap": 1400,
+    "LucideRotateCcw": 1400,
+    "LucideZap": 1400,
+    "LucideSun": 1550,
+    "LucideMoon": 1650,
+    "Layout1": 1300,
+    "Layout2": 1400,
+    "Layout3": 1500,
+    "Layout4": 1600
+  }
+};
+
 export const motion = { 'avatar-blink-duration': `${avatarMotion.blink}s`, 'avatar-gaze-duration': `${avatarMotion.gaze}s`, 'avatar-expression-duration': `${avatarMotion.expression}s`, 'avatar-gesture-duration': `${avatarMotion.gesture}s`, 'avatar-easing': 'cubic-bezier(.4, 0, .2, 1)', 'picker-duration': '280ms', 'picker-easing': 'cubic-bezier(.16, 1, .3, 1)', 'panel-light-duration': '48s', 'panel-light-easing': 'ease-in-out', 'feedback-duration': '160ms', 'progress-duration': '1000ms', 'skeleton-duration': '1600ms' };
 export function renderDesignCSS() {
   const shared = Object.fromEntries([
@@ -394,3 +482,7 @@ export function renderDesignCSS() {
 }
 
 export const scrubberSprings = { pointer: { stiffness: 700, damping: 52, mass: .5 }, strength: { stiffness: 260, damping: 30, mass: .6 } };
+
+export const attentionFanMotion = {hoverLift: -10, hoverScale: 1.02, rotation: 12, compactRotation: 6, depth: 18, scale: 0.94, spring: {stiffness: 180, damping: 25, mass: 0.8}};
+
+export const chatHeadingMotion = {character: 90, punctuation: 360, hold: 20000, fade: 900};

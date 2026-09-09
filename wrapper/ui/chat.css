@@ -109,9 +109,9 @@
 .turn-meta time { margin-left: 0; }
 .user-actions time { margin: 0 0 0 var(--space-8); }
 @media (hover: hover) and (pointer: fine) {
-  .agent-actions > button, .user-actions > button, .user-actions .message-more { opacity: 0; transition: opacity 140ms ease; }
-  .agent-message:hover .agent-actions > button, .agent-message:focus-within .agent-actions > button,
-  .user-message-row:hover .user-actions > button, .user-message-row:focus-within .user-actions > button,
+  .agent-actions > :is(button, .copy-feedback), .user-actions > :is(button, .copy-feedback), .user-actions .message-more { opacity: 0; transition: opacity 140ms ease; }
+  .agent-message:hover .agent-actions > :is(button, .copy-feedback), .agent-message:focus-within .agent-actions > :is(button, .copy-feedback),
+  .user-message-row:hover .user-actions > :is(button, .copy-feedback), .user-message-row:focus-within .user-actions > :is(button, .copy-feedback),
   .user-message-row:hover .message-more, .user-message-row:focus-within .message-more { opacity: 1; }
 }
 /* One writing surface; settings stay outside the pill. */
@@ -158,10 +158,10 @@
   .agent-actions .icon-button, .user-actions .icon-button { min-height: 36px; min-width: 36px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .agent-actions > button, .user-actions > button, .user-actions .message-more { transition: none; }
+  .agent-actions > :is(button, .copy-feedback), .user-actions > :is(button, .copy-feedback), .user-actions .message-more { transition: none; }
 }
-:root[data-reduce-motion="on"] .agent-actions > button,
-:root[data-reduce-motion="on"] .user-actions > button,
+:root[data-reduce-motion="on"] .agent-actions > :is(button, .copy-feedback),
+:root[data-reduce-motion="on"] .user-actions > :is(button, .copy-feedback),
 :root[data-reduce-motion="on"] .user-actions .message-more { transition: none; }
 
 .chat-main { position: relative; }
@@ -205,8 +205,7 @@
 .floating-chat-topbar { position: absolute; inset: 0 0 auto; z-index: 8; pointer-events: none; }
 .floating-chat-topbar > .row { pointer-events: auto; }
 .chat-workspace:has(> .floating-chat-topbar) .chat-main > .conversation { --chat-top-clear: 0px; --chat-top-fade: calc(3 * var(--space-64)); padding-top: calc(var(--space-64) + var(--space-48)); scroll-padding-top: calc(var(--space-64) + var(--space-48)); }
-.composer-entry .dictation-control > .icon-button { width: var(--control-target); height: var(--control-target); flex-shrink: 0; border-radius: var(--radius-pill); background: var(--raised); }
-.composer-entry .dictation-control > .icon-button:hover { background: var(--selected); }
+.composer-entry .dictation-control > .icon-button { width: var(--control-target); height: var(--control-target); flex-shrink: 0; }
 .composer-entry .dictation-control > .icon-button svg { width: 24px; height: 24px; }
 @media (pointer: coarse) { .composer-entry .dictation-control > .icon-button { width: var(--control-touch); height: var(--control-touch); } }
 
@@ -303,10 +302,10 @@
 .activity-group > summary { min-height: 28px; gap: var(--space-4); }
 .activity-group > summary > svg { width: 14px; height: 14px; }
 @media (hover: hover) and (pointer: fine) {
-  .agent-actions > button:not([aria-pressed="true"]), .user-actions > button { pointer-events: none; }
-  .agent-message:is(:hover, :focus-within) .agent-actions > button,
-  .user-message-row:is(:hover, :focus-within) .user-actions > button { pointer-events: auto; }
-  .agent-actions > button[aria-pressed="true"] { opacity: 1; }
+  .agent-actions > :is(button, .copy-feedback):not([aria-pressed="true"]), .user-actions > :is(button, .copy-feedback) { pointer-events: none; }
+  .agent-message:is(:hover, :focus-within) .agent-actions > :is(button, .copy-feedback),
+  .user-message-row:is(:hover, :focus-within) .user-actions > :is(button, .copy-feedback) { pointer-events: auto; }
+  .agent-actions > :is(button, .copy-feedback)[aria-pressed="true"] { opacity: 1; }
 }
 @media (pointer: coarse) {
   .message-actions .icon-button { min-width: var(--control-touch); min-height: var(--control-touch); }

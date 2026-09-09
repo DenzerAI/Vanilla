@@ -29,9 +29,10 @@ test('opening a report stores its assistant message and preserves context after 
   const next = joinHandoff(saved.id,snapshot,{turns:[{id:'question',items:[]}]});
   assert.deepEqual(next.turns.map(t=>t.id),['briefing-run-1','question']);
   chat.archived = true;
-  const reopened = briefingChatOpener({store,newChat,cache,emit:()=>{}});
+  let restored = 0;
+  const reopened = briefingChatOpener({store,newChat,cache,emit:()=>{},updateChat:async(id, change)=>{assert.equal(id,saved.id);assert.deepEqual(change,{archived:false});restored++;chat.archived=false;}});
   assert.equal((await reopened(item)).thread.id, saved.id);
-  assert.equal(chat.archived,false); assert.equal(created,1);
+  assert.equal(chat.archived,false); assert.equal(created,1); assert.equal(restored,1);
 });
 
 test('failed chat creation can be retried and examples retain their own historical dates', async () => {
