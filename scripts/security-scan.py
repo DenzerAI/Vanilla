@@ -70,7 +70,7 @@ def source_path(name):
         if '/assets/' in name:
             return (p.suffix in {'.png', '.svg', '.woff2'} or p.name in {'sources.json', 'voice-brands-sources.json', 'LICENSE'}
                     or p.name.endswith('-LICENSE.txt'))
-        return p.suffix in {'.ts', '.tsx', '.js', '.jsx', '.mjs', '.css'} or name == 'wrapper/ui/index.html'
+        return p.suffix in {'.ts', '.tsx', '.js', '.jsx', '.mjs', '.css'} or name in {'wrapper/ui/index.html', 'wrapper/ui/blueprint.html'}
     return any(name.count('/') == pattern.count('/') and fnmatch.fnmatchcase(name, pattern) for pattern in PATTERNS)
 
 

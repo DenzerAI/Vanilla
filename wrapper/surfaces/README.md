@@ -135,3 +135,8 @@ und native Schalter werden nicht in Iconbuttons umgeformt.
 Der Standardstart ist jetzt der leere Chat mit kontextabhängiger Begrüßung und
 AttentionFan. Heute entfällt im Hauptmenü; Kalender und bestehende Direktlinks
 bleiben über die Suche nutzbar. Aufbau und Verhalten führt [chat.md](chat.md).
+
+
+Der gemeinsame PageHeading ist aus app.jsx nach ui/page-heading.tsx ausgelagert;
+Anwendung und neutraler UI-Bauplan verwenden denselben Baustein.
+Bei Übernahmen in andere Installationen gilt ../../docs/UI-UPDATES.md.

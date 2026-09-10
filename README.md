@@ -148,3 +148,13 @@ Der getrennte Skilltree ist fertig gebaut und wird bereits über die bestehende 
 - Die vorhandenen Memory-Verlustfälle des Quellaudits sind nicht vollständig behoben oder abgenommen.
 - Restic ist optional; lokales Backup ist noch kein vollständiges ausfallsicheres Wiederherstellungskonzept. Vollständiger Betriebsumfang, eigene Zugänge und echter Restore-Test bleiben offen.
 - Der Scanner erkennt bekannte Muster; er beweist nicht die Abwesenheit unbekannter Namen oder kodierter Geheimnisse.
+
+
+## UI-Bauplan und Oberflächenupdates
+
+Die gemeinsame Oberfläche reist mit dem Code. `npm run ui:prepare` prüft und
+baut Anwendung samt neutralem UI-Bauplan; `npm run ui:preview` öffnet ihn ohne
+App-Backend. `npm run ui:verify` erkennt fehlende, veraltete oder veränderte
+Builddateien. Der Ablauf für eigene Erweiterungen und andere Installationen
+steht in [docs/UI-UPDATES.md](docs/UI-UPDATES.md). Git-Push und Serverneustart
+allein aktualisieren keinen lokal noch alten UI-Build.

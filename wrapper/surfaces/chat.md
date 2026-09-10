@@ -444,3 +444,10 @@ Verlauf und `/api/messages` geprüft. Explizite Fortsetzung nutzt `/api/messages
 mit aktuellem Prüftoken und bestätigtem Worker-Ruhezustand; die unklare Nachricht
 selbst wird dabei nicht wiederholt. Vorgemerkte Nachrichten erhalten die bestehende
 Rückmeldung. Keine neue Sendeleiste oder zusätzliche Navigation.
+
+
+ChatStartPreview dient als gemeinsamer neutraler Bauplan in Unser Design und
+in blueprint.html. Er verwendet ChatStart und dessen Scrollsteuerung direkt.
+Umschaltbare Lade- und Anhangszustände lassen Avatarposition und erreichbare
+Eingabe vergleichen; Vorschauaktionen zeigen nur ihr Ziel. Die Anhangsfläche
+ist ein Layoutbeispiel und führt keinen Upload aus.

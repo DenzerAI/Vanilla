@@ -115,3 +115,14 @@ Sicherheitsgrenze. Deshalb weiterhin nur neutrale Beispiele in Quelländerungen
 verwenden und Änderungen an den Prüfregeln selbst sorgfältig prüfen.
 Git ist keine Sicherung der lokalen Firmenbasis; diese gehört in die eigene
 Datensicherung der Installation.
+
+
+## Oberfläche als Teil des Updates
+
+Jede Übernahme enthält auch die gemeinsamen Design- und Bedienverbesserungen.
+Der Ablauf für bestehende eigene Module, den optischen Vergleich und die Prüfung
+des tatsächlich gebauten UI-Stands steht in [UI-UPDATES.md](UI-UPDATES.md).
+Nach dem Quellmerge folgt `npm run ui:prepare`; erst ein erfolgreich geprüfter
+Build wird über den vorhandenen Betriebsweg aktiviert. Die eigenständige
+Referenz `wrapper/ui/blueprint.html` ist ausdrücklich freigegebener neutraler
+Anwendungsquellcode; lokale Buildausgaben bleiben ausgeschlossen.

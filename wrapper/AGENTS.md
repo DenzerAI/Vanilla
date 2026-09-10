@@ -23,6 +23,11 @@ Zusätzliche verbindliche Regeln:
 - Mikrofon erst auf Benutzeraktion starten. Automodus läuft ausschließlich innerhalb eines vom Nutzer gestarteten Sprachchats. Kein automatischer Wechsel zu einem Cloudanbieter.
 - Nutzeranweisungen haben Vorrang; Änderungen an bestehenden Nutzerdaten bleiben außerhalb einer UI-Überarbeitung.
 
-Für wiederkehrende Designarbeit steht der projektbezogene Ablauf unter
-`../workspaces/default/skills/ui-design/SKILL.md`. Er verweist auf die obigen
-Designquellen und ergänzt keine zweite Palette oder Komponentenbibliothek.
+Der portable Ablauf für Designübernahmen steht unter `../docs/UI-UPDATES.md`.
+Die oben genannten Designquellen reisen vollständig mit dem Repository.
+
+
+Bei Updates zwischen Installationen gilt zusätzlich [docs/UI-UPDATES.md](../docs/UI-UPDATES.md).
+Der UI-Bauplan ist Teil des Updates. Neue gemeinsame Gestaltung und Bedienung
+in vorhandene Module integrieren; eigene Funktionen und Daten erhalten.
+Quellstand, gebauter UI-Stand und tatsächlich geladene Oberfläche getrennt prüfen.

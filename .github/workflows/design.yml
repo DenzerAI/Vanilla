@@ -16,3 +16,4 @@ jobs:
       - run: npm ci --prefix wrapper
       - run: npm --prefix wrapper run design:verify
       - run: npm --prefix wrapper run build
+      - run: npm run ui:verify

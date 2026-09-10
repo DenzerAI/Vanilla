@@ -917,7 +917,8 @@
         "wrapper/ui/welcome-suggestions.tsx",
         "wrapper/ui/workspace-review.jsx",
         "wrapper/updates.mjs",
-        "wrapper/vite.config.ts"
+        "wrapper/vite.config.ts",
+        "wrapper/ui/page-heading.tsx"
       ],
       "entrypoints": [
         "GET /internal/storage",
@@ -971,6 +972,36 @@
       "limits": "Öffentliche Open-Meteo-Dienste benötigen Internet. Ortssuche über GeoNames ist keine Adressprüfung. Fehler und veraltete Antworten werden benannt; keine Beispieldaten als Wetter.",
       "version": 1,
       "migration": "Additive optionale Koordinaten in USER.md; bestehender Ortsname und andere Markdown-Abschnitte bleiben erhalten. Löschen des Orts entfernt seine Koordinaten; der Cache ist nicht dauerhaft."
+    },
+    {
+      "id": "ui-blueprint",
+      "title": "UI-Bauplan und Designübernahme",
+      "purpose": "Gemeinsame Gestaltung und Bedienung in andere Installationen und bestehende eigene Module übernehmen; veraltete UI-Builds erkennen.",
+      "stage": "implemented",
+      "contract": "docs/UI-UPDATES.md",
+      "setup": "docs/UI-UPDATES.md#update-im-zielsystem",
+      "data": "Neutrale Beispieldaten im Quellcode; Build-Fingerabdruck und Datei-Hashes in wrapper/dist/version.json. Keine Kundeninhalte.",
+      "sources": [
+        "scripts/ui-build.mjs",
+        "wrapper/ui/blueprint.tsx",
+        "wrapper/ui/chat-start-preview.tsx"
+      ],
+      "entrypoints": [],
+      "command": "npm run ui:prepare; npm run ui:preview; npm run ui:verify",
+      "dependencies": [
+        "platform",
+        "chat"
+      ],
+      "verification": [
+        "wrapper/test/ui-build.test.mjs"
+      ],
+      "status": {
+        "endpoint": "GET /api/updates",
+        "meaning": "Version der ausgelieferten Buildmetadaten. Die lokale Aktualität und Dateiintegrität werden zusätzlich mit npm run ui:verify geprüft."
+      },
+      "limits": "Lokale Hashprüfung ersetzt keine visuelle Prüfung oder Kontrolle des tatsächlich bedienten Ursprungs. Kein automatisches Git-Update oder Deployment.",
+      "version": 1,
+      "migration": "Vorhandene Daten und eigene Funktionen erhalten. Alte Builds ohne Integritätsmetadaten einmal mit npm run ui:prepare neu erzeugen."
     }
   ]
 }

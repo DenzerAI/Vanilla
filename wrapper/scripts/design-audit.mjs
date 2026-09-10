@@ -13,7 +13,7 @@ const typographyProps=/^(?:font|font-size|font-family|font-weight|line-height|le
 const spacingProps=/^(?:(?:margin|padding)(?:-.+)?|(?:row-|column-)?gap)$/;
 const radiusProps=/radius$/;
 const unstyled=/^(?:inherit|initial|unset|revert|revert-layer|normal|auto|none|transparent|currentColor|0|0px|0rem|50%|100%)$/i;
-const trustedComponent={Modal:'modal.jsx',SettingRow:'settings-row.jsx',SettingsRow:'settings-row.jsx',PageHeading:'app.jsx',SettingsNavigationRow:'settings-patterns.jsx'};
+const trustedComponent={Modal:'modal.jsx',SettingRow:'settings-row.jsx',SettingsRow:'settings-row.jsx',PageHeading:'page-heading.tsx',SettingsNavigationRow:'settings-patterns.jsx'};
 function withoutVars(value){let s=value,previous;do{previous=s;s=s.replace(/var\(--[\w-]+(?:\s*,\s*[^()]*)?\)/g,'TOKEN');}while(previous!==s);return s;}
 export function styleViolation(property,value) {
  const prop=property.replace(/[A-Z]/g,m=>'-'+m.toLowerCase());
@@ -64,7 +64,7 @@ export function auditSource(file,source,definitions=new Set()) {
     if(tag==='dialog'&&path.basename(file)!=='modal.jsx')add('shared-component',line(n),'Use shared Modal');
     if(role==='dialog'&&path.basename(file)!=='modal.jsx')add('shared-component',line(n),'Use shared Modal');
     if(tag==='button'&&attr('className')?.split(/\s+/).includes('icon-button')&&!attrs.has('aria-label')&&!attrs.has('aria-labelledby'))add('accessible-name',line(n),'Icon button needs an accessible name');
-    if(attr('className')?.split(/\s+/).includes('page-heading')&&path.basename(file)!=='app.jsx')add('shared-component',line(n),'Use shared PageHeading');
+    if(attr('className')?.split(/\s+/).includes('page-heading')&&path.basename(file)!=='page-heading.tsx')add('shared-component',line(n),'Use shared PageHeading');
     if(attr('className')?.split(/\s+/).includes('setting-row')&&path.basename(file)!=='settings-row.jsx')add('shared-component',line(n),'Use shared SettingRow');
     if(tag==='img'&&!attrs.has('alt'))add('accessible-name',line(n),'Image needs alt');
     const style=attrs.get('style')?.initializer;

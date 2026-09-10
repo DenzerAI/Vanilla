@@ -13,7 +13,8 @@
     "start:adapter": "node server.mjs",
     "typecheck": "tsc --noEmit",
     "design:check": "node scripts/design-audit.mjs",
-    "design:verify": "npm run design:check && node --test test/design-audit.test.mjs test/design-system.test.mjs test/appearance.test.mjs && npm run typecheck"
+    "design:verify": "npm run design:check && node --test test/design-audit.test.mjs test/design-system.test.mjs test/appearance.test.mjs && npm run typecheck",
+    "preview:design": "vite preview --host 127.0.0.1 --port 4173 --strictPort --open /blueprint.html"
   },
   "dependencies": {
     "@agentclientprotocol/claude-agent-acp": "0.75.1",

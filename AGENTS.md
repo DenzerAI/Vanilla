@@ -48,3 +48,9 @@ Bei jeder neuen oder geänderten App-Oberfläche zuerst [wrapper/AGENTS.md](wrap
 Das gilt auch für neue Komponenten, importierte Vorlagen und Animationen.
 Bestehende Bausteine und Tokens verwenden; neue Muster mit Umsetzung und
 Prüfung in die führenden Designregeln aufnehmen.
+
+
+Bei Updates zwischen Installationen gilt zusätzlich [docs/UI-UPDATES.md](docs/UI-UPDATES.md).
+Der UI-Bauplan ist Teil des Updates. Neue gemeinsame Gestaltung und Bedienung
+in vorhandene Module integrieren; eigene Funktionen und Daten erhalten.
+Quellstand, gebauter UI-Stand und tatsächlich geladene Oberfläche getrennt prüfen.

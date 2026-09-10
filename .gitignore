@@ -231,3 +231,5 @@ cache/
 
 !/wrapper/ui/assets/icons/
 !/wrapper/ui/assets/icons/*-LICENSE.txt
+
+!/wrapper/ui/blueprint.html

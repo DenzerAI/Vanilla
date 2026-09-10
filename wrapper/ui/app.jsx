@@ -1,3 +1,4 @@
+import {PageHeading} from './page-heading';
 import {submitMessage} from "./message-submit.mjs";
 import {MailConnectionForm} from "./mail-connection";
 import { StartTextMotionSetting } from './chat-start-preferences';
@@ -188,15 +189,6 @@ async function api(url, data, retry = true) {
   return j;
 }
 const icon = (Icon, size = 18) => <Icon size={size} strokeWidth={1.55} />;
-function PageHeading({ title, onShowSidebar, children }) {
-  return <header className="page-heading">
-    <div className="page-heading-title">
-      {onShowSidebar && <IconButton label="Seitenleiste anzeigen" onClick={onShowSidebar}>{icon(PanelLeft)}</IconButton>}
-      <h1>{title}</h1>
-    </div>
-    {children && <div className="page-heading-actions">{children}</div>}
-  </header>;
-}
 function Field({ label, children, hint }) {
   return (
     <label className="field">

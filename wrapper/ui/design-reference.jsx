@@ -1,3 +1,4 @@
+import {ChatStartPreview} from './chat-start-preview';
 import { IconMotionPreview } from './icon-motion-preview';
 import {VoiceWave,VoiceStatus} from "./voice-visual";
 import { AvatarMotionSetting } from "./avatar-motion-setting.jsx";
@@ -10,10 +11,6 @@ import { ChapterScrubber } from "./components/ui/chapter-scrubber";
 import { PlannerPatternPreview } from "./planner";
 import { ModelPicker } from "./model-picker.jsx";
 import { InboxPatternPreview } from "./inbox";
-import {Avatar} from './avatar.jsx';
-import { ChatStartHeading } from './chat-start-heading';
-import { AttentionFan } from "./components/ui/attention-fan";
-import { conversationStarters } from "./chat-start-feed.mjs";
 import { PanelLight } from "./panel-light";
 import {LibraryThumbnail} from './library-thumbnail.jsx';
 import {LibraryPreview} from './library.jsx';
@@ -70,9 +67,7 @@ export function DesignReference({ theme, tone, accent }) {
       <h3 className="section-heading">Benachrichtigung · Beispiel</h3>
       <div className="settings-group"><NotificationRow item={{title:'Tagesüberblick · Fertig',created_at:1788854400,read_at:null}} onClick={()=>{}}/></div>
       <h3 className="section-heading">Gesprächseinstieg · Fächer</h3>
-      <div className="welcome agent-chat-welcome chat-start"><div className="chat-start-intro"><Avatar avatar="nori" color="neutral" large/><ChatStartHeading texts={['Was möchtest du heute mit mir angehen?','Wir können mit einer kleinen Idee anfangen.']}/></div></div>
-      <AttentionFan items={conversationStarters} onOpen={item=>setSuggestionDraft(item.prompt)}/>
-      <p className="page-note">Ein kompakter Fächer für Hinweise und Gesprächseinstiege. Seitliche Karten wählen aus, die vordere öffnet den Inhalt. Die Vorschau füllt nur den Entwurf darunter.</p>
+      <ChatStartPreview/>
       <h3 className="section-heading">Sprache · Pegel und Erkennung</h3>
       <div className="composer-entry"><VoiceWave levels={Array.from({length:60},(_,i)=> i>18 && i<45 ? (1+Math.sin(i*.7))*.08 : 0)}/></div>
       <div className="composer-entry"><VoiceStatus label="Wird erkannt" busy/></div>

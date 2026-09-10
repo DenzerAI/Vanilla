@@ -19,8 +19,8 @@ export default defineConfig({
     emptyOutDir: true,
     sourcemap: false,
     cssCodeSplit: false,
-    rollupOptions: { output: {
-      entryFileNames: 'app.js',
+    rollupOptions: { input: {app:new URL('./ui/index.html',import.meta.url).pathname, blueprint:new URL('./ui/blueprint.html',import.meta.url).pathname}, output: {
+      entryFileNames: '[name].js',
       chunkFileNames: 'assets/[name]-[hash].js',
       manualChunks(id) {
         if (id.includes('/node_modules/react/') || id.includes('/node_modules/react-dom/')) return 'react';

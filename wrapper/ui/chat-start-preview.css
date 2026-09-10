@@ -1,0 +1,5 @@
+.chat-start-preview-panel { height: 650px; max-height: 85dvh; display: flex; flex-direction: column; min-width: 0; border: 1px solid var(--border); border-radius: var(--radius-panel); overflow: hidden; }
+.chat-start-preview-panel > .conversation { min-height: 0; }
+.chat-start-preview-attachment { height: 100px; padding: var(--space-12); }
+.chat-start-preview-attachment .skeleton-media { height: 64px; width: 96px; }
+.chat-start-preview .blueprint-controls { display: flex; flex-wrap: wrap; gap: var(--space-12); margin-bottom: var(--space-16); }

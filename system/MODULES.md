@@ -57,3 +57,8 @@ bereit. Deren Verhalten und Gestaltungsregeln führen wrapper/DESIGN.md und
 wrapper/surfaces/chat.md. Die Produktion und Unser Design verwenden dieselben
 Bausteine. Die Orts- und Wetteranbindung ist dem eigenen Modul `weather`
 zugeordnet; Profilwerte gehören zum Modul `settings`.
+
+
+Der neutrale UI-Bauplan und die Buildprüfung sind als Modul `ui-blueprint`
+registriert. Sie begleiten Designübernahmen in bestehende eigene Module;
+Anwendung, UI-Referenz und Designquellen werden gemeinsam gebaut und geprüft.

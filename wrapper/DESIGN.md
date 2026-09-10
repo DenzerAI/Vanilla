@@ -703,3 +703,19 @@ Textbaustein und Fächer.
 
 
 Die angeschlossene Wetterkarte bleibt im Startfächer reserviert. Open-Meteo liefert Temperatur und Wetterlage; Quelle und Datenstand sind sichtbar. Ortssuche und bestätigte Koordinaten stehen unter Dein Profil. Speichern, erneutes Öffnen, Fokus und zehn Minuten im sichtbaren Chatstart aktualisieren das Wetter. Eindeutig passende alte Ortsnamen werden aufgelöst; mehrdeutige Orte erfordern Auswahl. Lade- und Abruffehler ersetzen keine Wetterwerte durch Beispiele. Wetter & Ort öffnet das Profil mit Aktualisieren-Aktion.
+
+
+## Portabler UI-Bauplan
+
+Gestaltung und Bedienverhalten gehören zu jeder Quellübernahme. Der Vertrag
+für die Integration in bestehende eigene Module steht in ../docs/UI-UPDATES.md.
+Die separate blueprint.html verwendet dieselbe DesignReference wie Unser Design.
+ChatStartPreview zeigt den echten Gesprächseinstieg mit umschaltbarem Ladezustand
+und simulierter Anhangsfläche, neutralen Daten und rein lokalen Aktionen.
+Die Vorlage liest keine Kundeninhalte. Hell/Dunkel und eine begrenzte Inhaltsbreite
+helfen beim Vergleich; Handybedienung wird zusätzlich am tatsächlichen Viewport
+geprüft. PageHeading liegt für Anwendung und Bauplan gemeinsam in ui/page-heading.tsx.
+Farben, Schrift und Abstände verwenden weiter die zentrale Designquelle.
+Build-Herkunft und Datei-Hashes machen veraltete Ausgaben erkennbar; die visuelle
+Abnahme bleibt notwendig. Eine lokale Erweiterung übernimmt die gemeinsamen
+Bausteine und dokumentiert fachlich notwendige Abweichungen im Bereichsvertrag.

@@ -22,7 +22,10 @@
     "source:check": "python3 scripts/security-scan.py --index",
     "source:merge": "python3 scripts/source-sync.py",
     "modules:verify": "python3 scripts/verify-modules.py",
-    "worker:login": "node scripts/worker-login.mjs"
+    "worker:login": "node scripts/worker-login.mjs",
+    "ui:verify": "node scripts/ui-build.mjs",
+    "ui:prepare": "npm --prefix wrapper run design:verify && npm run control:build && npm run ui:verify",
+    "ui:preview": "npm run ui:verify && npm --prefix wrapper run preview:design"
   },
   "engines": {
     "node": ">=22.12"

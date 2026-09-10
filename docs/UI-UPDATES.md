@@ -1,0 +1,102 @@
+# UI zwischen Installationen übernehmen
+
+Vanilla liefert einen verbindlichen optischen und funktionalen Bauplan mit.
+Die Oberfläche gehört zum Produktupdate: Layout, Typografie, Farben, Icons,
+Abstände, Bewegung, Fokus, Ladezustände und Bedienwege werden gemeinsam mit
+den Funktionen gepflegt. Eine Installation darf nicht allein deshalb die alte
+Gestaltung behalten, weil ihre eigenen Module bereits funktionieren.
+
+## Führende Quellen und optischer Vergleich
+
+- `wrapper/DESIGN.md`: gemeinsame Gestaltungs- und Bedienregeln.
+- `wrapper/ui/design-system.mjs`: zentrale Werte, keine nachgebauten Paletten.
+- `wrapper/surfaces/README.md` und Bereichsvertrag: Aufbau und Verhalten jedes Moduls.
+- `wrapper/ui/design-reference.jsx`: interaktive Produktionsbausteine in Unser Design.
+- `wrapper/ui/blueprint.html`: eigenständiger, neutraler UI-Bauplan ohne Anmeldung.
+
+Der eigenständige Bauplan und die Anwendung verwenden dieselben Komponenten,
+Styles und Tokens. ChatStartPreview zeigt den echten ChatStart, AttentionFan,
+Skeleton und die gemeinsame Scrollsteuerung mit neutralen Daten. Ladezustand,
+Anhang und Kartenaktion sind ausprobierbar. Alle Bausteine zeigt dieselbe
+DesignReference wie Aussehen → Unser Design. Der Bauplan sendet keine Nachrichten,
+liest keine Installationsdaten und startet keine Anmeldung oder Dienste.
+Eine simulierte Anhangsfläche dient dem Layoutvergleich; sie prüft keinen Upload.
+Handybreite begrenzt den Inhalt, ersetzt aber keine echte Browseremulation:
+Viewport-Mediaqueries, Tastatur und Touch sind zusätzlich zu prüfen.
+
+```sh
+npm run ui:prepare
+npm run ui:preview
+```
+
+`ui:prepare` prüft das Design, baut Anwendung und Bauplan gemeinsam und kontrolliert
+anschließend den Build. `ui:preview` öffnet die gebaute Vorschau auf Loopback-Port
+4173 unter `/blueprint.html`, ohne App-Backend. Der Port muss frei sein.
+Die gebaute Datei liegt unter `wrapper/dist/blueprint.html`; ES-Module benötigen
+HTTP, ein Doppelklick über `file://` ist kein unterstützter Vorschauweg.
+Builddateien bleiben lokal und werden in jeder Installation aus Git erzeugt.
+
+## Bestehende Erweiterungen erhalten
+
+Der übernehmende Worker liest zuerst den eigenen Bereichsvertrag und den
+entsprechenden neuen Vertrag aus Vanilla. Aufträge, Geschäftslogik, zusätzliche
+Felder, eigene Module und Datenflüsse der Zielinstallation bleiben erhalten.
+Die neuen gemeinsamen Bausteine und Bedienregeln werden in diese vorhandenen
+Module eingearbeitet. Keine zweite Parallelansicht und kein Komplettaustausch
+lokaler Module allein zum Erzwingen derselben Optik.
+
+Eine explizite lokale Produktanforderung kann eine Abweichung begründen. Der
+Worker nennt sie konkret im betroffenen Bereichsvertrag: betroffener Baustein,
+fachlicher Grund und Ersatzverhalten. Persönliche Werte wie Name, Avatar,
+Farbwelt und Schriftgröße bleiben lokal. Sie begründen keine unbeabsichtigte
+Abweichung bei Struktur, Fokus, Ladeverhalten oder Aktionen.
+
+Bei einem Merge-Konflikt beide Änderungen fachlich zusammenführen. Pauschales
+„ours“ oder „theirs“ für UI-Dateien ist keine Übernahme. Derselbe Grundsatz gilt
+beim Übertragen in ein anderes Repository: zuerst den gemeinsamen Baustein
+zuordnen, dann die Zieloberfläche daran anpassen. Source-, Design- und Modulprüfungen
+bleiben aktiv. Eine reine Git-Übereinstimmung beweist keine identische Oberfläche.
+
+## Update im Zielsystem
+
+1. Zielordner, Branch, laufenden Dienst und lokale Änderungen feststellen.
+   Nach `docs/CODE-SYNC.md` sichern und den gewünschten Quellstand übernehmen.
+2. Geänderte Abhängigkeiten mit den vorhandenen Lockdateien installieren:
+   `npm ci`, `npm --prefix wrapper ci`; bei Python-Änderungen zusätzlich die
+   projektlokale virtuelle Umgebung mit `requirements.lock` aktualisieren.
+3. Neue Regeln und Produktionsbausteine in bestehende eigene Module einarbeiten;
+   Modulvertrag und gemeinsame Referenz um zulässige Erweiterungen ergänzen.
+4. `npm run modules:verify`, passende Funktionstests und `npm run ui:prepare`
+   ausführen. Ein fehlgeschlagener Build wird nicht aktiviert.
+5. Laufende Oberfläche und Bauplan nebeneinander prüfen: Hell/Dunkel, Desktop,
+   Handyviewport, große Schrift, lange Inhalte, reduzierte Bewegung, Tastatur,
+   Lade-/Fehlerzustand und wachsende Eingabe. Abweichende Inhalte sind normal;
+   ungewollte Abweichungen in Layout oder Bedienung werden behoben.
+6. Genau den geprüften Quellstand samt Build über den vorhandenen Betriebsweg
+   übernehmen. Serveränderungen benötigen einen geregelten Neustart; ein reines
+   UI-Update benötigt das Neuladen der Oberfläche. Laufende Arbeit und Entwürfe
+   berücksichtigen. Git-Push ist keine Aktivierung auf dem Zielrechner.
+7. Im tatsächlich bedienten Installationsordner `npm run ui:verify` ausführen.
+   Der UI-Stand in `/version.json` des bedienten Ursprungs muss dem lokal geprüften
+   `uiVersion` entsprechen. Im Browser dessen Netzwerkantworten und die sichtbare
+   Oberfläche kontrollieren; ein anderer Port, Proxy oder alter Tab kann einen
+   anderen Stand zeigen.
+
+`ui:verify` prüft den UI-Quellfingerabdruck samt gemeinsam verwendeten Modulen
+und Buildkonfiguration sowie Hashes der erzeugten Dateien. Fehlender, veralteter
+oder veränderter Build führt zum Fehler. `sourceRevision` bezeichnet die beim
+Bauen vorhandene Git-Revision; `sourceDirty` kennzeichnet lokale Änderungen.
+Ein späterer Dokumentationscommit ist nicht automatisch ein anderer UI-Stand.
+Die Hashprüfung ersetzt weder einen Sichtvergleich noch die Prüfung eines
+externen Rechners. `npm start` und die Aktualisieren-Schaltfläche bauen keinen
+Quellcode neu. Ein automatischer Git-Download oder Deployment erfolgt hier nicht.
+
+## Kurzer Auftrag für einen übernehmenden Worker
+
+> Aktualisiere diese Installation auf den gewünschten Vanilla-Quellstand.
+> Lies AGENTS.md, docs/CODE-SYNC.md und docs/UI-UPDATES.md. Übernimm auch den
+> UI-Bauplan, die Designregeln und die Bedienverbesserungen in unsere vorhandenen
+> Module. Erhalte unsere eigenen Funktionen, Daten und Einstellungen. Löse
+> Überschneidungen fachlich, baue und prüfe die neue Oberfläche. Vergleiche die
+> tatsächlich laufende Ansicht mit dem Bauplan und bestätige erst danach den
+> geladenen UI-Stand. Melde konkret, falls die Zielinstallation nicht prüfbar ist.
