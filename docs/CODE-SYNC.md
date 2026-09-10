@@ -1,5 +1,11 @@
 # Code zwischen Installationen austauschen
 
+Für „Update + Link“ führt [UPDATE.md](../UPDATE.md) durch den vollständigen Ablauf
+einschließlich Sicherung, Versionsauswahl, eigener Erweiterungen und Aktivierung.
+Dieses Dokument beschreibt die technische Quellübernahme als Teil davon.
+`UPDATE.md` ist ausdrücklich zugelassene neutrale Dokumentation im Projektstamm;
+die Inhalts- und Historienprüfungen gelten auch für diese Datei unverändert.
+
 Jede Installation behält ihre Firma, Identität, Chats, Arbeitsdateien,
 Verbindungen und Anbieteranmeldung. Git transportiert Anwendungsquellen,
 neutrale Dokumentation, Abhängigkeitslisten und geprüfte UI-Assets.
@@ -62,6 +68,21 @@ bietet diese Prüfung vor der Dateiersetzung nicht. Die laufende Runtime erhält
 anschließend den freigegebenen Quellcommit und den passenden Build über ihren
 eigenen Betriebsweg. Nicht in einer laufenden Runtime entwickeln oder ungeprüfte
 Zweige mergen. Eine geprüfte Quellübernahme ersetzt keinen geregelten Neustart.
+
+## Eigenes Firmenrepository
+
+Der Abschnitt zur Entwicklung auf zwei Rechnern beschreibt gemeinsame Vanilla-
+Entwicklung. Eine eigenständig weiterentwickelte Firmenversion behält dagegen
+ihr eigenes Repository als `origin`. Vanilla wird als zusätzliche geprüfte Quelle
+angebunden, gewöhnlich `upstream`. Remotes vor Änderungen prüfen; bestehende
+Zuordnungen nicht überschreiben. Nach dem Fetch die gewünschte Commit-ID festhalten.
+Die oben beschriebenen `source:merge`-Prüfungen gelten auch für diesen Commit.
+
+Im separaten Entwicklungsclone vom gesicherten Firmenstand ausgehen und einen
+Update-Zweig verwenden. Den kombinierten Commit prüfen und über den eigenen
+Betriebsweg ausliefern. Die laufende Firmenversion muss nicht dieselbe Commit-ID
+wie Vanilla haben. Fehlende gemeinsame Historie, vertrauliche Inhalte in der
+Historie und Konflikte nach UPDATE.md behandeln; keine erzwungene Übernahme.
 
 ## Erstwechsel von den früheren Firmenvorlagen
 

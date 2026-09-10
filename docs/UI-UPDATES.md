@@ -59,6 +59,10 @@ bleiben aktiv. Eine reine Git-Übereinstimmung beweist keine identische Oberflä
 
 ## Update im Zielsystem
 
+Der gesamte Auftrag beginnt bei [UPDATE.md](../UPDATE.md), einschließlich
+Versionswahl, Sicherung, eigener Codeänderungen und Wiederherstellung. Die
+folgenden Schritte konkretisieren die UI-Prüfung innerhalb dieses Ablaufs.
+
 1. Zielordner, Branch, laufenden Dienst und lokale Änderungen feststellen.
    Nach `docs/CODE-SYNC.md` sichern und den gewünschten Quellstand übernehmen.
 2. Geänderte Abhängigkeiten mit den vorhandenen Lockdateien installieren:

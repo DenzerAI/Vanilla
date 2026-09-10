@@ -31,6 +31,12 @@ Projektwechsel: tatsächlichen Zielordner und geladene Herkunftsdateien prüfen.
 
 ## Zuständige Quellen bei Bedarf
 
+- [UPDATE.md](UPDATE.md): führender Einstieg bei „Update“ mit Repository-Link,
+  auch für ältere Installationen und eigene Firmenrepositories. Vor der Übernahme
+  vollständig lesen. Der Abschnitt zur Weiterentwicklung gilt bei jeder Änderung
+  und Veröffentlichung: Modul-/Migrationsverträge pflegen und einen gepushten Stand
+  erst nach erfolgreichen Prüfungen als updatebereit melden. Den festen Link erhalten.
+
 - [docs/CONTEXT.md](docs/CONTEXT.md): führende Dateien, Kontextübergabe,
   Jobdefinitionen und Abgrenzung von Verlauf und verbindlichen Quellen.
 - [README.md](README.md): lokale Distribution, Abweichungen und Abnahmestand;

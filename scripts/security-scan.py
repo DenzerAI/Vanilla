@@ -15,7 +15,7 @@ FORBIDDEN = {'data', 'workspaces', 'firmenbasis', 'brain', 'soul', 'notes', 'inp
              'output', 'chats', 'secrets', 'credentials', 'logs', 'uploads',
              'attachments', 'transcripts', 'backups', 'runtime', 'workspace',
              'node_modules', '.venv', '.git', '.cache', '.verify', '.security-audit'}
-ROOT_FILES = {'.gitignore', '.env.example', 'AGENTS.md', 'README.md', 'SECURITY.md',
+ROOT_FILES = {'.gitignore', '.env.example', 'AGENTS.md', 'README.md', 'UPDATE.md', 'SECURITY.md',
               'package.json', 'package-lock.json', 'pyproject.toml',
               'requirements.lock', 'requirements-embeddings.lock',
               'requirements-speech.lock', 'configure-agent-uptime.sh'}

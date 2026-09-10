@@ -126,6 +126,7 @@ cache/
 !/templates/firmenbasis/report-result/
 !/templates/firmenbasis/report-result/SKILL.md
 !/README.md
+!/UPDATE.md
 !/wrapper/README.md
 !/AGENTS.md
 

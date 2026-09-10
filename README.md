@@ -4,6 +4,20 @@ Neutrale, weiterentwickelbare Basis mit Python/FastAPI, SQLite, React, dateibasi
 
 Öffentlicher Quellcode: [DenzerAI/Vanilla](https://github.com/DenzerAI/Vanilla). Dieses Projekt heißt Vanilla. Das Repository enthält die Anwendungsquellen; Installationsdaten und Zugangsdaten bleiben lokal.
 
+## Bestehende Installation aktualisieren
+
+Dem Agenten auf dem Zielrechner diesen Auftrag geben:
+
+> Update https://github.com/DenzerAI/Vanilla/blob/main/UPDATE.md
+
+Der feste [Update-Einstieg](UPDATE.md) führt durch Bestandsaufnahme, Sicherung,
+Übernahme eigener Erweiterungen, Prüfung und Aktivierung. Er gilt auch für ältere
+Installationen und eigene Firmenrepositories. Firmendaten und Verbindungen bleiben
+lokal. Bei ungelösten Konflikten wird die neue Version nicht aktiviert.
+Ein Push allein aktualisiert keine andere Installation; der Zielagent führt den
+Ablauf mit seinen dortigen Werkzeugen aus. Ohne Versionsangabe wird der aktuelle
+`main`-Commit geprüft, vor erfolgreicher Prüfung wird er nicht aktiviert.
+
 ## Kundenbasis
 
 Neue Installationen beginnen ohne verbundene Worker, Postfächer oder persönliche
@@ -54,7 +68,8 @@ Die führende Quelle ist jetzt ein eigenständiger Entwicklungsclone von **Denze
 
 Änderungen entstehen in einem Feature-Branch, werden gebaut und geprüft, anschließend per Commit und normalem Push gesichert. Die Runtime übernimmt den geprüften Commit ohne eigene Quellcodeänderungen. Neue Instanzen klonen dasselbe Repository und erhalten eigene Daten, Identität und Zugänge. Betriebsdaten, Dependencies und Secrets bleiben außerhalb von Git; neue Dateitypen müssen bewusst in `.gitignore` aufgenommen werden.
 
-Der verbindliche Ablauf steht in [Code zwischen Installationen austauschen](docs/CODE-SYNC.md).
+Für Updateaufträge und die Freigabe neuer Stände führt [UPDATE.md](UPDATE.md).
+Die technischen Regeln der Codeübernahme stehen in [Code zwischen Installationen austauschen](docs/CODE-SYNC.md).
 `npm run source:setup` aktiviert Datenschutz-, Modul- und Design-Hooks und richtet einmalig
 die lokale, ausgeschlossene `firmenbasis/` aus neutralen Vorlagen ein. `npm ci`
 aktiviert die Git-Hooks ebenfalls. Commit und Push prüfen die tatsächlichen
@@ -112,16 +127,27 @@ Im verwalteten Betrieb prüft die App den eigenen HTTPS-Endpunkt mit echter Zert
 
 Der Befehl benutzt den vorhandenen Core-Neustart-Endpunkt. Er verweigert laufende Chats oder Aufträge und friert neue Arbeit während des Neustarts ein. Danach werden eine neue Prozess-ID, Erreichbarkeit und geladener KeepAlive-Dienst geprüft. Ein echter KeepAlive-Ausfalltest gehört zusätzlich in die zentrale Host-Abnahme.
 
-Für ein Update dieser alternativen launchd-Installation erst den geprüften Commit pushen, dann in der stabilen Runtime:
+Bei Updates zuerst [UPDATE.md](UPDATE.md) vollständig vorbereiten: eigenen Code
+separat zusammenführen, Sicherung und Rückkehr prüfen und den kombinierten Stand
+testen. Erst danach folgt das Wartungsfenster dieser alternativen launchd-
+Installation. Die folgende Befehlsfolge ist nur deren Aktivierungsschritt;
+`VANILLA_TARGET` muss die zuvor geprüfte Integrations-Commit-ID aus dem eigenen
+`origin/main` enthalten. Vor dem Stoppen deren Verfügbarkeit prüfen. Ein inzwischen
+weitergelaufenes `origin/main` erfordert wegen der Hostprüfung eine neue Vorbereitung.
+Jeden Schritt einzeln ausführen und seinen Erfolg prüfen. Bei einem Fehler nicht
+zum nächsten Schritt springen; nach Beginn des Wartungsfensters den vorbereiteten
+Rückweg verwenden.
 
 ```sh
-.venv/bin/python scripts/host-service.py stop
 git fetch origin
-npm run source:merge -- origin/main
+npm run source:merge -- "$VANILLA_TARGET" --check
+.venv/bin/python scripts/host-service.py stop
+npm run source:merge -- "$VANILLA_TARGET"
 .venv/bin/python -m pip install --no-cache-dir -r requirements.lock
 npm ci --ignore-scripts --cache .cache/npm --no-audit --no-fund
 npm --prefix wrapper ci --ignore-scripts --cache .cache/npm --no-audit --no-fund
-npm run control:build
+npm run source:setup
+npm run ui:prepare
 .venv/bin/python scripts/host-service.py seal-build
 .venv/bin/python scripts/host-service.py start --origin "$VANILLA_ORIGIN"
 ```
