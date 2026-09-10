@@ -41,3 +41,20 @@ jobs:
           AGENT_TEST_RESTIC: ${{ github.workspace }}/.verify/backup-runtime/bin/restic
           AGENT_REQUIRE_RESTIC: '1' 
       - run: npm run typecheck
+  update-sandbox:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm run source:setup
+      - run: python3 -m pip install -r requirements.lock
+      - run: python3 scripts/setup-update-sandbox.py
+      - run: python3 scripts/verify-update-sandbox.py

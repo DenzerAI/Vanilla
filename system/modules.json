@@ -1002,6 +1002,141 @@
       "limits": "Lokale Hashprüfung ersetzt keine visuelle Prüfung oder Kontrolle des tatsächlich bedienten Ursprungs. Kein automatisches Git-Update oder Deployment.",
       "version": 1,
       "migration": "Vorhandene Daten und eigene Funktionen erhalten. Alte Builds ohne Integritätsmetadaten einmal mit npm run ui:prepare neu erzeugen."
+    },
+    {
+      "id": "github",
+      "title": "GitHub-Verbindung",
+      "purpose": "GitHub-Verbindung über bestehende Einstellungen, Aufträge und Verbindungen bedienen.",
+      "stage": "implemented",
+      "contract": "docs/GITHUB.md",
+      "setup": "docs/GITHUB.md",
+      "data": "Lokale Zustände im vorhandenen SQLite-records-Speicher; Kandidaten und Operatorjournal unter data/control/updates. Keine Installationsdaten im Git.",
+      "sources": [
+        "core/github.py",
+        "wrapper/ui/github-connection.tsx"
+      ],
+      "entrypoints": [
+        "GET /api/github/repositories",
+        "GET /api/github/status",
+        "POST /api/github/check",
+        "POST /api/github/configure",
+        "POST /api/github/connect",
+        "POST /api/github/disconnect",
+        "POST /api/github/poll",
+        "POST /api/github/repository"
+      ],
+      "dependencies": [
+        "platform",
+        "connections"
+      ],
+      "verification": [
+        "core/tests/test_product_updates.py"
+      ],
+      "status": {
+        "endpoint": "GET /api/github/status",
+        "meaning": "Eigene GitHub App mit Device Flow und installationsgebundenem Konto nötig. App-Installation, Repositoryrechte und Betreuerzugriff separat prüfen."
+      },
+      "limits": "Eigene GitHub App mit Device Flow und installationsgebundenem Konto nötig. App-Installation, Repositoryrechte und Betreuerzugriff separat prüfen.",
+      "version": 1,
+      "migration": "Additive lokale records; Benachrichtigungen erhalten optionale kind/subject_id-Felder. Bestehende Jobs, Firmenbasis, Verbindungen und Lesestatus erhalten. Keine automatische Migration unbekannter Datenformate."
+    },
+    {
+      "id": "updates",
+      "title": "Vanilla-Updates",
+      "purpose": "Vanilla-Updates über bestehende Einstellungen, Aufträge und Verbindungen bedienen.",
+      "stage": "implemented",
+      "contract": "docs/UPDATES.md",
+      "setup": "docs/UPDATES.md",
+      "data": "Lokale Zustände im vorhandenen SQLite-records-Speicher; Kandidaten und Operatorjournal unter data/control/updates. Keine Installationsdaten im Git.",
+      "sources": [
+        "core/releases.py",
+        "core/product_updates.py",
+        "core/update_api.py",
+        "core/update_source.py",
+        "core/update_checks.py",
+        "core/update_operator.py",
+        "core/update_publish.py",
+        "scripts/setup-updates.py",
+        "wrapper/update-review.mjs",
+        "wrapper/ui/product-updates.tsx",
+        "core/update_sandbox.py",
+        "scripts/setup-update-sandbox.py",
+        "scripts/verify-update-sandbox.py"
+      ],
+      "entrypoints": [
+        "GET /api/system/update-review/models",
+        "GET /api/system/updates",
+        "POST /api/system/update-hold",
+        "POST /api/system/update-review/cancel",
+        "POST /api/system/update-review/run",
+        "POST /api/system/updates/cancel",
+        "POST /api/system/updates/check",
+        "POST /api/system/updates/install",
+        "POST /api/system/updates/prepare",
+        "POST /api/system/updates/publish",
+        "POST /api/system/updates/settings",
+        "POST /internal/update-operator"
+      ],
+      "dependencies": [
+        "platform",
+        "operations",
+        "jobs",
+        "workers",
+        "github",
+        "contributions"
+      ],
+      "verification": [
+        "core/tests/test_product_updates.py",
+        "core/tests/test_update_operator.py",
+        "core/tests/test_update_source.py",
+        "wrapper/test/update-review.test.mjs",
+        "core/tests/test_update_sandbox.py"
+      ],
+      "status": {
+        "endpoint": "GET /api/system/updates",
+        "meaning": "Installation v1: separat eingerichteter macOS-Operator, Standarddatenablagen, unveränderte Laufzeitabhängigkeiten, kompatible Datenformate und vollständige Prüfungen. Neue Versionen erfordern ein freigegebenes Manifest; keine Aktivierung durch main-Push."
+      },
+      "limits": "Installation v1: separat eingerichteter macOS-Operator, Standarddatenablagen, unveränderte Laufzeitabhängigkeiten, kompatible Datenformate und vollständige Prüfungen. Neue Versionen erfordern ein freigegebenes Manifest; keine Aktivierung durch main-Push.",
+      "version": 1,
+      "migration": "Additive lokale records; Benachrichtigungen erhalten optionale kind/subject_id-Felder. Bestehende Jobs, Firmenbasis, Verbindungen und Lesestatus erhalten. Keine automatische Migration unbekannter Datenformate."
+    },
+    {
+      "id": "contributions",
+      "title": "Privater Codeaustausch",
+      "purpose": "Privater Codeaustausch über bestehende Einstellungen, Aufträge und Verbindungen bedienen.",
+      "stage": "implemented",
+      "contract": "docs/UPDATES.md",
+      "setup": "docs/UPDATES.md",
+      "data": "Lokale Zustände im vorhandenen SQLite-records-Speicher; Kandidaten und Operatorjournal unter data/control/updates. Keine Installationsdaten im Git.",
+      "sources": [
+        "core/contributions.py"
+      ],
+      "entrypoints": [
+        "GET /api/system/contributions",
+        "GET /api/system/contributions/preview",
+        "POST /api/system/contributions/adopt",
+        "POST /api/system/contributions/check",
+        "POST /api/system/contributions/decide",
+        "POST /api/system/contributions/review",
+        "POST /api/system/contributions/settings",
+        "POST /api/system/contributions/share"
+      ],
+      "dependencies": [
+        "platform",
+        "github"
+      ],
+      "verification": [
+        "core/tests/test_product_updates.py",
+        "core/tests/test_update_source.py",
+        "core/tests/test_contributions.py"
+      ],
+      "status": {
+        "endpoint": "GET /api/system/contributions",
+        "meaning": "Nur vereinbarter neutraler Quellcode mit bestätigtem Betreuerzugriff. Übernehmen erzeugt eine getrennte Entwicklungskopie; keine Live-Installation oder automatische Veröffentlichung."
+      },
+      "limits": "Nur vereinbarter neutraler Quellcode mit bestätigtem Betreuerzugriff. Übernehmen erzeugt eine getrennte Entwicklungskopie; keine Live-Installation oder automatische Veröffentlichung.",
+      "version": 1,
+      "migration": "Additive lokale records; Benachrichtigungen erhalten optionale kind/subject_id-Felder. Bestehende Jobs, Firmenbasis, Verbindungen und Lesestatus erhalten. Keine automatische Migration unbekannter Datenformate."
     }
   ]
 }

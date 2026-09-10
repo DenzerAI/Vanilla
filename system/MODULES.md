@@ -68,3 +68,7 @@ zugeordnet; Profilwerte gehören zum Modul `settings`.
 Der neutrale UI-Bauplan und die Buildprüfung sind als Modul `ui-blueprint`
 registriert. Sie begleiten Designübernahmen in bestehende eigene Module;
 Anwendung, UI-Referenz und Designquellen werden gemeinsam gebaut und geprüft.
+
+## Updates, GitHub und Beiträge
+
+Die Module github, updates und contributions erweitern die vorhandenen Anschlüsse. Der Kern hält Zustände und Freigaben dauerhaft; technische Prüfungen und ein separat eingerichteter Operator sichern die Übernahme. Modulstatus nennt konkrete Einrichtungsgrenzen. Führend: ../docs/UPDATES.md und ../docs/GITHUB.md.

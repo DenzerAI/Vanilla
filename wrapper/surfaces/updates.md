@@ -1,6 +1,6 @@
 # Updates
 
-Beschlossener Aufbauvertrag; noch keine implementierte Oberfläche.
+Implementierter Aufbauvertrag. Betriebs- und Einrichtungsgrenzen stehen in UPDATES.md.
 Architektur, Freigaben, Zustände und Abnahme führt [UPDATES.md](../../docs/UPDATES.md).
 
 ## Platz und gemeinsame Bausteine

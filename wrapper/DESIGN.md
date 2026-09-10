@@ -719,3 +719,7 @@ Farben, Schrift und Abstände verwenden weiter die zentrale Designquelle.
 Build-Herkunft und Datei-Hashes machen veraltete Ausgaben erkennbar; die visuelle
 Abnahme bleibt notwendig. Eine lokale Erweiterung übernimmt die gemeinsamen
 Bausteine und dokumentiert fachlich notwendige Abweichungen im Bereichsvertrag.
+
+## Produktupdates und GitHub
+
+Einstellungen → Updates verwendet PageHeading, vorhandene tabs, SettingRow, SettingsNavigationRow, Settings-Skeleton und Modal. Version und Beiträge zeigen tatsächliche Kernzustände; kein Fortschrittsprozent ohne Messung. GitHub steht mit Originalzeichen unter Verbindungen. NotificationRow öffnet je nach Betreff den Updatebereich oder die vorhandene Auftragsansicht. Technische Details bleiben aufgeklappt; bestehende Themes, Touchziele und Fokusregeln gelten.

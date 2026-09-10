@@ -10,7 +10,7 @@ from time import time
 
 import httpx
 
-from .files import atomic_write
+from .files import atomic_write, read_json
 from .storage import safe_path
 from .streaming import StreamHub
 from .notifications import Notifications
@@ -33,7 +33,9 @@ class Runtime:
         self.next_restart = 0
         self.restart_delay = 5
         self.stopping = False
-        self.frozen = False
+        self.update_hold = bool(read_json(config.data / "updates/maintenance.json", {}))
+        self.frozen = self.update_hold
+        self.product_updates = None
         self.maintenance_lock = asyncio.Lock()
         self.client = httpx.AsyncClient(timeout=httpx.Timeout(60, connect=3), trust_env=False)
         self.stream = StreamHub(self, queue.db)
@@ -64,7 +66,7 @@ class Runtime:
         return bool(self.adapter_active or self.queue.db.rows("SELECT id FROM executions WHERE status IN ('dispatching','running')"))
 
     async def spawn_adapter(self):
-        env = {**os.environ, "UWE_PORT": str(self.config.adapter_port), "UWE_WORKSPACE": str(self.config.workspace), "UWE_DATA_ROOT": str(self.config.data), "AGENT_CORE_URL": f"http://127.0.0.1:{self.config.port}", "AGENT_INTERNAL_TOKEN": self.config.adapter_token, "AGENT_PYTHON": sys.executable}
+        env = {**os.environ, "VANILLA_UPDATE_HOLD": "1" if self.update_hold else "0", "UWE_PORT": str(self.config.adapter_port), "UWE_WORKSPACE": str(self.config.workspace), "UWE_DATA_ROOT": str(self.config.data), "AGENT_CORE_URL": f"http://127.0.0.1:{self.config.port}", "AGENT_INTERNAL_TOKEN": self.config.adapter_token, "AGENT_PYTHON": sys.executable}
         self.process = await asyncio.create_subprocess_exec("node", str(self.config.root / "wrapper/server.mjs"), cwd=self.config.root, env=env)
         self.last_adapter_check = 0
 
@@ -80,7 +82,7 @@ class Runtime:
     async def deliver_notifications(self):
         while True:
             try:
-                if self.config.start_adapter:
+                if self.config.start_adapter and not self.update_hold:
                     await self.notifications.deliver_next(self)
             except asyncio.CancelledError:
                 raise
@@ -113,7 +115,8 @@ class Runtime:
         while True:
             try:
                 await self.supervise()
-                await asyncio.to_thread(self.queue.schedule)
+                if not self.update_hold:
+                    await asyncio.to_thread(self.queue.schedule)
                 self.last_schedule = time()
                 limit = self.operations.settings.values["system"]["parallel_jobs"] if self.operations else 1
                 self.running = {id: task for id, task in self.running.items() if not task.done()}
@@ -141,6 +144,9 @@ class Runtime:
                 handler = job.get("python", {}).get("handler", "script")
                 if handler == "script":
                     result = await self.execute_script(job, run)
+                elif handler == "update-check" and self.product_updates:
+                    await self.product_updates.check()
+                    result = {"text": "Prüfstand unter Einstellungen → Updates verfügbar."}
                 else:
                     async with self.maintenance_lock:
                         if handler == "backup":
@@ -255,6 +261,9 @@ class Runtime:
     async def index_files(self):
         while True:
             try:
+                if self.update_hold:
+                    await asyncio.sleep(3)
+                    continue
                 await asyncio.to_thread(self.knowledge.scan)
                 if self.knowledge.embeddings.path:
                     await asyncio.to_thread(self.knowledge.embed)
@@ -267,6 +276,11 @@ class Runtime:
     async def maintain(self):
         while True:
             try:
+                if self.update_hold:
+                    await asyncio.sleep(3)
+                    continue
+                if self.product_updates and not self.frozen and not self.stopping:
+                    self.product_updates.schedule()
                 if self.operations:
                     await asyncio.to_thread(self.operations.memory.flush)
                     if self.config.public_origin:

@@ -18,10 +18,13 @@ Ein Push allein aktualisiert keine andere Installation; der Zielagent führt den
 Ablauf mit seinen dortigen Werkzeugen aus. Ohne Versionsangabe wird der aktuelle
 `main`-Commit geprüft, vor erfolgreicher Prüfung wird er nicht aktiviert.
 
-Das beschlossene [Produktkonzept für Updates und Beiträge](docs/UPDATES.md)
-führt den weiteren Ausbau: Einstellungen → Updates, GitHub unter Verbindungen,
-Benachrichtigungen und ein privater Beitragseingang beim Ursprung. Diese
-Automatisierung ist noch nicht implementiert; der obige Agentenauftrag bleibt nutzbar.
+Der [Ablauf für Updates und Beiträge](docs/UPDATES.md) verbindet Einstellungen → Updates,
+GitHub unter Verbindungen, Benachrichtigungen und einen privaten Beitragseingang
+beim Ursprung. GitHub App und Betriebsweg werden je Installation eingerichtet.
+Die automatische Installation bleibt bis zur vollständigen lokalen Abnahme
+gesperrt; die vollständigen Kandidatentests verwenden eine einmalig eingerichtete
+lokale Container-Prüfumgebung.
+Der Agentenauftrag oben bleibt für ältere oder abweichende Installationen nutzbar.
 
 ## Kundenbasis
 

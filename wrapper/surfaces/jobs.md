@@ -102,3 +102,7 @@ Wochentage verwenden die bestehende row mit Umbruch, damit auf Handybreite alle 
 ## Iconaktionen
 
 NotificationBell bewegt die erste sichtbare Glocke kurz bei einem neuen notification.created-Ereignis oder einer neuen Rückfrage. Gelesen-Markierungen und wiederholtes Laden lösen keine Bewegung aus. Der Ungelesen-Punkt und die zugängliche Beschriftung bleiben unabhängig von Animation verständlich.
+
+## Produktupdates
+
+Der bestehende Scheduler führt genau einen verwalteten lesenden Systemauftrag system-update-check aus; dessen Termine steuert der Kern. Update- und Beitragshinweise nutzen denselben dauerhaften NotificationRow-/Glockenweg mit eigenem Betreff, ohne fiktive Ausführung. Klick öffnet Einstellungen → Updates. Vor Aktivierung werden vorhandene Jobdateien, Einstellungen und reservierte Slots erhalten; keine erneute Ausführung unbestätigter externer Aktionen.

@@ -1,7 +1,7 @@
 import React, { useEffect, useId, useRef } from "react";
 import { X } from "./icons.jsx";
 
-export function Modal({ title, children, onClose, wide, className = "" }) {
+export function Modal({ title, children, onClose, wide = false, className = "" }) {
   const ref = useRef();
   const titleId = useId();
   useEffect(() => {

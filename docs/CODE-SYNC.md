@@ -147,3 +147,7 @@ Nach dem Quellmerge folgt `npm run ui:prepare`; erst ein erfolgreich geprüfter
 Build wird über den vorhandenen Betriebsweg aktiviert. Die eigenständige
 Referenz `wrapper/ui/blueprint.html` ist ausdrücklich freigegebener neutraler
 Anwendungsquellcode; lokale Buildausgaben bleiben ausgeschlossen.
+
+## Privater Produktaustausch
+
+Der App-Anschluss exportiert ausschließlich einen mit diesem Schutzmodul geprüften neutralen Quellbaum. Sein GitHub-Snapshot besitzt keine Eltern und verweist als Metadatum auf die gemeinsame öffentliche Basis. Der laufende Index, origin und private Historie bleiben lokal erhalten. Eine Übernahme in die Ursprungsentwicklung verwendet diese Basis für einen Dreiwegvergleich. Neue fremde Assets benötigen weiterhin eine eigenständige Quellenprüfung; Datenschutzmuster sind keine semantische Garantie für beliebige oder kodierte vertrauliche Inhalte.

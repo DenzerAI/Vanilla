@@ -7,6 +7,7 @@ export function SettingsHeader({icon, title, children}) {
   return <div className="settings-feature-header">{icon && <span className="settings-feature-icon" aria-hidden="true">{icon}</span>}<h3>{title}</h3>{children && <p>{children}</p>}</div>;
 }
 
+/** @param {{icon?: import('react').ReactNode, title: import('react').ReactNode, description?: import('react').ReactNode, value?: import('react').ReactNode, onClick: () => void}} props */
 export function SettingsNavigationRow({icon, title, description, value, onClick}) {
   return <button type="button" className="settings-navigation-row" onClick={onClick}>{icon}<span className="settings-navigation-copy"><strong>{title}</strong>{description && <span>{description}</span>}</span>{value && <span className="muted">{value}</span>}<ChevronRight size={16}/></button>;
 }

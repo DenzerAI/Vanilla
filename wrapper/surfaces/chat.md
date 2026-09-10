@@ -451,3 +451,5 @@ in blueprint.html. Er verwendet ChatStart und dessen Scrollsteuerung direkt.
 Umschaltbare Lade- und Anhangszustände lassen Avatarposition und erreichbare
 Eingabe vergleichen; Vorschauaktionen zeigen nur ihr Ziel. Die Anhangsfläche
 ist ein Layoutbeispiel und führt keinen Upload aus.
+
+Updates erscheinen ausschließlich im vorhandenen Einstellungsbereich. Ein interner Agentenreview nutzt einen eigenen begrenzten Thread ohne Änderung normaler Chats oder ihrer Modellwahl. Die Betriebspause sperrt neue Turns und lässt bestehende Arbeit vor dem Stoppen abschließen.

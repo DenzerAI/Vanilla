@@ -32,8 +32,8 @@ Agenten aufgenommen. Eigenes Konto, Anmeldung, Repository-Auswahl, Rechteprüfun
 Bearbeiten und Trennen folgen demselben Katalog-/Modal-/Tresormuster. Kein bloßer
 Website-Link und keine GitHub-Anmeldung auf der Update-Seite. Konto verbunden,
 Repository lesbar, Code schreibbar und Betreuerzugriff sind getrennte Prüfergebnisse.
-Der Anschluss ist noch nicht implementiert. Architektur und Einrichtungsgrenzen:
-[Updates und Beiträge](../../docs/UPDATES.md#github-verbindung).
+Der Anschluss verwendet GitHubConnectionForm, Device Flow und den bestehenden Tresor. Architektur und Einrichtungsgrenzen:
+[GitHub einrichten](../../docs/GITHUB.md) und [Updates und Beiträge](../../docs/UPDATES.md).
 
 Jeder weitere Anbieter folgt diesem Aufbau. Anbieterbezogene Einstellungen dürfen einen spezialisierten Dialoginhalt haben, aber keinen eigenen Einstieg, keine zusätzliche Übersichtsleiste und keine abweichende Kachel erfinden. Suchfilter gilt auch für neue Einträge.
 
