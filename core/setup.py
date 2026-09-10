@@ -51,10 +51,10 @@ def main():
     parser.add_argument("--data", type=Path, default=Path(__file__).resolve().parent.parent / "data/control")
     parser.add_argument("--embeddings", action="store_true")
     args = parser.parse_args()
-    print("Backup-Programm:", install_restic(args.data))
     if args.embeddings:
         from .models import install_model
         print("Lokale Suche:", install_model(args.data / "models/embeddings"))
+    print("Backup-Programm:", install_restic(args.data))
 
 
 if __name__ == "__main__":

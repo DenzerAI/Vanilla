@@ -276,3 +276,75 @@ transaktional gespeichert. Beim Scheitern der Host-Datei bleibt der alte Zugang
 gültig. Vor dem Abschluss einer Wiederherstellung wird der geprüfte
 Sicherungsschlüssel in einen neuen installationsbezogenen OS-Eintrag übernommen;
 bei Fehlern stellt das vorhandene Journal den alten Dateistand wieder her.
+
+
+## Lokale Suche
+
+Der Systeminstaller prüft Plattform, CPU, verfügbaren Plattenplatz und, soweit das
+Betriebssystem ihn meldet, den Arbeitsspeicher vor der Laufzeitinstallation.
+Die festgelegten Pakete unterstützen macOS 14+ auf Apple Silicon und Linux
+(glibc 2.28+) auf ARM64 oder x86-64, mindestens 4 GiB RAM und
+2 GiB freier Platz für die Suchlaufzeit einschließlich Modell. Das ist eine
+konservative Installationsgrenze, keine Reservierung für parallel laufende Worker.
+Eine nicht auslesbare RAM-Größe bleibt im Prüfprofil ausdrücklich unbekannt.
+Intel-Macs werden vor dem Download abgewiesen, weil die festgelegte Torch-Version
+kein entsprechendes Wheel anbietet. Linux benötigt weiterhin seine eigene
+Zielhost-Abnahme; dieser Entwicklungsstand wird auf macOS ARM64 geprüft.
+
+Festes Standardmodell ist das mehrsprachige
+[MiniLM-L12-v2](https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2)
+unter Apache-2.0. Repository, Revision und SHA-256 jedes notwendigen Files stehen
+in `core/models.py`; die Gewichte benötigen rund 471 MB, der Tokenizer rund 9 MB.
+`requirements-embeddings.lock` hält die Python-Laufzeit fest. Linux installiert
+vorab das CPU-Wheel aus dem [offiziellen PyTorch-Index](https://pytorch.org/get-started/locally/),
+um CUDA-Pakete zu vermeiden. Die Berechnung nutzt höchstens zwei CPU-Threads,
+Achter-Batches und keine GPU, keinen fremden Modellserver und keinen Cloudfallback.
+
+Die lokale Suche wird vor Diktat, Sprachausgabe und Backup eingerichtet, damit
+ein Fehler eines nachfolgenden Moduls die Suche nicht überspringt. Der gesamte
+Systeminstaller meldet einen späteren Fehler trotzdem als fehlgeschlagen.
+Ein Modell gilt erst nach Dateiprüfung, lokalem Laden und deutscher Bedeutungsprobe
+als installiert. Unterbrochene Downloads bleiben als `.part` erhalten; der nächste
+Durchlauf setzt sie fort oder beginnt neu, falls der Server Range nicht unterstützt.
+Beschädigte Dateien werden einzeln ersetzt, geprüfte Dateien wiederverwendet.
+Eine Dateisperre verhindert parallele Reparaturen und Laden während des Austauschs.
+Ein früherer `source.json`-Marker allein wird nie akzeptiert. Ein Start prüft die
+verwalteten Dateien unabhängig vom Marker und lädt ausschließlich lokale Dateien.
+Die Installation benötigt Internet, der Betrieb danach nicht. Downloads senden
+keine Texte oder Anmeldeinformationen an Hugging Face.
+
+Unter **Memory → Lokale Suche** stehen Zustand, konkreter Fehler, Installieren/
+Reparieren, lokale Testberechnung und Neuindizierung. Fehlt die Python-Laufzeit,
+muss der mitgelieferte Systeminstaller laufen; die Webaktion installiert nur
+Modellgewichte. Eine CLI-Installation bei bereits laufendem Kern wird nach
+dessen Neustart erkannt; die Webaktion aktiviert das Modell unmittelbar.
+Bereitschaft bedeutet eine erfolgreiche Berechnung im aktuellen
+Prozess. Ein leerer Index prüft das Modell ebenfalls. Ohne Modell arbeitet die
+Wortsuche weiter; die Systemprüfung lässt diese Einschränkung sichtbar.
+Nach Einrichtung werden bestehende Dokumente indiziert; bei normalem Start
+folgt der bestehende 30-Sekunden-Indexer. Ein dauerhaft fehlerhaftes Modell wird
+über Reparieren erneut initialisiert.
+
+Textpassagen richten sich nach dem tatsächlichen Tokenlimit des Modells und
+überlappen. So werden lange Dokumente nicht bei der Embedding-Berechnung still
+abgeschnitten. Die neue Vektoridentität `tokens-v2` bewirkt einen wiederholbaren
+Neuaufbau aus vorhandenen Texten, ohne Originale oder Tabellen zu verändern.
+Projektgrenzen gelten auch für die sinngemäße Suche. Explizit konfigurierte eigene
+lokale Modelle bleiben möglich und erhalten eine Inhaltsidentität; deren Qualität
+ist separat zu prüfen. Für Sicherungen bleiben Modellgewichte ersetzbare Downloads,
+Originaldokumente und lokale Konfiguration gehören in die Sicherung.
+
+Gezielte Einrichtung, Reparatur und Prüfung ohne Schlüsselbundzugriff:
+
+```sh
+.venv/bin/python -m core.models
+.venv/bin/python -m core.models --check
+VANILLA_TEST_EMBEDDING_MODEL=data/control/models/embeddings .venv/bin/python -m pytest core/tests/test_models.py -q
+```
+
+Der letzte Test blockiert Netzwerkverbindungen während echter lokaler Inferenz
+und prüft deutsche Bedeutungsähnlichkeit, späte Textpassagen, Projekttrennung und
+Indexinvalidierung. Ohne gesetzten Modellpfad wird nur diese echte Modellprobe
+übersprungen; Download-/Reparaturfehler werden mit isolierten Testdateien geprüft.
+Trennen: explizite Modellkonfiguration entfernen beziehungsweise den verwalteten
+Modellordner bei gestopptem Kern entfernen; Wortsuche und Originale bleiben erhalten.

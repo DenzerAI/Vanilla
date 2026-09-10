@@ -102,8 +102,9 @@ Trennen und Wiederanlauf: wrapper/CHANNELS.md.
 
 Markdown- und Textdateien im Workspace werden lokal indexiert. Bibliotheksvorschau
 für PDF oder Office bedeutet noch keine Inhaltsindexierung. Die Volltextsuche
-funktioniert ohne Embeddings; optionale Modelle über die vorhandene Systemeinrichtung
-installieren und mit deren Testaktion prüfen. Notizen mit Quellen und Versionsprüfung
+funktioniert ohne Embeddings; der Systeminstaller richtet das lokale Standardmodell
+automatisch ein. Fehler und Reparatur stehen unter Memory → Lokale Suche.
+Installationsvertrag und echte Offlineprobe: OPERATIONS.md#lokale-suche. Notizen mit Quellen und Versionsprüfung
 schreiben. Verlauf bleibt von aktuellen CRM-Fakten getrennt. Regeln: CORE.md.
 
 ## library

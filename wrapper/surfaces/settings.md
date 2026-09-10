@@ -244,3 +244,14 @@ Geschützt eingerichtet behauptet keine aktuell entsperrte OS-Schlüsselverwaltu
 Polling liest keine Schlüssel und öffnet keine Betriebssystemdialoge. Fehler beim
 Speichern bleiben im bestehenden Formular sichtbar. Anbieterzugänge werden
 weiter ausschließlich unter Verbindungen eingerichtet.
+
+
+## Zustand der lokalen Suche
+
+Memory verwendet weiterhin die vorhandenen SettingRow-Zeilen. „Bereit“ setzt
+erfolgreiche lokale Berechnung voraus. Andernfalls bleibt „Wortsuche verfügbar“
+sichtbar, mit konkretem Modellfehler oder noch ausstehender Prüfung.
+Installieren beziehungsweise Reparieren und Lokal testen verwenden denselben
+Systemanschluss. Während der Anfrage sind die bestehenden Bedienelemente gesperrt;
+„Bitte warten …“ meldet Arbeit ohne erfundene Prozentwerte. Erst abgeschlossene
+Modellprüfung und Indizierung bestätigen die Einrichtung.

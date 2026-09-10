@@ -143,7 +143,7 @@ Der getrennte Skilltree ist fertig gebaut und wird bereits über die bestehende 
 
 ## Bekannte Grenzen
 
-- Embedding-Modellgewichte fehlen; ohne Modell arbeitet die Suche mit Volltext/Fuzzy-Suche. Optionale Installation über `requirements-embeddings.lock` und `python -m core.models`.
+- Das lokale Suchmodell wird durch `setup:system` automatisch eingerichtet und geprüft. Ohne erfolgreiche Einrichtung bleibt die Wortsuche verfügbar; Reparatur unter Memory oder über `python -m core.models`. Zielhost-Grenzen und Offlineprüfung: [Lokale Suche](docs/OPERATIONS.md#lokale-suche).
 - Die Schlüsselablage benötigt eine verfügbare Betriebssystem-Schlüsselverwaltung. Eigene Worker-Anmeldungen bleiben installationsbezogen; fremde Profile werden nicht übernommen. Einrichtung und Migration stehen in docs/VAULT.md.
 - Die vorhandenen Memory-Verlustfälle des Quellaudits sind nicht vollständig behoben oder abgenommen.
 - Restic ist optional; lokales Backup ist noch kein vollständiges ausfallsicheres Wiederherstellungskonzept. Vollständiger Betriebsumfang, eigene Zugänge und echter Restore-Test bleiben offen.

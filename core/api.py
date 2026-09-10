@@ -124,8 +124,14 @@ def routes(operations, queue):
             except ImportError:
                 raise ValueError("Die lokale Suchlaufzeit fehlt. Den mitgelieferten Systeminstaller ausführen.")
             o.config.embedding_model = str(o.config.data / "models/embeddings")
-            o.knowledge.embeddings = LocalEmbeddings(o.config)
-            return await asyncio.to_thread(o.run, "index")
+            def activate_search():
+                with o.knowledge.lock:
+                    o.knowledge.embeddings = LocalEmbeddings(o.config)
+                    result = o.run("index")
+                    if not result["embeddingIndex"].get("ready"):
+                        raise ValueError(result["embeddingIndex"].get("error") or "Lokale Suche ist noch nicht einsatzbereit.")
+                    return result
+            return await asyncio.to_thread(activate_search)
         if b.action == "test-embeddings":
             vectors = await asyncio.to_thread(o.knowledge.embeddings.encode, ["Die Solaranlage erzeugt Strom.", "Photovoltaik liefert Energie."])
             if not vectors:

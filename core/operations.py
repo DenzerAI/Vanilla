@@ -61,8 +61,7 @@ class Operations:
             checks["adapter"] = {"ok": bool(runtime and runtime.process and runtime.process.returncode is None and not runtime.error), "message": "Worker-Anschluss"}
         checks['leases'] = {'ok': not bool(self.db.rows("SELECT id FROM executions WHERE status IN ('running','dispatching') AND lease_until<?", (time(),))), 'message':'Rückmeldungen laufender Aufträge'}
         checks['automations'] = {'ok': not bool(self.db.rows("SELECT id FROM jobs j WHERE j.status='invalid' OR (j.status='active' AND (SELECT status FROM executions e WHERE e.job_id=j.id ORDER BY created_at DESC LIMIT 1) IN ('failed','interrupted'))")), 'message':'Automationen'}
-        if self.knowledge.embeddings.path:
-            checks['embeddings'] = {'ok': not bool(self.knowledge.embeddings.error), 'message':'Lokale Suchberechnung'}
+        checks['embeddings'] = {'ok': bool(self.knowledge.embeddings.status().get('ready')), 'message':'Lokale Suchberechnung'}
         if self.config.public_origin:
             network = self.network_cache[1]
             checks['tailscale'] = {'ok': bool(network.get('connected') and network.get('serving') and time()-self.network_cache[0]<120), 'message':'Privater HTTPS-Zugang'}
@@ -91,7 +90,8 @@ class Operations:
                 result = self.cleanup()
             else:
                 raise ValueError("Unbekannte Systemfunktion.")
-            self.record(handler, "ok", result)
+            state = "error" if handler == "index" and not result["embeddingIndex"].get("ready") else "ok"
+            self.record(handler, state, result)
             return result
         except Exception as error:
             self.record(handler, "error", {"message": str(error)[:200]})

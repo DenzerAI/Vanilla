@@ -45,3 +45,9 @@ und die Auswahl unter Stimme. Die zentrale Anschlusslandkarte
 `system/CAPABILITIES.md` dokumentiert UI, Anbieter, Status und Endpunkte.
 `npm run setup:speech` legt seine Python-Laufzeit auch ohne vorheriges
 Diktat-Setup an. Gleichzeitige Ausgaben teilen sich eine exklusive Wiedergabe.
+
+
+Der gemeinsame Systeminstaller richtet die unabhängige lokale Suche vor den
+Sprachlaufzeiten ein. Ein Sprachfehler bleibt ein fehlgeschlagenes Gesamtsetup;
+die bereits geprüfte lokale Suche bleibt installiert. Suchmodellvertrag:
+[OPERATIONS.md](../docs/OPERATIONS.md#lokale-suche).

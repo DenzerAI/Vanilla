@@ -34,7 +34,7 @@ class Config:
         if self.embedding_model:
             self.embedding_model = str(inside(self.root, self.embedding_model))
         default_model = self.data / "models/embeddings"
-        if not self.embedding_model and (default_model / "modules.json").is_file():
+        if not self.embedding_model and default_model.exists():
             self.embedding_model = str(default_model)
         if (
             self.host not in {"127.0.0.1", "localhost", "::1"}

@@ -1,6 +1,6 @@
 // Explicit installer. Downloads pinned runtime dependencies and the local search model.
 import {spawn} from 'node:child_process';
-import {existsSync, mkdirSync} from 'node:fs';
+import {existsSync, mkdirSync, readFileSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
@@ -21,15 +21,23 @@ try {
   await run(process.execPath,['scripts/init-company.mjs']);
   if(!existsSync(python))await run(process.env.AGENT_PYTHON||'python3',['-m','venv','.venv']);
   await run(python,['-c','import sys; assert sys.version_info >= (3,12), "Python 3.12+ erforderlich"']);
+  await run(python,['-m','core.models','--preflight']);
+  if(process.platform==='linux') {
+    // The CPU wheel avoids installing CUDA/NVIDIA packages on customer hosts.
+    const torchPin=readFileSync(path.join(root,'requirements-embeddings.lock'),'utf8').split('\n').find(line=>/^torch==[0-9.]+$/.test(line));
+    if(!torchPin)throw new Error('Die festgelegte Torch-Version fehlt.');
+    await run(python,['-m','pip','install','--index-url','https://download.pytorch.org/whl/cpu',torchPin]);
+  }
   await run(python,['-m','pip','install','-r','requirements.lock','-r','requirements-embeddings.lock']);
   await run(python,['-m','pip','install','-e','.','--no-deps']);
+  await run(python,['-m','core.models']);
   await run('npm',['ci']);
   await run('npm',['--prefix','wrapper','ci']);
   process.env.UWE_PYTHON ||= python;
   await run('npm',['--prefix','wrapper','run','setup:dictation']);
   await run('npm',['--prefix','wrapper','run','setup:speech']);
   await run('npm',['run','control:build']);
-  await run(python,['-m','core.setup','--embeddings']);
+  await run(python,['-m','core.setup']);
 
   console.log('System vorbereitet. Mit npm start öffnen; Zugang und Sicherungsziel in den Einstellungen einrichten. Globale macOS-Dienste werden nicht installiert.');
 } catch(error) {console.error(error.message);process.exitCode=1;}
