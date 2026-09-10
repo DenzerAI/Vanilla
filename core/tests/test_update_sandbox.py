@@ -20,7 +20,7 @@ def test_sandbox_only_mounts_neutral_readonly_input_and_limits_local_resources(t
     mounts=[args[i+1] for i,a in enumerate(args) if a=='--mount']
     assert mounts==['type=bind,src='+str(inputs)+',dst=/input,readonly']
     assert not any('/var/run/docker.sock' in arg for arg in args)
-    assert any('/candidate:rw,nosuid,nodev,size=2g' in arg for arg in args)
+    assert any('/candidate:rw,exec,nosuid,nodev,size=2g' in arg for arg in args)
     cmd=sandbox.command(runner,tmp_path,['node','test.js'],{'HOME':str(tmp_path/'.verify/home'),'PATH':'/host/tooling'})
     assert 'exec' in cmd and '/usr/bin/env' in cmd and '-i' in cmd
     assert 'HOME=/candidate/.verify/home' in cmd and '/host/tooling' not in str(cmd)

@@ -72,8 +72,8 @@ def start(profile, inputs, directory):
     args = ['--context', profile['context'], 'run', '--detach', '--rm', '--pull=never', '--name', lease['name'],
             '--label', 'io.vanilla.update.owner=' + lease['owner'], '--network=none', '--read-only', '--cap-drop=ALL',
             '--security-opt=no-new-privileges', '--pids-limit=512', '--memory=4g', '--cpus=2', '--log-driver=none',
-            '--user', str(os.getuid()) + ':' + str(os.getgid()), '--tmpfs', '/tmp:rw,nosuid,nodev,size=512m',
-            '--tmpfs', f'/candidate:rw,nosuid,nodev,size=2g,uid={os.getuid()},gid={os.getgid()},mode=0700',
+            '--user', str(os.getuid()) + ':' + str(os.getgid()), '--tmpfs', '/tmp:rw,exec,nosuid,nodev,size=512m',
+            '--tmpfs', f'/candidate:rw,exec,nosuid,nodev,size=2g,uid={os.getuid()},gid={os.getgid()},mode=0700',
             '--mount', 'type=bind,src=' + str(inputs) + ',dst=/input,readonly',
             '--workdir=/candidate', '--entrypoint=/bin/sleep', profile['image'], '3600']
     docker(profile['binary'], *args)
@@ -90,6 +90,8 @@ def command(container, directory, argv, env):
 
 INITIALIZE = r"""import pathlib,shutil,subprocess,os
 root=pathlib.Path('/candidate')
+for name in ('/tmp/vanilla-home','/tmp/vanilla-tests'):
+ pathlib.Path(name).mkdir(parents=True,exist_ok=True)
 for p in pathlib.Path('/input').iterdir():
  if p.is_dir():shutil.copytree(p,root/p.name)
  else:shutil.copy2(p,root/p.name)

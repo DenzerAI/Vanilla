@@ -22,12 +22,10 @@ class ReviewRequired(ValueError):
 
 
 async def execute(directory, command, name, seconds=600, *, container):
-    (directory / ".verify/tmp").mkdir(parents=True, exist_ok=True)
-    env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": str(directory / ".verify/home"),
-           "TMPDIR": str(directory / ".verify/tmp"), "LANG": "C.UTF-8", "PYTHONPATH": str(directory),
+    env = {"PATH": os.environ.get("PATH", "/usr/bin:/bin"), "HOME": "/tmp/vanilla-home",
+           "TMPDIR": "/tmp/vanilla-tests", "LANG": "C.UTF-8", "PYTHONPATH": str(directory),
            "GIT_CONFIG_GLOBAL": os.devnull, "GIT_CONFIG_NOSYSTEM": "1", "GIT_TERMINAL_PROMPT": "0"}
     env.update(AGENT_REQUIRE_RESTIC="1", AGENT_TEST_RESTIC=str(directory / ".verify/bin/restic"))
-    Path(env["HOME"]).mkdir(parents=True, exist_ok=True)
     from . import update_sandbox
     argv = update_sandbox.command(container, directory, command, env)
     try:

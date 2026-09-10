@@ -136,7 +136,10 @@ des Containers ist nur sein eigener Loopback für Schnittstellentests erreichbar
 Nur neutraler Code wird schreibgeschützt eingebunden, keine Git-Historie.
 Prüfdaten liegen in einem begrenzten temporären Dateisystem; weder Hostdateien
 noch Docker-Socket sind schreibbar eingebunden. Zurück kommt ausschließlich
-ein größenbegrenztes, pfadgeprüftes UI-Buildarchiv. Eine bloße
+ein größenbegrenztes, pfadgeprüftes UI-Buildarchiv.
+Temporäre Testdateien liegen außerhalb des synthetischen Git-Repositories;
+ausführbare Testprogramme bleiben auf die isolierten Dateisysteme beschränkt.
+Eine bloße
 Arbeitskopie zählt nicht als Isolation. Schlägt ein Test wegen fehlender
 Sandboxfähigkeiten fehl, gibt es kein Ausweichen auf ungeschützte Ausführung.
 

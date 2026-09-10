@@ -5,6 +5,7 @@ import shutil
 import sqlite3
 import subprocess
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 from core import update_operator as operator
@@ -62,6 +63,12 @@ def fixture_install(tmp_path,monkeypatch):
         commands.append(args)
         if args[0]!='launchctl':return original(*args)
     monkeypatch.setattr(operator,'command',command)
+    original_run = subprocess.run
+    def process(args, **kwargs):
+        if args[0] == 'launchctl':
+            return SimpleNamespace(returncode=1, stdout=b'', stderr=b'')
+        return original_run(args, **kwargs)
+    monkeypatch.setattr(operator.subprocess, 'run', process)
     monkeypatch.setattr(operator.time,'sleep',lambda n:None)
     return root,data,directory,file,request,commands
 
