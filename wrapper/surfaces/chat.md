@@ -451,3 +451,20 @@ in blueprint.html. Er verwendet ChatStart und dessen Scrollsteuerung direkt.
 Umschaltbare Lade- und Anhangszustände lassen Avatarposition und erreichbare
 Eingabe vergleichen; Vorschauaktionen zeigen nur ihr Ziel. Die Anhangsfläche
 ist ein Layoutbeispiel und führt keinen Upload aus.
+
+## Kalenderkachel und Tageschat
+
+Im AttentionFan bleibt neben Wetter eine Kalenderkarte reserviert; insgesamt
+höchstens fünf Karten. CalendarCardContent zeigt Wochentag, große Tageszahl,
+Monat und ISO-KW mit denselben Glasmaßen und zentraler Typografierolle calendar.
+Der nächste laufende oder kommende heutige Termin erhält Titel und Countdown;
+ein weiterer Termin folgt gedämpft. Ganztägig und Läuft gerade sind eigene Angaben.
+Ohne weitere heutige Termine kein Countdown auf morgen. Datum und Countdown
+aktualisieren sich; Projektwechsel, Mitternacht und Abruffehler zeigen keinen
+vorherigen Tag als aktuellen. Fehlender Dienst ist kein terminfreier Tag.
+
+Klick öffnet explizit einen neuen Tageschat mit Datenbericht und kurzer Einordnung.
+Diese Aktion darf den Worker starten; bloßes Anzeigen der Kachel tut es nicht.
+Kalender öffnen im Tageschat führt zur bestehenden Kalenderansicht ohne neuen
+Hauptmenüpunkt. Eigene und angebundene Termine teilen dieselbe Projektion, bleiben
+nach Herkunft unterscheidbar. Kalenderdaten und Migrationsvertrag: docs/PLANNER.md.

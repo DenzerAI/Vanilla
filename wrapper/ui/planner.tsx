@@ -147,6 +147,7 @@ export function PlannerPage(props: Props) {
     () => preference("planner.demo", "false") === "true",
   );
   const [events, setEvents] = useState<PlannerEvent[]>(() => demoEvents(today));
+  const [calendarRevision,setCalendarRevision]=useState(0),[calendarSaving,setCalendarSaving]=useState(false);
   const [calendarEvents, setCalendarEvents] = useState<PlannerEvent[]>([]);
   const [calendarStatus, setCalendarStatus] = useState('Kalender wird geladen …');
   useEffect(() => {
@@ -166,14 +167,14 @@ export function PlannerPage(props: Props) {
         if(!alive)return;
         setCalendarEvents(result.events);
         const stale=syncFailed||result.feeds.some((f:any)=>f.error||!f.covered||!f.synced||Date.now()-Date.parse(f.synced)>600000);
-        setCalendarStatus(!result.feeds.length?'Noch kein Kalender abgeglichen. Unter Verbindungen einrichten.':stale?'Kalenderstand prüfen: Abgleich fehlt, ist fehlgeschlagen oder deckt diesen Zeitraum nicht ab.':'Letzter Abgleich: '+new Date(Math.min(...result.feeds.map((f:any)=>Date.parse(f.synced)))).toLocaleString('de-DE'));
+        setCalendarStatus(!result.feeds.length?'Vanilla-Kalender · Lokal gespeichert':stale?'Kalenderstand prüfen: Abgleich fehlt, ist fehlgeschlagen oder deckt diesen Zeitraum nicht ab.':'Letzter Abgleich: '+new Date(Math.min(...result.feeds.map((f:any)=>Date.parse(f.synced)))).toLocaleString('de-DE'));
       }catch(e){if(alive)setCalendarStatus('Kalenderstand prüfen: '+(e as Error).message);}
       finally{busy=false;}
     }
     setCalendarEvents([]);void refresh(true);
     const timer=setInterval(()=>{if(document.visibilityState==='visible')void refresh();},30000);
     return()=>{alive=false;clearInterval(timer);};
-  },[date,props.projectId,api]);
+  },[date,props.projectId,api,calendarRevision]);
   const [detail, setDetail] = useState<PlannerEvent | null>(null),
     [draft, setDraft] = useState<PlannerEvent | null>(null),
     [modal, setModal] = useState<
@@ -308,12 +309,13 @@ export function PlannerPage(props: Props) {
       end: "10:00",
       allDay: false,
       location: "",
-      source: "Eigener Kalender · Beispiel",
+      source: demo?"Eigener Kalender · Beispiel":"Vanilla",
+      readOnly:false, revision:0,
     });
   };
-  const save = (e: React.FormEvent) => {
+  const save = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!draft) return;
+    if (!draft || calendarSaving) return;
     try {
       parseDay(draft.date);
     } catch {
@@ -327,6 +329,10 @@ export function PlannerPage(props: Props) {
     ) {
       setFormError("Bitte Titel und eine Endzeit nach dem Beginn angeben.");
       return;
+    }
+    if(!demo){
+      setCalendarSaving(true);setFormError('');
+      try{await api('/calendar/local/save',{...draft,projectId:props.projectId});setCalendarRevision(n=>n+1);window.dispatchEvent(new Event('calendar-changed'));setDate(draft.date);setDraft(null);}catch(error){setFormError((error as Error).message);}finally{setCalendarSaving(false);}return;
     }
     setEvents((old) => [
       ...old.filter((item) => item.id !== draft.id),
@@ -392,7 +398,7 @@ export function PlannerPage(props: Props) {
         ))}
         {!onDay(key).length && (
           <p className="planner-empty">
-            {demo ? "Keine Termine" : "Keine synchronisierten Termine"}
+            Keine Termine in dieser Ansicht
           </p>
         )}
       </div>
@@ -434,10 +440,10 @@ export function PlannerPage(props: Props) {
           <button
             type="button"
             className="small-button primary"
-            onClick={() => (demo ? create() : props.onConnections())}
+            onClick={() => create()}
           >
             <Plus size={16} strokeWidth={undefined} />
-            {demo ? "Beispieltermin" : "Kalender verbinden"}
+            {demo ? "Beispieltermin" : "Termin hinzufügen"}
           </button>
         )}
       </PageHeading>
@@ -522,8 +528,7 @@ export function PlannerPage(props: Props) {
             ))}
             {!demo && (
               <p className="planner-empty">
-                Noch kein Kalender synchronisiert. Microsoft und weitere Quellen
-                werden über Verbindungen angeschlossen.
+                Dein Vanilla-Kalender ist bereit. Eigene Termine kannst du direkt anlegen. Externe Kalender werden über Verbindungen angeschlossen.
               </p>
             )}
             {demo && !onDay(today).length && (
@@ -873,10 +878,10 @@ export function PlannerPage(props: Props) {
             )}
           </div>
           <p className="planner-demo-note">
-{demo ? "Beispieltermin. Änderungen werden weder gespeichert noch an einen Kalender gesendet." : "Synchronisierter Termin. Änderungen und Einladungen erfolgen im verbundenen Kalender."}
+{demo ? "Beispieltermin. Änderungen werden weder gespeichert noch an einen Kalender gesendet." : detail.readOnly===false?"Vanilla-Termin. Lokal in diesem Arbeitsbereich gespeichert.":"Synchronisierter Termin. Änderungen und Einladungen erfolgen im verbundenen Kalender."}
           </p>
           <button
-            disabled={!demo}
+            disabled={!demo && detail.readOnly!==false}
             type="button"
             onClick={() => {
               setDraft({ ...detail });
@@ -884,17 +889,19 @@ export function PlannerPage(props: Props) {
               setFormError("");
             }}
           >
-            Beispiel bearbeiten
+            {demo?"Beispiel bearbeiten":"Termin bearbeiten"}
           </button>
+          {!demo&&detail.readOnly===false&&<button type="button" disabled={calendarSaving} onClick={async()=>{if(!window.confirm('Diesen Vanilla-Termin löschen?'))return;setCalendarSaving(true);try{await api('/calendar/local/delete',{id:detail.id,projectId:props.projectId,revision:detail.revision});setDetail(null);setCalendarRevision(n=>n+1);window.dispatchEvent(new Event('calendar-changed'));}catch(error){setFormError((error as Error).message);}finally{setCalendarSaving(false);}}}>Termin löschen</button>}
+          {formError&&<p role="alert">{formError}</p>}
         </Modal>
       )}
       {draft && (
         <Modal
           wide={false}
-          title="Beispieltermin bearbeiten"
+          title={demo?"Beispieltermin bearbeiten":"Vanilla-Termin"}
           onClose={() => setDraft(null)}
         >
-          <form className="planner-form" onSubmit={save}>
+          <form className="planner-form" onSubmit={save}><fieldset disabled={calendarSaving}>
             <label>
               Titel
               <input
@@ -968,7 +975,7 @@ export function PlannerPage(props: Props) {
                 }
               />
             </label>
-            <label>
+            {demo&&<label>
               Kontakt
               <select
                 value={draft.contactId || ""}
@@ -981,10 +988,9 @@ export function PlannerPage(props: Props) {
                   {demoContact.name} · Beispiel
                 </option>
               </select>
-            </label>
+            </label>}
             <p className="planner-demo-note">
-              Nur für diesen Entwurf. Beim Verlassen von Heute und Kalender
-              werden Bearbeitungen verworfen.
+              {demo?"Nur ein Beispiel. Änderungen werden nicht gespeichert.":"Wird im Vanilla-Kalender dieses Arbeitsbereichs gespeichert. Keine Einladung wird verschickt."}
             </p>
             {formError && (
               <p role="alert" className="planner-error">
@@ -995,11 +1001,11 @@ export function PlannerPage(props: Props) {
               <button type="button" onClick={() => setDraft(null)}>
                 Abbrechen
               </button>
-              <button type="submit" className="primary">
-                Im Beispiel übernehmen
+              <button type="submit" className="primary" disabled={calendarSaving}>
+                {calendarSaving?"Speichert …":demo?"Im Beispiel übernehmen":"Termin speichern"}
               </button>
             </div>
-          </form>
+          </fieldset></form>
         </Modal>
       )}
       {modal === "contact" && (

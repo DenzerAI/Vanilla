@@ -1139,22 +1139,29 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     setChatMenu(null);
     setTimeout(() => inputRef.current?.focus(), 50);
   }
-  async function openChat(id) {
+  const calendarRequestRef=useRef(null);
+  async function openCalendarReport() {
+    if(calendarRequestRef.current?.projectId!==projectRef.current)calendarRequestRef.current={projectId:projectRef.current,requestId:crypto.randomUUID()};
+    const result=await api('/calendar/chat',{...calendarRequestRef.current,worker:current?.workerId||draftWorker,model:pickerModel||model,serviceTier:current?.serviceTier||draftSpeed,mode});
+    await refreshChats();await openChat(result.thread.id,result.meta);calendarRequestRef.current=null;
+    if(result.summaryError)notify(result.summaryError);
+  }
+  async function openChat(id,restoredMetadata) {
     if (!embedded) {
       const existing = paneOrder.find(slot => sessions.current[slot].current?.id === id);
       if (existing != null && existing !== activePaneRef.current) { activatePane(existing); setView("chat"); return; }
       if (activePaneRef.current !== 0 && sessions.current[activePaneRef.current].current) {
         setView("chat");
-        return sessions.current[activePaneRef.current].current.openChat(id);
+        return sessions.current[activePaneRef.current].current.openChat(id,restoredMetadata);
       }
     }
-    return openChatHere(id);
+    return openChatHere(id,restoredMetadata);
   }
-  async function openChatHere(id) {
+  async function openChatHere(id,restoredMetadata) {
     if (busy) { notify("Bitte warten, bis die Nachricht übertragen wurde."); return; }
     if (chatRef.current === id) { setView("chat"); setModal(null); return; }
     saveDraft();
-    const metadata = chats.find((c) => c.id === id);
+    const metadata = restoredMetadata || chats.find((c) => c.id === id);
     chooseProject(metadata?.projectId || projectRef.current);
     setMode(metadata?.mode || "default");
     if (metadata?.model) setModel(metadata.model);
@@ -1905,6 +1912,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                   {id:"close-panel", label:`Panel ${paneNumber+1} schließen`, icon:icon(X,16), action:()=>embedded ? onClosePane?.() : closePane(0)},
                 ]}/>
               </div></div>}
+              {current?.calendarReportReady&&<div className="row"><button type="button" onClick={()=>{saveDraft();setView("calendar");}}>Kalender öffnen</button></div>}
               <ChapterScrubber className="message-index" reduceMotion={boot.settings.reduceMotion === "on"}
                 chapters={(thread?.turns || []).filter(t=>t.items?.some(i=>i.type === "userMessage")).map((t,n)=>({
                   id:t.id, title:`Eingabe ${n+1}`, meta:<MessageTime value={t.startedAt}/>,
@@ -1923,6 +1931,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 ) : !thread?.turns?.length ? (
                   <ChatStart api={api} routines={!!boot.features?.routines} revision={libraryRevision} composing={!!text.trim() || attachments.length>0} greeting={greeting} profile={boot.settings} requests={requests} notifications={notificationState.data?.items || []} chats={chats} projectId={projectId} error={notificationState.error}
                     onOpen={async item=>{
+                      if(item.kind==='calendar'){await openCalendarReport();return;}
                       if(item.kind==='weather'){openSettings('user');return;}
                       if(item.prompt){setText(item.prompt);inputRef.current?.focus();return;}
                       if(item.entry){setModal({type:'library-file',entry:item.entry,entries:[item.entry]});return;}

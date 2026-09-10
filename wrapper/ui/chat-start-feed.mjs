@@ -4,9 +4,9 @@ export const conversationStarters = [
   {id:'file',kind:'prompt',title:'Eine Datei verstehen',description:'Das Wesentliche finden und besprechen.',prompt:'Ich möchte eine Datei mit dir besprechen. Bitte warte, bis ich sie angehängt habe.'},
   {id:'project',kind:'prompt',title:'Projekt erkunden',description:'Überblick gewinnen und weiterkommen.',prompt:'Gib mir einen kurzen Überblick über dieses Projekt und seine nächsten Schritte.'},
 ];
-/** @param {{requests?: any[], notifications?: any[], chats?: any[], projectId?: string, jobs?: any[], entries?: any[], reports?: any[], now?: number, includeWeather?: boolean, userProfile?: {name?:string,location?:string}, profileError?: boolean, weather?:any}} options
+/** @param {{requests?: any[], notifications?: any[], chats?: any[], projectId?: string, jobs?: any[], entries?: any[], reports?: any[], now?: number, includeWeather?: boolean, includeCalendar?: boolean, calendar?:any, userProfile?: {name?:string,location?:string}, profileError?: boolean, weather?:any}} options
  * @returns {any[]} */
-export function chatStartFeed({requests=[],notifications=[],chats=[],projectId='default',jobs:scheduledJobs=[],entries=[],reports=[],now=Date.now(),includeWeather=false,userProfile={},profileError=false,weather=null}={}) {
+export function chatStartFeed({requests=[],notifications=[],chats=[],projectId='default',jobs:scheduledJobs=[],entries=[],reports=[],now=Date.now(),includeWeather=false,includeCalendar=false,calendar=null,userProfile={},profileError=false,weather=null}={}) {
   const result=[], seen=new Set();
   for(const request of requests) {
     const threadId=request.params?.threadId;
@@ -40,8 +40,9 @@ export function chatStartFeed({requests=[],notifications=[],chats=[],projectId='
   const candidates=[...urgent.slice(0,2),...result.filter(i=>i.kind==='chat'),newReport,continueCard,jobCard,...urgent.slice(2)].filter(Boolean);
   const unique=new Set();const mixed=candidates.filter(item=>{if(unique.has(item.id))return false;unique.add(item.id);return true;});
   if(!mixed.length)mixed.push(conversationStarters[0]);
-  const chosen=mixed.slice(0,includeWeather?4:5);
+  const chosen=mixed.slice(0,5-Number(includeWeather)-Number(includeCalendar));
   if(includeWeather)chosen.push({id:'weather',kind:'weather',title:userProfile.location||'Dein Wetter',weather:profileError?null:weather,weatherConfigured:!!userProfile.location,description:profileError?'Dein Wetterort konnte nicht geladen werden.':userProfile.location?weatherDescription(weather):'Dein Ort ist noch nicht eingerichtet.'});
+  if(includeCalendar)chosen.push({id:'calendar',kind:'calendar',title:'Dein Tag',description:'Termine und freie Zeit gemeinsam planen',calendar});
   return chosen;
 }
 export function startHeadline(kind, fallback) {
@@ -57,6 +58,7 @@ export function friendlyFileTitle(name='') {
 }
 export function headlineForItem(item, fallback) {
  if(!item)return fallback;
+ if(item.kind==='calendar')return 'Schauen wir auf deinen Tag.';
  if(item.continuation)return 'Hier können wir weitermachen.';
  if(item.kind==='weather'&&item.weatherConfigured)return item.weather?.status==='ready'?'So sieht das Wetter bei dir aus.':'Dein Wetterort ist hinterlegt.';
  if(item.kind==='artifact') {
@@ -69,6 +71,6 @@ export function headlineForItem(item, fallback) {
 export function headlinesForItem(item, fallback) {
  const first=headlineForItem(item,fallback);
  if(!item)return [first];
- const detail=({request:'Mit deiner Antwort können wir weitermachen.',notice:'Den Hinweis findest du auf der Karte.',report:'Dein Ergebnis liegt hier zum Ansehen bereit.',artifact:'Der letzte Stand liegt hier für dich bereit.',job:'Die Einzelheiten findest du auf der Karte.',weather:item.weatherConfigured?'Wetter und Ort findest du in deinem Profil.':'Deinen Ort kannst du im Profil festlegen.',chat:'Wir können direkt daran anknüpfen.',prompt:'Wir können mit einer kleinen Idee anfangen.'})[item.kind];
+ const detail=({calendar:'Deine Termine und wo noch Luft ist.',request:'Mit deiner Antwort können wir weitermachen.',notice:'Den Hinweis findest du auf der Karte.',report:'Dein Ergebnis liegt hier zum Ansehen bereit.',artifact:'Der letzte Stand liegt hier für dich bereit.',job:'Die Einzelheiten findest du auf der Karte.',weather:item.weatherConfigured?'Wetter und Ort findest du in deinem Profil.':'Deinen Ort kannst du im Profil festlegen.',chat:'Wir können direkt daran anknüpfen.',prompt:'Wir können mit einer kleinen Idee anfangen.'})[item.kind];
  return detail&&detail!==first?[first,detail]:[first];
 }

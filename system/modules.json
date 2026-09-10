@@ -92,7 +92,7 @@
       "stage": "partial",
       "contract": "docs/PLANNER.md",
       "setup": "docs/CUSTOMER-SETUP.md#planner",
-      "data": "Installationsdaten in data/control und workspaces; Code enthält keine Kundendaten.",
+      "data": "Eigene Termine in calendar_local, externe Projektionen in calendar_windows, Tagesberichte als bestehende Chat-Handoff-Snapshots; alles im lokalen Datenordner.",
       "sources": [
         "core/calendar.py",
         "wrapper/ui/planner-briefings.mjs",
@@ -100,7 +100,11 @@
         "wrapper/ui/planner-dates.mjs",
         "wrapper/ui/planner-demo.ts",
         "wrapper/ui/planner.css",
-        "wrapper/ui/planner.tsx"
+        "wrapper/ui/planner.tsx",
+        "wrapper/calendar-chat.mjs",
+        "wrapper/ui/calendar-day.mjs",
+        "wrapper/ui/calendar-card.tsx",
+        "wrapper/ui/calendar-card.css"
       ],
       "entrypoints": [
         "GET /api/calendar/events",
@@ -108,7 +112,12 @@
         "POST /api/calendar/sync",
         "POST /api/calendar/tool",
         "POST /api/planner/chat",
-        "POST /internal/calendar/tool"
+        "POST /internal/calendar/tool",
+        "GET /api/calendar/day",
+        "GET /internal/calendar/day",
+        "POST /api/calendar/local/save",
+        "POST /api/calendar/local/delete",
+        "POST /api/calendar/chat"
       ],
       "dependencies": [
         "connections",
@@ -116,15 +125,16 @@
       ],
       "verification": [
         "core/tests/test_calendar.py",
-        "wrapper/test/planner-data.test.mjs"
+        "wrapper/test/planner-data.test.mjs",
+        "wrapper/test/calendar-day.test.mjs"
       ],
       "status": {
         "endpoint": "GET /api/calendar/events",
         "meaning": "Gespeicherte Termine, letzter erfolgreicher Abgleich, Fehler und abgedeckter Zeitraum je Anschluss. Keine Feeds bedeutet noch keinen erfolgreichen Kalenderabgleich."
       },
-      "limits": "Microsoft-Kalender lesen mit Paging und vollständigem Zeitfenster; Änderungen und Einladungen erfolgen beim Anbieter. Höchstens 93 Tage und 10.000 Vorkommen pro Abruf. Wetter und fachliche Briefing-Typisierung sind noch nicht implementiert.",
-      "version": 1,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten.",
+      "limits": "Eigene Einzeltermine anlegen, ändern und löschen. Externe Quellen getrennt zusammen anzeigen; Microsoft liest vollständig abgeglichene Fenster, keine externen Schreibaktionen. Weitere Anbieter benötigen eigene Adapter. Lücken sind Kalenderlücken innerhalb des ausdrücklich genannten Fensters 08–18 Uhr, keine Verfügbarkeitsgarantie.",
+      "version": 2,
+      "migration": "Version 2 legt calendar_local additiv und idempotent an. Eigene Termine und Löschmarkierungen bleiben in der vorhandenen SQLite-Sicherung erhalten; externe calendar_windows unverändert. Rückkehr zu Version 1 lässt lokale Termine auf Disk bestehen, zeigt sie aber nicht. Neuinstallation, Wiederöffnung, Projekttrennung und Versionskonflikte sind geprüft.",
       "keywords": [
         "Microsoft",
         "Outlook",
@@ -311,8 +321,8 @@
         "meaning": "Eingerichtet, verbunden und authentifiziert getrennt auswerten."
       },
       "limits": "Eingerichtet, verbunden und authentifiziert getrennt auswerten.",
-      "version": 2,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 3,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Tageschat verwendet vorhandene Handoff-Snapshots und optionale calendarReportReady/calendarSummaryError-Metadaten; ältere Chats bleiben unverändert lesbar."
     },
     {
       "id": "speech",
@@ -939,8 +949,8 @@
         "meaning": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen."
       },
       "limits": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen.",
-      "version": 1,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 2,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Additive Kalender-Typografierolle und Kalenderzweig im vorhandenen AttentionFan; keine persistente UI-Datenmigration."
     },
     {
       "id": "weather",

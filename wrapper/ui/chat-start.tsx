@@ -1,3 +1,4 @@
+import {useCalendarDay} from './calendar-card';
 import {Skeleton} from './skeleton';
 import {useChatStartData} from './chat-start-data';
 import {useMemo,useState,useCallback} from 'react';
@@ -7,7 +8,8 @@ import {ChatStartHeading} from './chat-start-heading';
 import {Avatar} from './avatar.jsx';
 export function ChatStart({greeting,profile,requests,notifications,chats,projectId,onOpen,error,composing=false,api,routines=false,revision=0}:{greeting:string;profile:any;requests:any[];notifications:any[];chats:any[];projectId:string;onOpen:(item:AttentionItem)=>Promise<void>|void;error?:string;composing?:boolean;api?:any;routines?:boolean;revision?:number}) {
   const data=useChatStartData(api,routines,revision);
-  const items=useMemo(()=>chatStartFeed({requests,notifications,chats,projectId,...data,includeWeather:true}),[requests,notifications,chats,projectId,data]);
+  const calendar=useCalendarDay(api,projectId);
+  const items=useMemo(()=>chatStartFeed({requests,notifications,chats,projectId,...data,calendar,includeCalendar:true,includeWeather:true}),[requests,notifications,chats,projectId,data,calendar]);
   const [selected,setSelected]=useState(''),[busy,setBusy]=useState(false),[failure,setFailure]=useState(''),[interacting,setInteracting]=useState(false);
   const choose=useCallback((item:AttentionItem)=>setSelected(item.id),[]);
   const open=async(item:AttentionItem)=>{if(busy)return;setBusy(true);setFailure('');try{await onOpen(item);}catch(e){setFailure((e as Error).message || 'Das Gespräch konnte nicht geöffnet werden. Bitte versuche es erneut.');}finally{setBusy(false);}};

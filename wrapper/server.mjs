@@ -1,3 +1,4 @@
+import {calendarChatOpener} from './calendar-chat.mjs';
 import {installWeatherRoutes} from './weather.mjs';
 import {installationEnvironment} from './worker-environment.mjs';
 import {chatArchiveUpdater} from './chat-archive.mjs';
@@ -677,6 +678,8 @@ route("GET", "/api/bootstrap", async () => {
 });
 const updateChat = chatArchiveUpdater({store, workers, active, turnLocks, voiceSessions, loaded, restartGate, emit});
 const openBriefingChat = briefingChatOpener({store, newChat, cache:threadCache, emit, updateChat});
+const openCalendarChat=calendarChatOpener({store,readDay:projectId=>coreRequest('calendar/day?'+new URLSearchParams({projectId})),openBriefing:openBriefingChat,sendTurn,isRestarting:()=>restartGate.restarting});
+route('POST','/api/calendar/chat',b=>{const policy=runMode(b.mode);return openCalendarChat({requestId:b.requestId,projectId:b.projectId,selection:{worker:b.worker||'auto',model:b.model,serviceTier:b.serviceTier||null,mode:policy.mode,permission:policy.permission}});});
 route("POST", "/api/planner/chat", async b => {
   let item;
   if (b.demoDate) {

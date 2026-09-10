@@ -2,10 +2,12 @@
 import asyncio
 import hashlib
 import json
+import re
+from uuid import UUID
 from datetime import date, datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 from fastapi import APIRouter, Request
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 def window(start, end):
@@ -22,6 +24,23 @@ class Sync(BaseModel):
     end: str
 
 
+class LocalEvent(BaseModel):
+    id: str
+    projectId: str = 'default'
+    revision: int = Field(default=0, ge=0)
+    title: str = Field(min_length=1, max_length=160)
+    date: str
+    start: str = ''
+    end: str = ''
+    allDay: bool = False
+    location: str = Field(default='', max_length=160)
+
+class LocalDelete(BaseModel):
+    id: str
+    projectId: str = 'default'
+    revision: int = Field(ge=1)
+
+
 class Calendar:
     def __init__(self, db, config, runtime, project):
         self.db, self.config, self.runtime, self.project = db, config, runtime, project
@@ -29,6 +48,49 @@ class Calendar:
         self.task = None
         with db.lock:
             db.connection.execute('CREATE TABLE IF NOT EXISTS calendar_windows(connection TEXT NOT NULL, project TEXT NOT NULL, start TEXT NOT NULL, end TEXT NOT NULL, data TEXT NOT NULL, synced TEXT, error TEXT NOT NULL, PRIMARY KEY(connection,project,start,end))')
+            db.connection.execute('CREATE TABLE IF NOT EXISTS calendar_local(id TEXT NOT NULL, project TEXT NOT NULL, date TEXT NOT NULL, data TEXT NOT NULL, revision INTEGER NOT NULL, PRIMARY KEY(id,project))')
+
+    def save_local(self, body):
+        b=LocalEvent.model_validate(body); self.project(b.projectId)
+        UUID(b.id)
+        day=date.fromisoformat(b.date); zone=ZoneInfo(self.config.timezone)
+        if not b.title.strip(): raise ValueError('Bitte einen Titel angeben.')
+        if b.allDay:
+            a=datetime.combine(day,datetime.min.time(),zone)
+            z=datetime.combine(day+timedelta(days=1),datetime.min.time(),zone)
+        else:
+            def instant(value):
+                if not re.fullmatch(r'(?:[01]\d|2[0-3]):[0-5]\d',value): raise ValueError('Ungültige Uhrzeit.')
+                naive=datetime.fromisoformat(b.date+'T'+value)
+                first=naive.replace(tzinfo=zone,fold=0); second=naive.replace(tzinfo=zone,fold=1)
+                if first.astimezone(timezone.utc).astimezone(zone).replace(tzinfo=None)!=naive or first.utcoffset()!=second.utcoffset():
+                    raise ValueError('Diese Uhrzeit ist wegen der Zeitumstellung nicht eindeutig. Bitte eine andere Uhrzeit wählen.')
+                return first
+            a,z=instant(b.start),instant(b.end)
+            if z<=a: raise ValueError('Das Ende muss nach dem Beginn liegen.')
+        value={'id':b.id,'title':b.title.strip(),'date':b.date,'start':'' if b.allDay else b.start,'end':'' if b.allDay else b.end,'allDay':b.allDay,'location':b.location.strip(),'source':'Vanilla','connectionId':'local','timezone':self.config.timezone,'startsAt':a.isoformat(),'endsAt':z.isoformat(),'readOnly':False}
+        with self.db.transaction() as cx:
+            old=cx.execute('SELECT revision,data FROM calendar_local WHERE id=? AND project=?',(b.id,b.projectId)).fetchone()
+            revision=old['revision'] if old else 0
+            if old and json.loads(old['data'])==value: return {**value,'revision':revision}
+            if revision!=b.revision: raise ValueError('Der Termin wurde inzwischen geändert. Bitte neu öffnen.')
+            revision+=1
+            cx.execute('INSERT INTO calendar_local VALUES(?,?,?,?,?) ON CONFLICT(id,project) DO UPDATE SET date=excluded.date,data=excluded.data,revision=excluded.revision',(b.id,b.projectId,b.date,json.dumps(value),revision))
+        return {**value,'revision':revision}
+
+    def delete_local(self, body):
+        b=LocalDelete.model_validate(body); self.project(b.projectId); UUID(b.id)
+        with self.db.transaction() as cx:
+            old=cx.execute('SELECT revision,date FROM calendar_local WHERE id=? AND project=?',(b.id,b.projectId)).fetchone()
+            if not old or old['date']=='': return {'deleted':True}
+            if old['revision']!=b.revision: raise ValueError('Der Termin wurde inzwischen geändert. Bitte neu öffnen.')
+            cx.execute("UPDATE calendar_local SET date='',data='{}',revision=revision+1 WHERE id=? AND project=?",(b.id,b.projectId))
+        return {'deleted':True}
+
+    def day(self, project):
+        now=datetime.now(ZoneInfo(self.config.timezone)); day=now.date()
+        data=self.read(project,day.isoformat(),(day+timedelta(days=1)).isoformat())
+        return {**data,'date':day.isoformat(),'now':now.isoformat(),'windowStart':now.replace(hour=8,minute=0,second=0,microsecond=0).isoformat(),'windowEnd':now.replace(hour=18,minute=0,second=0,microsecond=0).isoformat()}
 
     def normalize(self, items, connection, start, end):
         result = []
@@ -128,9 +190,12 @@ class Calendar:
         for feed in feeds:
             if feed['connection'] not in connected:
                 feed['error']=feed['error'] or 'Kalenderanschluss nicht mehr eingerichtet; gespeicherter historischer Stand.'
-        return {'events':sorted([e for f in feeds for e in json.loads(f['data']) if start<=e['date']<end],key=lambda e:(e['date'],not e['allDay'],e['start'],e['id'])),
+        local=[{**json.loads(r['data']),'revision':r['revision']} for r in self.db.rows('SELECT * FROM calendar_local WHERE project=? AND date>=? AND date<?',(project,start,end))]
+        missing=connected-{f['connection'] for f in feeds}
+        feeds.extend({'connection':id,'project':project,'start':start,'end':end,'synced':None,'error':'Noch kein erfolgreicher Abgleich.','data':'[]'} for id in missing)
+        return {'localReady':True,'events':sorted(local+[e for f in feeds for e in json.loads(f['data']) if start<=e['date']<end],key=lambda e:(e['date'],not e['allDay'],e['start'],e['id'])),
                 'feeds':[{k:v for k,v in f.items() if k!='data'}|{'covered':f['start']<=start and f['end']>=end} for f in feeds],
-                'start':start,'end':end,'timezone':self.config.timezone,'readOnly':True}
+                'start':start,'end':end,'timezone':self.config.timezone,'readOnly':False}
 
 
 def routes(calendar):
@@ -139,6 +204,13 @@ def routes(calendar):
     async def events(projectId: str='default', start: str='',end: str=''):
         today=date.today()
         return calendar.read(projectId,start or today.isoformat(),end or (today+timedelta(days=31)).isoformat())
+    @router.get('/api/calendar/day')
+    @router.get('/internal/calendar/day')
+    async def day(projectId: str='default'): return calendar.day(projectId)
+    @router.post('/api/calendar/local/save')
+    async def save_local(b: LocalEvent): return calendar.save_local(b.model_dump())
+    @router.post('/api/calendar/local/delete')
+    async def delete_local(b: LocalDelete): return calendar.delete_local(b.model_dump())
     @router.post('/api/calendar/sync')
     async def sync(b: Sync): return await calendar.sync(b)
     @router.post('/api/calendar/tool')

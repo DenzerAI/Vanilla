@@ -1,3 +1,4 @@
+import {CalendarCardContent} from '../../calendar-card';
 import {MapPin} from 'lucide-react';
 import {LibraryThumbnail} from '../../library-thumbnail.jsx';
 "use client";
@@ -6,7 +7,7 @@ import {motion,useReducedMotion} from 'motion/react';
 import {ArrowUpRight,Bell,FileText,MessageCircle,BrainCircuit,ChevronLeft,ChevronRight,Clock} from '../../icons.jsx';
 import {attentionFanMotion} from '../../design-system.mjs';
 import './attention-fan.css';
-export interface AttentionItem {id:string;kind:string;title:string;description:string;prompt?:string;continuation?:boolean;threadId?:string;noticeId?:string;entry?:any;job?:any;weather?:any;weatherConfigured?:boolean;}
+export interface AttentionItem {id:string;kind:string;title:string;description:string;prompt?:string;continuation?:boolean;threadId?:string;noticeId?:string;entry?:any;job?:any;calendar?:any;weather?:any;weatherConfigured?:boolean;}
 export function AttentionFan({items,onOpen,onActiveChange,reduceMotion=false,disabled=false}:{items:AttentionItem[];onOpen:(item:AttentionItem)=>void;onActiveChange?:(item:AttentionItem)=>void;reduceMotion?:boolean;disabled?:boolean}) {
   const [selected,setSelected]=useState<string|null>(null),[hovered,setHovered]=useState<string|null>(null);
   const index=Math.max(0,items.findIndex(item=>item.id===selected)), active=items[index];
@@ -34,11 +35,13 @@ export function AttentionFan({items,onOpen,onActiveChange,reduceMotion=false,dis
           onFocus={e=>{if(e.currentTarget.matches(':focus-visible'))setHovered(item.id);}} onBlur={()=>setHovered(null)}
           disabled={disabled} aria-label={item.title+(isActive||isHovered?' öffnen':' auswählen')} aria-current={isActive?'true':undefined}
           onClick={()=>{if(Date.now()<ignoreClick.current)return;isActive||isHovered?onOpen(item):select(i);}}>
+          {item.kind==='calendar'?<CalendarCardContent data={item.calendar} preview={item.calendar?.preview}/>:<>
           <span className="attention-fan-kind"><Icon size={20} strokeWidth={undefined}/><span>{item.continuation?'Weitermachen':({weather:'Wetter',artifact:'Zum Weitermachen',job:'Als Nächstes',request:'Braucht dich',notice:'Hinweis',report:'Für dich',chat:'Neue Antwort',prompt:'Mit dir'})[item.kind as 'request']}</span></span>
           {item.kind==='artifact'&&item.entry&&<LibraryThumbnail key={item.entry.id || item.entry.path} entry={item.entry} variant="card"/>}
           <strong>{item.title}</strong>{item.description&&<span className="attention-fan-description">{item.description}</span>}
           {item.kind==='weather'&&item.weather?.status==='ready'&&<span className="attention-fan-action">Open-Meteo · Stand {new Date(item.weather.time).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}</span>}
           <span className="attention-fan-action"><span>{item.kind==='artifact'?'Weitermachen':item.kind==='weather'?(item.weatherConfigured?'Wetter & Ort':'Ort einstellen'):item.kind==='chat'?'Gespräch öffnen':item.kind==='report'?'Ergebnis besprechen':item.kind==='job'?'Auftrag ansehen':item.kind==='request'?'Antworten':item.kind==='notice'?'Hinweis ansehen':'Entwurf vorbereiten'}</span><ArrowUpRight className="attention-fan-arrow" size={18} strokeWidth={undefined}/></span>
+          </>}
         </motion.button>;
       })}
     </div>

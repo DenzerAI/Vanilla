@@ -719,3 +719,13 @@ Farben, Schrift und Abstände verwenden weiter die zentrale Designquelle.
 Build-Herkunft und Datei-Hashes machen veraltete Ausgaben erkennbar; die visuelle
 Abnahme bleibt notwendig. Eine lokale Erweiterung übernimmt die gemeinsamen
 Bausteine und dokumentiert fachlich notwendige Abweichungen im Bereichsvertrag.
+
+## Kalender im Glasfächer
+
+CalendarCardContent verwendet den vorhandenen AttentionFan ohne eigene Kartenmaße.
+Datum in der zentralen Rolle calendar (56 px), Wochentag und Countdown mit
+brand-accent, Monat/KW und Folgetermin mit muted. Der nächste Titel ist maximal
+zweizeilig; ein Folgetermin einzeilig mit Ellipse. Keine zusätzliche Daueranimation.
+Die Kalenderkachel folgt Fächerbewegung, Reduced Motion und Kontrastvorgaben.
+CalendarPreview zeigt denselben Produktionsbaustein mit markierten Beispieldaten in
+Unser Design und damit im gemeinsamen UI-Bauplan. Verhalten: surfaces/chat.md.
