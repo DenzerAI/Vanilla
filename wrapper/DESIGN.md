@@ -724,8 +724,9 @@ Bausteine und dokumentiert fachlich notwendige Abweichungen im Bereichsvertrag.
 
 CalendarCardContent verwendet den vorhandenen AttentionFan ohne eigene Kartenmaße.
 Datum in der zentralen Rolle calendar (56 px), Wochentag und Countdown mit
-brand-accent, Monat/KW mit muted. Ohne weiteren heutigen Termin sind auch
-Wochentag, Tageszahl und Leerzustand muted; es gibt keine farbige Betonung.
+brand-accent, Monat/KW mit muted. Ohne weiteren heutigen Termin ist nur der
+Hinweis unter Monat/KW muted. Wochentag behält brand-accent, die Tageszahl
+behält die normale helle Textfarbe im dunklen Design.
 Nur der nächste Termin steht auf der Karte: Countdown und Uhrzeit zusammen,
 der Titel darunter maximal zweizeilig. Weitere Termine stehen im Tagesbericht.
 Unvollständige oder veraltete Daten heißen „Termine möglicherweise nicht aktuell“.

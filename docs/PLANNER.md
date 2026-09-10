@@ -157,6 +157,7 @@ App-Bereich zur vorhandenen Übersicht; der aktuelle Entwurf bleibt erhalten.
 Datum und Uhrzeiten der produktiven Kalenderansicht folgen der Installationszeitzone; die Zeitzone steht auch im lokalen Termindialog. Ein anderer Browserstandort ändert keine gespeicherten Terminzeiten.
 
 Die Tageskachel zeigt nur den nächsten heutigen Termin; weitere Termine bleiben im
-Tagesbericht. Terminfreie Tage erscheinen gedämpft ohne Akzentfarbe. Unvollständige
+Tagesbericht. Bei terminfreien Tagen erscheint nur der Leerhinweis gedämpft;
+Wochentag und Tageszahl behalten ihre Farben. Unvollständige
 oder veraltete Quellen tragen den Hinweis „Termine möglicherweise nicht aktuell“
 und werden nicht als terminfreier Tag dargestellt.

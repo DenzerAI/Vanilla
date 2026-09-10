@@ -459,8 +459,9 @@ höchstens fünf Karten. CalendarCardContent zeigt Wochentag, große Tageszahl,
 Monat und ISO-KW mit denselben Glasmaßen und zentraler Typografierolle calendar.
 Der nächste laufende oder kommende heutige Termin erhält Titel und Countdown;
 weitere Termine erscheinen erst im Tagesbericht. Countdown und Uhrzeit stehen
-gemeinsam über dem Titel. Ohne nächsten Termin bleibt die Karte ohne Akzentfarbe
-gedämpft. Ganztägig und Läuft gerade sind eigene Angaben.
+gemeinsam über dem Titel. Ohne nächsten Termin ist nur der Leerhinweis unter
+Monat/KW gedämpft; Wochentag und Tageszahl behalten ihre Farben.
+Ganztägig und Läuft gerade sind eigene Angaben.
 Veraltete oder unvollständige Quellen werden als „Termine möglicherweise nicht
 aktuell“ erklärt, statt zum unklaren „Stand prüfen“ aufzufordern.
 Ohne weitere heutige Termine kein Countdown auf morgen. Datum und Countdown
