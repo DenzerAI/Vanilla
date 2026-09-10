@@ -139,6 +139,8 @@ noch Docker-Socket sind schreibbar eingebunden. Zurück kommt ausschließlich
 ein größenbegrenztes, pfadgeprüftes UI-Buildarchiv.
 Temporäre Testdateien liegen außerhalb des synthetischen Git-Repositories;
 ausführbare Testprogramme bleiben auf die isolierten Dateisysteme beschränkt.
+Der UI-Build entsteht vor den Schnittstellentests, die diesen Build verwenden;
+sein Quellabgleich wird nach den Tests erneut geprüft.
 Eine bloße
 Arbeitskopie zählt nicht als Isolation. Schlägt ein Test wegen fehlender
 Sandboxfähigkeiten fehl, gibt es kein Ausweichen auf ungeschützte Ausführung.

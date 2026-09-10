@@ -59,7 +59,12 @@ t.join();s.close()
         except Exception:
             # Explicit acceptance command uses only a clean, public fixture clone.
             for log in sorted((parent / 'checks').glob('*.log')):
-                print(log.read_text(errors='replace')[-12000:])
+                content = log.read_text(errors='replace')
+                lines = content.splitlines()
+                failures = [i for i, line in enumerate(lines) if line.startswith('not ok ') or line.startswith('FAILED ')]
+                for i in failures[:20]:
+                    print('\n'.join(lines[max(0, i-2):i+45])[:6000])
+                print(content[-12000:])
             raise
         print('Isolationsgrenzen und alle', len(checks), 'Kandidatenprüfungen bestanden.')
 

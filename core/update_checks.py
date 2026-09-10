@@ -112,9 +112,10 @@ class Preparation:
                 ("Lokale Firmenbasis", ["node", "scripts/init-company.mjs"]),
                 ("Datenschutz", [python, "scripts/security-scan.py", "--index"]),
                 ("Modulverträge", [python, "scripts/verify-modules.py"]),
+                ("Oberfläche und Typen", ["npm", "run", "ui:prepare"]),
                 ("Funktionen", ["npm", "test"]),
                 ("Kernfunktionen", [python, "-m", "pytest", "-q"]),
-                ("Oberfläche und Typen", ["npm", "run", "ui:prepare"]),
+                ("Oberflächenstand", ["npm", "run", "ui:verify"]),
             ]:
                 if self.runtime.product_updates:
                     self.runtime.product_updates.journal(run, checks=list(checks), phase=name)
