@@ -148,3 +148,18 @@ Der getrennte Skilltree ist fertig gebaut und wird bereits über die bestehende 
 - Die vorhandenen Memory-Verlustfälle des Quellaudits sind nicht vollständig behoben oder abgenommen.
 - Restic ist optional; lokales Backup ist noch kein vollständiges ausfallsicheres Wiederherstellungskonzept. Vollständiger Betriebsumfang, eigene Zugänge und echter Restore-Test bleiben offen.
 - Der Scanner erkennt bekannte Muster; er beweist nicht die Abwesenheit unbekannter Namen oder kodierter Geheimnisse.
+
+## Entwicklungsstand Sicherung und Wiederanlauf
+
+Der Betriebsanschluss unterstützt Sicherungsschema 4, atomare Archiveinrichtung,
+Restore mit Rückkehrjournal und anschließender ausdrücklicher Betriebsfreigabe.
+Offene alte Aufträge und Sendungen werden nicht automatisch wiederholt.
+Der vorhandene kontrollierte Neustart kehrt über den Server-Shutdown zum
+execv-Startweg zurück; ein Prozessabsturz bleibt Aufgabe des freigegebenen
+Hostdienstes. Zustand, Grenzen und Migration führt [OPERATIONS.md](docs/OPERATIONS.md#sicherung-und-wiederanlauf-betriebsgrenzen).
+
+Automatisierte Abnahme verwendet echte verschlüsselte restic-Archive und eine
+separate synthetische Zielinstallation, einschließlich beschädigter Bestände und
+abgebrochener Dateitausche. Der OS-Schlüsselspeicher ist dabei simuliert; die
+native Schlüsselablage und ein tatsächlicher Rechnerneustart benötigen weiterhin
+eine eigene Geräteabnahme. Quellcode und Testnachweis aktivieren keinen Hostdienst.

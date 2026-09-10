@@ -38,8 +38,7 @@ Installationen. `…heartbeat` ruft `python -m core.heartbeat` alle 60 Sekunden 
 ```sh
 .venv/bin/python -m core.service status
 .venv/bin/python -m core.service install
-# Nur bei bereits gestopptem manuellem Kern aktivieren:
-.venv/bin/python -m core.service install --activate
+# Die Aktivierung übernimmt der freigegebene Host-Operator aus README.md.
 .venv/bin/python -m core.service uninstall
 ```
 
@@ -348,3 +347,60 @@ Indexinvalidierung. Ohne gesetzten Modellpfad wird nur diese echte Modellprobe
 übersprungen; Download-/Reparaturfehler werden mit isolierten Testdateien geprüft.
 Trennen: explizite Modellkonfiguration entfernen beziehungsweise den verwalteten
 Modellordner bei gestopptem Kern entfernen; Wortsuche und Originale bleiben erhalten.
+
+## Sicherung und Wiederanlauf: Betriebsgrenzen
+
+Sicherungsschema 4 ergänzt die vorhandenen Daten um lokale Kanal- und
+Nachrichtenablagen für den Legacy-Import. Im integrierten Betrieb bleiben ihre
+SQLite-Datensätze führend. Neue Sicherungen prüfen alle Wurzeln und Dateihashes;
+Schema 2 und 3 bleiben lesbar. Archivziel, verschlüsselter Schlüssel und
+Schlüsselmetadaten werden erst nach erfolgreicher Archivprüfung gemeinsam
+übernommen. Alte Archivschlüssel bleiben beim Zielwechsel erhalten. Ziele
+innerhalb einer gesicherten Firmenbasis sind ebenso ausgeschlossen wie Workspace
+und Systemdaten. Eine fehlgeschlagene Entpackung entfernt ihre Arbeitskopie;
+nach einem Prozessabbruch entfernt der nächste Start verbliebene Backup-Arbeitskopien.
+
+Der vorhandene Wartungs-Lock verbindet Sicherung und Restore mit dem Neustart.
+Laufende Aufträge, Gespräche und aktive Eingangskanäle verhindern die Übernahme;
+Kanäle vorher ausdrücklich anhalten. Währenddessen werden neue öffentliche
+Schreibzugriffe und Worker-Übergaben abgewiesen. Der Adapter erhält eine eigene
+Sicherungspause. Sie muss bei Integration des Update-Operators unabhängig von
+dessen Update-Pause bestehen bleiben: Das Freigeben einer Pause darf die andere
+nicht aufheben. Kein zusätzlicher Supervisor wird installiert.
+
+Offline-Restore kopiert zuerst alle Bestandteile, schreibt Dateien und Journal
+auf den Datenträger und tauscht dann den Bestand. Unterbrochene Übernahmen
+rollen beim nächsten Start zurück; ein bereits abgeschlossener Tausch stellt
+seinen fehlenden Abschlussnachweis wieder her. Alte Bestände bleiben als lokale
+Rückkehrkopien erhalten und werden nicht durch die normale Aufbewahrung gelöscht.
+Sie und geprüfte Restore-Arbeitskopien enthalten sensible Daten; lokale
+Datenträgerverschlüsselung bleibt eine Eigenschaft des Kundengeräts.
+
+Nach erfolgreichem Restore bleibt `restore-hold.json` aktiv. Die Oberfläche ist
+zum Prüfen erreichbar; Auftragsplanung, Postfach-/Kalenderabruf und automatischer
+Versand pausieren. Offene Ausführungen werden als unterbrochen, offene
+Nachrichtenübergaben und Benachrichtigungen als unbestätigt übernommen.
+App-Sitzungen werden ungültig. Zeitpläne holen keine Termine vor der Übernahme
+nach; vorhandene Ereigniscursor überspringen alte Ereignisse. Ausstehende
+Einmalaufträge benötigen bei Bedarf einen neuen ausdrücklichen Auftrag.
+Unter **Speicher & Sicherung → Geprüft · Betrieb fortsetzen** wird die Pause
+mit anschließendem Neustart aufgehoben. Unbestätigte alte Sendungen bleiben
+weiterhin zur Einzelprüfung gesperrt. Vorher die alte Installation beenden,
+Ergebnisse beim Anbieter abgleichen und native Worker-/Kanal-Anmeldungen am
+Ziel erneut einrichten. Der Archivstand kann spätere externe Aktionen nicht kennen.
+
+`status.backup` unterscheidet nicht eingerichtet, deaktiviert, unvollständig,
+laufend, veraltet, Fehler und bereit. Der letzte erfolgreiche Snapshot bleibt
+getrennt vom letzten Versuch sichtbar. „Bereit“ bedeutet Archiv erstellt und
+5-Prozent-Stichprobe geprüft; es behauptet keinen vollständigen Restore-Test.
+Heartbeat-Ergebnisse älter als 150 Sekunden gelten als veraltet. Fehlende
+Sicherungseinrichtung bleibt auch im Healthcheck sichtbar.
+
+Der Schalter für Wiederanlauf steuert ausschließlich den Node-Adapter nach
+Prozessende. Ein beendeter Kern wird nur durch den bereits aktivierten
+launchd-Kerndienst neu gestartet. Ohne diesen ist nach einem Prozessabsturz ein manueller Start notwendig.
+Ein ausdrücklich angeforderter Neustart einschließlich Restore/Fortsetzen nutzt
+den bestehenden restart.json-/execv-Weg in core.__main__ und startet sich selbst neu. Start nach einem Rechnerneustart setzt die
+Benutzeranmeldung voraus. Minutenprüfung und Kerndienst werden getrennt gemeldet;
+ein hängender, noch lebender Prozess wird nicht blind beendet. Ein tatsächlicher
+Host-Neustarttest ist eine separate Betriebsabnahme am Kundengerät.

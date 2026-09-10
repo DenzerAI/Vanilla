@@ -20,15 +20,16 @@ def service_status(config):
     name = label(config)
     path = config.data / "services" / (name + ".plist")
     installed = (config.data / "services/host-activation.json").is_file()
-    loaded = False
+    loaded = monitor_loaded = False
     if installed and sys.platform == "darwin":
         try:
             loaded = subprocess.run(["launchctl", "print", f"gui/{os.getuid()}/{name}"],
                                     capture_output=True, timeout=3).returncode == 0
+            monitor_loaded = subprocess.run(["launchctl", "print", f"gui/{os.getuid()}/{name}.heartbeat"], capture_output=True, timeout=3).returncode == 0
         except (OSError, subprocess.SubprocessError):
             pass
     return {"installed": installed, "loaded": loaded, "generated": path.is_file(), "label": name,
-            "starts": "launchd-keepalive" if loaded else "manual-only"}
+            "starts": "launchd-keepalive" if loaded else "manual-only", "monitor_loaded":monitor_loaded, "after_reboot":"user-login" if loaded else "manual-only", "process_recovery":loaded}
 
 
 def install(config, activate=False):

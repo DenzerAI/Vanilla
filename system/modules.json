@@ -310,8 +310,8 @@
         "meaning": "Eingerichtet, verbunden und authentifiziert getrennt auswerten."
       },
       "limits": "Eingerichtet, verbunden und authentifiziert getrennt auswerten.",
-      "version": 1,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 2,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Restore markiert offene Nachrichtenübergaben als unknown. Die gemeinsame Betriebspause blockiert neue Übergaben bis zur ausdrücklichen Fortsetzung; unbestätigte alte Nachrichten bleiben einzeln prüfpflichtig. Vertrag docs/OPERATIONS.md."
     },
     {
       "id": "speech",
@@ -543,8 +543,8 @@
         "meaning": "Ausführung über Scheduler; Abschluss und Zustellbeleg prüfen."
       },
       "limits": "Ausführung über Scheduler; Abschluss und Zustellbeleg prüfen.",
-      "version": 1,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 2,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Nach Restore gilt recovery/not-before als Zeitplangrenze. Normale Neustarts erhalten bestehende Wiederholungsregeln. Keine Tabellen entfernt."
     },
     {
       "id": "library",
@@ -583,8 +583,8 @@
         "meaning": "Dateibestand; Vorschau ist kein Suchindex."
       },
       "limits": "Dateibestand; Vorschau ist kein Suchindex.",
-      "version": 1,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 2,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Während Sicherung und Wiederherstellungsprüfung weist der gemeinsame Server Schreibaktionen ab; lesende Bibliotheksansichten bleiben erreichbar. Kein Dateiformat geändert. Vertrag docs/OPERATIONS.md."
     },
     {
       "id": "skills",
@@ -781,22 +781,25 @@
         "POST /api/system/tailscale",
         "POST /api/system/tool",
         "POST /internal/restart",
-        "GET /api/system/readiness"
+        "GET /api/system/readiness",
+        "POST /api/system/backups/resume",
+        "POST /api/system/backup-hold"
       ],
       "dependencies": [
         "platform"
       ],
       "verification": [
         "core/tests/test_operations.py",
-        "core/tests/test_provider_vault.py"
+        "core/tests/test_provider_vault.py",
+        "core/tests/test_recovery.py"
       ],
       "status": {
         "endpoint": "GET /api/system/readiness",
         "meaning": "Prozess, vollständige lokale Basis und tatsächliche Worker-Ausführbarkeit getrennt prüfen; Kundenanschlüsse werden nicht pauschal als bereit erklärt."
       },
       "limits": "Betriebszustand, Login, Backup und Restore-Nachweis separat prüfen.",
-      "version": 3,
-      "migration": "Tresorformat 2: OS-geschützter installationsbezogener Schlüssel. Vor Quellaktivierung alten Bestand offline mit core.vault_migrate prüfen und übernehmen. Rückweg benötigt vollständige Datenwiederherstellung; Details docs/VAULT.md. Bestehende Ciphertexte und übrige Daten bleiben erhalten. Fehlende oder fehlerhafte Suchberechnung bleibt als Einschränkung sichtbar; der Volltextindex bleibt nutzbar."
+      "version": 4,
+      "migration": "Tresorformat 2: OS-geschützter installationsbezogener Schlüssel. Vor Quellaktivierung alten Bestand offline mit core.vault_migrate prüfen und übernehmen. Rückweg benötigt vollständige Datenwiederherstellung; Details docs/VAULT.md. Bestehende Ciphertexte und übrige Daten bleiben erhalten. Fehlende oder fehlerhafte Suchberechnung bleibt als Einschränkung sichtbar; der Volltextindex bleibt nutzbar. Sicherungsschema 4; Schema 2/3 weiter lesbar. Restore setzt eine dauerhafte Betriebspause, quarantänisiert offene Übergaben und verhindert alte Zeitpläne. Details docs/OPERATIONS.md."
     },
     {
       "id": "platform",
@@ -939,8 +942,8 @@
         "meaning": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen."
       },
       "limits": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen.",
-      "version": 3,
-      "migration": "Tresorformat 2: OS-geschützter installationsbezogener Schlüssel. Vor Quellaktivierung alten Bestand offline mit core.vault_migrate prüfen und übernehmen. Rückweg benötigt vollständige Datenwiederherstellung; Details docs/VAULT.md. Bestehende Ciphertexte und übrige Daten bleiben erhalten. Lokales MiniLM wird anhand der festgelegten Dateiprüfsummen geprüft und repariert; source.json allein bestätigt keine Bereitschaft. Bestehende Modellordner bleiben erhalten."
+      "version": 4,
+      "migration": "Tresorformat 2: OS-geschützter installationsbezogener Schlüssel. Vor Quellaktivierung alten Bestand offline mit core.vault_migrate prüfen und übernehmen. Rückweg benötigt vollständige Datenwiederherstellung; Details docs/VAULT.md. Bestehende Ciphertexte und übrige Daten bleiben erhalten. Lokales MiniLM wird anhand der festgelegten Dateiprüfsummen geprüft und repariert; source.json allein bestätigt keine Bereitschaft. Bestehende Modellordner bleiben erhalten. Nach Restore gilt recovery/not-before als Zeitplangrenze. Normale Neustarts erhalten bestehende Wiederholungsregeln. Keine Tabellen entfernt."
     }
   ]
 }

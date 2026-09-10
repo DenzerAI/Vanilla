@@ -255,3 +255,14 @@ Installieren beziehungsweise Reparieren und Lokal testen verwenden denselben
 Systemanschluss. Während der Anfrage sind die bestehenden Bedienelemente gesperrt;
 „Bitte warten …“ meldet Arbeit ohne erfundene Prozentwerte. Erst abgeschlossene
 Modellprüfung und Indizierung bestätigen die Einrichtung.
+
+
+## Sicherungszustand und Wiederherstellungsprüfung
+
+Speicher & Sicherung zeigt den Zustand und den letzten bestätigten Snapshot in
+vorhandenen SettingRow-Zeilen. Ein neuer Fehlversuch überschreibt dessen Datum
+nicht. Nach Restore erscheint vor der Sicherung die Gruppe Wiederherstellung
+prüfen mit einer ausdrücklich beschrifteten Fortsetzen-Aktion. Der vorhandene
+Übernahmedialog erklärt die anschließende Betriebspause. System nennt Adapter-Wiederanlauf und Kerndienst getrennt;
+ein veralteter Heartbeat wird niemals als In Ordnung angezeigt. Bestehende
+Tokens, Formulare, Busy- und Fehlerrückmeldungen gelten unverändert.

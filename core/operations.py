@@ -65,15 +65,53 @@ class Operations:
         if self.config.public_origin:
             network = self.network_cache[1]
             checks['tailscale'] = {'ok': bool(network.get('connected') and network.get('serving') and time()-self.network_cache[0]<120), 'message':'Privater HTTPS-Zugang'}
-        v = self.settings.values
-        if v["backup"]["enabled"]:
-            rows = self.db.rows("SELECT checked_at,status FROM maintenance WHERE name='backup'")
-            checks["backup"] = {"ok": bool(rows and rows[0]["status"] == "ok" and time() - rows[0]["checked_at"] < 90000), "message": "Letzte Sicherung"}
+        backup = self.backup_status()
+        checks['backup'] = {'ok':backup['state']=='ready','state':backup['state'],'message':backup['message']}
+        if runtime and runtime.restore_hold:
+            checks['recovery'] = {'ok':False,'state':'paused','message':'Wiederherstellung wartet auf Prüfung und Fortsetzen.'}
         return checks
+
+    def backup_status(self):
+        options = self.settings.values['backup']
+        last = self.db.get('backup/last-success')['value']
+        if last and last.get('target') != options['target']: last = None
+        target_error = None
+        if options['target']:
+            try:
+                if not (self.backups.target/'config').is_file():
+                    target_error = 'Sicherungsarchiv ist nicht erreichbar oder nicht eingerichtet.'
+            except (ValueError,OSError) as error:
+                target_error = str(error)[:200]
+        rows = self.db.rows("SELECT * FROM maintenance WHERE name='backup'")
+        attempt = rows[0] if rows else None
+        if not options['target']:
+            state,message = 'unconfigured','Noch kein Sicherungsziel eingerichtet.'
+        elif not options['enabled']:
+            state,message = 'disabled','Automatische Sicherung ist ausgeschaltet.'
+        elif not self.backups.binary:
+            state,message = 'error','Backup-Programm fehlt.'
+        elif target_error:
+            state,message = 'error',target_error
+        elif attempt and attempt['status']=='running':
+            active = bool(self.db.rows("SELECT id FROM executions WHERE job_id='system-backup' AND status IN ('dispatching','running')"))
+            state,message = ('running','Sicherung läuft.') if active else ('error','Letzter Sicherungsversuch wurde unterbrochen.')
+        elif attempt and attempt['status']=='error':
+            state,message = 'error','Letzter Sicherungsversuch fehlgeschlagen.'
+        elif not last:
+            state,message = 'degraded','Ziel eingerichtet; erste bestätigte Sicherung fehlt.'
+        elif not 0 <= time()-last['checked_at'] < 90000:
+            state,message = 'stale','Letzte bestätigte Sicherung ist älter als 25 Stunden.'
+        else:
+            state,message = 'ready','Letzte Sicherung erstellt und stichprobenartig geprüft.'
+        return {'state':state,'message':message,'last_success':last,'last_attempt':attempt}
 
     def status(self):
         heartbeat = read_json(self.config.data / "heartbeat.json", None)
-        return {"settings": self.settings.read(), "checks": self.checks(), "heartbeat": heartbeat, "service": service_status(self.config), "embeddings": self.knowledge.embeddings.status(), "maintenance": self.db.rows("SELECT * FROM maintenance ORDER BY name"), "memory": {"sources": self.db.rows("SELECT count(*) n FROM memory_sources WHERE forgotten=0")[0]["n"], "pending": len(self.memory.pending), "mode": "local-extractive", "changes": self.db.rows("SELECT * FROM memory_changes ORDER BY created_at DESC LIMIT 20")}, "storage": {"free_mb": shutil.disk_usage(self.config.data).free // 1024**2, "database_bytes": (self.config.data / "agent.sqlite3").stat().st_size}, "backup_installed": bool(self.backups.binary), "vault": ProviderVault(self.config.data / "provider-vault", self.db).status(), "access": {"enabled": self.config.login_required, "origin": self.config.public_origin}, "stream": {"connected": bool(self.runtime and self.runtime.stream.connected), "clients": len(self.runtime.stream.clients) if self.runtime else 0}}
+        enabled = self.settings.values['system']['heartbeat']
+        fresh = bool(heartbeat and 0 <= time()-heartbeat.get('checked_at',0) < 150)
+        heartbeat = {**(heartbeat or {}),'ok':bool(enabled and fresh and heartbeat.get('ok')),'state':'disabled' if not enabled else 'unconfigured' if not heartbeat else 'stale' if not fresh else 'ready' if heartbeat.get('ok') else 'error'}
+        recovery = {'paused':bool(self.runtime and self.runtime.restore_hold),'last':read_json(self.config.data/'restore-last.json',None)}
+        return {"backup":self.backup_status(), "recovery":recovery, "settings": self.settings.read(), "checks": self.checks(), "heartbeat": heartbeat, "service": service_status(self.config), "embeddings": self.knowledge.embeddings.status(), "maintenance": self.db.rows("SELECT * FROM maintenance ORDER BY name"), "memory": {"sources": self.db.rows("SELECT count(*) n FROM memory_sources WHERE forgotten=0")[0]["n"], "pending": len(self.memory.pending), "mode": "local-extractive", "changes": self.db.rows("SELECT * FROM memory_changes ORDER BY created_at DESC LIMIT 20")}, "storage": {"free_mb": shutil.disk_usage(self.config.data).free // 1024**2, "database_bytes": (self.config.data / "agent.sqlite3").stat().st_size}, "backup_installed": bool(self.backups.binary), "vault": ProviderVault(self.config.data / "provider-vault", self.db).status(), "access": {"enabled": self.config.login_required, "origin": self.config.public_origin}, "stream": {"connected": bool(self.runtime and self.runtime.stream.connected), "clients": len(self.runtime.stream.clients) if self.runtime else 0}}
 
     def run(self, handler):
         try:
@@ -85,6 +123,7 @@ class Operations:
             elif handler == "memory":
                 result = self.memory.dream()
             elif handler == "backup":
+                self.record(handler,"running",{})
                 result = self.backups.snapshot()
             elif handler == "cleanup":
                 result = self.cleanup()
@@ -126,11 +165,13 @@ class Operations:
         if self.settings.values["backup"]["enabled"]:
             self.backups.prune()
         # Only remove old verified staging copies, never applied restore safety copies.
-        pending = read_json(self.config.data / 'restore-pending.json', {})
-        for p in (self.config.data / 'restores').glob('*'):
-            if p.is_dir() and not p.is_symlink() and str(p) not in str(pending.get('path','')) and p.stat().st_mtime < now - values['logs_days']*86400:
-                shutil.rmtree(p)
-                cleared += 1
+        with self.backups.lock:
+            pending = read_json(self.config.data / 'restore-pending.json', {})
+            for p in (self.config.data / 'restores').glob('*'):
+                protected = pending.get('path') and Path(pending['path']).is_relative_to(p)
+                if p.is_dir() and not p.is_symlink() and not protected and p.stat().st_mtime < now - values['logs_days']*86400:
+                    shutil.rmtree(p)
+                    cleared += 1
         return {"events_removed": events, "logs_cleaned": cleared}
 
     def configure_access(self, password):

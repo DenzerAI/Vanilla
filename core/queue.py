@@ -134,6 +134,7 @@ class JobQueue:
 
     def schedule(self, now=None):
         now = now or datetime.now(self.timezone)
+        recovered_at = self.db.get("recovery/not-before")["value"] or 0
         for job in self.storage.sync_jobs():
             schedule = job.get("schedule", {})
             if job.get("status") != "active":
@@ -143,13 +144,15 @@ class JobQueue:
             if start and local < start:
                 continue
             if schedule.get('type') == 'once':
-                if local >= instant(schedule['at']):
+                if local >= instant(schedule['at']) and instant(schedule['at']).timestamp() > recovered_at:
                     self.enqueue(job['id'], f"{job['id']}:once:{instant(schedule['at']).astimezone(timezone.utc).isoformat()}")
                 continue
             if schedule.get("type") == "interval":
                 slot = int((local.timestamp() - (start.timestamp() if start else 0)) // (schedule["minutes"] * 60))
                 if start and slot < 1:
                     continue
+                due_at = slot * schedule["minutes"] * 60 + (start.timestamp() if start else 0)
+                if due_at <= recovered_at: continue
                 anchor = f":{schedule['startAt']}" if start else ''
                 self.enqueue(job["id"], f"{job['id']}:interval{anchor}:{slot}")
                 continue
@@ -185,6 +188,7 @@ class JobQueue:
                 continue
             hour, minute = map(int, scheduled.split(':'))
             due = local.replace(hour=hour, minute=minute, second=0, microsecond=0, fold=0)
+            if due.timestamp() <= recovered_at: continue
             if local.timestamp() < due.timestamp() or (start and due.timestamp() < start.timestamp()):
                 continue
             slot = f"{job['id']}:{local.date()}:{scheduled}"
