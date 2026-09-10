@@ -693,3 +693,12 @@ Kopf und navigiert höchstens bis zu dessen Wurzel zurück. Workspace-Wechsel
 verwerfen vorherige Dateiauswahl und Ordnerziele. Ausdrückliche Auftragslinks
 können weiterhin ihren zugehörigen Ordner öffnen. Technische Installationsnamen
 sind keine Workspace-Titel. Geschützte Einträge sind zunächst ausgeblendet.
+
+## Geräteanschlüsse
+
+Geräte & Netzwerk erweitert ausschließlich den vorhandenen Verbindungskatalog.
+Gerätedialoge verwenden Field, SettingRow, Modal, apple-switch und native Details.
+Freigabe und letzte Verbindungsprüfung erhalten getrennte Textzustände; keine
+Live-Verbindung durch einen lediglich gespeicherten Status behaupten. Die
+Fernbedienung nutzt die vorhandenen umbrechenden Aktionszeilen. Bildschirmbilder
+bleiben auf Dialogbreite und 60 vh begrenzt. Aufbau führt surfaces/connections.md.

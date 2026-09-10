@@ -8,6 +8,7 @@ export const connectionCategories = [
   {id:'messaging', name:'Nachrichten', aliases:['Messaging','Chat','Messenger']},
   {id:'design', name:'Design & Medien', aliases:['Bild','Video','Marketing']},
   {id:'voice', name:'Sprache', aliases:['Audio','Stimme','Diktat']},
+  {id:'devices', name:'Geräte & Netzwerk', aliases:['Android','ADB','USB','Fernseher','Samsung','Tizen','Tailscale','Serve','Funnel']},
   {id:'automation', name:'Automatisierung & Agenten', aliases:['Workflow','Automation','MCP','Tools']},
 ];
 export function connectionCategory(entry) {
@@ -32,7 +33,9 @@ export function matchesConnection(service, search) {
 }
 const service = (id,icon,category) => {const s=serviceDefinition(id);return {name:s.name,description:s.description,provider:id,kind:'service',icon,category};};
 export const connectionCatalog = [
-  {name:'Tailscale',provider:'tailscale',category:'automation',icon:'plug',description:'Privater HTTPS-Zugang für Mobilgeräte',kind:'system'},
+  {name:'Android (ADB)',provider:'android-adb',category:'devices',icon:'plug',description:'Android-Geräte per USB oder Netzwerk steuern',kind:'device'},
+  {name:'Samsung TV',provider:'samsung-tv',category:'devices',icon:'plug',description:'Fernseher im Netzwerk fernbedienen',kind:'device'},
+  {name:'Tailscale',provider:'tailscale',category:'devices',icon:'plug',description:'Privater HTTPS-Zugang für Mobilgeräte',kind:'system'},
   ...crmCatalog.map(provider => ({name:provider.name, description:provider.description, kind:'crm', category:'crm', provider:provider.id, icon:'plug'})),
   {name:'Gmail',provider:'gmail',category:'office',icon:'mail',description:'E-Mail über einen Workflow anbinden',kind:'webhook'},
   service('microsoft-graph','mail','office'),
@@ -54,7 +57,7 @@ export const audioServices=connectionCatalog.filter(s=>s.kind==='audio');
 
 // The static UI can be rebuilt while older server processes finish active chats.
 export function catalogForFeatures(features={}) {
-  const available = connectionCatalog.filter(service => (service.kind !== 'crm' || features.crmConnections) && (service.kind !== 'system' || features.operations));
+  const available = connectionCatalog.filter(service => (service.kind !== 'device' || features.deviceConnections) && (service.kind !== 'crm' || features.crmConnections) && (service.kind !== 'system' || features.operations));
   if(features.serviceConnections)return available;
   return available.flatMap(s=>s.kind!=='service'?[s]:s.provider==='microsoft-graph'?[{name:'Outlook',provider:'outlook',category:'office',icon:'mail',description:'E-Mail über einen Workflow anbinden',kind:'webhook'}]:s.provider==='whatsapp-local'?[{name:'WhatsApp',provider:'whatsapp',category:'messaging',icon:'message',description:'Bestehende Bridge oder Workflow anbinden',kind:'webhook'}]:[]);
 }

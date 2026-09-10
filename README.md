@@ -136,3 +136,13 @@ Der getrennte Skilltree ist fertig gebaut und wird bereits über die bestehende 
 - Die vorhandenen Memory-Verlustfälle des Quellaudits sind nicht vollständig behoben oder abgenommen.
 - Restic ist optional; lokales Backup ist noch kein vollständiges ausfallsicheres Wiederherstellungskonzept. Vollständiger Betriebsumfang, eigene Zugänge und echter Restore-Test bleiben offen.
 - Der Scanner erkennt bekannte Muster; er beweist nicht die Abwesenheit unbekannter Namen oder kodierter Geheimnisse.
+
+## Geräte & Netzwerk
+
+Verbindungen enthält Android (ADB), Samsung TV und die geführte Tailscale-Einrichtung.
+Geräte werden einzeln verbunden und für Arbeitsbereiche/Agenten freigegeben.
+Platform Tools und Tailscale benötigen ihre native Installation; die App zeigt
+die offiziellen Einstiege. Private Serve-Freigaben und expliziter, durch eine
+App-Anmeldung geschützter Funnel verwenden nur eigene Regeln. Zentral verwaltetes
+HTTPS bleibt beim Host-Betriebsweg. Keine automatische Geräte- oder Netzwerkfreigabe.
+Modellgrenzen, Rechte, Migration und Prüfwege: [Gerätevertrag](docs/DEVICES.md).

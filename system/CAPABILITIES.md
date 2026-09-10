@@ -46,3 +46,11 @@ Diktat- und Sprachinstallation selbst auf. Festgelegte Sprachpakete führt
 `runtime-assets.mjs`. Der Bereitschaftsmarker wird erst nach Dateiprüfung und
 erfolgreichem Laden durch Piper geschrieben; geänderte Versionen oder fehlende
 Dateien lösen bei erneuter Einrichtung eine Reparatur aus.
+
+## Geräte und Netzwerk
+
+`device-connections` verbindet Android/ADB, Samsung-Fernbedienung und Tailscale
+unter Verbindungen. Status: `/api/devices`, `/api/network/status`.
+Worker verwenden `device_list` und `device_action` für explizit freigegebene
+Geräte, Arbeitsbereiche, Worker und Aktionen. Keine automatische Kopplung,
+Freigabe oder öffentliche Veröffentlichung. Details und Migration: [Geräte](../docs/DEVICES.md).

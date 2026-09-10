@@ -72,3 +72,32 @@ Der offizielle MCP-Endpunkt ist https://21st.dev/api/mcp und verlangt den
 Header `x-api-key`; ein Bearer-Token im Link-Dialog aktiviert diesen Zugang nicht.
 Die Worker-Einrichtung ist separat und wird nicht als verbunden dargestellt.
 Quelle: https://github.com/21st-dev/magic-mcp/blob/main/server.json (08.09.2026).
+
+## Geräte & Netzwerk
+
+Die zusätzliche Kataloggruppe enthält Android (ADB), Samsung TV und Tailscale.
+`DeviceConnection` und `NetworkConnection` verwenden den bestehenden Modal,
+Field, SettingRow, native Details und den gemeinsamen Schalter. Technische
+Geräteanschlüsse verwenden das vorhandene Plug-Symbol statt neuer Markenbilder.
+Keine zusätzliche Hauptnavigation oder Geräteübersicht außerhalb der Verbindungen.
+Der Katalog zeigt Geräte erst, wenn der Server `deviceConnections` meldet.
+
+Android: Name → USB oder WLAN/Tailscale → Geräteadresse und Verbindungsport bzw.
+USB-Auswahl → Hinzufügen. Danach Verbinden, Verbindung prüfen und Trennen.
+Die separate Codekopplung erklärt Kopplungsport und Verbindungsport am selben Ort.
+Samsung: Name und WebSocket-Adresse; öffentliche WSS-Adressen erst unter Fernzugriff.
+Arbeitsbereich, Agenten und Aktionsrechte liegen zunächst unter Details.
+Freigeben wird erst nach bestätigter Verbindung möglich und mit Speichern bestätigt;
+Sofort sperren wirkt direkt auch während einer laufenden Anfrage. Adressänderung
+nimmt die Freigabe serverseitig zurück. Veraltete Dialoge erhalten den Entwurf
+mit Konfliktmeldung. Kopplungscodes werden nach jedem Versuch aus dem Feld entfernt.
+Fernbedienung und Nutzungsprotokoll sind aufklappbar; Bildschirmbilder passen in
+Viewport und Dialog. Schmale Ansichten lassen die vorhandenen Aktionszeilen umbrechen.
+
+Gespeichert, zuletzt verbunden und für Agenten freigegeben sind unterschiedliche
+Zustände. USB-Suche beginnt nur auf Klick; es gibt keine automatische Geräteaktion.
+Entfernen benennt den zusätzlichen Widerruf der nativen ADB-Kopplung am Gerät.
+Tailscale zeigt Installation, Kontoanmeldung und Serve im normalen Dialog.
+Funnel liegt unter Öffentlicher Zugriff und benötigt App-Anmeldung und ausdrücklichen
+Schalter. Zentral verwaltete Installationen zeigen ihren Host-Betriebsweg.
+Technischer Vertrag, Modellgrenzen und Migration: [Geräte](../../docs/DEVICES.md).

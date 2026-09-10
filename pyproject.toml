@@ -11,6 +11,7 @@ dependencies = [
   "fastapi>=0.115,<1",
   "uvicorn>=0.34,<1",
   "httpx>=0.28,<1",
+  "websockets>=17.0.1,<18",
   "rapidfuzz>=3.12,<4",
   "PyYAML>=6,<7",
 ]
