@@ -233,3 +233,12 @@ müssen alter Code, eigene Daten und Ausführungsreservierungen wieder vorhanden
 Testdoubles belegen Zustands- und Fehlerlogik; sie ersetzen weder echten GitHub-
 Zugriff noch den tatsächlichen Hostwechsel. Desktop/Handy, beide Themes und
 Tastaturbedienung ergänzen die gemeinsame Designprüfung.
+
+## KI-Programme und Modellkatalog
+
+Die Hintergrundpflege unter KI & Modelle erweitert den vorhandenen Wartungstakt
+und die Systembenachrichtigungen. Sie prüft Programmversionen und den öffentlichen
+Modellkatalog und kann unterstützte installierte CLIs automatisch in einer
+Arbeitspause ersetzen. Vertrag, Quellen, Datenformat und Grenzen stehen unter
+[KI & Modelle](../wrapper/WORKERS.md#ki--modelle-und-hintergrundaktualisierung--version-2).
+Vanilla-Releases verwenden weiterhin die Freigabe und den Operator dieses Dokuments.

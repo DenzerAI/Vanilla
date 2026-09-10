@@ -80,7 +80,7 @@ export function JobNotifications({api,state,Field,onRun,onChat,requests,onReques
     return()=>{alive=false;};
   },[initialId]);
   async function open(item){
-    if(['update','contribution'].includes(item.kind)) onUpdates?.(item.kind);
+    if(['update','contribution','ai-update'].includes(item.kind)) onUpdates?.(item.kind);
     else setSelected(item);
     setError('');
     try{await api('/notifications/read',{id:item.id});await state.refresh();}catch(e){setError(e.message);}
@@ -102,7 +102,7 @@ export function JobNotifications({api,state,Field,onRun,onChat,requests,onReques
     <Markdown text={selected.body}/>
     <p className="form-help">{({app:'In der App verfügbar',pending:'Versand wartet',sending:'Wird versendet',sent:'An den Anschluss übergeben',failed:'Zustellung fehlgeschlagen',unknown:'Zustellung unbestätigt'})[(state.data?.items.find(n=>n.id===selected.id)||selected).delivery]}</p>
     {(state.data?.items.find(n=>n.id===selected.id)||selected).delivery_error&&<p role="alert">{(state.data?.items.find(n=>n.id===selected.id)||selected).delivery_error}</p>}
-    {['update','contribution'].includes(selected.kind)?<button onClick={()=>onUpdates?.(selected.kind)}>Updates öffnen</button>:<div className="row"><button onClick={()=>onRun(selected)}>Ausführung öffnen</button><button onClick={chat}>Chat öffnen</button></div>}
+    {['update','contribution','ai-update'].includes(selected.kind)?<button onClick={()=>onUpdates?.(selected.kind)}>{selected.kind==='ai-update'?'KI & Modelle öffnen':'Updates öffnen'}</button>:<div className="row"><button onClick={()=>onRun(selected)}>Ausführung öffnen</button><button onClick={chat}>Chat öffnen</button></div>}
     {error&&<p role="alert">{error}</p>}
   </>;
   return <>

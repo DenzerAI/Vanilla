@@ -29,7 +29,7 @@ class Notifications:
                 cx.execute("ALTER TABLE job_notifications ADD COLUMN subject_id TEXT")
 
     def system(self, id, kind, subject, title, body, status='completed'):
-        if kind not in {'update', 'contribution'}:
+        if kind not in {'update', 'contribution', 'ai-update'}:
             raise ValueError('Unbekannte Systembenachrichtigung.')
         with self.db.transaction() as cx:
             inserted = cx.execute("INSERT OR IGNORE INTO job_notifications(id,job_id,title,body,status,created_at,target,delivery,kind,subject_id) VALUES(?,'',?,?,?,?, 'app','app',?,?)",

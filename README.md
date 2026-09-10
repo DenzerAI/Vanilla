@@ -192,3 +192,12 @@ App-Backend. `npm run ui:verify` erkennt fehlende, veraltete oder veränderte
 Builddateien. Der Ablauf für eigene Erweiterungen und andere Installationen
 steht in [docs/UI-UPDATES.md](docs/UI-UPDATES.md). Git-Push und Serverneustart
 allein aktualisieren keinen lokal noch alten UI-Build.
+
+## KI & Modelle
+
+Der Quellausbau bündelt Programme, Verbindungen, öffentliche Modellinformationen
+und automatische Versionsprüfungen unter KI & Modelle. Bereits installierte
+Codex- und Gemini-CLIs können in Arbeitspausen aus eigenen geprüften Programmkopien
+aktualisiert werden. Andere Programme zeigen ihren verfügbaren Prüf-/Anbieterweg.
+Ein öffentlicher Modelleintrag ist kein eingerichteter Zugang. Einrichtung,
+Datenhaltung und Abnahmegrenzen führt [WORKERS.md](wrapper/WORKERS.md).

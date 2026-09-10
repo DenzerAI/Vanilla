@@ -1641,7 +1641,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     ["skills", Sparkles, "Skills"],
     ["secrets", KeyRound, "Secrets"],
     ["privacy", ShieldCheck, "Datenschutz"],
-    ["engines", BrainCircuit, "Worker"],
+    ["engines", BrainCircuit, "KI & Modelle"],
     ["usage", Activity, "Nutzung"],
     ["shortcuts", Keyboard, "Tastaturkürzel"],
     ["archive", Archive, "Archivierte Chats"],
@@ -3118,7 +3118,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       {modal?.type==='skill-hub'&&<Modal title="Skill hinzufügen" onClose={()=>setModal(null)}><SkillHub api={api} Field={Field} onSelect={skill=>setModal({type:'skill',skill})} onCreated={()=>setModal({type:'skill-create'})}/></Modal>}
       {modal?.type==='skill-create'&&<Modal title="Eigenen Skill erstellen" onClose={()=>setModal(null)}><CreateSkillForm api={api} Field={Field} onCreated={async()=>{await loadSkills();setModal(null);}}/></Modal>}
       {modal?.type==='tailscale'&&<Modal title="Tailscale" onClose={()=>setModal(null)}><TailscaleConnection api={api}/></Modal>}
-      {(modal === 'notifications'||modal?.type==='notifications') && <Modal title="Benachrichtigungen" onClose={()=>setModal(null)}><JobNotifications onUpdates={kind=>{setModal(null);setUpdatesTab(kind==='contribution'?'contributions':'version');openSettings('updates');}} initialId={modal?.id} api={api} state={notificationState} Field={Field} requests={requests.length} onRequests={()=>setModal('activity')} onChat={async id=>{setModal(null);await openChat(id);}} onRun={item=>setModal({type:'job-run',job:{name:item.title,lastRun:{coreRunId:item.id.replace(/^attention-/,'')}}})}/></Modal>}
+      {(modal === 'notifications'||modal?.type==='notifications') && <Modal title="Benachrichtigungen" onClose={()=>setModal(null)}><JobNotifications onUpdates={kind=>{setModal(null);setUpdatesTab(kind==='contribution'?'contributions':'version');openSettings(kind==='ai-update'?'engines':'updates');}} initialId={modal?.id} api={api} state={notificationState} Field={Field} requests={requests.length} onRequests={()=>setModal('activity')} onChat={async id=>{setModal(null);await openChat(id);}} onRun={item=>setModal({type:'job-run',job:{name:item.title,lastRun:{coreRunId:item.id.replace(/^attention-/,'')}}})}/></Modal>}
       {modal?.type === "job-run" && (
         <Modal title={modal.job.name} onClose={() => setModal(null)}>
           {modal.job.lastRun.coreRunId ? <CoreRunDetails api={api} id={modal.job.lastRun.coreRunId}/> : <>

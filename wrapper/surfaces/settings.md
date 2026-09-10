@@ -256,3 +256,25 @@ nur den Vorschauzustand; Karten zeigen ihr Aktionsziel, ohne API oder Versand.
 Der separate Bauplan ergänzt Hell/Dunkel und eine schmale Inhaltsbreite. Die
 Vorschau speichert keine App-Einstellungen und benötigt keine Anmeldung.
 Die Übernahme in eigene Module führt ../../docs/UI-UPDATES.md.
+
+## KI & Modelle · Erweiterung
+
+Der bisherige Navigationseintrag Worker heißt KI & Modelle; seine interne ID
+`engines` bleibt erhalten. Standard und Vertretung stehen zuerst, danach die
+vorhandenen Zeilen der KI-Programme. Aktuell bleiben ergänzt gemeinsame SettingRow-
+Zeilen für Prüfdatum/Jetzt prüfen und automatische Updates mit apple-switch.
+KI entdecken zeigt einen suchbaren Anbieterüberblick samt benanntem öffentlichem
+Modellkatalog. Neueste Katalognamen sind sichtbar; Programmversionen, Quellenstand,
+Verbindungsgrenzen und Modellauswahl stehen unter Versionen & Details. Anbieterlinks
+öffnen Dokumentation, keine Kontoanlage. Zugänge bleiben bei den vorhandenen
+Verbindungs-/Worker-Anmeldewegen. Feste Abläufe und lokale Modelle bleiben erhalten.
+
+Laden verwendet Settings-Skeleton, Fehler erhalten vorhandene Daten. Updates zeigen
+Prüfung, Download, Warten auf eine Arbeitspause und Ergebnis als Text. Unbekannte
+Version ist nicht Aktuell. Keine fiktiven Prozentwerte. Die Produktion wird in
+Unser Design mit einem neutralen Beispielzustand gezeigt. Technischer Vertrag:
+../WORKERS.md#ki--modelle-und-hintergrundaktualisierung--version-2.
+
+Gemini und Kimi verwenden bis zur Aufnahme eines geprüften Original-Markenassets
+bewusst den bestehenden neutralen Anschluss-Fallback von BrandIcon. Es werden
+keine nachgezeichneten oder fremden Markenbilder eingesetzt.

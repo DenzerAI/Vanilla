@@ -453,3 +453,7 @@ Eingabe vergleichen; Vorschauaktionen zeigen nur ihr Ziel. Die Anhangsfläche
 ist ein Layoutbeispiel und führt keinen Upload aus.
 
 Updates erscheinen ausschließlich im vorhandenen Einstellungsbereich. Ein interner Agentenreview nutzt einen eigenen begrenzten Thread ohne Änderung normaler Chats oder ihrer Modellwahl. Die Betriebspause sperrt neue Turns und lässt bestehende Arbeit vor dem Stoppen abschließen.
+
+KI-Aktualisierungen verwenden die bestehenden Hinweis-/Ergebniskarten des Startfächers.
+Pro Anbieter erscheint dessen neuester ungelesener Hinweis. Die Karte öffnet
+KI & Modelle; sie startet keine Installation und keinen Modellauftrag.

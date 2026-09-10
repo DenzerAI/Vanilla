@@ -443,8 +443,8 @@
     },
     {
       "id": "workers",
-      "title": "Codex CLI, Claude Code, Hermes und OpenClaw",
-      "purpose": "Codex CLI, Claude Code, Hermes und OpenClaw über die bestehenden Anschlüsse bedienen und erweitern.",
+      "title": "KI & Modelle",
+      "purpose": "KI-Programme verbinden, Modelle entdecken und installierte Programme im Hintergrund aktuell halten.",
       "stage": "implemented",
       "contract": "wrapper/WORKERS.md",
       "setup": "docs/CUSTOMER-SETUP.md#workers",
@@ -464,7 +464,10 @@
         "wrapper/worker-environment.mjs",
         "wrapper/worker-models.mjs",
         "wrapper/worker-rpc.mjs",
-        "wrapper/workers.mjs"
+        "wrapper/workers.mjs",
+        "system/ai-catalog.mjs",
+        "wrapper/ai-maintenance.mjs",
+        "wrapper/ui/ai-maintenance.tsx"
       ],
       "entrypoints": [
         "GET /api/local-workers",
@@ -480,21 +483,27 @@
         "POST /api/workers/activate",
         "POST /api/workers/connect",
         "POST /api/workers/disconnect",
-        "POST /api/workers/preferences"
+        "POST /api/workers/preferences",
+        "GET /api/ai-maintenance",
+        "POST /api/ai-maintenance/settings",
+        "POST /api/ai-maintenance/check",
+        "POST /api/ai-maintenance/tick"
       ],
       "dependencies": [
         "platform"
       ],
       "verification": [
-        "wrapper/test/workers.test.mjs"
+        "wrapper/test/workers.test.mjs",
+        "wrapper/test/ai-maintenance.test.mjs",
+        "core/tests/test_ai_notifications.py"
       ],
       "status": {
         "endpoint": "GET /api/workers",
         "meaning": "Programmfund ist kein Login. Nur eigene Profile und bestätigte Sitzung verwenden."
       },
-      "limits": "Programmfund ist kein Login. Nur eigene Profile und bestätigte Sitzung verwenden.",
-      "version": 1,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "limits": "Programmfund ist kein Login. Nur eigene Profile und bestätigte Sitzung verwenden. Automatische Installation nur für installierte Codex/Gemini ohne festen Programmpfad. Modellkatalog ist kein Zugangsnachweis.",
+      "version": 2,
+      "migration": "Additives ai-maintenance.json Schema 1 und ai-programs im Datenordner. Bestehende Worker-IDs, Konten und Modellwahl erhalten. Unbekanntes Schema stoppt. Alter Code ignoriert verwaltete Programmwahl; native Profilmigrationen benötigen gesonderte Wiederherstellung."
     },
     {
       "id": "jobs",
@@ -544,8 +553,8 @@
         "meaning": "Ausführung über Scheduler; Abschluss und Zustellbeleg prüfen."
       },
       "limits": "Ausführung über Scheduler; Abschluss und Zustellbeleg prüfen.",
-      "version": 1,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 2,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Additiver Benachrichtigungstyp ai-update, bestehender Wartungstakt und interner Einstellungsschlüssel engines bleiben erhalten."
     },
     {
       "id": "library",
@@ -733,8 +742,8 @@
         "meaning": "Persistierte Konfiguration dieser Installation."
       },
       "limits": "Persistierte Konfiguration dieser Installation.",
-      "version": 2,
-      "migration": "Vorhandene Einstellungen und Markdown-Abschnitte erhalten. Optionale Wetterkoordinaten ergänzen USER.md; alte Ortsnamen bleiben lesbar und werden bei Mehrdeutigkeit erst nach Auswahl verwendet."
+      "version": 3,
+      "migration": "Vorhandene Einstellungen und Markdown-Abschnitte erhalten. Optionale Wetterkoordinaten ergänzen USER.md; alte Ortsnamen bleiben lesbar und werden bei Mehrdeutigkeit erst nach Auswahl verwendet. Additiver Benachrichtigungstyp ai-update, bestehender Wartungstakt und interner Einstellungsschlüssel engines bleiben erhalten."
     },
     {
       "id": "operations",
@@ -939,8 +948,8 @@
         "meaning": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen."
       },
       "limits": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen.",
-      "version": 1,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 2,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Additiver Benachrichtigungstyp ai-update, bestehender Wartungstakt und interner Einstellungsschlüssel engines bleiben erhalten."
     },
     {
       "id": "weather",

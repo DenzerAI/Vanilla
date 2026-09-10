@@ -1,3 +1,4 @@
+import {AIMaintenancePreview} from "./ai-maintenance.tsx";
 import {ChatStartPreview} from './chat-start-preview';
 import { IconMotionPreview } from './icon-motion-preview';
 import {VoiceWave,VoiceStatus} from "./voice-visual";
@@ -52,6 +53,8 @@ export function DesignReference({ theme, tone, accent }) {
       {section === 'components' && <>
       <h3 className="section-heading">Bedienelemente & Seitenaufbau</h3>
       <SettingsPatterns/>
+      <h3 className="section-heading">KI & Modelle · Beispiel</h3>
+      <AIMaintenancePreview/>
       <h3 className="section-heading">Glasbutton · Beispiel</h3>
       <GlassButtonDemo/>
       <h3 className="section-heading">Erscheinungsbild · Beispiel</h3>

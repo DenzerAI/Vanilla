@@ -1,3 +1,4 @@
+import {AIMaintenance, managedCommand, installAIMaintenanceRoutes} from "./ai-maintenance.mjs";
 import {installUpdateReviewRoutes} from "./update-review.mjs";
 import {installWeatherRoutes} from './weather.mjs';
 import {installationEnvironment} from './worker-environment.mjs';
@@ -75,14 +76,15 @@ const runtime = await prepareCodexHome({
   home: path.join(dataRoot, "codex"),
   chats: store.state.chats.filter(c => !c.workerId || c.workerId === "codex"),
 });
+const resolveAICommand = async entry => process.env[entry.env] ? await findWorkerCommand(entry) : await managedCommand(dataRoot,entry) || await findWorkerCommand(entry);
 const nativeCodex = new Codex({
   cwd: workspace,
   home: runtime.home,
   config: {...runtime.config,...sharedMemoryCodexConfig()},
-  binary: await findWorkerCommand(workerCatalog.find(w => w.id === "codex")) || "codex",
+  binary: await resolveAICommand(workerCatalog.find(w => w.id === "codex")) || "codex",
   contextEnv: { ...await installationEnvironment(dataRoot), AGENT_INTERNAL_TOKEN: process.env.AGENT_INTERNAL_TOKEN || "", COMPANY_BASE: companyRoot(root), SYSTEM_BASE: systemRoot() },
 });
-const workers = new Workers({ store, root, codex: nativeCodex });
+const workers = new Workers({ store, root, codex: nativeCodex, resolveCommand: resolveAICommand });
 await workers.init();
 const clients = new Set(),
   loaded = new ThreadLoading(),
@@ -635,6 +637,7 @@ const restartGate = createRestartGate({
         clearInterval(scheduler);
         await channels.close();
         localWorkers.close();
+        await aiMaintenance.close();
         for (const id of active.keys()) if (own(id)) store.chat(id).lastTurnStatus = "interrupted";
         await store.save();
         workers.stop();
@@ -661,6 +664,11 @@ route("POST", "/api/updates/restart", body => restartGate.request(body));
 await installSpeechRoutes({ route, dataRoot, recordBoundary, secrets });
 const dictations = await installDictationRoutes({ route, dataRoot, recordBoundary, secrets });
 const localWorkers = await installLocalWorkerRoutes({ route, dataRoot, recordBoundary });
+const aiMaintenance = new AIMaintenance({dataRoot,workers,probeLocal:()=>localWorkers.status(),
+  activate:(id,command,commit)=>workers.replaceProgram(id,command,commit,()=>!updateHold && !restartGate.restarting && !active.size && !turnLocks.size && !voiceSessions.size && !liveBrowserSessions().length && !updateReviews.active() && ![...channels.live.keys()].some(key=>channels.hasActive(key)),()=>{loaded.clear();threadCache.clear();}),
+});
+await aiMaintenance.init();
+installAIMaintenanceRoutes({route,maintenance:aiMaintenance});
 const updateReviews = installUpdateReviewRoutes({route, workers, dataRoot});
 installWorkerRoutes({ route, workers, active, store });
 route("GET", "/api/status", async () => ({
@@ -1389,6 +1397,7 @@ for (const sig of ["SIGINT", "SIGTERM"])
   process.on(sig, async () => {
     await channels.close();
     localWorkers.close();
+        await aiMaintenance.close();
     clearInterval(scheduler);
     for (const c of clients) c.end();
     workers.stop();

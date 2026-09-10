@@ -36,6 +36,8 @@ class Runtime:
         self.update_hold = bool(read_json(config.data / "updates/maintenance.json", {}))
         self.frozen = self.update_hold
         self.product_updates = None
+        self.ai_receipts = set()
+        self.ai_error = False
         self.maintenance_lock = asyncio.Lock()
         self.client = httpx.AsyncClient(timeout=httpx.Timeout(60, connect=3), trust_env=False)
         self.stream = StreamHub(self, queue.db)
@@ -273,6 +275,20 @@ class Runtime:
                 self.queue.db.event("index.error", None, {"error": str(error)[:200]})
             await asyncio.sleep(30)
 
+    async def maintain_ai(self):
+        try:
+            ai = await self.request("POST", "/api/ai-maintenance/tick", json={}, timeout=5)
+            for event in ai.get("events", []):
+                if event["id"] not in self.ai_receipts:
+                    self.notifications.system(event["id"], "ai-update", event["subject"], event["title"], event["body"], event["status"])
+                    self.ai_receipts.add(event["id"])
+            self.ai_receipts.intersection_update(event["id"] for event in ai.get("events", []))
+            self.ai_error = False
+        except Exception:
+            if not self.ai_error:
+                self.queue.db.event("ai-maintenance.error", None, {"error": "KI-Hintergrundprüfung momentan nicht erreichbar."})
+            self.ai_error = True
+
     async def maintain(self):
         while True:
             try:
@@ -281,6 +297,8 @@ class Runtime:
                     continue
                 if self.product_updates and not self.frozen and not self.stopping:
                     self.product_updates.schedule()
+                if self.config.start_adapter and not self.frozen and not self.stopping:
+                    await self.maintain_ai()
                 if self.operations:
                     await asyncio.to_thread(self.operations.memory.flush)
                     if self.config.public_origin:

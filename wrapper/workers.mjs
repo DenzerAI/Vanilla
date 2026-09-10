@@ -1,3 +1,4 @@
+import {Codex} from "./codex.mjs";
 import {installationEnvironment} from './worker-environment.mjs';
 import {sharedMemoryACPServers} from './shared-memory.mjs';
 import {fileURLToPath} from 'node:url';
@@ -35,6 +36,7 @@ export class Workers extends EventEmitter {
     this.attach(catalog.find(w => w.adapter === "codex").id, codex);
     this.file = path.join(store.dataRoot, "workers.json");
     this.queue = Promise.resolve();
+    this.inFlight = 0; this.changing = null;
   }
   async init() {
     this.settings = await jsonFile(this.file, { defaultWorker: "auto", fallbackWorker: null, enabled: [] });
@@ -44,6 +46,7 @@ export class Workers extends EventEmitter {
   attach(id, adapter) {
     this.adapters.set(id, adapter);
     adapter.on("notification", msg => {
+      if (this.adapters.get(id) !== adapter) return;
       msg = this.publicEvent(id, msg);
       if (!msg) return;
       if (msg.method === "serverRequest/resolved") {
@@ -60,8 +63,9 @@ export class Workers extends EventEmitter {
       }
       this.emit("notification", { ...msg, workerId: id });
     });
-    adapter.on("request", msg => { msg = this.publicEvent(id, msg); if (!msg) return; this.requests.set(String(msg.id), { ...msg, workerId: id }); this.emit("request", { ...msg, workerId: id }); });
+    adapter.on("request", msg => { if (this.adapters.get(id) !== adapter) return; msg = this.publicEvent(id, msg); if (!msg) return; this.requests.set(String(msg.id), { ...msg, workerId: id }); this.emit("request", { ...msg, workerId: id }); });
     adapter.on("disconnected", error => {
+      if (this.adapters.get(id) !== adapter) return;
       const intentional = this.stopping.has(id);
       if (!intentional) this.errors.set(id, error.message);
       for (const [key, request] of this.requests) if (request.workerId === id) this.requests.delete(key);
@@ -99,13 +103,13 @@ export class Workers extends EventEmitter {
       ? { chat: true, streaming: true, attachments: true, approvals: true, plan: true, steer: true, fork: true, archive: true, terminal: true, skills: true }
       : { chat: true, streaming: true, attachments: false, approvals: true, plan: false, steer: false, fork: false, archive: true, terminal: false, skills: false });
   }
-  async adapter(id) {
-    if (this.adapters.has(id)) return this.adapters.get(id);
-    const entry = this.entry(id), command = await this.resolveCommand(entry);
+  async adapter(id, candidateCommand = null) {
+    if (!candidateCommand && this.adapters.has(id)) return this.adapters.get(id);
+    const entry = this.entry(id), command = candidateCommand || await this.resolveCommand(entry);
     if (!command) throw new Error(`${entry.name}: Programm nicht gefunden. Zuerst installieren oder den Programmpfad hinterlegen.`);
     if (entry.adapter !== "acp") throw new Error("Worker-Adapter fehlt.");
     const contextEnv = { ...await installationEnvironment(this.store.dataRoot), AGENT_INTERNAL_TOKEN: process.env.AGENT_INTERNAL_TOKEN || "", COMPANY_BASE: companyRoot(this.root), SYSTEM_BASE: systemRoot(), UWE_WORKSPACE: this.store.root };
-    return this.attach(id, this.makeACP({ id, name: entry.name, command, args: entry.args, cwd: this.store.root,
+    const created = this.makeACP({ id, name: entry.name, command, args: entry.args, cwd: this.store.root,
       contextEnv,
       readThread: async threadId => await jsonFile(path.join(this.store.root, "chats", safeName(threadId), "native-session.json"), null)
         || await jsonFile(path.join(this.store.root, "chats", safeName(threadId), "transcript.json"), null),
@@ -115,9 +119,11 @@ export class Workers extends EventEmitter {
         const job=(await this.store.jobs()).find(j=>path.resolve(this.store.root,'jobs',j.id)===path.resolve(cwd||this.store.root));
         return sharedMemoryACPServers(id,project?.id||job?.projectId||'default');
       },
-    }));
+    });
+    return candidateCommand ? created : this.attach(id, created);
   }
   async start(id = this.settings.defaultWorker, { allowUnconfigured = false } = {}) {
+    if (this.changing) await this.changing;
     if (id === "auto") return this.adapters.get((await this.select()).id);
     if (!allowUnconfigured && !this.settings.enabled.includes(id)) throw new Error(`${workerName(id)} ist noch nicht verbunden. Unter Einstellungen → Worker verbinden.`);
     if (this.connecting.has(id)) return this.connecting.get(id);
@@ -140,7 +146,35 @@ export class Workers extends EventEmitter {
     }
     throw new Error(failures.join(" ") || "Kein Worker eingerichtet. Unter Einstellungen → Worker verbinden.");
   }
+  async replaceProgram(id, command, commit, idle, activated = () => {}) {
+    if (this.changing || this.inFlight || this.connecting.size || !idle()) return false;
+    let release;
+    this.changing = new Promise(resolve => {release=resolve;});
+    const old=this.adapters.get(id), wasConnected=old?.connected, enabled=JSON.stringify(this.settings.enabled);
+    let candidate;
+    try {
+      candidate=this.entry(id).adapter==='codex'
+        ? new Codex({cwd:old.cwd,home:old.home,config:old.config,contextEnv:old.contextEnv,binary:command})
+        : await this.adapter(id,command);
+      await candidate.start();
+      if(!idle() || old?.connected!==wasConnected || JSON.stringify(this.settings.enabled)!==enabled){candidate.stop();return false;}
+      // Commit only after the protocol handshake succeeded. Old process remains available on failure.
+      await commit();
+      this.attach(id,candidate);
+      old?.stop();
+      this.errors.delete(id);
+      activated();
+      this.emit('notification',{method:'wrapper/workers',params:{}});
+      return true;
+    } catch(error) {candidate?.stop();throw error;}
+    finally {this.changing=null;release();}
+  }
   async call(method, params = {}, timeout) {
+    if(this.changing)await this.changing;
+    this.inFlight++;
+    try {return await this.callUnlocked(method,params,timeout);} finally {this.inFlight--;}
+  }
+  async callUnlocked(method, params = {}, timeout) {
     const requested = params.workerId || (params.threadId ? this.owner(params.threadId) : "auto");
     const id = requested === "auto" ? (await this.select()).id : requested;
     // Reading/exporting ACP history does not need a live connection.

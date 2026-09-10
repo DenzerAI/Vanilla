@@ -6,6 +6,7 @@ export const capabilities = {
   schemaVersion: 1,
   availability: 'Query the referenced status endpoint at runtime; source presence is not readiness.',
   domains: [
+    {id:'ai-maintenance',ui:'settings/engines',sources:['system/ai-catalog.mjs','wrapper/ai-maintenance.mjs','wrapper/ui/ai-maintenance.tsx'],contract:'wrapper/WORKERS.md',status:'/api/ai-maintenance',backend:'existing core maintenance tick, managed CLI versions, public model catalog and durable notifications'},
     {id:'github',ui:'settings/connections',sources:['core/github.py','wrapper/ui/github-connection.tsx'],contract:'docs/GITHUB.md',status:'/api/github/status',backend:'GitHub App Device Flow and existing encrypted provider vault'},
     {id:'updates',ui:'settings/updates',sources:['core/product_updates.py','core/update_checks.py','core/update_operator.py','wrapper/ui/product-updates.tsx'],contract:'docs/UPDATES.md',status:'/api/system/updates',backend:'existing scheduler, durable core journal, isolated checks and separately installed local operator'},
     {id:'contributions',ui:'settings/updates/contributions',sources:['core/contributions.py'],contract:'docs/UPDATES.md',status:'/api/system/contributions',backend:'private neutral source snapshots, read-only comparison and separate development candidates'},
