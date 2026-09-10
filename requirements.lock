@@ -21,3 +21,5 @@ uvicorn==0.52.4
 cffi==2.1.1
 cryptography==50.0.1
 pycparser==3.0
+
+websockets==17.0.1

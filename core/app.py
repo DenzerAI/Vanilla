@@ -23,6 +23,9 @@ from fastapi.responses import (
 from pydantic import BaseModel, Field
 from starlette.background import BackgroundTask
 
+from .devices import Devices
+from .device_network import DeviceNetwork
+from .device_api import routes as device_routes
 from .config import Config
 from .database import Database
 from .crm import CRM
@@ -68,6 +71,8 @@ def create_app(config=None):
     memory = Memory(db, config, knowledge, settings)
     memory.crm = crm
     operations = Operations(db, config, settings, knowledge, memory)
+    devices = Devices(db, config)
+    network = DeviceNetwork(operations)
     storage.system_jobs = operations.managed_jobs
     queue = JobQueue(db, storage, config.timezone)
     runtime = Runtime(config, queue, knowledge, operations)
@@ -89,6 +94,8 @@ def create_app(config=None):
         await calendar.close()
         await mail.close()
         await runtime.close()
+        await asyncio.to_thread(devices.close)
+        await asyncio.to_thread(network.close)
         db.close()
 
     app = FastAPI(
@@ -108,6 +115,9 @@ def create_app(config=None):
     app.state.operations = operations
     app.state.crm = crm
     app.state.mail = mail
+
+    app.state.devices = devices
+    app.state.device_network = network
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(request, error):
@@ -233,6 +243,8 @@ def create_app(config=None):
     app.include_router(mail_workflow_routes(mail.workflow))
     app.include_router(calendar_routes(calendar))
     app.include_router(module_routes(Modules(config), runtime, mail))
+
+    app.include_router(device_routes(devices, network))
 
     @app.get("/api/auth/session")
     async def session(request: Request):
@@ -530,6 +542,7 @@ def create_app(config=None):
                 "knowledge": True,
                 "sqlite": True,
                 "crmCore": True,
+                "deviceConnections": True,
                 "operations": True,
                 "routines": True,
             }

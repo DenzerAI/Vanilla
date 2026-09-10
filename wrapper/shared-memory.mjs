@@ -5,10 +5,10 @@ import {promisify} from 'node:util';
 const exec=promisify(execFile);
 
 const root=path.resolve(path.dirname(fileURLToPath(import.meta.url)),'..');
-export function sharedMemoryServer(projectId) {
+export function sharedMemoryServer(projectId, workerId='codex') {
   if(!process.env.AGENT_CORE_URL || !process.env.AGENT_PYTHON) return null;
   const port=new URL(process.env.AGENT_CORE_URL).port;
-  return {name:'shared_memory',command:process.env.AGENT_PYTHON,args:[path.join(root,'core/mcp.py'),'--port',port,'--data',process.env.UWE_DATA_ROOT,...(projectId?['--project',projectId]:[])],env:[]};
+  return {name:'shared_memory',command:process.env.AGENT_PYTHON,args:[path.join(root,'core/mcp.py'),'--port',port,'--data',process.env.UWE_DATA_ROOT,'--worker',workerId,...(projectId?['--project',projectId]:[])],env:[]};
 }
 export function sharedMemoryCodexConfig() {
   const server=sharedMemoryServer();
@@ -17,7 +17,7 @@ export function sharedMemoryCodexConfig() {
 
 export function sharedMemoryACPServers(workerId, projectId) {
   if(workerId==='openclaw') return []; // OpenClaw explicitly rejects per-session MCP.
-  const server=sharedMemoryServer(projectId);return server?[server]:[];
+  const server=sharedMemoryServer(projectId, workerId);return server?[server]:[];
 }
 
 export async function configureGatewayMemory() {

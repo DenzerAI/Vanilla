@@ -86,3 +86,32 @@ Quelle: https://github.com/21st-dev/magic-mcp/blob/main/server.json (08.09.2026)
 Gmail und Outlook verwenden denselben vorhandenen Modal und Katalogplatz mit `MailConnectionForm`. Die App-Registrierung, eigene Kontoanmeldung, Prüfen, Abgleichen und Trennen sind an den Python-Kern angeschlossen. Die Einrichtung liefert ihre tatsächliche Rücksprungadresse. „Mit Agent einrichten“ ergänzt ausschließlich den Chatentwurf mit dem vorhandenen Bauplan; es startet weder Anmeldung noch Versand. Gespeicherte Postfächer erscheinen projektbezogen unter Eingerichtet. Ein neuer Clone enthält keine Appregistrierung und keine Konten. Statusfelder und Rechte: docs/MAIL.md. Bestehende ältere Microsoft-Graph-Serviceverbindungen werden nicht automatisch umgestellt.
 
 Kalender verwendet den vorhandenen Microsoft-Service-Dialog; Outlook und Gmail verwenden den Mail-Dialog. Die Einrichtungen und Rechte bleiben getrennt. Ein Kontostatus `connected` mit erfolgreichem Abgleich zeigt das verbundene Postfach; gespeicherte Appwerte allein genügen nicht.
+
+## Geräte & Netzwerk
+
+Die zusätzliche Kataloggruppe enthält Android (ADB), Samsung TV und Tailscale.
+`DeviceConnection` und `NetworkConnection` verwenden den bestehenden Modal,
+Field, SettingRow, native Details und den gemeinsamen Schalter. Technische
+Geräteanschlüsse verwenden das vorhandene Plug-Symbol statt neuer Markenbilder.
+Keine zusätzliche Hauptnavigation oder Geräteübersicht außerhalb der Verbindungen.
+Der Katalog zeigt Geräte erst, wenn der Server `deviceConnections` meldet.
+
+Android: Name → USB oder WLAN/Tailscale → Geräteadresse und Verbindungsport bzw.
+USB-Auswahl → Hinzufügen. Danach Verbinden, Verbindung prüfen und Trennen.
+Die separate Codekopplung erklärt Kopplungsport und Verbindungsport am selben Ort.
+Samsung: Name und WebSocket-Adresse; öffentliche WSS-Adressen erst unter Fernzugriff.
+Arbeitsbereich, Agenten und Aktionsrechte liegen zunächst unter Details.
+Freigeben wird erst nach bestätigter Verbindung möglich und mit Speichern bestätigt;
+Sofort sperren wirkt direkt auch während einer laufenden Anfrage. Adressänderung
+nimmt die Freigabe serverseitig zurück. Veraltete Dialoge erhalten den Entwurf
+mit Konfliktmeldung. Kopplungscodes werden nach jedem Versuch aus dem Feld entfernt.
+Fernbedienung und Nutzungsprotokoll sind aufklappbar; Bildschirmbilder passen in
+Viewport und Dialog. Schmale Ansichten lassen die vorhandenen Aktionszeilen umbrechen.
+
+Gespeichert, zuletzt verbunden und für Agenten freigegeben sind unterschiedliche
+Zustände. USB-Suche beginnt nur auf Klick; es gibt keine automatische Geräteaktion.
+Entfernen benennt den zusätzlichen Widerruf der nativen ADB-Kopplung am Gerät.
+Tailscale zeigt Installation, Kontoanmeldung und Serve im normalen Dialog.
+Funnel liegt unter Öffentlicher Zugriff und benötigt App-Anmeldung und ausdrücklichen
+Schalter. Zentral verwaltete Installationen zeigen ihren Host-Betriebsweg.
+Technischer Vertrag, Modellgrenzen und Migration: [Geräte](../../docs/DEVICES.md).

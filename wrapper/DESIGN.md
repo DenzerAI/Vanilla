@@ -719,3 +719,12 @@ Farben, Schrift und Abstände verwenden weiter die zentrale Designquelle.
 Build-Herkunft und Datei-Hashes machen veraltete Ausgaben erkennbar; die visuelle
 Abnahme bleibt notwendig. Eine lokale Erweiterung übernimmt die gemeinsamen
 Bausteine und dokumentiert fachlich notwendige Abweichungen im Bereichsvertrag.
+
+## Geräteanschlüsse
+
+Geräte & Netzwerk erweitert ausschließlich den vorhandenen Verbindungskatalog.
+Gerätedialoge verwenden Field, SettingRow, Modal, apple-switch und native Details.
+Freigabe und letzte Verbindungsprüfung erhalten getrennte Textzustände; keine
+Live-Verbindung durch einen lediglich gespeicherten Status behaupten. Die
+Fernbedienung nutzt die vorhandenen umbrechenden Aktionszeilen. Bildschirmbilder
+bleiben auf Dialogbreite und 60 vh begrenzt. Aufbau führt surfaces/connections.md.

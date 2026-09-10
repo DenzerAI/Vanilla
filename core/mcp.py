@@ -57,22 +57,28 @@ CRM_DEFINITIONS = [
     ('crm_propose', 'Propose typed CRM changes with evidence. Does not create facts; a separate owner decision is required. Missing fields are not written to notes.', {'signal_id':{'type':'string'},'entity_id':{'type':['string','null']},'kind':{'enum':['person','organization','case']},'base_revision':{'type':'integer','minimum':0},'changes':{'type':'array','minItems':1,'maxItems':100,'items':{'type':'object','properties':{'field':{'type':'string'},'slot':{'type':'string'},'value':{}},'required':['field','value'],'additionalProperties':False}},'confidence':{'enum':['uncertain','likely','explicit']},'reason':{'type':'string'}}, ['signal_id','kind','base_revision','changes','reason']),
 ]
 DEFINITIONS += CRM_DEFINITIONS
-WRITE_TOOLS = {'calendar_sync','inbox_capture','inbox_routine','inbox_draft','inbox_compose','inbox_send','memory_write','crm_capture','crm_propose','routine_create','routine_update'}
+DEFINITIONS += [
+    ('device_list', 'List devices explicitly released for this project and worker, including allowed actions. Saved connection status is historical; use status to check now.', {}, []),
+    ('device_action', 'Control a released device on user request. read permits status/screenshot, control permits key/tap/swipe/text, apps permits launch, shell permits explicit advanced commands. No pairing or approvals. Check device_list first. Never retry a failed action automatically.', {'id': {'type':'string'}, 'action': {'type':'object','properties': {'action': {'enum':['status','screenshot','key','tap','swipe','text','launch','shell']}, 'key':{'type':'string'}, 'x':{'type':'integer'}, 'y':{'type':'integer'}, 'x2':{'type':'integer'}, 'y2':{'type':'integer'}, 'duration':{'type':'integer'}, 'text':{'type':'string'}, 'component':{'type':'string'}, 'command':{'type':'string'}},'required':['action'],'additionalProperties':False}}, ['id','action']),
+]
+WRITE_TOOLS = {'device_action','calendar_sync','inbox_capture','inbox_routine','inbox_draft','inbox_compose','inbox_send','memory_write','crm_capture','crm_propose','routine_create','routine_update'}
 
 
 def tools():
-    return [{'name':name,'description':description,'inputSchema':{'type':'object','properties':{'projectId':{'type':'string','description':'ID of the current project, default for Allgemein. Never choose another project without user intent.'},**properties},'required':['projectId',*required],'additionalProperties':False},'annotations':{'readOnlyHint':name not in WRITE_TOOLS,'destructiveHint':name in WRITE_TOOLS and name!='routine_create','openWorldHint':name.startswith('routine_') or name=='inbox_send'}} for name,description,properties,required in DEFINITIONS]
+    return [{'name':name,'description':description,'inputSchema':{'type':'object','properties':{'projectId':{'type':'string','description':'ID of the current project, default for Allgemein. Never choose another project without user intent.'},**properties},'required':['projectId',*required],'additionalProperties':False},'annotations':{'readOnlyHint':name not in WRITE_TOOLS,'destructiveHint':name in WRITE_TOOLS and name!='routine_create','openWorldHint':name.startswith(('routine_', 'device_')) or name=='inbox_send'}} for name,description,properties,required in DEFINITIONS]
 
 
 def call_core(args, name, arguments):
     if args.project and arguments.get('projectId') != args.project:
         raise ValueError('This memory connection belongs to another project.')
-    family = 'calendar' if name.startswith('calendar_') else 'inbox' if name.startswith('inbox_') else 'system' if name.startswith('system_') else 'routines' if name.startswith('routine_') else 'crm' if name.startswith('crm_') else 'memory'
+    family = 'devices' if name.startswith('device_') else 'calendar' if name.startswith('calendar_') else 'inbox' if name.startswith('inbox_') else 'system' if name.startswith('system_') else 'routines' if name.startswith('routine_') else 'crm' if name.startswith('crm_') else 'memory'
     headers={'Content-Type':'application/json'}
     token=os.environ.get('AGENT_INTERNAL_TOKEN')
     if token:
         route='/internal/'+family+'/tool';headers['x-agent-internal']=token
     else:
+        if family == 'devices':
+            raise ValueError('Device tools require the authenticated internal worker connection.')
         route='/api/'+family+'/tool'
         host=args.data/'host.json'
         if len(os.environ.get('AGENT_ACCESS_TOKEN','')) >= 32:
@@ -82,7 +88,7 @@ def call_core(args, name, arguments):
         else:
             with urlopen(f'http://127.0.0.1:{args.port}/api/auth/session',timeout=5) as response:
                 headers['x-uwe-token']=json.load(response)['token']
-    request=Request(f'http://127.0.0.1:{args.port}'+route,data=json.dumps({'name':name,'arguments':arguments}).encode(),headers=headers)
+    request=Request(f'http://127.0.0.1:{args.port}'+route,data=json.dumps({'name':name,'arguments':arguments, **({'workerId':args.worker} if family == 'devices' else {})}).encode(),headers=headers)
     try:
         with urlopen(request,timeout=60) as response:return json.load(response)
     except HTTPError as error:
@@ -106,7 +112,7 @@ def handle(message, args):
         try:
             if params.get('name') not in {d[0] for d in DEFINITIONS}:raise ValueError('Unknown memory tool.')
             result=call_core(args,params['name'],params.get('arguments') or {})
-            response['result']={'content':[{'type':'text','text':json.dumps(result,ensure_ascii=False)}]}
+            response['result']={'content':([{'type':'image','data':result['image'],'mimeType':result['mimeType']}] if isinstance(result,dict) and result.get('image') else [{'type':'text','text':json.dumps(result,ensure_ascii=False)}])}
         except Exception as error:
             response['result']={'isError':True,'content':[{'type':'text','text':str(error)[:500]}]}
     else:response['error']={'code':-32601,'message':'Method not found'}
@@ -118,6 +124,7 @@ def main():
     parser.add_argument('--port',type=int,default=1989)
     parser.add_argument('--data',type=Path,required=True)
     parser.add_argument('--project',default='')
+    parser.add_argument('--worker',default='codex')
     args=parser.parse_args()
     while line:=sys.stdin.buffer.readline(2*1024*1024+1):
         if len(line)>2*1024*1024:break

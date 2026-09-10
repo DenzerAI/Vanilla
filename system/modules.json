@@ -82,8 +82,8 @@
         "meaning": "Schema ist verfügbar; externe CRM-Synchronisation separat prüfen."
       },
       "limits": "Schema ist verfügbar; externe CRM-Synchronisation separat prüfen.",
-      "version": 1,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 2,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Gemeinsame MCP-Bridge ergänzt Gerätewerkzeuge; CRM-Werkzeuge und Daten bleiben kompatibel."
     },
     {
       "id": "planner",
@@ -311,8 +311,8 @@
         "meaning": "Eingerichtet, verbunden und authentifiziert getrennt auswerten."
       },
       "limits": "Eingerichtet, verbunden und authentifiziert getrennt auswerten.",
-      "version": 2,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 3,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Gerätedialoge unter Verbindungen ergänzen; vorhandene Chats und Entwürfe bleiben erhalten."
     },
     {
       "id": "speech",
@@ -438,8 +438,8 @@
         "meaning": "Gespeichert, getestet, verbunden und ausführbar getrennt behandeln; reine Links versprechen kein Werkzeug."
       },
       "limits": "Gespeichert, getestet, verbunden und ausführbar getrennt behandeln; reine Links versprechen kein Werkzeug.",
-      "version": 1,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 2,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Geräte & Netzwerk ergänzt den bestehenden Katalog; bisherige Anbieter und Mail-Einrichtungen bleiben erhalten."
     },
     {
       "id": "workers",
@@ -544,8 +544,8 @@
         "meaning": "Ausführung über Scheduler; Abschluss und Zustellbeleg prüfen."
       },
       "limits": "Ausführung über Scheduler; Abschluss und Zustellbeleg prüfen.",
-      "version": 1,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 2,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Gemeinsame MCP-Bridge ergänzt Gerätewerkzeuge; Auftragswerkzeuge und Zeitpläne bleiben kompatibel."
     },
     {
       "id": "library",
@@ -664,8 +664,8 @@
         "meaning": "FTS ist unabhängig von optionalen Embeddings; noch nicht indexierte Formate kennzeichnen."
       },
       "limits": "FTS ist unabhängig von optionalen Embeddings; noch nicht indexierte Formate kennzeichnen.",
-      "version": 1,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 2,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. MCP ergänzt device_list/device_action und die feste Worker-ID; Memory- und Projektargumente bleiben kompatibel."
     },
     {
       "id": "channels",
@@ -939,8 +939,8 @@
         "meaning": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen."
       },
       "limits": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen.",
-      "version": 1,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 2,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Additiver Geräte-Router und Lifecycle-Anschluss; neue Records unter devices/, keine Änderungen bestehender Tabellen."
     },
     {
       "id": "weather",
@@ -1002,6 +1002,51 @@
       "limits": "Lokale Hashprüfung ersetzt keine visuelle Prüfung oder Kontrolle des tatsächlich bedienten Ursprungs. Kein automatisches Git-Update oder Deployment.",
       "version": 1,
       "migration": "Vorhandene Daten und eigene Funktionen erhalten. Alte Builds ohne Integritätsmetadaten einmal mit npm run ui:prepare neu erzeugen."
+    },
+    {
+      "id": "device-connections",
+      "title": "Geräte & Netzwerk",
+      "purpose": "Android per ADB, Samsung-Fernseher und privaten Tailscale-Zugang mit einzelnen Gerätefreigaben einrichten und nutzen.",
+      "stage": "implemented",
+      "contract": "docs/DEVICES.md",
+      "setup": "docs/DEVICES.md#anschlüsse-und-zustände",
+      "data": "SQLite-Records devices/registry-v1 und devices/network-v1. Geräteziele, gehashte Android-Kennung, Freigaben, Revision und begrenztes Metadatenprotokoll. Native ADB- und Tailscale-Anmeldungen bleiben bei ihren Programmen.",
+      "sources": [
+        "core/devices.py",
+        "core/device_api.py",
+        "core/device_network.py",
+        "wrapper/ui/device-connection.tsx",
+        "wrapper/ui/device-connection.css"
+      ],
+      "entrypoints": [
+        "GET /api/devices",
+        "GET /api/devices/usb",
+        "POST /api/devices/save",
+        "POST /api/devices/{id}/revoke",
+        "POST /api/devices/{id}/remove",
+        "GET /api/devices/{id}/audit",
+        "POST /api/devices/{id}/action",
+        "POST /internal/devices/tool",
+        "GET /api/network/status",
+        "POST /api/network/action"
+      ],
+      "dependencies": [
+        "platform",
+        "connections",
+        "operations",
+        "workers"
+      ],
+      "verification": [
+        "core/tests/test_devices.py",
+        "wrapper/test/device-connections.test.mjs"
+      ],
+      "status": {
+        "endpoint": "GET /api/devices",
+        "meaning": "Gespeicherte Gerätefreigaben, letzte Prüfung und installierte ADB-CLI. Kein Live-Erreichbarkeitsnachweis; Statusaktion beziehungsweise GET /api/network/status separat ausführen."
+      },
+      "limits": "Native Programme, Konten und Gerätebestätigungen erforderlich. Samsung-Netzwerk-Fernbedienung ist modellabhängig. Keine Betriebssystem-Sandbox oder Mitarbeiterrollen. Keine öffentliche ADB-Freigabe. Physische Hardware-Abnahme separat.",
+      "version": 1,
+      "migration": "Additive versionierte Records ohne Zurücksetzen vorhandener Einstellungen. Unbekannte Geräteformate verweigern. Vor Rückkehr Freigaben sperren und eigene Serve/Funnel-Regeln beenden; Code-Rollback beendet externe Freigaben nicht."
     }
   ]
 }

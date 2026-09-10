@@ -189,3 +189,13 @@ App-Backend. `npm run ui:verify` erkennt fehlende, veraltete oder veränderte
 Builddateien. Der Ablauf für eigene Erweiterungen und andere Installationen
 steht in [docs/UI-UPDATES.md](docs/UI-UPDATES.md). Git-Push und Serverneustart
 allein aktualisieren keinen lokal noch alten UI-Build.
+
+## Geräte & Netzwerk
+
+Verbindungen enthält Android (ADB), Samsung TV und die geführte Tailscale-Einrichtung.
+Geräte werden einzeln verbunden und für Arbeitsbereiche/Agenten freigegeben.
+Platform Tools und Tailscale benötigen ihre native Installation; die App zeigt
+die offiziellen Einstiege. Private Serve-Freigaben und expliziter, durch eine
+App-Anmeldung geschützter Funnel verwenden nur eigene Regeln. Zentral verwaltetes
+HTTPS bleibt beim Host-Betriebsweg. Keine automatische Geräte- oder Netzwerkfreigabe.
+Modellgrenzen, Rechte, Migration und Prüfwege: [Gerätevertrag](docs/DEVICES.md).
