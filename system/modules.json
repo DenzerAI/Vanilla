@@ -1061,7 +1061,8 @@
         "wrapper/ui/product-updates.tsx",
         "core/update_sandbox.py",
         "scripts/setup-update-sandbox.py",
-        "scripts/verify-update-sandbox.py"
+        "scripts/verify-update-sandbox.py",
+        "system/version.json"
       ],
       "entrypoints": [
         "GET /api/system/update-review/models",

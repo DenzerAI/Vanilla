@@ -228,6 +228,7 @@ cache/
 !/wrapper/ui/assets/21st.png
 
 !/system/modules.json
+!/system/version.json
 !/.github/workflows/functionality.yml
 
 !/wrapper/ui/assets/icons/

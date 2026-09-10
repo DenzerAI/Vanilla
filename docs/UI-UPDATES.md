@@ -90,6 +90,11 @@ folgenden Schritte konkretisieren die UI-Prüfung innerhalb dieses Ablaufs.
 und Buildkonfiguration sowie Hashes der erzeugten Dateien. Fehlender, veralteter
 oder veränderter Build führt zum Fehler. `sourceRevision` bezeichnet die beim
 Bauen vorhandene Git-Revision; `sourceDirty` kennzeichnet lokale Änderungen.
+`productVersion` stammt aus `system/version.json`; ein fehlender oder abweichender
+Produktstand macht den Build ungültig. Das Agentenmenü zeigt den tatsächlich
+gestarteten Kernstand; ein bereits neu gebautes Frontend ersetzt diesen Nachweis
+nicht. Entwicklung, freigegebene Produktversion und nativer CLI-Stand bleiben
+unterscheidbar.
 Ein späterer Dokumentationscommit ist nicht automatisch ein anderer UI-Stand.
 Die Hashprüfung ersetzt weder einen Sichtvergleich noch die Prüfung eines
 externen Rechners. `npm start` und die Aktualisieren-Schaltfläche bauen keinen

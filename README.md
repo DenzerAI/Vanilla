@@ -26,6 +26,10 @@ gesperrt; die vollständigen Kandidatentests verwenden eine einmalig eingerichte
 lokale Container-Prüfumgebung.
 Der Agentenauftrag oben bleibt für ältere oder abweichende Installationen nutzbar.
 
+Aktuelle Produktversion: **0.1.0**. Der führende Stand liegt in `system/version.json`.
+Das Menü am Agentennamen zeigt laufende Version, Entwicklungskennzeichnung und
+vorhandenen CLI-Stand; von dort öffnet Updates die Versionsprüfung.
+
 ## Kundenbasis
 
 Neue Installationen beginnen ohne verbundene Worker, Postfächer oder persönliche

@@ -66,6 +66,9 @@ eine vorhandene Anmeldung, Codeübermittlung oder erfolgreiche Prüfung vortäus
 ## Abnahme
 
 Vor Umsetzung Verbindung-, Einstellungs- und Benachrichtigungsquellen prüfen.
+Das Agentenmenü zeigt die aus dem laufenden Kern gemeldete Produktversion und
+öffnet diesen Bereich direkt im Reiter Version. Entwicklung, CLI-Version,
+verfügbare Freigabe und installierter Stand dürfen sich nicht gegenseitig ersetzen.
 Desktop und schmale Ansicht, beide Themes, große Schrift, lange Versionshinweise,
 Tastatur und reduzierte Bewegung prüfen. Laufender Auftrag überlebt Tabwechsel,
 Browser-Neuladen und Dienstneustart. Doppelklicks erzeugen keine zweite Aktion.

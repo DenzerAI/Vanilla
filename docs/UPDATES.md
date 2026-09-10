@@ -13,6 +13,22 @@ bleibt [UPDATE.md](../UPDATE.md), die Anmeldung führt [GITHUB.md](GITHUB.md).
 
 ## Bedienung
 
+Die aktuelle Produktversion ist **0.1.0**. Führend ist `system/version.json`;
+spätere Freigaben erhöhen zunächst die Patchversion innerhalb **0.1.x**.
+Eine Version 1.0 ist eine bewusste spätere Produktentscheidung. Die Ganzzahl 1
+bei Manifest-, Updater- und Modulformaten bezeichnet keine Produktversion 1.0.
+Der Herausgeber muss die Produktversion im Quellstand pflegen und prüfen lassen,
+bevor eine gleichnamige Release veröffentlicht werden kann. Paketmetadaten sind
+keine zweite Quelle für die sichtbare Produktversion.
+
+Das geöffnete Agentenmenü zeigt die Version des gestarteten Kerns, den kurzen
+Quellstand und die vom Worker tatsächlich gemeldete CLI-Version. Ein unbestätigter
+oder lokal veränderter Stand trägt **Entwicklung**. Ein alter Installationsbeleg
+oder eine neuere verfügbare Release überschreibt niemals die laufende Version.
+**Updates** beziehungsweise **Update verfügbar** öffnet den Reiter Version mit
+der vorhandenen Prüfaktion. Das Öffnen des Menüs liest nur den lokalen Prüfstand;
+es installiert, veröffentlicht und übermittelt keinen Code.
+
 **Einstellungen → Updates** enthält **Version / Beiträge**. Die vorhandene Glocke
 öffnet den passenden Reiter. GitHub bleibt im gemeinsamen Verbindungsbereich.
 

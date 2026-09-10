@@ -162,6 +162,9 @@ Diese Regeln gelten bei jedem Weiterbau und jeder Veröffentlichung:
 4. Den geprüften Quellstand veröffentlichen und die erfolgreichen GitHub-Prüfungen
    für diesen Commit kontrollieren. Erst dann als updatebereit melden.
    Feature-Branches und ungeprüfte Pushes sind keine Standardupdates.
+   Produktversion in `system/version.json` pflegen; aktuell gilt die Reihe 0.1.x.
+   Release und angezeigter Produktstand müssen übereinstimmen. Ganzzahlige
+   Schema-/Modulversionen sind davon unabhängig.
 5. README, AGENTS und dieser feste Link bleiben der Einstieg. Ändert sich der
    Übernahme- oder Betriebsweg, diesen Ablauf im selben Auftrag aktualisieren.
 
