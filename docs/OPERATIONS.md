@@ -265,3 +265,7 @@ geprüft. Eine Sicherung ohne App-Anmeldung darf einen bereits geschützten Zuga
 nicht abschalten; alte Stände werden dafür in einer neuen lokalen Installation
 geöffnet. Scheitert die Offline-Prüfung vor dem Austausch, bleibt der aktuelle
 Bestand erhalten und die fehlgeschlagene Anfrage wird nicht bei jedem Start wiederholt.
+
+## Kontrollierte Produktupdates
+
+Ein regulär berechtigter Hostprozess richtet den unabhängigen Updateoperator einmalig mit scripts/setup-updates.py ein. Die Web-App installiert keinen Dienst und startet keine beliebigen Befehle; sie schreibt den geprüften, freigegebenen Auftrag in das lokale Journal. Vor Wechsel pausieren neue Arbeit, Mail, Kalender und aktive Kanäle; der Operator beendet nur den zugeordneten App-Dienst. Wiederanlauf bleibt bis zur Prüfung gesperrt. Erfasste Kanalanschlüsse werden anschließend wieder gestartet. Eigene Aufträge und reservierte Ausführungsslots werden weder neu angelegt noch gelöscht. Laufzeitabhängigkeiten und Datenformate dürfen im automatischen Weg v1 nicht wechseln. Vollständiger Ablauf und Grenzen: UPDATES.md.

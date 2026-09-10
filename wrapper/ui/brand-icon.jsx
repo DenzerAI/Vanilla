@@ -1,6 +1,7 @@
 import React from "react";
 import { skillArt } from "./skill-art.mjs";
 import a2a from "./assets/a2a.svg";
+import github from "./assets/github.svg";
 import groq from "./assets/groq.svg";
 import gmail from "./assets/gmail.svg";
 import outlook from "./assets/outlook.svg";
@@ -34,6 +35,7 @@ import lmstudio from "./assets/lmstudio.png";
 import claude from "./assets/claude-code.svg";
 
 const brands = {
+  github,
   openclaw, hermes, ollama, lmstudio, "claw-code": claude, "claude-code": claude,
   hero, labelwin, plancraft, tooltime, openhandwerk, pds, 'streitv.1':streit,
   winworker, weclapp, centralstationcrm, casgenesisworld:cas, cobracrm:cobra, sapbusinessone:sap,
@@ -56,7 +58,7 @@ const brands = {
 export function BrandIcon({ name, fallback: Fallback = Plug }) {
   const key = name?.toLowerCase().replace(/\s+/g, "");
   const src = brands[key];
-  const needsBrandSurface = ['hero','labelwin','openhandwerk','centralstationcrm','cobracrm'].includes(key);
+  const needsBrandSurface = ['github','hero','labelwin','openhandwerk','centralstationcrm','cobracrm'].includes(key);
   return (
     <div className={"app-icon " + (src ? "brand-icon brand-" + key : "") + (needsBrandSurface ? ' brand-asset-surface' : '')}>
       {src ? (

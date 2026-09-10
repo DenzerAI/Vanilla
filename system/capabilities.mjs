@@ -6,6 +6,9 @@ export const capabilities = {
   schemaVersion: 1,
   availability: 'Query the referenced status endpoint at runtime; source presence is not readiness.',
   domains: [
+    {id:'github',ui:'settings/connections',sources:['core/github.py','wrapper/ui/github-connection.tsx'],contract:'docs/GITHUB.md',status:'/api/github/status',backend:'GitHub App Device Flow and existing encrypted provider vault'},
+    {id:'updates',ui:'settings/updates',sources:['core/product_updates.py','core/update_checks.py','core/update_operator.py','wrapper/ui/product-updates.tsx'],contract:'docs/UPDATES.md',status:'/api/system/updates',backend:'existing scheduler, durable core journal, isolated checks and separately installed local operator'},
+    {id:'contributions',ui:'settings/updates/contributions',sources:['core/contributions.py'],contract:'docs/UPDATES.md',status:'/api/system/contributions',backend:'private neutral source snapshots, read-only comparison and separate development candidates'},
     {id:"work-evidence", ui:"settings/service", sources:["wrapper/ui/work-evidence.tsx","wrapper/ui/work-evidence.mjs","wrapper/ui/work-evidence.css"], contract:"wrapper/surfaces/work-evidence.md", status:"explicit fictional demo only", backend:"none; real time capture and scoped A2A planned"},
     {id:'crm-core', sources:['core/crm.py','core/crm_schema.py','core/crm_models.py','core/crm_mapping.py','core/crm_api.py','core/mcp.py'], contract:'docs/CRM.md', status:'/api/crm/schema', backend:'FastAPI and existing SQLite; no connector sync enabled'},
     {id:'planner', sources:['wrapper/ui/planner.tsx','wrapper/ui/planner.css','wrapper/ui/planner-dates.mjs','wrapper/ui/planner-data.mjs','wrapper/ui/planner-demo.ts'], contract:'wrapper/surfaces/today.md', status:'interactive concept with live CRM reads and existing notifications', backend:'existing CRM and notification APIs; calendar, weather and briefing feeds pending'},

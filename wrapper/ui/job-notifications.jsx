@@ -70,17 +70,19 @@ export function NotificationPreference({api,Field,job,form=false}) {
   </>;
 }
 
-export function JobNotifications({api,state,Field,onRun,onChat,requests,onRequests,initialId}) {
+export function JobNotifications({api,state,Field,onRun,onChat,requests,onRequests,initialId,onUpdates}) {
   const [selected,setSelected]=useState(null),[error,setError]=useState(''),[more,setMore]=useState([]),[cursor,setCursor]=useState(undefined),[loadingMore,setLoadingMore]=useState(false);
   const [permission,setPermission]=useState(globalThis.Notification?.permission);
   useEffect(()=>{
     if(!initialId)return;
     let alive=true;
-    api('/notifications/item?id='+encodeURIComponent(initialId)).then(async item=>{if(alive){setSelected(item);await api('/notifications/read',{id:item.id});state.refresh();}}).catch(e=>{if(alive)setError(e.message);});
+    api('/notifications/item?id='+encodeURIComponent(initialId)).then(async item=>{if(alive)await open(item);}).catch(e=>{if(alive)setError(e.message);});
     return()=>{alive=false;};
   },[initialId]);
   async function open(item){
-    setSelected(item);setError('');
+    if(['update','contribution'].includes(item.kind)) onUpdates?.(item.kind);
+    else setSelected(item);
+    setError('');
     try{await api('/notifications/read',{id:item.id});await state.refresh();}catch(e){setError(e.message);}
   }
   async function chat(){
@@ -100,7 +102,7 @@ export function JobNotifications({api,state,Field,onRun,onChat,requests,onReques
     <Markdown text={selected.body}/>
     <p className="form-help">{({app:'In der App verfügbar',pending:'Versand wartet',sending:'Wird versendet',sent:'An den Anschluss übergeben',failed:'Zustellung fehlgeschlagen',unknown:'Zustellung unbestätigt'})[(state.data?.items.find(n=>n.id===selected.id)||selected).delivery]}</p>
     {(state.data?.items.find(n=>n.id===selected.id)||selected).delivery_error&&<p role="alert">{(state.data?.items.find(n=>n.id===selected.id)||selected).delivery_error}</p>}
-    <div className="row"><button onClick={()=>onRun(selected)}>Ausführung öffnen</button><button onClick={chat}>Chat öffnen</button></div>
+    {['update','contribution'].includes(selected.kind)?<button onClick={()=>onUpdates?.(selected.kind)}>Updates öffnen</button>:<div className="row"><button onClick={()=>onRun(selected)}>Ausführung öffnen</button><button onClick={chat}>Chat öffnen</button></div>}
     {error&&<p role="alert">{error}</p>}
   </>;
   return <>

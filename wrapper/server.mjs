@@ -1,3 +1,4 @@
+import {installUpdateReviewRoutes} from "./update-review.mjs";
 import {installWeatherRoutes} from './weather.mjs';
 import {installationEnvironment} from './worker-environment.mjs';
 import {chatArchiveUpdater} from './chat-archive.mjs';
@@ -422,7 +423,7 @@ deliveryRecovery.unref();
 
 async function sendTurn(id, b, delivery) {
   if (turnLocks.has(id)) throw Object.assign(new Error("Eine Nachricht wird gerade übergeben. Bitte kurz warten."), {deliveryPaused:true});
-  if (restartGate.restarting) throw Object.assign(new Error("Der Server wird neu gestartet. Bitte kurz warten."), {deliveryPaused:true});
+  if (updateHold || restartGate.restarting) throw Object.assign(new Error("Der Server wird neu gestartet. Bitte kurz warten."), {deliveryPaused:true});
   turnLocks.add(id);
   try { return await sendTurnUnlocked(id, b, delivery); } finally { turnLocks.delete(id); deliveries.kick(id); }
 }
@@ -596,9 +597,31 @@ const mime = {
   ".svg": "image/svg+xml",
   ".md": "text/plain; charset=utf-8",
 };
+let updateHold = process.env.VANILLA_UPDATE_HOLD === "1";
 const routes = new Map();
 const route = (method, url, fn) => routes.set(method + " " + url, fn);
 installWeatherRoutes(route);
+let pausedChannels = [];
+route("POST", "/api/system/update-hold", async b => {
+  if (typeof b.hold !== 'boolean') throw Error('Ungültige Betriebspause.');
+  if (b.hold) {
+    updateHold = true;
+    if (active.size || turnLocks.size || voiceSessions.size || updateReviews.active() || [...channels.live.keys()].some(id=>channels.hasActive(id))) {
+      updateHold = false;
+      throw Error('Neue Arbeit ist hinzugekommen. Nach Abschluss erneut installieren.');
+    }
+    pausedChannels = [...channels.live.keys()];
+    for (const id of pausedChannels) await channels.stop(id);
+    return {hold:true, channels:pausedChannels};
+  }
+  const requested = b.channels ?? pausedChannels;
+  if (!Array.isArray(requested) || requested.length > 100 || requested.some(id => typeof id !== 'string' || !id || id.length > 200)) throw Error('Ungültiger Anschlussbestand.');
+  const restore = [...new Set(requested)];
+  updateHold = false;
+  for (const id of restore) if (!channels.running(id)) await channels.start(id);
+  pausedChannels = [];
+  return {hold:false};
+});
 const restartGate = createRestartGate({
   sessions: () => [...new Set([...active].map(([id,turn])=>`${id}:${turn}`).concat([...turnLocks].map(id=>`${id}:starting`), [...voiceSessions].map(id=>`${id}:voice`), liveBrowserSessions()))],
   restart: async () => {
@@ -624,7 +647,7 @@ const restartGate = createRestartGate({
 });
 route("GET", "/api/updates", async () => {
   const {uiVersion} = await jsonFile(path.join(here,"dist/version.json"), {uiVersion: null});
-  return {uiVersion, instanceId, restartRequired:await sourceVersion() !== startedSourceVersion, activeCount:active.size + turnLocks.size + voiceSessions.size + liveBrowserSessions().length};
+  return {uiVersion, instanceId, updateHold, restartRequired:await sourceVersion() !== startedSourceVersion, activeCount:active.size + turnLocks.size + voiceSessions.size + liveBrowserSessions().length + updateReviews.active()};
 });
 route("POST", "/api/updates/presence", body => {
   if (typeof body.id !== "string" || !/^[a-f0-9-]{36}$/.test(body.id)) throw new Error("Ungültige Sitzung.");
@@ -638,6 +661,7 @@ route("POST", "/api/updates/restart", body => restartGate.request(body));
 await installSpeechRoutes({ route, dataRoot, recordBoundary, secrets });
 const dictations = await installDictationRoutes({ route, dataRoot, recordBoundary, secrets });
 const localWorkers = await installLocalWorkerRoutes({ route, dataRoot, recordBoundary });
+const updateReviews = installUpdateReviewRoutes({route, workers, dataRoot});
 installWorkerRoutes({ route, workers, active, store });
 route("GET", "/api/status", async () => ({
   engine: { name: workers.entry(workers.effectiveWorker).name, connected: workers.connected, version: workers.info?.userAgent || null },
@@ -1258,6 +1282,9 @@ const scheduler = setInterval(async () => {
 }, 15000);
 scheduler.unref();
 const server = http.createServer(async (req, res) => {
+  if (updateHold && !['GET','HEAD','OPTIONS'].includes(req.method) && new URL(req.url, 'http://localhost').pathname !== '/api/system/update-hold') {
+    res.writeHead(503, {'Content-Type':'application/json'}); res.end(JSON.stringify({error:'Update wird geprüft. Bitte kurz warten.'})); return;
+  }
   if (coreEnabled && req.headers["x-agent-internal"] !== token) return send(res, 403, {error:"Interner Worker-Anschluss geschützt."});
   const allowedHosts = new Set([`127.0.0.1:${port}`, `localhost:${port}`]);
   if (!allowedHosts.has(req.headers.host)) {

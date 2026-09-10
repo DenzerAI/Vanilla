@@ -118,5 +118,9 @@
   "ui/assets/avatars/faces/nori.svg": {
     "sha256": "7f717f3518b5e60aa56ce3c8359d20ca035b044dba717fc2fc29f2daa62f44d9",
     "reason": "Original monochrome face artwork. No feet; Pixel and Pad use continuous grid silhouettes. Independent SVG expression layers, no masks or external content."
+  },
+  "ui/assets/github.svg": {
+    "sha256": "7421820090b50ac79d7c2bf7c951a433d7098a8a9c474809207bdd45f62d9d46",
+    "reason": "Original GitHub mark from primer/octicons; unchanged geometry. See ui/assets/sources.json."
   }
 }

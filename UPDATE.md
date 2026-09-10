@@ -1,8 +1,6 @@
 # Bestehende Vanilla-Installation aktualisieren
 
-Das [Produktkonzept für Updates und Beiträge](docs/UPDATES.md) beschreibt den
-beschlossenen Frontend-/GitHub-Ausbau. Es ist noch kein automatischer Updater.
-Bis zu dessen Implementierung und Abnahme gilt der folgende Agentenablauf.
+Die [Updatefunktion mit GitHub und Beiträgen](docs/UPDATES.md) bietet den kontrollierten App-Ablauf nach ihrer lokalen Einrichtung. Für ältere Installationen, geänderte Laufzeitabhängigkeiten und abweichende Betriebswege gilt weiterhin der folgende Agentenablauf.
 
 Fester Einstieg: [Vanilla-Update](https://github.com/DenzerAI/Vanilla/blob/main/UPDATE.md).
 Dem Agenten **auf dem Zielrechner** genügt dieser Auftrag:
@@ -164,6 +162,9 @@ Diese Regeln gelten bei jedem Weiterbau und jeder Veröffentlichung:
 4. Den geprüften Quellstand veröffentlichen und die erfolgreichen GitHub-Prüfungen
    für diesen Commit kontrollieren. Erst dann als updatebereit melden.
    Feature-Branches und ungeprüfte Pushes sind keine Standardupdates.
+   Produktversion in `system/version.json` pflegen; aktuell gilt die Reihe 0.1.x.
+   Release und angezeigter Produktstand müssen übereinstimmen. Ganzzahlige
+   Schema-/Modulversionen sind davon unabhängig.
 5. README, AGENTS und dieser feste Link bleiben der Einstieg. Ändert sich der
    Übernahme- oder Betriebsweg, diesen Ablauf im selben Auftrag aktualisieren.
 

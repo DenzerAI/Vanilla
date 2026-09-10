@@ -33,6 +33,7 @@ class Operations:
             ("backup", "System sichern", values["backup"]["enabled"], {"type": "daily", "time": values["backup"]["time"]}),
             ("cleanup", "Speicher pflegen", True, {"type": "daily", "time": "04:00"}),
             ("index", "Suchindex aktualisieren", False, {"type": "manual"}),
+            ("update-check", "Vanilla-Updates prüfen", True, {"type": "manual"}),
         ]
         return [{"id": "system-" + handler, "name": name, "worker": "python", "managed": True, "status": "active" if enabled else "paused", "schedule": schedule, "instructions": name + ". Nutzt die gemeinsamen Systemeinstellungen und protokolliert das Ergebnis.", "python": {"handler": handler, "timeout": 600, "input": {}}, "retry": {"count": 0, "idempotent": True}} for handler, name, enabled, schedule in definitions]
 

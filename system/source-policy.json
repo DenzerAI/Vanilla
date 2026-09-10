@@ -85,7 +85,8 @@
     "wrapper/ui/assets/avatars/faces/pebble.svg": "3e7d4f9950659a1b0d577cc55d86fb0974d218988312d0b2cbe3af677b373895",
     "wrapper/ui/assets/avatars/faces/kibo.svg": "c14b1d81ec9c12f2d6c0c165c1fd8ba36f3d49f555c6e010a136f77e97b8a1cb",
     "wrapper/ui/assets/avatars/faces/lumi.svg": "d8202f35cb7c518742b2a79f84a632764d1b72b0358bea22e990652aa3959336",
-    "wrapper/ui/assets/avatars/faces/nori.svg": "7f717f3518b5e60aa56ce3c8359d20ca035b044dba717fc2fc29f2daa62f44d9"
+    "wrapper/ui/assets/avatars/faces/nori.svg": "7f717f3518b5e60aa56ce3c8359d20ca035b044dba717fc2fc29f2daa62f44d9",
+    "wrapper/ui/assets/github.svg": "7421820090b50ac79d7c2bf7c951a433d7098a8a9c474809207bdd45f62d9d46"
   },
   "syntheticLiterals": {
     "test/hero-client.test.mjs": {
