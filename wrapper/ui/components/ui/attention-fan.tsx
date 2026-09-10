@@ -1,3 +1,4 @@
+import {WeatherCardContent} from './weather-scene';
 import {MapPin} from 'lucide-react';
 import {LibraryThumbnail} from '../../library-thumbnail.jsx';
 "use client";
@@ -6,7 +7,7 @@ import {motion,useReducedMotion} from 'motion/react';
 import {ArrowUpRight,Bell,FileText,MessageCircle,BrainCircuit,ChevronLeft,ChevronRight,Clock} from '../../icons.jsx';
 import {attentionFanMotion} from '../../design-system.mjs';
 import './attention-fan.css';
-export interface AttentionItem {id:string;kind:string;title:string;description:string;prompt?:string;threadId?:string;noticeId?:string;entry?:any;job?:any;}
+export interface AttentionItem {id:string;kind:string;title:string;description:string;prompt?:string;threadId?:string;noticeId?:string;entry?:any;job?:any;weather?:any;weatherConfigured?:boolean;}
 export function AttentionFan({items,onOpen,onActiveChange,reduceMotion=false,disabled=false}:{items:AttentionItem[];onOpen:(item:AttentionItem)=>void;onActiveChange?:(item:AttentionItem)=>void;reduceMotion?:boolean;disabled?:boolean}) {
   const [selected,setSelected]=useState<string|null>(null),[hovered,setHovered]=useState<string|null>(null);
   const index=Math.max(0,items.findIndex(item=>item.id===selected)), active=items[index];
@@ -26,21 +27,26 @@ export function AttentionFan({items,onOpen,onActiveChange,reduceMotion=false,dis
     <div className="attention-fan-track">
       {visible.map(i=>{
         const item=items[i],isActive=i===index,isHovered=hovered===item.id,side=isActive?0:i===(index+1)%items.length?1:-1;
+        const weatherReady=item.kind==='weather'&&item.weather?.status==='ready';
         const Icon=item.kind==='weather'?MapPin:item.kind==='job'?Clock:item.kind==='artifact'?FileText:item.kind==='request'||item.kind==='notice'?Bell:item.kind==='report'?FileText:item.kind==='chat'?MessageCircle:BrainCircuit;
-        return <motion.button type="button" key={item.id} className={'attention-fan-card'+(isActive?' is-active':'')+(isHovered?' is-hovered':'')} data-side={side}
+        return <motion.button type="button" key={item.id} className={'attention-fan-card'+(weatherReady?' weather-card':'')+(isActive?' is-active':'')+(isHovered?' is-hovered':'')} data-side={side}
           initial={false} animate={{rotate:isHovered?0:side*(compact?attentionFanMotion.compactRotation:attentionFanMotion.rotation),y:isHovered?attentionFanMotion.hoverLift:isActive?0:attentionFanMotion.depth,scale:isHovered?attentionFanMotion.hoverScale:isActive?1:attentionFanMotion.scale}}
           transition={reduced?{duration:0}:{type:'spring',...attentionFanMotion.spring}}
           onPointerEnter={e=>{if(e.pointerType==='mouse'&&!disabled)setHovered(item.id);}}
           onFocus={e=>{if(e.currentTarget.matches(':focus-visible'))setHovered(item.id);}} onBlur={()=>setHovered(null)}
-          disabled={disabled} aria-label={item.title+(isActive||isHovered?' öffnen':' auswählen')} aria-current={isActive?'true':undefined}
+          disabled={disabled} aria-label={item.title+(weatherReady?' · '+item.description:'')+(isActive||isHovered?(weatherReady?' · Wetterbericht in neuem Chat öffnen':' öffnen'):' auswählen')} aria-current={isActive?'true':undefined}
           onClick={()=>{if(Date.now()<ignoreClick.current)return;isActive||isHovered?onOpen(item):select(i);}}>
+          <>{weatherReady?<WeatherCardContent item={item} active={isActive||isHovered} reduceMotion={!!reduced}/>:<>
           <span className="attention-fan-kind"><Icon size={20} strokeWidth={undefined}/><span>{({weather:'Wetter',artifact:'Zuletzt erstellt',job:'Als Nächstes',request:'Rückfrage',notice:'Hinweis',report:'Ergebnis',chat:'Neue Antwort',prompt:'Mit dir'})[item.kind as 'request']}</span></span>
           {item.kind==='artifact'&&item.entry&&<LibraryThumbnail key={item.entry.id || item.entry.path} entry={item.entry} variant="card"/>}
-          <strong>{item.title}</strong><span className="attention-fan-description">{item.description}</span>
-          <span className="attention-fan-action"><span>{item.kind==='artifact'?'Vorschau öffnen':item.kind==='weather'?'Ort einstellen':''}</span><ArrowUpRight className="attention-fan-arrow" size={18} strokeWidth={undefined}/></span>
+          <strong>{item.title}</strong>{item.description&&<span className="attention-fan-description">{item.description}</span>}
+          {item.kind==='weather'&&item.weather?.status==='ready'&&<span className="attention-fan-action">Open-Meteo · Stand {new Date(item.weather.time).toLocaleTimeString('de-DE',{hour:'2-digit',minute:'2-digit'})}</span>}
+          <span className="attention-fan-action"><span>{item.kind==='artifact'?'Weitermachen':item.kind==='weather'?(item.weatherConfigured&&item.weather?.status!=='unresolved'?'Wetterbericht öffnen':'Ort einstellen'):item.kind==='chat'?'Gespräch öffnen':item.kind==='report'?'Ergebnis besprechen':item.kind==='job'?'Auftrag ansehen':item.kind==='request'?'Antworten':item.kind==='notice'?'Hinweis ansehen':'Entwurf vorbereiten'}</span><ArrowUpRight className="attention-fan-arrow" size={18} strokeWidth={undefined}/></span>
+          </>}</>
         </motion.button>;
       })}
     </div>
-    {items.length>1&&<div className="attention-fan-navigation"><button type="button" className="icon-button" aria-label="Vorherige Karte" disabled={disabled} onClick={()=>select(index-1)}><ChevronLeft size={16} strokeWidth={undefined}/></button><span aria-live="polite">{index+1} / {items.length}</span><button type="button" className="icon-button" aria-label="Nächste Karte" disabled={disabled} onClick={()=>select(index+1)}><ChevronRight size={16} strokeWidth={undefined}/></button></div>}
+    {<div className="attention-fan-navigation">{items.length>1&&<><button type="button" className="icon-button" aria-label="Vorherige Karte" disabled={disabled} onClick={()=>select(index-1)}><ChevronLeft size={16} strokeWidth={undefined}/></button><span aria-live="polite">{index+1} / {items.length}</span><button type="button" className="icon-button" aria-label="Nächste Karte" disabled={disabled} onClick={()=>select(index+1)}><ChevronRight size={16} strokeWidth={undefined}/></button></>}</div>}
+    <div className="attention-fan-credit">{active.kind==='weather'&&active.weather?.status==='ready'&&!active.weather.preview&&<a href="https://open-meteo.com/" target="_blank" rel="noreferrer" title="Wetterdaten von Open-Meteo">Open-Meteo</a>}</div>
   </section>;
 }

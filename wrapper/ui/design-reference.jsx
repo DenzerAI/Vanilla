@@ -1,3 +1,4 @@
+import {WeatherPreview} from './weather-preview';
 import { IconMotionPreview } from './icon-motion-preview';
 import {VoiceWave,VoiceStatus} from "./voice-visual";
 import { AvatarMotionSetting } from "./avatar-motion-setting.jsx";
@@ -72,6 +73,8 @@ export function DesignReference({ theme, tone, accent }) {
       <div className="welcome agent-chat-welcome chat-start"><div className="chat-start-intro"><Avatar avatar="nori" color="neutral" large/><ChatStartHeading texts={['Hier kannst du direkt weitermachen.','Deine letzte Datei liegt hier für dich bereit.']}/></div></div>
       <AttentionFan items={conversationStarters} onOpen={item=>setSuggestionDraft(item.prompt)}/>
       <p className="page-note">Ein kompakter Fächer für Hinweise und Gesprächseinstiege. Seitliche Karten wählen aus, die vordere öffnet den Inhalt. Die Vorschau füllt nur den Entwurf darunter.</p>
+      <h3 className="section-heading">Wetter · Himmel im Glasfächer</h3>
+      <WeatherPreview/>
       <h3 className="section-heading">Sprache · Pegel und Erkennung</h3>
       <div className="composer-entry"><VoiceWave levels={Array.from({length:60},(_,i)=> i>18 && i<45 ? (1+Math.sin(i*.7))*.08 : 0)}/></div>
       <div className="composer-entry"><VoiceStatus label="Wird erkannt" busy/></div>

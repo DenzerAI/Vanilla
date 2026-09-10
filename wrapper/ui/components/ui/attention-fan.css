@@ -1,6 +1,6 @@
 .attention-fan { width: 100%; max-width: 480px; min-width: 0; container-type: inline-size; }
 .attention-fan-track { display: grid; justify-items: center; padding: var(--space-24) 0 var(--space-40); touch-action: pan-y; }
-.attention-fan-card { grid-area: 1 / 1; width: 62%; max-width: 230px; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-12); padding: var(--space-16); min-height: 152px; text-align: left; border: 1px solid var(--border); border-radius: var(--radius-panel); background: var(--suggestion-glass); background-image: var(--popover-glass-sheen); backdrop-filter: blur(28px) saturate(1.5); -webkit-backdrop-filter: blur(28px) saturate(1.5); color: var(--text); box-shadow: var(--popover-glass-shadow); position: relative; left: calc(var(--fan-side) * 16cqw); transform-origin: center bottom; overflow-wrap: anywhere; }
+.attention-fan-card { grid-area: 1 / 1; width: 62%; max-width: 230px; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-8); padding: var(--space-16); box-sizing: border-box; height: 224px; min-height: 224px; max-height: 224px; overflow: hidden; text-align: left; border: 1px solid var(--border); border-radius: var(--radius-panel); background: var(--suggestion-glass); background-image: var(--popover-glass-sheen); backdrop-filter: blur(28px) saturate(1.5); -webkit-backdrop-filter: blur(28px) saturate(1.5); color: var(--text); box-shadow: var(--popover-glass-shadow); position: relative; left: calc(var(--fan-side) * 16cqw); transform-origin: center bottom; overflow-wrap: anywhere; }
 .attention-fan-card.is-active { background-color: var(--suggestion-glass-hover); }
 .attention-fan-kind { display: flex; align-items: center; gap: var(--space-8); font-size: var(--text-caption); color: var(--muted); }
 .attention-fan-kind svg { color: var(--brand-accent); flex-shrink: 0; }
@@ -64,3 +64,11 @@
 .library-thumbnail-card .library-document-mini { width: 100%; border: 0; border-radius: var(--radius-button); }
 .library-thumbnail-card .library-document-excerpt { width: 100%; transform: none; box-sizing: border-box; font-family: var(--font-ui); font-size: var(--text-caption); line-height: var(--leading-normal); padding: var(--space-12); }
 .library-thumbnail-card .library-document-mini .library-format { display: none; }
+
+.attention-fan-kind, .attention-fan-action { flex-shrink: 0; }
+.attention-fan-card > strong { flex-shrink: 0; max-height: 2lh; }
+.attention-fan-description { max-height: 2lh; }
+.attention-fan-navigation { min-height: var(--control-touch); }
+.attention-fan-credit { min-height: var(--space-20); font-size: var(--text-caption); text-align: center; line-height: var(--leading-normal); }
+.attention-fan-credit a { color: var(--muted); text-decoration: underline; text-underline-offset: var(--space-2); }
+.skeleton-attention::after { content: ''; display: block; height: var(--space-20); }

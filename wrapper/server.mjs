@@ -1,3 +1,5 @@
+import {weatherChatOpener} from './weather-report.mjs';
+import {installWeatherRoutes} from './weather.mjs';
 import {chatArchiveUpdater} from './chat-archive.mjs';
 import {briefingChatOpener} from './briefing-chat.mjs';
 import {demoBriefings} from './ui/planner-briefings.mjs';
@@ -554,6 +556,7 @@ const mime = {
 };
 const routes = new Map();
 const route = (method, url, fn) => routes.set(method + " " + url, fn);
+const weatherService=installWeatherRoutes(route);
 const restartGate = createRestartGate({
   sessions: () => [...new Set([...active].map(([id,turn])=>`${id}:${turn}`).concat([...turnLocks].map(id=>`${id}:starting`), [...voiceSessions].map(id=>`${id}:voice`), liveBrowserSessions()))],
   restart: async () => {
@@ -632,6 +635,13 @@ route("GET", "/api/bootstrap", async () => {
 });
 const updateChat = chatArchiveUpdater({store, workers, active, turnLocks, voiceSessions, loaded, restartGate, emit});
 const openBriefingChat = briefingChatOpener({store, newChat, cache:threadCache, emit, updateChat});
+const openWeatherChat = weatherChatOpener({store,weather:weatherService,
+  readProfile:()=>readFile(path.join(workspace,'soul','USER.md'),'utf8'),
+  openBriefing:openBriefingChat,sendTurn,isRestarting:()=>restartGate.restarting});
+route('POST','/api/weather/chat',b=>{
+  const policy=runMode(b.mode);
+  return openWeatherChat({requestId:b.requestId,projectId:b.projectId,selection:{worker:b.worker||'auto',model:b.model,serviceTier:b.serviceTier||null,mode:policy.mode,permission:policy.permission}});
+});
 route("POST", "/api/planner/chat", async b => {
   let item;
   if (b.demoDate) {

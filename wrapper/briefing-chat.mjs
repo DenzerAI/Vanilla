@@ -4,7 +4,7 @@ import {briefingText} from './ui/planner-briefings.mjs';
 // One durable conversation per report, including simultaneous clicks in two windows.
 export function briefingChatOpener({store, newChat, cache, emit, updateChat}) {
   const pending = new Map();
-  return function open(item) {
+  return function open(item, selection = {}) {
     if (pending.has(item.id)) return pending.get(item.id);
     const work = (async () => {
       const existing = store.state.chats.find(c => c.briefingId === item.id);
@@ -13,7 +13,7 @@ export function briefingChatOpener({store, newChat, cache, emit, updateChat}) {
         return {thread:{id:existing.id}};
       }
       const result = await newChat({title:item.title + (item.demo ? ' · Beispiel' : '') + ' · ' + new Date(item.created_at*1000).toLocaleDateString('de-DE'),
-        projectId:'default', cwd:await store.projectRoot('default')});
+        ...selection, projectId:item.projectId || 'default', cwd:await store.projectRoot(item.projectId || 'default')});
       const chat = store.chat(result.thread.id);
       const snapshot = {id:chat.id, turns:[{id:'briefing-' + item.id, status:'completed',
         startedAt:item.created_at, completedAt:item.created_at,

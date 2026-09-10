@@ -34,6 +34,7 @@ export const fonts = [
   },
 ];
 export const typography = [
+  {id: "weather", label: "Wettertemperatur", size: 56, line: 1, weight: 400, use: "Aktuelle Temperatur im Wetterfächer"},
   {
     id: "caption",
     label: "Zusatzinformation",
@@ -456,6 +457,7 @@ export const motion = { 'avatar-blink-duration': `${avatarMotion.blink}s`, 'avat
 export function renderDesignCSS() {
   const shared = Object.fromEntries([
     ...Object.entries(typeMetrics),
+    ...Object.entries(weatherArtwork),
     ...fonts.map((f) => [f.token, f.value]),
     ...typography.map((t) => [`text-${t.id}`, `${t.size / 16}rem`]),
     ...spacing.map((n) => [`space-${n}`, `${n / 16}rem`]),
@@ -486,3 +488,30 @@ export const scrubberSprings = { pointer: { stiffness: 700, damping: 52, mass: .
 export const attentionFanMotion = {hoverLift: -10, hoverScale: 1.02, rotation: 12, compactRotation: 6, depth: 18, scale: 0.94, spring: {stiffness: 180, damping: 25, mass: 0.8}};
 
 export const chatHeadingMotion = {character: 90, punctuation: 360, hold: 20000, fade: 900};
+
+// Own atmospheric illustrations, inspired by Apple's Weather hierarchy.
+// These fixed scene colors describe weather, independently of the app theme.
+export const weatherArtwork = {
+ 'weather-ink':'#ffffff', 'weather-shade':'#06182d',
+ 'weather-sunny-top':'#0755b6', 'weather-sunny-bottom':'#38a8ef',
+ 'weather-cloudy-top':'#425d79', 'weather-cloudy-bottom':'#8fa9bd',
+ 'weather-rain-top':'#1a304b', 'weather-rain-bottom':'#587e98',
+ 'weather-snow-top':'#54728e', 'weather-snow-bottom':'#b8d4e1',
+ 'weather-frost-top':'#285c96', 'weather-frost-bottom':'#82bddd',
+ 'weather-fog-top':'#556977', 'weather-fog-bottom':'#9fb3bd',
+ 'weather-storm-top':'#232a44', 'weather-storm-bottom':'#59657f',
+ 'weather-night-top':'#091a3a', 'weather-night-bottom':'#254f7a',
+ 'weather-sun-rays':'repeating-conic-gradient(from 8deg, transparent 0deg 16deg, #fff1a2 18deg, transparent 21deg 45deg)',
+ 'weather-sun':'#ffdf55', 'weather-sun-core':'#fff1a2',
+ 'weather-cloud':'#f4faff', 'weather-cloud-shadow':'#7992aa',
+ 'weather-ice':'#d1f4ff', 'weather-warning':'#ffe1a3',
+ 'weather-warning-bg':'#523613',
+ 'weather-text-shadow':'0 1px 5px #06182d66',
+ 'weather-cloud-duration':'24s', 'weather-rain-duration':'1400ms',
+ 'weather-snow-duration':'10s', 'weather-easing':'ease-in-out',
+ 'weather-sun-duration':'18s', 'weather-rays-duration':'90s', 'weather-frost-duration':'22s', 'weather-cloud-wind-duration':'12s', 'weather-rain-heavy-duration':'900ms',
+ 'weather-leading':'1', 'weather-tracking':'-2px',
+};
+
+export const weatherParallaxMotion = {stiffness:110,damping:24,mass:0.6};
+export const weatherDepth = {back:3,front:7,near:11,light:18};

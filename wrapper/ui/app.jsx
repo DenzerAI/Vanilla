@@ -1,3 +1,4 @@
+import { WeatherMotionSetting } from './weather-motion';
 import { StartTextMotionSetting } from './chat-start-preferences';
 import { IconMotionSetting } from './icon-motion-setting';
 import { IconButton } from './icon-button';
@@ -1145,22 +1146,33 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     setChatMenu(null);
     setTimeout(() => inputRef.current?.focus(), 50);
   }
-  async function openChat(id) {
+  const weatherRequestRef=useRef(null);
+  async function openWeatherReport(item) {
+    if(!item.weatherConfigured || item.weather?.status==='unresolved'){openSettings('user');return;}
+    const key=projectRef.current+'|'+item.title;
+    if(weatherRequestRef.current?.key!==key)weatherRequestRef.current={key,requestId:crypto.randomUUID()};
+    const result=await api('/weather/chat',{requestId:weatherRequestRef.current.requestId,projectId:projectRef.current,worker:current?.workerId||draftWorker,model:pickerModel||model,serviceTier:current?.serviceTier||draftSpeed,mode});
+    await refreshChats();
+    await openChat(result.thread.id,result.meta);
+    weatherRequestRef.current=null;
+    if(result.summaryError)notify(result.summaryError);
+  }
+  async function openChat(id, restoredMetadata) {
     if (!embedded) {
       const existing = paneOrder.find(slot => sessions.current[slot].current?.id === id);
       if (existing != null && existing !== activePaneRef.current) { activatePane(existing); setView("chat"); return; }
       if (activePaneRef.current !== 0 && sessions.current[activePaneRef.current].current) {
         setView("chat");
-        return sessions.current[activePaneRef.current].current.openChat(id);
+        return sessions.current[activePaneRef.current].current.openChat(id, restoredMetadata);
       }
     }
-    return openChatHere(id);
+    return openChatHere(id, restoredMetadata);
   }
-  async function openChatHere(id) {
+  async function openChatHere(id, restoredMetadata) {
     if (busy) { notify("Bitte warten, bis die Nachricht übertragen wurde."); return; }
     if (chatRef.current === id) { setView("chat"); setModal(null); return; }
     saveDraft();
-    const metadata = chats.find((c) => c.id === id);
+    const metadata = restoredMetadata || chats.find((c) => c.id === id);
     chooseProject(metadata?.projectId || projectRef.current);
     setMode(metadata?.mode || "default");
     if (metadata?.model) setModel(metadata.model);
@@ -1929,7 +1941,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 ) : !thread?.turns?.length ? (
                   <ChatStart api={api} routines={!!boot.features?.routines} revision={libraryRevision} composing={!!text.trim() || attachments.length>0} greeting={greeting} profile={boot.settings} requests={requests} notifications={notificationState.data?.items || []} chats={chats} projectId={projectId} error={notificationState.error}
                     onOpen={async item=>{
-                      if(item.kind==='weather'){openSettings('user');return;}
+                      if(item.kind==='weather'){await openWeatherReport(item);return;}
                       if(item.prompt){setText(item.prompt);inputRef.current?.focus();return;}
                       if(item.entry){setModal({type:'library-file',entry:item.entry,entries:[item.entry]});return;}
                       if(item.job){setModal({type:'job',job:item.job});return;}
@@ -2573,6 +2585,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                     <select aria-label="Flächenlicht" value={boot.settings.panelLight || "animated"} onChange={e => guard(() => saveSettings({panelLight: e.target.value}))()}>{appearanceOptions.panelLight.options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
                   </SettingRow>
                   <StartTextMotionSetting/>
+                  <WeatherMotionSetting/>
                   <SettingRow title="Reiseeffekt" description="Sanft wandernde Lichtpunkte auf der Startansicht oder in allen Chats.">
                     <select aria-label="Reiseeffekt" value={boot.settings.welcomeParticles || "on"} onChange={e => guard(() => saveSettings({welcomeParticles: e.target.value}))()}>{appearanceOptions.welcomeParticles.options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
                   </SettingRow>

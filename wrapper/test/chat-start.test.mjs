@@ -22,6 +22,12 @@ test('fan renders empty, single and multiple entries with accessible action name
   const file=dir+'/fan.mjs';await writeFile(file,result.outputFiles[0].contents);
   const {AttentionFan}=await import(pathToFileURL(file));
   const render=items=>renderToStaticMarkup(React.createElement(AttentionFan,{items,onOpen:()=>{},reduceMotion:true}));
+  const sunny=render([{id:'weather',kind:'weather',title:'Teststadt',description:'24 °C · Klar',weather:{status:'ready',temperature:24,code:0,isDay:true,high:26,low:12,time:1800000000000}}]);
+  assert.match(sunny,/weather-temperature/);assert.match(sunny,/24°/);assert.match(sunny,/data-scene="sunny"/);assert.match(sunny,/data-night="false"/);assert.match(sunny,/H: 26°/);
+  const snow=render([{id:'weather',kind:'weather',title:'Teststadt',description:'Schnee',weather:{status:'ready',temperature:-2,code:73,isDay:false,time:1800000000000}}]);
+  assert.match(snow,/data-scene="snow"/);assert.match(snow,/data-night="true"/);assert.doesNotMatch(snow,/weather-sun/);assert.doesNotMatch(snow,/Unwetterwarnung/);
+  const failed=render([{id:'weather',kind:'weather',title:'Teststadt',description:'Wetter konnte nicht geladen werden.',weather:{status:'error'}}]);
+  assert.doesNotMatch(failed,/weather-scene/);assert.match(failed,/nicht geladen/);
   assert.equal(render([]),'');
   const single=render([conversationStarters[0]]);assert.match(single,/Gemeinsam planen öffnen/);assert.doesNotMatch(single,/Nächste Karte/);
   const many=render([...conversationStarters,{id:'4',kind:'notice',title:'Hinweis',description:'Neu'},{id:'5',kind:'report',title:'Ergebnis',description:'Neu'}]);
@@ -57,7 +63,7 @@ test('weather card opens deterministic settings and reflects only the saved loca
  assert.equal(unset.prompt,undefined);
  const saved=chatStartFeed({includeWeather:true,userProfile:{location:'Beispielstadt'}}).find(i=>i.kind==='weather');
  assert.equal(saved.title,'Beispielstadt');
- assert.match(saved.description,/noch nicht verbunden/);
+ assert.match(saved.description,/wird geladen/);
  const failed=chatStartFeed({includeWeather:true,profileError:true}).find(i=>i.kind==='weather');
  assert.match(failed.description,/nicht geladen/);
 });

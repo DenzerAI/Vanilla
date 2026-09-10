@@ -671,7 +671,7 @@ Der kompakte Startfächer mischt bis zu fünf Karten. Rückfragen und Probleme k
 zuerst, danach die letzte vorhandene Datei, der nächste aktive Benutzerauftrag mit
 serverseitigem nextRun, das neueste Routine-Ergebnis und ungelesene Chatantworten.
 Eine Wetterkarte bleibt reserviert; ohne Einrichtung benennt sie den fehlenden Ort
-und die fehlende Wetterquelle, statt Beispieldaten als Wetter auszugeben.
+statt Beispieldaten als Wetter auszugeben.
 Dateien öffnen LibraryPreview, Jobs ihren vorhandenen Dialog, Ergebnisse den
 bestehenden Berichtschat. Keine Aktion startet beim Anzeigen automatisch Arbeit.
 Datei und Routine-Ergebnis mit derselben job_id werden nicht doppelt gezeigt.
@@ -680,7 +680,7 @@ vorhandenen GET /jobs, /library und /planner/results; Fokus und relevante Ereign
 aktualisieren die Daten. Kleinere Rollen: Überschrift subheading, Kartentitel control.
 
 
-Die letzte Datei im Startfächer verwendet LibraryThumbnail und die Aktion „Vorschau öffnen“ für LibraryPreview. HTML und nicht unterstützte Formate zeigen das vorhandene Formatsymbol; keine automatisch laufende HTML-Seite in der Miniatur. Die Wetterkarte zeigt ohne Einrichtung ein Ortssymbol, „Dein Ort ist noch nicht eingerichtet.“ und „Ort einstellen“. Die Aktion öffnet direkt Einstellungen → Dein Profil. Nach Speicherung zeigt sie den Ort; fehlender Wetterabruf wird ausdrücklich benannt. Ladefehler werden nicht als fehlende Einrichtung ausgegeben. Die Sprechblase steht als Produktionsbaustein in Unser Design.
+Die letzte Datei im Startfächer verwendet LibraryThumbnail und die Aktion „Vorschau öffnen“ für LibraryPreview. HTML und nicht unterstützte Formate zeigen das vorhandene Formatsymbol; keine automatisch laufende HTML-Seite in der Miniatur. Die Wetterkarte zeigt ohne Einrichtung ein Ortssymbol, „Dein Ort ist noch nicht eingerichtet.“ und „Ort einstellen“. Die Aktion öffnet direkt Einstellungen → Dein Profil. Nach Speicherung zeigt sie aktuelle Wetterdaten und öffnet den unten beschriebenen Wetterbericht; Abruffehler werden ausdrücklich benannt. Ladefehler werden nicht als fehlende Einrichtung ausgegeben. Die Sprechblase steht als Produktionsbaustein in Unser Design.
 
 MD-Miniaturen im Startfächer nutzen die Kartenvariante von LibraryThumbnail mit der ganzen Dokumentbreite, normal lesbarer kleiner Schrift und ohne große Endungsplakette. Die Bibliotheksdarstellung bleibt unverändert.
 
@@ -693,3 +693,47 @@ Kopf und navigiert höchstens bis zu dessen Wurzel zurück. Workspace-Wechsel
 verwerfen vorherige Dateiauswahl und Ordnerziele. Ausdrückliche Auftragslinks
 können weiterhin ihren zugehörigen Ordner öffnen. Technische Installationsnamen
 sind keine Workspace-Titel. Geschützte Einträge sind zunächst ausgeblendet.
+
+
+### Wetter im bestehenden Glasfächer
+
+Die Wetterkarte verwendet WeatherCardContent und WeatherScene innerhalb von
+AttentionFan. Fächergeometrie, Höhe, Navigation und Aktionen bleiben gemeinsam.
+Ort über großer Temperatur (Rolle weather, 56 px), Wetterlage, optional echte
+Tageshöchst-/Tiefstwerte; im Fuß steht nur Heute & 7 Tage. Quelle und Datenstand stehen im Bericht; der erforderliche Open-Meteo-Link bleibt bei ausgewählter echter Wetterkarte klein unter dem Fächer erreichbar. Fehlende Werte
+werden ausgelassen. Lade-, Fehler- und Einrichtungszustände behalten die bisherige
+neutrale Textkarte. Ohne Ort oder bei mehrdeutigem Altort öffnet ein Klick das Profil; bei eingerichtetem Ort startet er einen neuen Wetterchat im aktuellen Workspace.
+
+Eigene Himmelsszenen orientieren sich an Apples iOS-26-Wetterdarstellung:
+sattes Blau und gelbe Sonne, geschichtete weiche Wolken, Regen, Schnee, Frost,
+gefrierender Regen, Nebel und Gewitter. is_day bestimmt Tag/Nacht unabhängig
+vom App-Theme; bei fehlendem Tag/Nacht-Wert wird kein Nachtzustand behauptet.
+Temperaturen unter oder gleich null ergänzen bei klarem Wetter Frost. Reifnebel, Nieselregen, Starkregen, Hagel und stärkere Winde besitzen eigene Details.
+Wettercodes sind keine amtlichen Warnungen. Die ausdrücklich markierte Warnkarte
+in WeatherPreview ist nur ein Designbeispiel, bis eine Warnquelle angeschlossen ist.
+Apple-Referenzbilder werden nicht als Produktassets übernommen.
+
+Farben, Licht, Typografie und Bewegungsdauern führt weatherArtwork in der
+zentralen Designquelle. Glasrahmen und Fächerschatten bleiben erhalten; die
+Landschaft ist auf die Kartenfläche begrenzt. Die abdunkelnde Textebene hält
+Beschriftungen ruhig lesbar. Keine blitzenden Gewittereffekte. Aussehen → Visuell
+→ Wetterbewegung speichert den Ein-/Aus-Zustand lokal und synchronisiert Tabs;
+Speicherfehler bleiben sichtbar. Reduzierte Bewegung zeigt statische Szenen,
+inaktive Karten und versteckte Ansichten pausieren. Pointer-Parallaxe bewegt Hintergrund, Wolken und Niederschlag mit unterschiedlichen, zentral festgelegten Tiefen; die Schrift bleibt fest. Ein federnder Rücklauf und verschobenes Flächenlicht ergänzen die feine Liquid-Glass-Kante. Touch benötigt keine Bewegungssensoren. Sonne und Strahlen bewegen sich sehr langsam, Eis schimmert sanft. Forced Colors blendet die
+Dekoration aus. Unser Design zeigt alle Wetterzustände im produktiven Fächer
+mit ausdrücklich markierten Beispieldaten und Tag-/Nachtwahl.
+
+Der Wetterklick liest den gespeicherten Ort serverseitig und holt eine aktuelle
+Open-Meteo-Vorhersage. Erst nach gültigen sieben Tagen entsteht über den bestehenden
+Berichtschat-Baustein eine neue Session im aktiven Workspace. Der dauerhaft gespeicherte
+Bericht enthält aktuelle Werte, sieben Tageszeilen und die nächsten Stunden mit
+Ortszeit, Einheiten, Quelle, Abrufzeit und fehlenden Werten als Strich. Er bleibt
+beim Wiederöffnen als zeitgebundener Bericht erkennbar. Danach startet genau eine
+kurze KI-Einordnung über den bestehenden Turn-Anschluss. Sie nutzt nur belegten
+persönlichen oder Projektkontext dieses Workspaces, maximal drei passende Hinweise;
+keine erfundenen Baustellen, keine Zuordnung fremder Orte und keine Arbeitsfreigaben.
+Ohne solchen Kontext genügt der allgemeine Ausblick. Fehlende Einordnung lässt den
+Datenbericht erreichbar. Wiederholungen desselben Klicks sind über requestId
+idempotent, ein neuer bewusster Klick erzeugt eine neue Session. Der Composer-Entwurf
+bleibt erhalten. Forecast-Fehler erzeugen keine leere Session. Die Quellenangabe
+entfällt auf der kompakten Kachel; unter dem Fächer steht bei ausgewähltem Wetter der Quellenlink. Die Quellenzeile reserviert ihre Höhe auch bei anderen Karten. Ausführliche Quellen stehen im Wetterbericht und im Profil.
