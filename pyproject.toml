@@ -14,6 +14,7 @@ dependencies = [
   "rapidfuzz>=3.12,<4",
   "PyYAML>=6,<7",
   "cryptography>=50,<51",
+  "keyring>=25.7,<26",
 ]
 
 [project.optional-dependencies]

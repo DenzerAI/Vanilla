@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo
 from .backups import Backups
 from .database import dump
 from .files import atomic_write, read_json
-from .secrets import save_secret, register_secret
+from .provider_vault import ProviderVault
 from .service import label, service_status
 
 
@@ -74,7 +74,7 @@ class Operations:
 
     def status(self):
         heartbeat = read_json(self.config.data / "heartbeat.json", None)
-        return {"settings": self.settings.read(), "checks": self.checks(), "heartbeat": heartbeat, "service": service_status(self.config), "embeddings": self.knowledge.embeddings.status(), "maintenance": self.db.rows("SELECT * FROM maintenance ORDER BY name"), "memory": {"sources": self.db.rows("SELECT count(*) n FROM memory_sources WHERE forgotten=0")[0]["n"], "pending": len(self.memory.pending), "mode": "local-extractive", "changes": self.db.rows("SELECT * FROM memory_changes ORDER BY created_at DESC LIMIT 20")}, "storage": {"free_mb": shutil.disk_usage(self.config.data).free // 1024**2, "database_bytes": (self.config.data / "agent.sqlite3").stat().st_size}, "backup_installed": bool(self.backups.binary), "access": {"enabled": self.config.login_required, "origin": self.config.public_origin}, "stream": {"connected": bool(self.runtime and self.runtime.stream.connected), "clients": len(self.runtime.stream.clients) if self.runtime else 0}}
+        return {"settings": self.settings.read(), "checks": self.checks(), "heartbeat": heartbeat, "service": service_status(self.config), "embeddings": self.knowledge.embeddings.status(), "maintenance": self.db.rows("SELECT * FROM maintenance ORDER BY name"), "memory": {"sources": self.db.rows("SELECT count(*) n FROM memory_sources WHERE forgotten=0")[0]["n"], "pending": len(self.memory.pending), "mode": "local-extractive", "changes": self.db.rows("SELECT * FROM memory_changes ORDER BY created_at DESC LIMIT 20")}, "storage": {"free_mb": shutil.disk_usage(self.config.data).free // 1024**2, "database_bytes": (self.config.data / "agent.sqlite3").stat().st_size}, "backup_installed": bool(self.backups.binary), "vault": ProviderVault(self.config.data / "provider-vault", self.db).status(), "access": {"enabled": self.config.login_required, "origin": self.config.public_origin}, "stream": {"connected": bool(self.runtime and self.runtime.stream.connected), "clients": len(self.runtime.stream.clients) if self.runtime else 0}}
 
     def run(self, handler):
         try:
@@ -136,16 +136,37 @@ class Operations:
     def configure_access(self, password):
         if len(password) < 8:
             raise ValueError("Bitte mindestens acht Zeichen verwenden.")
-        save_secret("system-access", password, self.config, self.db)
         api_token = secrets.token_urlsafe(48)
-        save_secret("system-api", api_token, self.config, self.db)
-        register_secret(self.db, "system-access", "System · Anmeldung")
-        register_secret(self.db, "system-api", "System · Lokale Werkzeuge")
-        host = read_json(self.config.data / "host.json", {})
-        atomic_write(self.config.data / "host.json", dump({**host, "access_enabled": True}))
-        self.config.login_password, self.config.access_token = password, api_token
-        with self.db.transaction() as cx:
-            cx.execute("DELETE FROM sessions")
+        vault = ProviderVault(self.config.data / 'provider-vault', self.db)
+        host_path = self.config.data / 'host.json'
+        with self.db.lock:
+            old_host = host_path.read_text() if host_path.exists() else None
+            host = json.loads(old_host) if old_host else {}
+            encrypted = {name: vault.encrypt(name, value) for name, value in
+                         [('system-access', password), ('system-api', api_token)]}
+            # Both credentials and their metadata commit together. A failed
+            # host-file write leaves the previous login and browser sessions valid.
+            wrote_host = False
+            try:
+                with self.db.transaction() as cx:
+                    for name, value in encrypted.items():
+                        cx.execute('INSERT INTO records VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at',
+                                   (vault.name(name), dump(value), time()))
+                    state = self.db.get('control/state.json')['value']
+                    if state:
+                        state['secrets'] = [s for s in state.get('secrets', []) if s['id'] not in encrypted] + [
+                            {'id': 'system-access', 'name': 'System · Anmeldung', 'system': True},
+                            {'id': 'system-api', 'name': 'System · Lokale Werkzeuge', 'system': True}]
+                        cx.execute('UPDATE records SET value=?,updated_at=? WHERE key=?', (dump(state), time(), 'control/state.json'))
+                    cx.execute('DELETE FROM sessions')
+                    atomic_write(host_path, dump({**host, 'access_enabled': True}))
+                    wrote_host = True
+            except BaseException:
+                if wrote_host:
+                    if old_host is None: host_path.unlink(missing_ok=True)
+                    else: atomic_write(host_path, old_host)
+                raise
+            self.config.login_password, self.config.access_token = password, api_token
         return {"ok": True, "loginRequired": True}
 
     def tailscale_binary(self):

@@ -153,7 +153,14 @@ class Backups:
                 self.db.backup(stage / "database.sqlite3")
                 for name,source in snapshot_paths(self.config):
                     (stage/name).mkdir(mode=0o700)
-                    if source.exists(): copy_stable(source,stage/name)
+                    if name == 'provider-vault':
+                        from .provider_vault import ProviderVault
+                        vault = ProviderVault(source, self.db)
+                        if vault.records():
+                            # Only the private staging directory of an encrypted
+                            # restic snapshot may contain the recovery key.
+                            atomic_write(stage/name/'provider.key', vault.key().decode('ascii'))
+                    elif source.exists(): copy_stable(source,stage/name)
                     elif name=='company' and os.environ.get('COMPANY_BASE'):
                         raise ValueError('Die konfigurierte Firmenbasis fehlt; Sicherung wurde nicht erstellt.')
                 # Host-specific addresses/services are re-established on the new host.

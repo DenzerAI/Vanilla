@@ -1222,11 +1222,14 @@ def routes(mail):
     @router.post("/internal/provider-secrets")
     async def secret(request: Request):
         b = await request.json()
+        if not isinstance(b, dict):
+            raise ValueError("Ungültige Tresoranfrage.")
         name = b.get("id", "")
+        mail.vault.name(name)
         if name.startswith("system-"):
             raise ValueError("Systemschlüssel werden getrennt verwaltet.")
         if b.get("action") == "save":
-            mail.vault.save(name, str(b["value"]))
+            mail.vault.save(name, b.get("value"))
             return {"ok": True}
         if b.get("action") == "read":
             return {"value": mail.vault.read(name)}

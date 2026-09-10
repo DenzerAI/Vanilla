@@ -85,6 +85,12 @@ def apply_pending(config):
             target,old=Path(step['target']),Path(step['old'])
             if target.exists():os.replace(target,old)
             if step['prepared']:os.replace(step['prepared'],target)
+        # Import the verified recovery key into a NEW scoped OS entry before
+        # committing the swap. Failure rolls back files and leaves old OS keys.
+        from .secrets import vault_database
+        from .provider_vault import ProviderVault
+        with vault_database(config) as db:
+            ProviderVault(config.data/'provider-vault', db).migrate()
         record['committed']=True
         atomic_write(journal,json.dumps(record))
         atomic_write(config.data/'restore-last.json',json.dumps({'ok':True,'snapshot':state['snapshot'],'safety':[s['old'] for s in steps if s['existed']],'restored_at':time()}))

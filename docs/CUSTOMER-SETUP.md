@@ -144,7 +144,7 @@ oder neutrale Vorlagen schreiben. Regeln: wrapper/surfaces/settings.md.
 ## operations
 
 App-Anmeldung über die vorhandenen Systemeinstellungen aktivieren. Der lokale
-Tresor speichert Appzugänge und Anbieterschlüssel verschlüsselt, ohne Hostschlüsselbund.
+Tresor speichert Appzugänge und Anbieterschlüssel verschlüsselt, mit einem eigenen installationsbezogenen Schutzschlüssel in der Betriebssystem-Schlüsselverwaltung.
 Backupziel und Wiederherstellungsschlüssel einrichten, Sicherung ausführen und einen
 echten Restore in einer getrennten Installation prüfen. Ein erfolgreicher Healthcheck
 allein bestätigt weder Backup noch Login noch Anbieterfunktion. Hostdienst und HTTPS
@@ -168,3 +168,9 @@ Für Weiterbau gilt system/MODULES.md. Quellen, erreichbare Endpunkte, Einrichtu
 Statusbedeutung und Funktionsprüfungen werden im selben Auftrag registriert.
 Neue Module besitzen ihre eigenen Daten und benutzen dokumentierte Schnittstellen.
 Die automatische Prüfung verhindert unregistrierte Dateien und Routen.
+
+
+Für Schlüsselablage, Neustart und Migration gilt [VAULT.md](VAULT.md).
+macOS benötigt einen zugänglichen Schlüsselbund, Linux eine entsperrbare
+Secret-Service-Sitzung. Ohne diese Voraussetzung schlägt Speichern sichtbar
+fehl; ein Prozessstart allein bestätigt noch keine nutzbare Schlüsselablage.

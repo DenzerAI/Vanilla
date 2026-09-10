@@ -68,7 +68,7 @@ die Aktivierung der laufenden Anwendung bleibt ein eigener Schritt.
 
 Die folgenden `host-service.py`-Befehle beschreiben den launchd-Installationsweg auf einem entsprechend berechtigten Zielhost. Sie setzen freie Ports 1989/1990 und die funktionierende native Tailscale-CLI voraus.
 
-Dieser Abschnitt ist ein Operator-Ablauf für einen regulär berechtigten Host-Prozess. Er ist keine Umgehung einer Worker-Sandbox. Die Web-App darf weiterhin weder Dienste installieren noch Serve oder Schlüsselbund ändern.
+Dieser Abschnitt ist ein Operator-Ablauf für einen regulär berechtigten Host-Prozess. Er ist keine Umgehung einer Worker-Sandbox. Die App verwendet ausschließlich ihren eigenen installationsbezogenen Tresoreintrag; fremde Schlüsselbund-Einträge bleiben unberührt. Dienst- und Netzwerkaktivierung folgen dem gesonderten Betriebsweg.
 
 Einmalig einen **stabilen eigenen Clone außerhalb der Werkbank und temporärer Verzeichnisse** anlegen:
 
@@ -144,7 +144,7 @@ Der getrennte Skilltree ist fertig gebaut und wird bereits über die bestehende 
 ## Bekannte Grenzen
 
 - Embedding-Modellgewichte fehlen; ohne Modell arbeitet die Suche mit Volltext/Fuzzy-Suche. Optionale Installation über `requirements-embeddings.lock` und `python -m core.models`.
-- System-Schlüsselbund, persönliche Worker-Logins und globale Aktivierung über die App bleiben gesperrt. Ein eigener lokaler Tresor ist vor produktiven Anbieter-Verbindungen erforderlich.
+- Die Schlüsselablage benötigt eine verfügbare Betriebssystem-Schlüsselverwaltung. Eigene Worker-Anmeldungen bleiben installationsbezogen; fremde Profile werden nicht übernommen. Einrichtung und Migration stehen in docs/VAULT.md.
 - Die vorhandenen Memory-Verlustfälle des Quellaudits sind nicht vollständig behoben oder abgenommen.
 - Restic ist optional; lokales Backup ist noch kein vollständiges ausfallsicheres Wiederherstellungskonzept. Vollständiger Betriebsumfang, eigene Zugänge und echter Restore-Test bleiben offen.
 - Der Scanner erkennt bekannte Muster; er beweist nicht die Abwesenheit unbekannter Namen oder kodierter Geheimnisse.

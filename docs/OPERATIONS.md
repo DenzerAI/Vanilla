@@ -243,7 +243,7 @@ Pause überschreibt. Diese Prüfungen versenden keine echten Nachrichten.
 
 ## Kundenbasis: Zugang und Sicherung
 
-Systemzugänge und Anbieterwerte verwenden den installationsgebundenen Fernet-Tresor in data/control/provider-vault und verschlüsselte Datensätze in SQLite. Keine Hostschlüsselbund-Fallbacks. App-Anmeldung ist über den bestehenden Einstellungsweg aktivierbar. Vor einem neuen Backup einen eigenen Wiederherstellungsschlüssel eingeben und getrennt vom Gerät aufbewahren. Ein ausdrücklich gewählter erreichbarer externer Ordner ist zulässig; Workspace und laufende Daten bleiben als Ziel ausgeschlossen.
+Systemzugänge und Anbieterwerte verwenden den installationsgebundenen Fernet-Tresor in data/control/provider-vault und verschlüsselte Datensätze in SQLite. Der Schutzschlüssel liegt in einem eigenen Betriebssystem-Eintrag; keine fremden Konten oder Klartext-Fallbacks. App-Anmeldung ist über den bestehenden Einstellungsweg aktivierbar. Vor einem neuen Backup einen eigenen Wiederherstellungsschlüssel eingeben und getrennt vom Gerät aufbewahren. Ein ausdrücklich gewählter erreichbarer externer Ordner ist zulässig; Workspace und laufende Daten bleiben als Ziel ausgeschlossen.
 
 Sicherungsschema 3 enthält Firmenbasis, Workspace einschließlich Identität und Ergebnisse, SQLite, Memory-Git-Historie, Diktataufnahmen, Provider-/Systemtresorschlüssel und eigene Codex-Verläufe. Modellgewichte und Caches werden neu aufgebaut; native Worker-Anmeldungen werden am Ziel erneut eingerichtet. Hostadressen und Dienstdefinitionen werden am Ziel neu bestimmt. Restore prüft den Bestand vor dem Ersetzen und führt die bisherige Rückkehrsicherung fort. Alte Sicherungen ohne Firmenbasis/Aufnahmen stellen diese Bestandteile nicht wieder her. Healthchecks sind keine vollständige Kundenauslieferungsabnahme.
 
@@ -265,3 +265,14 @@ geprüft. Eine Sicherung ohne App-Anmeldung darf einen bereits geschützten Zuga
 nicht abschalten; alte Stände werden dafür in einer neuen lokalen Installation
 geöffnet. Scheitert die Offline-Prüfung vor dem Austausch, bleibt der aktuelle
 Bestand erhalten und die fehlgeschlagene Anfrage wird nicht bei jedem Start wiederholt.
+
+
+## Geschützte Schlüsselablage ab Tresorformat 2
+
+[VAULT.md](VAULT.md) führt Einrichtung, Offline-Migration, Neustartverhalten
+und Wiederherstellung. App-Anmeldung, Anbieter und Backup verwenden denselben
+Anschluss. Neue App-Zugangswerte samt Metadaten und Sitzungswiderruf werden
+transaktional gespeichert. Beim Scheitern der Host-Datei bleibt der alte Zugang
+gültig. Vor dem Abschluss einer Wiederherstellung wird der geprüfte
+Sicherungsschlüssel in einen neuen installationsbezogenen OS-Eintrag übernommen;
+bei Fehlern stellt das vorhandene Journal den alten Dateistand wieder her.

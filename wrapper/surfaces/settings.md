@@ -233,3 +233,14 @@ Die boolesche Auswahl wird als on/off im lokalen Browserspeicher gespeichert,
 zwischen offenen Tabs synchronisiert und als gerätebezogen beschriftet.
 Unbekannte Werte verwenden die ruhige aktivierte Voreinstellung; Speicherfehler
 bleiben sichtbar. Reduzierte Bewegung in App oder System hat Vorrang.
+
+
+## Installationsbezogene Schlüsselablage
+
+Zugang zeigt vor Anmeldung eine vorhandene SettingRow „Schlüsselablage“ aus
+`/api/system/status.vault`. Die Zeile unterscheidet noch nicht eingerichtet,
+geschützt eingerichtet, Migration erforderlich und beschädigte Zuordnung.
+Geschützt eingerichtet behauptet keine aktuell entsperrte OS-Schlüsselverwaltung.
+Polling liest keine Schlüssel und öffnet keine Betriebssystemdialoge. Fehler beim
+Speichern bleiben im bestehenden Formular sichtbar. Anbieterzugänge werden
+weiter ausschließlich unter Verbindungen eingerichtet.

@@ -223,9 +223,9 @@
         "endpoint": "GET /api/mail/setup",
         "meaning": "OAuth-App bereit ist noch kein verbundenes Postfach. Zusätzlich /api/mail/accounts und letzten Sync prüfen."
       },
-      "limits": "Gmail und Outlook: Lesen, Entwürfe und expliziter Versand. CRM-Übergabe erzeugt Belege und Vorschläge; Entscheidungen bleiben separat. Kalender nutzt den eigenen Microsoft-Serviceanschluss. Weitere Messenger sind keine Mailpostfächer.",
-      "version": 1,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "limits": "Gmail und Outlook: Lesen, Entwürfe und expliziter Versand. CRM-Übergabe erzeugt Belege und Vorschläge; Entscheidungen bleiben separat. Kalender nutzt den eigenen Microsoft-Serviceanschluss. Weitere Messenger sind keine Mailpostfächer. Schlüsselablage setzt eine erreichbare native OS-Schlüsselverwaltung voraus; siehe docs/VAULT.md.",
+      "version": 2,
+      "migration": "Tresorformat 2: OS-geschützter installationsbezogener Schlüssel. Vor Quellaktivierung alten Bestand offline mit core.vault_migrate prüfen und übernehmen. Rückweg benötigt vollständige Datenwiederherstellung; Details docs/VAULT.md. Bestehende Ciphertexte und übrige Daten bleiben erhalten."
     },
     {
       "id": "chat",
@@ -437,8 +437,8 @@
         "meaning": "Gespeichert, getestet, verbunden und ausführbar getrennt behandeln; reine Links versprechen kein Werkzeug."
       },
       "limits": "Gespeichert, getestet, verbunden und ausführbar getrennt behandeln; reine Links versprechen kein Werkzeug.",
-      "version": 1,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 2,
+      "migration": "Tresorformat 2: OS-geschützter installationsbezogener Schlüssel. Vor Quellaktivierung alten Bestand offline mit core.vault_migrate prüfen und übernehmen. Rückweg benötigt vollständige Datenwiederherstellung; Details docs/VAULT.md. Bestehende Ciphertexte und übrige Daten bleiben erhalten."
     },
     {
       "id": "workers",
@@ -739,7 +739,7 @@
       "stage": "implemented",
       "contract": "docs/OPERATIONS.md",
       "setup": "docs/CUSTOMER-SETUP.md#operations",
-      "data": "Installationsdaten in data/control und workspaces; Code enthält keine Kundendaten.",
+      "data": "Verschlüsselte Werte in SQLite; Schutzschlüssel im eigenen Betriebssystem-Eintrag. Verschlüsselte Sicherungen enthalten eine Wiederherstellungskopie. Vertrag docs/VAULT.md.",
       "sources": [
         "core/api.py",
         "core/backups.py",
@@ -752,7 +752,9 @@
         "scripts/start-core.mjs",
         "scripts/verify-hero-keys.mjs",
         "scripts/verify-modules.py",
-        "scripts/verify-start.py"
+        "scripts/verify-start.py",
+        "core/vault_keys.py",
+        "core/vault_migrate.py"
       ],
       "entrypoints": [
         "GET /api/auth/session",
@@ -784,15 +786,16 @@
         "platform"
       ],
       "verification": [
-        "core/tests/test_operations.py"
+        "core/tests/test_operations.py",
+        "core/tests/test_provider_vault.py"
       ],
       "status": {
         "endpoint": "GET /api/system/readiness",
         "meaning": "Prozess, vollständige lokale Basis und tatsächliche Worker-Ausführbarkeit getrennt prüfen; Kundenanschlüsse werden nicht pauschal als bereit erklärt."
       },
       "limits": "Betriebszustand, Login, Backup und Restore-Nachweis separat prüfen.",
-      "version": 1,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 2,
+      "migration": "Tresorformat 2: OS-geschützter installationsbezogener Schlüssel. Vor Quellaktivierung alten Bestand offline mit core.vault_migrate prüfen und übernehmen. Rückweg benötigt vollständige Datenwiederherstellung; Details docs/VAULT.md. Bestehende Ciphertexte und übrige Daten bleiben erhalten."
     },
     {
       "id": "platform",
@@ -934,8 +937,8 @@
         "meaning": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen."
       },
       "limits": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen.",
-      "version": 1,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 2,
+      "migration": "Tresorformat 2: OS-geschützter installationsbezogener Schlüssel. Vor Quellaktivierung alten Bestand offline mit core.vault_migrate prüfen und übernehmen. Rückweg benötigt vollständige Datenwiederherstellung; Details docs/VAULT.md. Bestehende Ciphertexte und übrige Daten bleiben erhalten."
     }
   ]
 }
