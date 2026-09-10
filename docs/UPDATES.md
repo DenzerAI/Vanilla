@@ -136,7 +136,8 @@ des Containers ist nur sein eigener Loopback für Schnittstellentests erreichbar
 Nur neutraler Code wird schreibgeschützt eingebunden, keine Git-Historie.
 Prüfdaten liegen in einem begrenzten temporären Dateisystem; weder Hostdateien
 noch Docker-Socket sind schreibbar eingebunden. Zurück kommt ausschließlich
-ein größenbegrenztes, pfadgeprüftes UI-Buildarchiv.
+ein größenbegrenztes, pfadgeprüftes UI-Buildarchiv. Es wird im noch laufenden
+Container aus dessen temporärem Dateisystem gelesen und erst lokal entpackt.
 Temporäre Testdateien liegen außerhalb des synthetischen Git-Repositories;
 ausführbare Testprogramme bleiben auf die isolierten Dateisysteme beschränkt.
 Der UI-Build entsteht vor den Schnittstellentests, die diesen Build verwenden;

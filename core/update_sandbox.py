@@ -138,8 +138,11 @@ def extract_build(raw, destination):
 
 
 async def copy_build(container, destination):
-    process = await asyncio.create_subprocess_exec(container['binary'], '--context', container['context'], 'cp',
-        container['name'] + ':/candidate/wrapper/dist', '-', env=host_env(), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL)
+    # Export from the running mount namespace: docker cp does not reliably
+    # expose tmpfs contents through the daemon's container filesystem view.
+    process = await asyncio.create_subprocess_exec(container['binary'], '--context', container['context'], 'exec',
+        container['name'], '/usr/bin/env', '-i', '/bin/tar', '-C', '/candidate/wrapper', '-cf', '-', 'dist',
+        env=host_env(), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL)
     raw = bytearray()
     async def consume():
         while chunk := await process.stdout.read(65536):
