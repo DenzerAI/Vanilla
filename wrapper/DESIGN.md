@@ -724,8 +724,12 @@ Bausteine und dokumentiert fachlich notwendige Abweichungen im Bereichsvertrag.
 
 CalendarCardContent verwendet den vorhandenen AttentionFan ohne eigene Kartenmaße.
 Datum in der zentralen Rolle calendar (56 px), Wochentag und Countdown mit
-brand-accent, Monat/KW und Folgetermin mit muted. Der nächste Titel ist maximal
-zweizeilig; ein Folgetermin einzeilig mit Ellipse. Keine zusätzliche Daueranimation.
+brand-accent, Monat/KW mit muted. Ohne weiteren heutigen Termin sind auch
+Wochentag, Tageszahl und Leerzustand muted; es gibt keine farbige Betonung.
+Nur der nächste Termin steht auf der Karte: Countdown und Uhrzeit zusammen,
+der Titel darunter maximal zweizeilig. Weitere Termine stehen im Tagesbericht.
+Unvollständige oder veraltete Daten heißen „Termine möglicherweise nicht aktuell“.
+Keine zusätzliche Daueranimation.
 Die Kalenderkachel folgt Fächerbewegung, Reduced Motion und Kontrastvorgaben.
 CalendarPreview zeigt denselben Produktionsbaustein mit markierten Beispieldaten in
 Unser Design und damit im gemeinsamen UI-Bauplan. Verhalten: surfaces/chat.md.

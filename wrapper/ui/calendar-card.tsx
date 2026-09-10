@@ -12,14 +12,13 @@ export function CalendarCardContent({data,preview=false}:{data:any;preview?:bool
  const [now,setNow]=useState(Date.now);useEffect(()=>{const t=setInterval(()=>setNow(Date.now()),30000);return()=>clearInterval(t);},[]);
  const card=calendarCard(data,preview?Date.parse(data.now):now),day=new Date(card.date+'T12:00:00Z');
  const label=(options:Intl.DateTimeFormatOptions)=>new Intl.DateTimeFormat('de-DE',{timeZone:'UTC',...options}).format(day);
- const status=card.state==='error'?'Kalender nicht erreichbar':card.state==='loading'?'Kalender wird geladen …':card.state==='unavailable'?'Kalender einrichten':card.state==='stale'?'Kalenderstand prüfen':card.events.length?'Heute keine weiteren Termine':'Heute keine Termine';
- return <span className="calendar-card-content">
+ const status=card.state==='error'?'Kalender nicht erreichbar':card.state==='loading'?'Kalender wird geladen …':card.state==='unavailable'?'Kalender einrichten':card.state==='stale'?'Termine möglicherweise nicht aktuell':card.events.length?'Heute keine weiteren Termine':'Heute keine Termine';
+ return <span className="calendar-card-content" data-quiet={card.state==='ready'&&!card.next ? 'true' : undefined}>
   <span className="calendar-weekday">{label({weekday:'long'})}</span>
   <span className="calendar-date">{day.getUTCDate()}</span>
   <span className="calendar-month">{label({month:'long'})} · KW {card.week}</span>
   <span className="calendar-next">{card.next?<><span className="calendar-countdown">{card.relative}{!card.next.allDay?' · '+card.next.start:''}</span><span className="calendar-event-title">{card.next.title}</span></>:status}</span>
-  {card.state==='ready'&&card.following.slice(0,1).map((e:any)=><span key={e.id} className="calendar-following">{e.start} · {e.title}</span>)}
-  {card.state==='stale'&&<span className="calendar-following">Stand prüfen</span>}
+  {card.state==='stale'&&card.next&&<span className="calendar-status">Termine möglicherweise nicht aktuell</span>}
   <span className="calendar-card-action">{preview?'Beispieldaten': 'Deinen Tag besprechen'}<ArrowUpRight size={16}/></span>
  </span>;
 }
