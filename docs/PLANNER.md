@@ -153,3 +153,5 @@ veraltete oder unvollständige externe Quellen sowie ganztägige Einträge verhi
 pauschale Freizeitaussagen. Vorbereitung nutzt nur passende belegte Angaben; keine
 erfundenen Wegezeiten, Aufgaben oder Teilnehmer. Kalender öffnen führt im gleichen
 App-Bereich zur vorhandenen Übersicht; der aktuelle Entwurf bleibt erhalten.
+
+Datum und Uhrzeiten der produktiven Kalenderansicht folgen der Installationszeitzone; die Zeitzone steht auch im lokalen Termindialog. Ein anderer Browserstandort ändert keine gespeicherten Terminzeiten.

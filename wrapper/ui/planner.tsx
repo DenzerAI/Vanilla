@@ -1,3 +1,4 @@
+import {calendarClock} from './calendar-day.mjs';
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Modal } from "./modal.jsx";
 import { SettingRow } from "./settings-row.jsx";
@@ -134,6 +135,7 @@ export function PlannerPatternPreview() {
 }
 export function PlannerPage(props: Props) {
   const { PageHeading, section, onSection, onShowSidebar, api } = props;
+  const [calendarTimezone,setCalendarTimezone]=useState(Intl.DateTimeFormat().resolvedOptions().timeZone);
   const [today, setToday] = useState(() => dateKey(new Date()));
   const [date, setDate] = useState(today);
   const [mode, setMode] = useState(() => {
@@ -166,6 +168,8 @@ export function PlannerPage(props: Props) {
         const result=await api('/calendar/events?'+new URLSearchParams({projectId:props.projectId,start,end}));
         if(!alive)return;
         setCalendarEvents(result.events);
+        setCalendarTimezone(result.timezone);
+        const localToday=calendarClock(Date.now(),result.timezone);setToday(localToday);setDate(old=>old===today?localToday:old);
         const stale=syncFailed||result.feeds.some((f:any)=>f.error||!f.covered||!f.synced||Date.now()-Date.parse(f.synced)>600000);
         setCalendarStatus(!result.feeds.length?'Vanilla-Kalender · Lokal gespeichert':stale?'Kalenderstand prüfen: Abgleich fehlt, ist fehlgeschlagen oder deckt diesen Zeitraum nicht ab.':'Letzter Abgleich: '+new Date(Math.min(...result.feeds.map((f:any)=>Date.parse(f.synced)))).toLocaleString('de-DE'));
       }catch(e){if(alive)setCalendarStatus('Kalenderstand prüfen: '+(e as Error).message);}
@@ -226,7 +230,7 @@ export function PlannerPage(props: Props) {
     reload();
     const update = () => {
       if (document.visibilityState === "visible") {
-        setToday(dateKey(new Date()));
+        setToday(calendarClock(Date.now(),calendarTimezone));
         reload();
       }
     };
@@ -245,7 +249,7 @@ export function PlannerPage(props: Props) {
       document.removeEventListener("visibilitychange", update);
       window.removeEventListener("core/event", changed);
     };
-  }, [reload]);
+  }, [reload,calendarTimezone]);
   const [reports, setReports] = useState<any[]>([]);
   const [reportsLoaded, setReportsLoaded] = useState(false);
   const [reportsError, setReportsError] = useState("");
@@ -787,7 +791,7 @@ export function PlannerPage(props: Props) {
           </div>
           {!demo && (
             <p className="planner-empty">
-              {calendarStatus}
+              {calendarStatus} · Uhrzeiten: {calendarTimezone}
             </p>
           )}
           {workweek && (
@@ -992,6 +996,7 @@ export function PlannerPage(props: Props) {
             <p className="planner-demo-note">
               {demo?"Nur ein Beispiel. Änderungen werden nicht gespeichert.":"Wird im Vanilla-Kalender dieses Arbeitsbereichs gespeichert. Keine Einladung wird verschickt."}
             </p>
+            {!demo&&<p className="planner-meta">Uhrzeiten: {calendarTimezone}</p>}
             {formError && (
               <p role="alert" className="planner-error">
                 {formError}
