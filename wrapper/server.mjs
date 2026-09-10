@@ -28,6 +28,7 @@ import { applySessionSelection, sessionModelSelection, supportedEffort, visibleM
 import { markReplyRead } from "./chat-read-state.mjs";
 import { readAgentProfile } from "./identity-profile.mjs";
 import { assignChatTitle } from "./chat-title.mjs";
+import { registerFork } from "./chat-fork.mjs";
 import { conversationInstructions } from "./chat-style.mjs";
 import { validateAppearance } from "./ui/appearance.mjs";
 import http from "node:http";
@@ -913,18 +914,7 @@ route("POST", "/api/fork", async (b) => {
     ...(c.mode === "plan" ? { approvalPolicy: "never" } : {}),
     ...(b.beforeTurnId ? { beforeTurnId: b.beforeTurnId } : {}),
   });
-  store.state.chats.unshift({
-    ...c,
-    id: r.thread.id,
-    workerThreadId: c.workerThreadId ? r.thread.id : undefined,
-    title: c.title + " · Kopie",
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    archived: false,
-    pinned: false,
-    jobId: null,
-    runId: null,
-  });
+  registerFork(store.state.chats, c, r.thread.id);
   loaded.add(r.thread.id);
   const inheritedTools = (toolsByThread.get(b.id) || []).filter((record) =>
     r.thread.turns.some((t) => t.id === record.turnId),
@@ -938,6 +928,7 @@ route("POST", "/api/fork", async (b) => {
   );
   await store.save();
   await store.exportThread(r.thread);
+  emit({ method: "wrapper/chats" });
   return r;
 });
 route("POST", "/api/respond", async (b) => {

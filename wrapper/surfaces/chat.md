@@ -422,3 +422,30 @@ Kopf und navigiert höchstens bis zu dessen Wurzel zurück. Workspace-Wechsel
 verwerfen vorherige Dateiauswahl und Ordnerziele. Ausdrückliche Auftragslinks
 können weiterhin ihren zugehörigen Ordner öffnen. Technische Installationsnamen
 sind keine Workspace-Titel. Geschützte Einträge sind zunächst ausgeblendet.
+
+
+## Römische Forktitel · Version 1.0.0
+
+Beim ersten erfolgreichen Verzweigen erhält der ursprüngliche Chat `I · Titel`,
+der neue `II · Titel`. Weitere Abzweigungen derselben Familie zählen mit III, IV
+usw. weiter, auch beim Fork eines Forks. Ohne Fork bleibt der Titel unverändert.
+Die vorhandenen Chatzeilen, Suche und Panelmenüs zeigen denselben gespeicherten
+Titel mit der Nummer vorne; keine neuen Komponenten oder Stilwerte.
+Umbenennen bleibt frei und verändert andere Familienmitglieder nicht. Ein
+weiterer Fork übernimmt den aktuellen Quelltitel ohne dessen verwaltete Nummer.
+
+Datenvertrag: `chat-fork.mjs` ergänzt beim erfolgreichen Fork optional
+`forkFamilyId`, `forkIndex` und `forkSequence` im vorhandenen Chatdatensatz.
+Die Familienzuordnung folgt IDs, niemals gleichlautenden Titeln. Der höchste
+vergebene Zähler wird bei allen vorhandenen Familienmitgliedern mitgeführt;
+Archivieren, Löschen einzelner Mitglieder und Neuladen setzen ihn nicht zurück.
+Die Nummer wird erst nach erfolgreichem nativen Fork vergeben. Alle geöffneten
+Ansichten erhalten danach das bestehende `wrapper/chats`-Ereignis.
+
+Migration: additive Felder, keine Startmigration und keine Massenumbenennung.
+Alte Kopien ohne belegte Familienzuordnung bleiben eigenständige Chats; beim
+nächsten Fork beginnen sie eine neue Familie. Älterer Code kann Titel und
+Datensätze weiter lesen, vergibt aber wieder Kopie-Zusätze. Nach einer solchen
+Rückkehr erstellte Kopien müssen vor erneutem Einsatz gesondert zugeordnet werden,
+da alter Code Familienfelder ungeprüft kopieren kann. Native Sitzungsdaten und
+Kontextverwaltung bleiben unverändert.
