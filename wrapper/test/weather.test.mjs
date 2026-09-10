@@ -68,3 +68,15 @@ test('day/night and daily extremes preserve zero and do not invent missing measu
  const minimal=await missing.current(0,0);assert.equal(minimal.high,null);assert.equal(minimal.low,null);assert.equal(minimal.isDay,null);
  assert.equal(result.warning,undefined);
 });
+
+
+test('daylight follows location sunrise and sunset across six phases, with honest missing-data fallback', async()=>{
+ const {weatherDaylight}=await import('../ui/weather-client.mjs');
+ const sunrise=Date.UTC(2026,5,21,4),sunset=Date.UTC(2026,5,21,20),h=3600000,w={sunrise,sunset,isDay:true};
+ for(const [time,phase] of [[sunrise-h/2,'dawn'],[sunrise+h/2,'morning'],[sunrise+6*h,'day'],[sunset-h/2,'sunset'],[sunset+h/2,'dusk'],[sunset+2*h,'night']])assert.equal(weatherDaylight(w,time).phase,phase);
+ assert.equal(weatherDaylight(w,sunset).night,true);
+ assert.equal(weatherDaylight({isDay:false},sunrise).phase,'night');
+ assert.equal(weatherDaylight({},sunrise).phase,'unknown');
+ assert.equal(weatherDaylight({...w,sunrise:NaN},sunrise).phase,'day');
+ assert.equal(weatherDaylight(w,sunrise+8*h).sunY,8);
+});

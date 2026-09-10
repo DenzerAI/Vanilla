@@ -1,3 +1,4 @@
+import {WeatherPreview} from './weather-preview';
 import { WeatherMotionSetting } from './weather-motion';
 import { StartTextMotionSetting } from './chat-start-preferences';
 import { IconMotionSetting } from './icon-motion-setting';
@@ -1146,6 +1147,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     setChatMenu(null);
     setTimeout(() => inputRef.current?.focus(), 50);
   }
+  const [weatherPreviewOpen,setWeatherPreviewOpen]=useState(false);
   const weatherRequestRef=useRef(null);
   async function openWeatherReport(item) {
     if(!item.weatherConfigured || item.weather?.status==='unresolved'){openSettings('user');return;}
@@ -2586,6 +2588,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                   </SettingRow>
                   <StartTextMotionSetting/>
                   <WeatherMotionSetting/>
+                  <SettingRow title="Wettervorschau" description="Wetterzustände und Tageszeiten direkt ausprobieren."><button type="button" aria-expanded={weatherPreviewOpen} onClick={()=>setWeatherPreviewOpen(value=>!value)}>{weatherPreviewOpen?'Vorschau schließen':'Wettervorschau öffnen'}</button></SettingRow>
+                  {weatherPreviewOpen&&<WeatherPreview/>}
                   <SettingRow title="Reiseeffekt" description="Sanft wandernde Lichtpunkte auf der Startansicht oder in allen Chats.">
                     <select aria-label="Reiseeffekt" value={boot.settings.welcomeParticles || "on"} onChange={e => guard(() => saveSettings({welcomeParticles: e.target.value}))()}>{appearanceOptions.welcomeParticles.options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
                   </SettingRow>

@@ -3,16 +3,19 @@ import {motion,useReducedMotion,useMotionValue,useSpring,useTransform} from 'mot
 import {weatherParallaxMotion,weatherDepth} from '../../design-system.mjs';
 import {ArrowUpRight} from '../../icons.jsx';
 import {useWeatherMotion} from '../../weather-motion';
-import {weatherLabel,weatherScene} from '../../weather-client.mjs';
+import {weatherLabel,weatherScene,weatherDaylight} from '../../weather-client.mjs';
 import './weather-scene.css';
 
 export function WeatherScene({weather,active=true,reduceMotion=false}:{weather:any;active?:boolean;reduceMotion?:boolean}) {
- const scene=weatherScene(weather),night=weather.isDay===false;
+ const scene=weatherScene(weather);
+ const [clock,setClock]=useState(Date.now);
+ useEffect(()=>{const tick=()=>setClock(Date.now());const timer=setInterval(tick,60000);document.addEventListener('visibilitychange',tick);return()=>{clearInterval(timer);document.removeEventListener('visibilitychange',tick);};},[]);
+ const daylight=weatherDaylight(weather,weather.preview?weather.time:clock),{night,phase}=daylight;
  const id=useId().replace(/:/g,''),ref=useRef<HTMLSpanElement>(null);
  const [visible,setVisible]=useState(false),[appReduced,setAppReduced]=useState(false),enabled=useWeatherMotion(),reduced=useReducedMotion();
  useEffect(()=>{let onscreen=false;const update=()=>setVisible(onscreen&&!document.hidden);const observer=new IntersectionObserver(([entry])=>{onscreen=entry.isIntersecting;update();});if(ref.current)observer.observe(ref.current);document.addEventListener('visibilitychange',update);return()=>{observer.disconnect();document.removeEventListener('visibilitychange',update);};},[]);
  useEffect(()=>{const update=()=>setAppReduced(document.documentElement.dataset.reduceMotion==='on');const observer=new MutationObserver(update);observer.observe(document.documentElement,{attributes:true,attributeFilter:['data-reduce-motion']});update();return()=>observer.disconnect();},[]);
- const running=active&&visible&&enabled&&!reduced&&!reduceMotion&&!appReduced;
+ const running=visible&&enabled&&!reduced&&!reduceMotion&&!appReduced;
  const x=useMotionValue(0),y=useMotionValue(0),sx=useSpring(x,weatherParallaxMotion),sy=useSpring(y,weatherParallaxMotion);
  const backX=useTransform(sx,v=>v*weatherDepth.back),backY=useTransform(sy,v=>v*weatherDepth.back);
  const frontX=useTransform(sx,v=>v*weatherDepth.front),frontY=useTransform(sy,v=>v*weatherDepth.front);
@@ -20,20 +23,20 @@ export function WeatherScene({weather,active=true,reduceMotion=false}:{weather:a
  const lightX=useTransform(sx,v=>v*weatherDepth.light),lightY=useTransform(sy,v=>v*weatherDepth.light);
  useEffect(()=>{
   const card=ref.current?.closest('button');
-  if(!card||!running){x.set(0);y.set(0);return;}
+  if(!card||!running||!active){x.set(0);y.set(0);return;}
   const reset=()=>{x.set(0);y.set(0);};
   const move=(e:PointerEvent)=>{if(e.pointerType!=='mouse')return;const rect=card.getBoundingClientRect();x.set(Math.max(-1,Math.min(1,(e.clientX-rect.left)/rect.width*2-1)));y.set(Math.max(-1,Math.min(1,(e.clientY-rect.top)/rect.height*2-1)));};
   card.addEventListener('pointermove',move);card.addEventListener('pointerleave',reset);card.addEventListener('pointercancel',reset);card.addEventListener('blur',reset);
   return()=>{reset();card.removeEventListener('pointermove',move);card.removeEventListener('pointerleave',reset);card.removeEventListener('pointercancel',reset);card.removeEventListener('blur',reset);};
- },[running,x,y]);
+ },[running,active,x,y]);
  const heavy=[65,75,82,86,99].includes(weather.code),drizzle=[51,53,55].includes(weather.code),hail=[96,99].includes(weather.code);
  const clouds=['partly','cloudy','rain','snow','storm','ice'].includes(scene);
  const precipitation=['rain','snow','storm','ice'].includes(scene);
- return <span ref={ref} className="weather-scene" data-scene={scene} data-night={night} data-running={running} data-day-known={typeof weather.isDay==='boolean'} data-intensity={heavy?'heavy':drizzle?'light':'normal'} data-windy={weather.wind>=30} aria-hidden="true">
+ return <span ref={ref} className="weather-scene" data-scene={scene} data-night={night} data-phase={phase} data-running={running} data-day-known={phase!=='unknown'} data-intensity={heavy?'heavy':drizzle?'light':'normal'} data-windy={weather.wind>=30} aria-hidden="true">
   <motion.span className="weather-depth weather-depth-back" style={{x:running?backX:0,y:running?backY:0}}>
-  <span className="weather-sky"/>
-  {typeof weather.isDay==='boolean'&&['sunny','partly','frost'].includes(scene)&&<span className={night?'weather-moon':'weather-sun'}><span/></span>}
-  {night&&['sunny','partly','frost'].includes(scene)&&<svg className="weather-stars" viewBox="0 0 230 224">{Array.from({length:19},(_,i)=><circle key={i} cx={(i*67+9)%230} cy={(i*31+12)%180} r={i%3===0?0.8:0.45}/>)}</svg>}
+  <span className="weather-sky"/><span className="weather-horizon"/>
+  {phase!=='unknown'&&['sunny','partly','frost'].includes(scene)&&<span className={night?'weather-moon':'weather-sun'} style={{left:night?undefined:daylight.sunX+'%',top:night?undefined:daylight.sunY+'%'}}><span/></span>}
+  {night&&['sunny','partly','frost'].includes(scene)&&<svg className="weather-stars" viewBox="0 0 230 224">{Array.from({length:19},(_,i)=><circle key={i} cx={(i*67+9)%230} cy={(i*31+12)%180} r={i%3===0?1.1:0.65}/>)}</svg>}
   </motion.span>
   <motion.span className="weather-depth" style={{x:running?frontX:0,y:running?frontY:0}}>
   {clouds&&<svg className="weather-clouds" viewBox="0 0 300 224" preserveAspectRatio="xMidYMid slice">

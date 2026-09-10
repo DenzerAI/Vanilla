@@ -507,11 +507,16 @@ export const weatherArtwork = {
  'weather-ice':'#d1f4ff', 'weather-warning':'#ffe1a3',
  'weather-warning-bg':'#523613',
  'weather-text-shadow':'0 1px 5px #06182d66',
- 'weather-cloud-duration':'24s', 'weather-rain-duration':'1400ms',
- 'weather-snow-duration':'10s', 'weather-easing':'ease-in-out',
- 'weather-sun-duration':'18s', 'weather-rays-duration':'90s', 'weather-frost-duration':'22s', 'weather-cloud-wind-duration':'12s', 'weather-rain-heavy-duration':'900ms',
+ 'weather-cloud-duration':'9s', 'weather-rain-duration':'1400ms',
+ 'weather-snow-duration':'7s', 'weather-easing':'ease-in-out',
+ 'weather-sun-duration':'7s', 'weather-rays-duration':'36s', 'weather-frost-duration':'8s', 'weather-cloud-wind-duration':'5s', 'weather-rain-heavy-duration':'900ms',
+ 'weather-dawn-top':'#35466f', 'weather-dawn-bottom':'#cb8a8e',
+ 'weather-morning-top':'#397db9', 'weather-morning-bottom':'#f2c183',
+ 'weather-sunset-top':'#4b5a8c', 'weather-sunset-bottom':'#e8a06c',
+ 'weather-dusk-top':'#1d2b52', 'weather-dusk-bottom':'#865a7a',
+ 'weather-twinkle-duration':'5s', 'weather-light-duration':'8s',
  'weather-leading':'1', 'weather-tracking':'-2px',
 };
 
 export const weatherParallaxMotion = {stiffness:110,damping:24,mass:0.6};
-export const weatherDepth = {back:3,front:7,near:11,light:18};
+export const weatherDepth = {back:5,front:11,near:16,light:24};

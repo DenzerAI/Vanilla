@@ -719,7 +719,7 @@ Landschaft ist auf die Kartenfläche begrenzt. Die abdunkelnde Textebene hält
 Beschriftungen ruhig lesbar. Keine blitzenden Gewittereffekte. Aussehen → Visuell
 → Wetterbewegung speichert den Ein-/Aus-Zustand lokal und synchronisiert Tabs;
 Speicherfehler bleiben sichtbar. Reduzierte Bewegung zeigt statische Szenen,
-inaktive Karten und versteckte Ansichten pausieren. Pointer-Parallaxe bewegt Hintergrund, Wolken und Niederschlag mit unterschiedlichen, zentral festgelegten Tiefen; die Schrift bleibt fest. Ein federnder Rücklauf und verschobenes Flächenlicht ergänzen die feine Liquid-Glass-Kante. Touch benötigt keine Bewegungssensoren. Sonne und Strahlen bewegen sich sehr langsam, Eis schimmert sanft. Forced Colors blendet die
+Sichtbare seitliche Wetterkarten bewegen sich ebenfalls; unsichtbare Karten und versteckte Ansichten pausieren. Pointer-Parallaxe bewegt Hintergrund, Wolken und Niederschlag mit unterschiedlichen, zentral festgelegten Tiefen; die Schrift bleibt fest. Ein federnder Rücklauf und verschobenes Flächenlicht ergänzen die feine Liquid-Glass-Kante. Touch benötigt keine Bewegungssensoren. Sonne und Strahlen bewegen sich ruhig, aber klar sichtbar, Eis schimmert sanft. Forced Colors blendet die
 Dekoration aus. Unser Design zeigt alle Wetterzustände im produktiven Fächer
 mit ausdrücklich markierten Beispieldaten und Tag-/Nachtwahl.
 
@@ -737,3 +737,6 @@ Datenbericht erreichbar. Wiederholungen desselben Klicks sind über requestId
 idempotent, ein neuer bewusster Klick erzeugt eine neue Session. Der Composer-Entwurf
 bleibt erhalten. Forecast-Fehler erzeugen keine leere Session. Die Quellenangabe
 entfällt auf der kompakten Kachel; unter dem Fächer steht bei ausgewähltem Wetter der Quellenlink. Die Quellenzeile reserviert ihre Höhe auch bei anderen Karten. Ausführliche Quellen stehen im Wetterbericht und im Profil.
+
+
+Die Wetterbeleuchtung unterscheidet Morgendämmerung, Morgen, Tag, Sonnenuntergang, Abenddämmerung und Nacht anhand gelieferter Sonnenauf- und Untergangszeiten am Wetterort. Der Sonnenbogen ist eine dekorative Annäherung innerhalb der Karte, kein astronomischer Positionsmesser. Ohne Sonnenzeiten gilt weiterhin is_day; ohne beides bleibt der Himmel neutral. Die Uhr wird bei sichtbarer Ansicht minütlich aktualisiert. Vorschauen zeigen dieselben sechs Phasen mit markierten Beispieldaten. Größere Wolkenwege, gegenläufige Ebenen, Sonnenstrahlen und dezentes Sternenfunkeln machen Motion erkennbar, ohne Text zu bewegen.

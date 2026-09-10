@@ -18,12 +18,14 @@ export const weatherExamples = [
  {id:'warning',label:'Warnung · Beispiel',code:95,temperature:21,previewWarning:'Beispiel: Unwetterwarnung'},
 ];
 export function WeatherPreview({initialState='sunny',initialNight=false}:{initialState?:string;initialNight?:boolean}={}){
- const [selected,setSelected]=useState(weatherExamples.some(x=>x.id===initialState)?initialState:'sunny'),[night,setNight]=useState(initialNight),[opened,setOpened]=useState(false);
+ const [selected,setSelected]=useState(weatherExamples.some(x=>x.id===initialState)?initialState:'sunny'),[phase,setPhase]=useState(initialNight?'night':'day'),[opened,setOpened]=useState(false);
  const example=weatherExamples.find(x=>x.id===selected)!;
- const weather={...example,status:'ready',preview:true,isDay:!night,time:Date.now()};
+ const sunrise=Date.UTC(2026,5,21,6),sunset=Date.UTC(2026,5,21,20);
+ const time=({dawn:sunrise-1800000,morning:sunrise+1800000,day:sunrise+6*3600000,sunset:sunset-1800000,dusk:sunset+1800000,night:sunset+3*3600000})[phase]??sunrise+6*3600000;
+ const weather={...example,status:'ready',preview:true,isDay:time>=sunrise&&time<sunset,sunrise,sunset,time};
  return <div className="weather-preview">
   <div className="weather-preview-controls" role="group" aria-label="Wetterzustand">{weatherExamples.map(x=><button key={x.id} type="button" aria-pressed={selected===x.id} onClick={()=>{setSelected(x.id);setOpened(false);}}>{x.label}</button>)}</div>
-  <div className="weather-preview-controls" role="group" aria-label="Tageszeit"><button type="button" aria-pressed={!night} onClick={()=>setNight(false)}>Tag</button><button type="button" aria-pressed={night} onClick={()=>setNight(true)}>Nacht</button></div>
+  <div className="weather-preview-controls" role="group" aria-label="Tageszeit">{[['dawn','Morgendämmerung'],['morning','Morgen'],['day','Tag'],['sunset','Sonnenuntergang'],['dusk','Abenddämmerung'],['night','Nacht']].map(([id,label])=><button key={id} type="button" aria-pressed={phase===id} onClick={()=>setPhase(id)}>{label}</button>)}</div>
   <AttentionFan key={selected} items={[
    {id:'weather',kind:'weather',title:'Beispielstadt',description:`${example.temperature} °C · ${example.label}`,weather,weatherConfigured:true},
    {id:'answer',kind:'chat',title:'Deine Antwort ist da',description:'Hier können wir weitermachen.'},

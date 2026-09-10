@@ -51,3 +51,14 @@ export function weatherScene(weather) {
  if(c===1||c===2)return 'partly';
  return 'sunny';
 }
+
+/** Solar times are UTC milliseconds for the selected location, not the device timezone. */
+export function weatherDaylight(weather, now=Date.now()) {
+ const {sunrise, sunset}=weather||{};
+ if(Number.isFinite(sunrise)&&Number.isFinite(sunset)&&sunset>sunrise&&now>sunrise-12*3600000&&now<sunset+12*3600000){
+  const hour=3600000, progress=Math.max(0,Math.min(1,(now-sunrise)/(sunset-sunrise)));
+  const phase=now<sunrise-hour?'night':now<sunrise?'dawn':now<sunrise+hour?'morning':now<sunset-hour?'day':now<sunset?'sunset':now<sunset+hour?'dusk':'night';
+  return {phase,night:now<sunrise||now>=sunset,sunX:22+progress*62,sunY:58-Math.sin(progress*Math.PI)*50};
+ }
+ return {phase:weather?.isDay===false?'night':weather?.isDay===true?'day':'unknown',night:weather?.isDay===false,sunX:76,sunY:12};
+}

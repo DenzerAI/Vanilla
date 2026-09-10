@@ -6,7 +6,7 @@ const subscribe=(fn:()=>void)=>{window.addEventListener(event,fn);window.addEven
 export function useWeatherMotion(){return useSyncExternalStore(subscribe,read,()=>false);}
 export function WeatherMotionSetting(){
  const enabled=useWeatherMotion(),[error,setError]=useState('');
- return <SettingRow title="Wetterbewegung" description="Wolken, Regen und Schnee sanft bewegen. Auf diesem Gerät gespeichert.">
+ return <SettingRow title="Wetterbewegung" description="Wolken, Licht, Regen und Schnee bewegen, auch auf seitlichen Karten. Auf diesem Gerät gespeichert.">
   <button type="button" role="switch" className="apple-switch" aria-label="Wetterbewegung" aria-checked={enabled} onClick={()=>{try{localStorage.setItem(key,enabled?'off':'on');window.dispatchEvent(new Event(event));setError('');}catch{setError('Die Auswahl konnte nicht gespeichert werden.');}}}><span/></button>
   {error&&<span role="alert">{error}</span>}
  </SettingRow>;

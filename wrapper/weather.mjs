@@ -36,7 +36,7 @@ export function createWeatherService({fetcher=fetch,now=Date.now}={}) {
    if(!c||!Number.isFinite(c.temperature_2m)||!Number.isFinite(c.weather_code)||!Number.isFinite(c.time))throw Error('Die Wetterquelle liefert gerade keine vollständigen Daten.');
    if(Math.abs(now()-c.time*1000)>3600000)throw Error('Die Wetterquelle liefert gerade keine aktuellen Daten.');
    const optional=value=>Number.isFinite(value)?value:null;
-   const current={temperature:c.temperature_2m,code:c.weather_code,time:c.time*1000,source:'Open-Meteo',
+   const current={sunrise:Number.isFinite(data.daily?.sunrise?.[0])?data.daily.sunrise[0]*1000:null,sunset:Number.isFinite(data.daily?.sunset?.[0])?data.daily.sunset[0]*1000:null,timezone:data.timezone||null,temperature:c.temperature_2m,code:c.weather_code,time:c.time*1000,source:'Open-Meteo',
     isDay:c.is_day===1?true:c.is_day===0?false:null,wind:optional(c.wind_speed_10m),gusts:optional(c.wind_gusts_10m),
     feelsLike:optional(c.apparent_temperature),high:optional(data.daily?.temperature_2m_max?.[0]),low:optional(data.daily?.temperature_2m_min?.[0])};
    if(days===1)return current;
