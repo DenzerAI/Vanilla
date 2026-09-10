@@ -37,6 +37,11 @@ Projektwechsel: tatsächlichen Zielordner und geladene Herkunftsdateien prüfen.
   und Veröffentlichung: Modul-/Migrationsverträge pflegen und einen gepushten Stand
   erst nach erfolgreichen Prüfungen als updatebereit melden. Den festen Link erhalten.
 
+- [docs/UPDATES.md](docs/UPDATES.md): beschlossener Ausbau für Updatefunktion,
+  GitHub-Verbindung und Beiträge. Vor Arbeiten daran lesen; vorhandene Modul-,
+  Betriebs-, Benachrichtigungs- und Oberflächenanschlüsse erweitern. Konzeptstatus
+  nicht als implementierte Funktion ausgeben. Bereichsvertrag: wrapper/surfaces/updates.md.
+
 - [docs/CONTEXT.md](docs/CONTEXT.md): führende Dateien, Kontextübergabe,
   Jobdefinitionen und Abgrenzung von Verlauf und verbindlichen Quellen.
 - [README.md](README.md): lokale Distribution, Abweichungen und Abnahmestand;

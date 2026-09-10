@@ -14,6 +14,7 @@ Diese Dateien sind verbindliche Bauanleitungen, keine Ideensammlung. Vor einer E
 | Einstellungen → Service | [work-evidence.md](work-evidence.md) | work-evidence.tsx, work-evidence.mjs, work-evidence.css |
 | Module (entfallen) | [modules.md](modules.md) | Keine eigene Oberfläche |
 | Einstellungen | [settings.md](settings.md) | app.jsx, voice-settings.jsx, local-workers.jsx |
+| Einstellungen → Updates (geplant) | [updates.md](updates.md) | Beschlossenes Konzept; noch keine Oberfläche |
 
 ## Navigation
 

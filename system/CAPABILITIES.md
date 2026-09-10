@@ -22,6 +22,12 @@ diese Quelle, damit alle Worker dieselben Anschlüsse finden.
 
 ## Neutraler Codeaustausch
 
+Geplanter Ausbau: [Updates und Beiträge](../docs/UPDATES.md), Oberfläche
+[Einstellungen → Updates](../wrapper/surfaces/updates.md), GitHub unter Verbindungen.
+Das Konzept reserviert `updates`, `github` und `contributions`. Es beschreibt noch
+keine verfügbaren APIs oder registrierten Module. Bei Implementierung hier und
+in den ausführbaren Katalogen mit realen Anschlüssen, Prüfungen und Status aufnehmen.
+
 `source-privacy` führt die lokalen Git-Prüfungen, den geschützten Merge-Befehl und
 die einmalige Einrichtung der ausgeschlossenen Firmenbasis zusammen. Ablauf,
 Erstübernahme und Grenzen stehen in [../docs/CODE-SYNC.md](../docs/CODE-SYNC.md).

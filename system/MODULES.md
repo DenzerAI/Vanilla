@@ -42,6 +42,12 @@ weiterhin Review und Funktionstest. Ein leeres Gerüst darf nicht als fertig gel
 
 ## Daten und Installation
 
+Für langfristige Updatefähigkeit und den privaten Code-Rückweg führt zusätzlich
+[UPDATES.md](../docs/UPDATES.md) das beschlossene Konzept. Jedes neue Modul muss
+mit stabiler ID, versionierter Schnittstelle, eigener Datenzuordnung und prüfbarer
+Migration in den gemeinsamen Ablauf passen. Die geplanten Update-/GitHub-Module
+erst mit realen Quellen und Prüfungen als verfügbare Fähigkeiten registrieren.
+
 Der Katalog enthält ausschließlich neutrale Quellpfade und Routen. Er enthält
 keine absoluten Entwicklerpfade, Zugangsdaten oder Live-Ergebnisse. Die Dateien
 reisen mit Git, Kundenkonfiguration bleibt lokal. Ein gescheiterter optionaler

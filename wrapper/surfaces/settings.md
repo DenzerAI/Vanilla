@@ -11,6 +11,11 @@ Verbindungen und Skills stehen als eigene Einträge nach Dein Agent in derselben
 
 ## Elemente
 
+Beschlossener Ausbau: **Updates** erhält einen eigenen Einstellungsbereich direkt
+nach System, mit den Reitern **Version** und **Beiträge**. Der Aufbau führt
+[updates.md](updates.md), der technische Ablauf ../../docs/UPDATES.md. Der Bereich
+ist noch nicht implementiert; neue GitHub-Zugänge bleiben unter Verbindungen.
+
 Auswahl über vorhandene Selects, Ein/Aus über `apple-switch`, Aktion über den gemeinsamen kompakten, leicht gerundeten Aktionsbutton, auch in verschachtelten Aktionsgruppen. Native Selects verwenden dieselbe Form und den gemeinsamen Chevron. Iconaktionen sind kreisrund. Auf schmalen Ansichten dürfen Aktionsgruppen umbrechen. Gruppentrennung, Schriften und Flächen aus dem Designsystem. Primäre Funktion und Zustand auf einen Blick. Technische Installationsbefehle gehören in Dokumentation, nicht in den normalen Einstellungsfluss. Nicht verfügbare Funktionen zeigen einen ehrlichen Status.
 
 ## Dein Agent
