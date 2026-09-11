@@ -2,6 +2,7 @@ import {useEffect,useState} from 'react';
 import {SettingRow} from './settings-row.jsx';
 import {Skeleton} from './skeleton';
 import {formatStat} from './statistics-data.mjs';
+import {featuredAllowances,remainingPercent} from '../usage.mjs';
 import './usage.css';
 export function useAllowances(api:any,enabled=true){
  const [data,setData]=useState<any>(null);
@@ -22,10 +23,24 @@ export function AllowanceBars({data,compact=false}:{data:any;compact?:boolean}){
  if(!data)return <span className="usage-note">Kontingente werden geladen …</span>;
  if(data.error&&!data.providers)return <span className="usage-note" role="status">Kontingente gerade nicht erreichbar.</span>;
  const rows=(data.providers||[]).flatMap((p:any)=>p.rows.map((r:any)=>({...r,provider:p.id,stale:p.stale||data.error})));
- // A compact card gives each provider a place; details retain every native bucket.
- const featured=(data.providers||[]).flatMap((p:any)=>{const own=rows.filter((r:any)=>r.provider===p.id);return own.slice(0,1);});
- const shown=compact?[...featured,...rows.filter((r:any)=>!featured.includes(r))].slice(0,2):rows;
- return <span className={'allowance-bars'+(compact?' is-compact':'')}>
+ // The card shows the allowances that carry real work, as remaining share.
+ if(compact){
+  const featured=featuredAllowances(data.providers||[]).map((r:any)=>({...r,stale:(data.providers||[]).find((p:any)=>p.id===r.provider)?.stale||data.error}));
+  return <span className="allowance-bars is-compact">
+   {featured.map((r:any)=>{
+    const left=remainingPercent(r,now);
+    return <span className="allowance-row" key={r.provider+r.id} data-level={left===null?'unknown':left<=10?'low':left<=25?'warn':'ok'}>
+     <span className="allowance-label"><span>{r.label}</span><span>{left===null?'–':`${formatStat(left)} % übrig`}</span></span>
+     <span className="allowance-track" role={left===null?'img':'meter'} aria-label={`${r.label}, übrig${r.stale?', letzter bekannter Stand':''}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={left??undefined} aria-valuetext={left===null?'Neuer Stand ausstehend':`${left} Prozent übrig`}><span style={{width:`${left??0}%`}}/></span>
+     <span className="usage-note">{r.stale?'Letzter Stand · ':''}{resetLabel(r.resetAt,now)}</span>
+    </span>;})}
+   {(data.providers||[]).filter((p:any)=>p.status!=='ready').map((p:any)=><span key={p.id} className="usage-note">{p.name}: {p.status==='error'?'Aktualisierung fehlgeschlagen':'Abo-Kontingent nicht verfügbar'}</span>)}
+   {!data.providers?.length&&<span className="usage-note">Noch kein Anbieter für Kontingente eingerichtet.</span>}
+   {!!featured.length&&rows.length>featured.length&&<span className="usage-note">+ {rows.length-featured.length} weitere Kontingente</span>}
+  </span>;
+ }
+ const shown=rows;
+ return <span className="allowance-bars">
   {shown.map((r:any)=><span className="allowance-row" key={r.provider+r.id}>
    <span className="allowance-label"><span>{r.label}</span><span>{r.expired||r.resetAt!==null&&r.resetAt<=now?'–':`${formatStat(r.usedPercent)} %`}</span></span>
    <span className="allowance-track" role={r.expired||r.resetAt!==null&&r.resetAt<=now?"img":"meter"} aria-label={`${r.label}, verbraucht${r.stale?', letzter bekannter Stand':''}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={r.expired||r.resetAt!==null&&r.resetAt<=now?undefined:Math.min(r.usedPercent,100)} aria-valuetext={r.expired||r.resetAt!==null&&r.resetAt<=now?'Neuer Stand ausstehend':`${r.usedPercent} Prozent verbraucht`}><span style={{width:`${r.expired||r.resetAt!==null&&r.resetAt<=now?0:Math.min(r.usedPercent,100)}%`}}/></span>
@@ -33,7 +48,6 @@ export function AllowanceBars({data,compact=false}:{data:any;compact?:boolean}){
   </span>)}
   {(data.providers||[]).filter((p:any)=>p.status!=='ready').map((p:any)=><span key={p.id} className="usage-note">{p.name}: {p.status==='error'?'Aktualisierung fehlgeschlagen':'Abo-Kontingent nicht verfügbar'}</span>)}
   {!data.providers?.length&&<span className="usage-note">Noch kein Anbieter für Kontingente eingerichtet.</span>}
-  {compact&&rows.length>shown.length&&<span className="usage-note">+ {rows.length-shown.length} weitere Kontingente</span>}
  </span>;
 }
 export function UsageSettings({api}:{api:any}){

@@ -16,3 +16,9 @@
 .usage-live-heading { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-8); margin-bottom: var(--space-16); }
 .usage-live-heading button { min-height: var(--control-touch); }
 @media (forced-colors: active) { .allowance-track { background: Canvas; outline: 1px solid CanvasText; } .allowance-track > span { background: Highlight; } }
+
+/* The card reads as remaining headroom: green while there is room, warm when it runs out. */
+.allowance-bars.is-compact .allowance-row[data-level="ok"] .allowance-track > span { background: var(--success); }
+.allowance-bars.is-compact .allowance-row[data-level="warn"] .allowance-track > span { background: var(--warning); }
+.allowance-bars.is-compact .allowance-row[data-level="low"] .allowance-track > span { background: var(--danger); }
+.allowance-bars.is-compact .allowance-row[data-level="unknown"] .allowance-track > span { background: var(--muted); }
