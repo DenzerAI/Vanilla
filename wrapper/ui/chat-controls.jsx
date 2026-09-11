@@ -1,3 +1,5 @@
+import { arrangeChatMenu } from "./chat-menu.mjs";
+import {IconButton} from './icon-button';
 import { LayoutGlyph } from './icon-variants.jsx';
 export { LayoutGlyph } from './icon-variants.jsx';
 import React, {
@@ -8,7 +10,7 @@ import React, {
   useState,
 } from "react";
 import { createPortal } from "react-dom";
-import { Check, ChevronDown, MoreHorizontal } from "./icons.jsx";
+import { Check, ChevronDown, MoreHorizontal, Lock, Plus, Pin, SquarePen, ArrowUpRight, Maximize, X, Archive } from "./icons.jsx";
 
 export function ChatMenu({
   label,
@@ -134,6 +136,8 @@ export function ChatMenu({
           >
             {header}
             {items.map((item) => (
+              <React.Fragment key={item.id}>
+              {item.separatorBefore && <div role="separator" className="chat-menu-separator" />}
               <button
                 type="button"
                 key={item.id}
@@ -154,6 +158,7 @@ export function ChatMenu({
                 </span>
                 {selected === item.id && <Check size={16} />}
               </button>
+              </React.Fragment>
             ))}
             {footer && <p className="dropdown-note">{footer}</p>}
           </div>,
@@ -182,10 +187,12 @@ export function LayoutPicker({ count, onChange }) {
 export function ChatTitle({ session, compact = false, extraItems = [] }) {
   if (!session) return <span className="title-text">Neuer Chat</span>;
   return (
+    <>
+    {session.private && !session.locked && <IconButton label="Chat jetzt sperren" onClick={session.lock}><Lock size={18}/></IconButton>}
     <ChatMenu
       label={`Chat-Menü: ${session.title}`}
       className={compact ? "icon-button" : "chat-title-button"}
-      items={[...extraItems, ...session.items]}
+      items={arrangeChatMenu(session.items, extraItems)}
     >
       {compact ? <MoreHorizontal size={20} /> : <><span title={session.projectName} className="chat-project-icon">
         {session.projectIcon}
@@ -193,6 +200,7 @@ export function ChatTitle({ session, compact = false, extraItems = [] }) {
       <span className="title-text">{session.title}</span>
       <ChevronDown size={14} /></>}
     </ChatMenu>
+    </>
   );
 }
 export function PaneDivider({ onResize, value = 50, label = "Chat-Breite ändern", min = 0, max = 100, onReset }) {
@@ -235,4 +243,20 @@ export function PaneDivider({ onResize, value = 50, label = "Chat-Breite ändern
       }}
     />
   );
+}
+
+export function ChatMenuPreview() {
+  const [pinned, setPinned] = useState(false), [action, setAction] = useState("");
+  const items = [
+    {id:"new", label:"Neuer Chat", icon:<Plus size={16}/>, action:()=>setAction("Neuer Chat ausgewählt")},
+    {id:"pin", label:pinned ? "Nicht mehr anpinnen" : "Anpinnen", icon:<Pin size={16}/>, action:()=>setPinned(value=>!value)},
+    {id:"rename", label:"Umbenennen", icon:<SquarePen size={16}/>, action:()=>setAction("Umbenennen ausgewählt")},
+    {id:"share", label:"Teilen und exportieren …", icon:<ArrowUpRight size={16}/>, action:()=>setAction("Teilen ausgewählt")},
+    {id:"privacy", label:"Chat sperren …", icon:<Lock size={16}/>, disabled:true, action:()=>{}},
+    {id:"archive", label:"Archivieren", icon:<Archive size={16}/>, action:()=>setAction("Archivieren ausgewählt")},
+  ];
+  return <><ChatTitle compact session={{title:"Beispielchat",items}} extraItems={[
+    {id:"maximize-panel",label:"Chat 2 maximieren",icon:<Maximize size={16}/>,action:()=>setAction("Maximieren ausgewählt")},
+    {id:"close-panel",label:"Chat 2 schließen",icon:<X size={16}/>,action:()=>setAction("Schließen ausgewählt")},
+  ]}/><p className="page-note" role="status">{action || "Lokale Menüvorschau mit Gruppen und deaktivierter Aktion."}</p></>;
 }

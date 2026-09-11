@@ -219,3 +219,49 @@ kann über `sourceHome` keine persönlichen Konten, Plugins oder Gesprächsdatei
 übernehmen; der alte Parameter führt zu einem konkreten Einrichtungsfehler.
 Bereits eigene Dateien bleiben beim Start erhalten. Datenumzug erfolgt über die
 vollständige Sicherung, die native Anbieteranmeldung am Ziel über den eigenen Login.
+
+## Native Rückfragen · Version 1.0.0
+
+Codex-Anfragen `item/tool/requestUserInput` werden über den bestehenden
+Request-Stream weitergereicht und mit `{answers:{id:{answers:[text]}}}` an die
+ursprüngliche native Anfrage beantwortet. ACP meldet zusätzlich
+`clientCapabilities.elicitation.form = {}`. `elicitation/create` eines laufenden
+Turns erscheint mit öffentlicher Thread-/Turn-ID als Formularanfrage; die
+Antwort `{action,content}` geht an die originale ACP-RPC-ID zurück. Der
+mitgelieferte Claude-Adapter übersetzt damit AskUserQuestion einschließlich
+Mehrfachauswahl und `_askUserQuestionCustomAnswer` ohne neue Modellanweisungen.
+URL-Elicitation wird nicht als neue Fähigkeit angemeldet.
+
+Request-IDs, Frage-IDs und primitive Antworttypen bleiben erhalten. Ein
+beendeter oder getrennter Aufruf kann nicht erneut beantwortet werden. Antworten
+werden weder als neue Nutzernachricht noch als Turn-Steuerung gesendet.
+Anbieter dürfen weiterhin selbst entscheiden, wann eine Rückfrage nötig ist.
+Native Wartezeiten und Abbruch gehören zum jeweiligen Anbieterprotokoll.
+Keine Konto-, Paket- oder Datenmigration; ergänzende Fragequittungen verwenden
+bestehende Werkzeugaufzeichnungen. Vor Rückkehr auf einen alten Adapterstand
+laufende Rückfragen beantworten oder regulär stoppen.
+
+
+### Native Verbrauchsdaten
+
+Codex-Tokens bleiben im bestehenden thread/tokenUsage/updated-Ereignis; die
+Statistik bewahrt belegte Turn-Differenzen. Claude-ACP 0.75.1 liefert usage_update
+für Kontext/Kostenschätzung sowie _meta.quota in der Promptantwort mit Tokens
+und Modellwerten. Diese werden ohne Neuberechnung der Anbieterpreise übernommen.
+@anthropic-ai/claude-agent-sdk 0.3.257 ist für den experimentellen get_usage-
+Kontrollabruf direkt festgelegt. Der separate Nur-Lese-Prozess nutzt dieselbe
+native Konfiguration, sendet keinen Prompt und beendet sich nach spätestens
+15 Sekunden. Account-Limits sind getrennt von Workspace-/Sitzungs-Tokens.
+Vertrag und Rückkehrgrenzen: surfaces/chat.md, Kontingente und Live-Verbrauch.
+
+Codex aktiviert beim App-Server-Start `features.default_mode_request_user_input`
+für native Rückfragen auch im normalen Arbeitsmodus. Die private oder globale
+Nutzerkonfiguration bleibt unverändert; ein ausdrücklich übergebener Adapterwert
+kann den Standard überschreiben. Nach dieser Anschlussänderung ist ein regulärer
+Serverneustart erforderlich. Textfragen werden nicht in Formulare umgedeutet.
+
+Die native Claude-Kontingentabfrage verwendet denselben installationsbezogenen
+Profilweg wie der ACP-Anschluss über `installationEnvironment`. Fremde
+Host-Anmeldungen, Provider-Schlüssel und Proxyzugänge werden auch bei diesem
+separaten SDK-Kontrollprozess nicht vererbt. Vorhandene native Einstellungen und
+Memory-Dateien innerhalb des eigenen Profils bleiben erhalten.

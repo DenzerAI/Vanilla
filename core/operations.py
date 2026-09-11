@@ -34,7 +34,13 @@ class Operations:
             ("cleanup", "Speicher pflegen", True, {"type": "daily", "time": "04:00"}),
             ("index", "Suchindex aktualisieren", False, {"type": "manual"}),
         ]
-        return [{"id": "system-" + handler, "name": name, "worker": "python", "managed": True, "status": "active" if enabled else "paused", "schedule": schedule, "instructions": name + ". Nutzt die gemeinsamen Systemeinstellungen und protokolliert das Ergebnis.", "python": {"handler": handler, "timeout": 600, "input": {}}, "retry": {"count": 0, "idempotent": True}} for handler, name, enabled, schedule in definitions]
+        descriptions = {
+            'memory': 'Verdichtet gespeicherte Gesprächsauszüge lokal, verlinkt die Quellen und schreibt einen Pflegebericht. Originalgespräche bleiben erhalten.',
+            'backup': 'Erstellt eine verschlüsselte Sicherung von Datenbank und Arbeitsdateien. Benötigt ein eingerichtetes Sicherungsziel und einen verfügbaren Sicherungsschlüssel.',
+            'cleanup': 'Bereinigt alte Ereignisse und Protokolle nach den Aufbewahrungsfristen. Gespräche und Arbeitsdateien bleiben erhalten.',
+            'index': 'Aktualisiert die lokale Suche. Der Hintergrunddienst prüft Dateien bereits alle 30 Sekunden; dieser Auftrag erlaubt eine zusätzliche manuelle Aktualisierung.',
+        }
+        return [{"id": "system-" + handler, "name": name, "worker": "python", "managed": True, "status": "active" if enabled else "paused", "schedule": schedule, "description": descriptions[handler], "instructions": descriptions[handler], "python": {"handler": handler, "timeout": 600, "input": {}}, "retry": {"count": 0, "idempotent": True}} for handler, name, enabled, schedule in definitions]
 
     def update_monitor(self):
         v = self.settings.values

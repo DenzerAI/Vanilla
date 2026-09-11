@@ -32,6 +32,9 @@ PATTERNS = [
     'wrapper/scripts/*.mjs', 'wrapper/scripts/*.py', 'wrapper/scripts/design-*.json',
     'wrapper/public/*.js', 'wrapper/public/*.css', 'wrapper/public/*.svg',
     'wrapper/public/*.webmanifest',
+    'wrapper/public/app-icon-192.png', 'wrapper/public/app-icon-512.png',
+    'wrapper/public/app-icon-1024.png', 'wrapper/public/apple-touch-icon.png',
+    'wrapper/public/favicon-32.png',
 ]
 RULES = {
     'private-key': re.compile(rb'-----BEGIN (?:RSA |EC |OPENSSH |DSA )?PRIVATE KEY-----'),
@@ -68,7 +71,7 @@ def source_path(name):
         return True
     if name.startswith('wrapper/ui/'):
         if '/assets/' in name:
-            return (p.suffix in {'.png', '.svg', '.woff2'} or p.name in {'sources.json', 'voice-brands-sources.json', 'LICENSE'}
+            return (p.suffix in {'.png', '.svg', '.woff2', '.ttf'} or p.name in {'sources.json', 'voice-brands-sources.json', 'LICENSE'}
                     or p.name.endswith('-LICENSE.txt'))
         return p.suffix in {'.ts', '.tsx', '.js', '.jsx', '.mjs', '.css'} or name in {'wrapper/ui/index.html', 'wrapper/ui/blueprint.html'}
     return any(name.count('/') == pattern.count('/') and fnmatch.fnmatchcase(name, pattern) for pattern in PATTERNS)
@@ -170,7 +173,7 @@ class Scanner:
             return
         if name.startswith('templates/') and digest != self.policy['neutralTemplates'].get(name):
             self.add('changed-neutral-template', name, revision=revision)
-        if PurePosixPath(name).suffix in {'.png', '.woff2', '.svg'}:
+        if PurePosixPath(name).suffix in {'.png', '.woff2', '.svg', '.ttf'}:
             if digest != self.policy['reviewedBinaryAssets'].get(name):
                 self.add('unreviewed-asset', name, revision=revision)
             return

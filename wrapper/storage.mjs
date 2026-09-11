@@ -326,6 +326,8 @@ export class Storage {
       worker: job.worker || "auto",
       connectionId: job.connectionId || null,
       projectId: job.projectId || 'default',
+      model: typeof job.model === 'string' ? job.model : '',
+      effort: typeof job.effort === 'string' ? job.effort : '',
       ...(job.requestKey ? {requestKey:job.requestKey} : {}),
       ...(job.notification ? {notification:job.notification} : {}),
       schedule: job.schedule || { type: "manual" },

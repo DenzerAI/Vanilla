@@ -20,7 +20,7 @@ export function localFilePath(value, workspace = '', directory = workspace) {
 
 export function fileKind(path = '') {
   if (/\.html?$/i.test(path)) return 'html';
-  if (/\.(png|jpe?g|webp|gif|avif|bmp)$/i.test(path)) return 'image';
+  if (/\.(png|jpe?g|webp|gif|avif|bmp|svg)$/i.test(path)) return 'image';
   if (/\.pdf$/i.test(path)) return 'pdf';
   if (/\.(mp3|wav|m4a|ogg|flac|aac)$/i.test(path)) return 'audio';
   if (/\.(mp4|webm|mov|m4v)$/i.test(path)) return 'video';
@@ -42,10 +42,15 @@ export function patchChanges(patch) {
 
 export function diffLines(diff = '', limit = 400) {
   const lines = String(diff).split('\n');
-  return { total: lines.length, lines: lines.slice(0, limit).map(text => ({text, kind: text.startsWith('@@') || /^(---|\+\+\+)/.test(text) ? 'header' : text.startsWith('+') ? 'added' : text.startsWith('-') ? 'removed' : 'context'})) };
+  let inHunk = false;
+  return { total: lines.length, lines: lines.slice(0, limit).map(text => {
+    if (/^diff --git /.test(text)) { inHunk = false; return {text,kind:'header'}; }
+    if (text.startsWith('@@')) { inHunk = true; return {text,kind:'header'}; }
+    return {text, kind: !inHunk && /^(---|\+\+\+) /.test(text) ? 'header' : text.startsWith('+') ? 'added' : text.startsWith('-') ? 'removed' : 'context'};
+  }) };
 }
 
-export function collectArtifacts(items = [], workspace = '', directory = workspace) {
+export function collectArtifacts(items = [], workspace = '', directory = workspace, {previewLinkedImages = false} = {}) {
   const files = new Map(), linked = new Set();
   const add = (value, label) => {
     const path = localFilePath(value, workspace, directory);
@@ -56,7 +61,10 @@ export function collectArtifacts(items = [], workspace = '', directory = workspa
       marked.walkTokens(marked.lexer(item.text), token => {
         if (token.type === 'link' || token.type === 'image') {
           const path = localFilePath(token.href, workspace, directory);
-          if (path) linked.add(path);
+          if (path) {
+            if (previewLinkedImages && token.type === 'link' && fileKind(path) === 'image') add(token.href);
+            else linked.add(path);
+          }
         }
       });
     }
@@ -70,3 +78,18 @@ export function collectArtifacts(items = [], workspace = '', directory = workspa
   return [...files.values()].filter(file => !linked.has(file.path));
 }
 
+// Chat deliverables are for the reader; source edits remain in the tool history.
+// Keep the broader collector unchanged for the library and file inventory.
+export function collectChatArtifacts(items = [], workspace = '', directory = workspace) {
+  const explicit = new Set(items.filter(i => i.status === 'completed').flatMap(i =>
+    (Array.isArray(i.artifacts) ? i.artifacts : []).map(a => localFilePath(a.path,workspace,directory))));
+  return collectArtifacts(items.filter(i => i.type !== 'imageGeneration' || !['failed','inProgress','interrupted'].includes(i.status)),workspace,directory,{previewLinkedImages:true}).filter(file => {
+    const path = file.path;
+    // An output folder may itself contain an entire source checkout.
+    const relative = path.split(/(?:^|\/)(?:output|exports|deliverables)\//i).at(-1);
+    if (/(?:^|\/)(?:wrapper|src|node_modules|core|system|scripts|test|tests|public|assets)(?:\/|$)/i.test(relative)) return false;
+    if (/\.(?:png|jpe?g|webp|gif|avif|bmp|svg|pdf|docx?|odt|rtf|xlsx?|ods|pptx?|odp|mp3|wav|m4a|ogg|flac|aac|mp4|webm|mov|m4v)$/i.test(path)) return true;
+    const output = /(?:^|\/)(?:output|exports|deliverables)\//i.test(path) || explicit.has(path);
+    return output && /\.(?:md|markdown|txt|rst|csv|tsv|html?|zip)$/i.test(path);
+  });
+}

@@ -21,8 +21,8 @@
 .activity-group[open] > summary .activity-chevron { transform: rotate(90deg); }
 .activity-group > summary:hover { color: var(--text); }
 .activity-steps { margin: var(--space-8) 0 0 var(--space-4); padding-left: var(--space-12); border-left: 1px solid var(--border); }
-.activity-steps .tool-item { border: 0; border-radius: 0; margin: var(--space-4) 0; }
-.activity-steps .tool-item summary { padding: var(--space-8) 0; }
+.activity-steps .tool-item { border: 0; border-radius: 0; margin: 0; }
+.activity-steps .tool-item summary { padding: var(--space-2) 0; gap: var(--space-4); flex-wrap: wrap; }
 .tool-item summary > span { flex: 0 1 auto; min-width: 0; overflow-wrap: anywhere; }
 .tool-item summary > svg { flex-shrink: 0; }
 .tool-item summary > svg:last-child { margin-left: 0; }
@@ -30,7 +30,7 @@
 .activity-failed { color: var(--danger); }
 .activity-failure-note { color: inherit; }
 .activity-steps .tool-item { font-size: var(--text-caption); }
-.activity-steps .tool-item summary { min-height: var(--control-target); }
+.activity-steps .tool-item summary { min-height: var(--control-activity-row); }
 .turn-meta { display: flex; align-items: center; gap: var(--space-8); color: var(--muted); font-size: var(--text-caption); margin: var(--space-12) 0 var(--space-32); font-variant-numeric: tabular-nums; }
 .turn-meta time { margin-left: auto; }
 .chat-turn > .agent-message { margin-bottom: var(--space-12); }
@@ -207,14 +207,15 @@
 .composer-entry .dictation-control > .icon-button svg { width: 24px; height: 24px; }
 @media (pointer: coarse) { .composer-entry .dictation-control > .icon-button { width: var(--control-touch); height: var(--control-touch); } }
 
-/* Small attachment chips share the composer's flat translucent surface. */
+/* Attachment bubbles share the existing liquid-glass material. */
 .composer .attachments { gap: var(--space-8); }
-.composer .attachment { max-width: min(260px, 100%); padding: var(--space-4); gap: var(--space-4); border: 0; border-radius: var(--radius-panel); background: var(--composer-blur); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px); box-shadow: none; }
+.composer .attachment { max-width: min(260px, 100%); padding: var(--space-4); gap: var(--space-4); border: 0; border-radius: var(--radius-panel); background: var(--glass-button-tint); backdrop-filter: blur(var(--glass-button-blur)) saturate(1.5); -webkit-backdrop-filter: blur(var(--glass-button-blur)) saturate(1.5); box-shadow: var(--glass-button-edge); }
 .composer .attachment > .attachment-open { display: flex; align-items: center; justify-content: flex-start; gap: var(--space-8); flex: 1 1 auto; min-width: 0; width: auto; height: var(--control-target); padding: 0 var(--space-4); border-radius: var(--radius-control); font-size: var(--text-caption); color: var(--text); }
 .composer .attachment-open > svg { flex-shrink: 0; }
 .composer .attachment-preview { width: 32px; height: 32px; flex-shrink: 0; border-radius: var(--radius-small); object-fit: cover; }
 .composer .attachment > button:not(.attachment-open) { width: 28px; height: var(--control-target); }
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) { .composer .attachment { background: var(--composer); } }
+@media (prefers-reduced-transparency: reduce) { .composer .attachment { background: var(--composer); backdrop-filter: none; -webkit-backdrop-filter: none; } }
 
 /* Match the inset sidebar's heading center in every chat layout. */
 .app .chat-topbar { height: var(--control-app-heading-height); padding-block: var(--space-16); }
@@ -268,13 +269,35 @@
   padding-top: calc(var(--space-64) + var(--space-48) + var(--control-heading-height));
   scroll-padding-top: calc(var(--space-64) + var(--space-48) + var(--control-heading-height));
 }
-.pane-divider-slot > .pane-divider { background: transparent; position: relative; }
+/* A quiet hairline separates conversations over one continuous backdrop. */
+.pane-divider-slot { position: relative; z-index: 9; }
+.pane-divider-slot > .pane-divider {
+  background: transparent; position: relative;
+  width: 14px; left: -4px;
+}
+.pane-divider-slot > .pane-divider::before {
+  content: ''; position: absolute; inset: 0 auto 0 6px; width: 1px;
+  pointer-events: none;
+  background: var(--pane-seam);
+  mask-image: linear-gradient(transparent, var(--text) calc(2 * var(--space-48)), var(--text) calc(100% - 2 * var(--space-48)), transparent);
+}
 .pane-divider-slot > .pane-divider::after {
-  content: ''; position: absolute; inset: var(--space-16) auto var(--space-16) 2px;
-  width: 1px; background: var(--border);
+  content: ''; position: absolute; left: 6px; top: 50%;
+  width: 2px; height: 32px; transform: translateY(-50%);
+  border-radius: var(--radius-pill); background: var(--muted);
+  opacity: 0; pointer-events: none;
 }
 .pane-divider-slot > .pane-divider:hover::after,
-.pane-divider-slot > .pane-divider:focus-visible::after { background: var(--blue); }
+.pane-divider-slot > .pane-divider:active::after,
+.pane-divider-slot > .pane-divider:focus-visible::after { opacity: 1; }
+.pane-divider-slot > .pane-divider:focus-visible::after {
+  outline: 1px solid var(--focus-ring); outline-offset: 2px;
+}
+.pane-seam-preview { height: 180px; display: flex; justify-content: center; background: var(--bg); }
+@media (forced-colors: active) {
+  .pane-divider-slot > .pane-divider::before { background: CanvasText; width: 1px; left: 6px; mask-image: none; }
+  .pane-divider-slot > .pane-divider::after { background: CanvasText; }
+}
 @media (pointer: coarse) {
   .chat-panes > [data-trailing-pane="true"] .pane-header {
     padding-right: calc(var(--space-16) + 2 * (var(--control-touch) + var(--space-8)));
@@ -327,7 +350,7 @@
 .turn-response-progress .activity-group > summary { flex-wrap: wrap; }
 .turn-activity-status { display: inline-flex; align-items: center; flex-wrap: wrap; gap: var(--space-4); min-width: 0; font-variant-numeric: tabular-nums; }
 .turn-activity-status .app-loader { flex-shrink: 0; }
-.turn-response-progress .activity-steps .commentary-message { margin: var(--space-12) 0; }
+.turn-response-progress .activity-steps .commentary-message { margin: var(--space-8) 0; }
 .agent-message .markdown a { color: var(--blue); text-decoration: underline; text-underline-offset: var(--space-2); }
 
 /* Calm conversational typography: one family, compact paragraphs, regular weight. */

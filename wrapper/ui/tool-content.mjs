@@ -32,6 +32,18 @@ export function publicToolContent(value) {
 export function toolImages(item) {
   return publicToolContent(item.result ?? item.output ?? item.contentItems ?? item.toolContent).filter(b => b.type === 'image').slice(0,4);
 }
+// Generated media belongs to the answer, even when the provider delivers it
+// through a generic exec tool. Screenshots and inspected reference images stay
+// in the activity log. The receipt is used only for classification, never as a
+// file path or an instruction to fetch something outside the workspace.
+export function generatedImageItems(items = []) {
+  return items.filter(item => {
+    if (item.status !== 'completed' || isComputerTool(item) || !toolImages(item).length) return false;
+    if (item.type === 'imageGeneration' || /(?:imagegen|image_generate|generate_image)/i.test([item.tool, item.toolName, item.name].filter(Boolean).join(' '))) return true;
+    return toolContent(item.result ?? item.output ?? item.contentItems ?? item.toolContent).some(block =>
+      typeof block?.text === 'string' && /^Generated images are saved to /m.test(block.text));
+  });
+}
 export function toolOutputText(item) {
   const value = item.result ?? item.output ?? item.contentItems ?? item.toolContent ?? item.arguments;
   return toolContent(value).map(b => ['image','input_image'].includes(b?.type) ? '[Bildschirmaufnahme / Bild]' : b?.text ?? (b?.type === 'resource_link' ? b.name || b.uri : '')).filter(Boolean).join('\n');

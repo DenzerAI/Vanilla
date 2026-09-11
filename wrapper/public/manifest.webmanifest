@@ -1,1 +1,37 @@
-{"name":"Agent · Schaltzentrale","short_name":"Agent","start_url":"/","display":"standalone","lang":"de","background_color":"#171717","theme_color":"#171717","icons":[{"src":"/app-icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
+{
+  "name": "Vanilla",
+  "short_name": "Vanilla",
+  "start_url": "/?app=vanilla",
+  "display": "standalone",
+  "lang": "de",
+  "background_color": "#171717",
+  "theme_color": "#171717",
+  "icons": [
+    {
+      "src": "/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/app-icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/app-icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/app-icon-1024.png",
+      "sizes": "1024x1024",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "id": "/vanilla-agent",
+  "scope": "/"
+}

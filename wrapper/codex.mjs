@@ -15,7 +15,8 @@ export class Codex extends EventEmitter {
     super();
     this.cwd = cwd;
     this.home = home;
-    this.config = config;
+    // Native question cards must also be available during ordinary work.
+    this.config = { "features.default_mode_request_user_input": true, ...config };
     this.contextEnv = contextEnv;
     this.binary = binary;
     this.nextId = 0;

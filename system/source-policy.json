@@ -55,7 +55,7 @@
     "wrapper/ui/assets/skills/spiral-notepad.png": "647fd6d44d8596c0b76f1a65815fb9f6baa6b1ac0df5c19c3915c5e1d6919e8a",
     "wrapper/ui/assets/skills/test-tube.png": "60dc2ba1c1dd275624dc27a1a63548af6264c4288733b838af46e1ee31233668",
     "wrapper/ui/assets/skills/toolbox.png": "904e3e9b5e16bfd6473ea1303ac6a60b2100ebb2078ccfcfe4ea7598bfd21052",
-    "wrapper/public/app-icon.svg": "f7049982cc53fec15ad6770985701f6f7d27eb4dc9e0f2e6bbb1b2088f8d8760",
+    "wrapper/public/app-icon.svg": "3355b6ce1ce2ff433fc2daeaee7dee2d3b66ae3a553b6c86f71b090f4de22d04",
     "wrapper/ui/assets/a2a.svg": "ee46ec740f2180ddd5cc4376c55c5a7cf7bc1756aee72676f2f1b38ee7e07942",
     "wrapper/ui/assets/avatars/kibo.svg": "47db54555690e5bde26d20f1326422d43ecfb15d6a5f4f5b903fc7418e8206f5",
     "wrapper/ui/assets/avatars/lumi.svg": "b798e9fb8fdb01a39a07ba7752a3d35c851ed4fc915b7edc96086c0944fb3237",
@@ -85,7 +85,14 @@
     "wrapper/ui/assets/avatars/faces/pebble.svg": "3e7d4f9950659a1b0d577cc55d86fb0974d218988312d0b2cbe3af677b373895",
     "wrapper/ui/assets/avatars/faces/kibo.svg": "c14b1d81ec9c12f2d6c0c165c1fd8ba36f3d49f555c6e010a136f77e97b8a1cb",
     "wrapper/ui/assets/avatars/faces/lumi.svg": "d8202f35cb7c518742b2a79f84a632764d1b72b0358bea22e990652aa3959336",
-    "wrapper/ui/assets/avatars/faces/nori.svg": "7f717f3518b5e60aa56ce3c8359d20ca035b044dba717fc2fc29f2daa62f44d9"
+    "wrapper/ui/assets/avatars/faces/nori.svg": "7f717f3518b5e60aa56ce3c8359d20ca035b044dba717fc2fc29f2daa62f44d9",
+    "wrapper/public/app-icon-512.png": "80af497fe41c1fcdf582904c2a247b7474a9b1fab63682af68d1aa35ca35b61f",
+    "wrapper/public/apple-touch-icon.png": "bbe6c0931a9a8a606ef44cbd228c463dec5c34b7ec011661dd1a5fca4821ffe9",
+    "wrapper/public/app-icon-1024.png": "2fe87f5a094926420378fd20e2cb53f0d8fb50a02b86ed43d4d425cbb5e616b6",
+    "wrapper/public/app-icon-192.png": "fd489b706fcab141255c134c5f118965709abc5d03b0d5ec6f8cb78cd0e4425c",
+    "wrapper/public/favicon-32.png": "bab4e29002d95cbc3a9c1dc9672137ac4f703fd332b1886a4f4b0228a08daf07",
+    "wrapper/public/vanilla-wordmark.svg": "f455938b3ef2355a441b37af2c1cdeb413e8bf3d205757a16769fe5c0a1ea6b9",
+    "wrapper/ui/assets/fonts/QuicksandVariable.ttf": "39c9b64223561f56aaff6062a6f04063c4fc86809ad6768722c06614d977e1cc"
   },
   "syntheticLiterals": {
     "test/hero-client.test.mjs": {

@@ -147,3 +147,7 @@ Nach dem Quellmerge folgt `npm run ui:prepare`; erst ein erfolgreich geprüfter
 Build wird über den vorhandenen Betriebsweg aktiviert. Die eigenständige
 Referenz `wrapper/ui/blueprint.html` ist ausdrücklich freigegebener neutraler
 Anwendungsquellcode; lokale Buildausgaben bleiben ausgeschlossen.
+
+Bereits geprüfte TrueType-Schriften (`.ttf`) verwenden dieselbe bindende
+SHA-256-Prüfung wie WOFF2. Neue oder veränderte Fontdateien ohne passenden
+Eintrag in reviewedBinaryAssets bleiben gesperrt.

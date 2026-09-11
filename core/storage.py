@@ -11,6 +11,7 @@ from .routines import validate_schedule
 
 CONTROL_FILES = {
     "message-delivery.json",
+    "firma.json",
     "state.json",
     "workers.json",
     "library.json",
@@ -33,6 +34,13 @@ ManifestLoader.yaml_implicit_resolvers = {
     ]
     for key, rules in yaml.SafeLoader.yaml_implicit_resolvers.items()
 }
+
+# PyYAML uses YAML 1.1 sexagesimal numbers; the JS writer uses YAML 1.2.
+# An unquoted afternoon clock such as 23:59 must remain a clock string.
+for digit in '0123456789':
+    ManifestLoader.yaml_implicit_resolvers[digit].insert(
+        0, ('tag:yaml.org,2002:str', re.compile(r'^([01]\d|2[0-3]):[0-5]\d$'))
+    )
 
 
 def safe_path(root: Path, relative: str, *, missing=False):

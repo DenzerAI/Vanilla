@@ -1,0 +1,19 @@
+.allowance-bars { display: flex; flex-direction: column; gap: var(--space-24); width: 100%; min-width: 0; }
+.allowance-row { display: flex; flex-direction: column; gap: var(--space-4); min-width: 0; }
+.allowance-label { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-8); font-size: var(--text-control); font-variant-numeric: tabular-nums; }
+.allowance-label > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.allowance-label > span:last-child { flex-shrink: 0; }
+.allowance-track { display: block; width: 100%; height: var(--space-8); border-radius: var(--radius-pill); background: var(--raised); overflow: hidden; }
+.allowance-track > span { display: block; height: 100%; border-radius: inherit; background: var(--brand-accent); }
+.usage-note { color: var(--muted); font-size: var(--text-caption); line-height: var(--leading-normal); overflow-wrap: anywhere; }
+.allowance-bars.is-compact { gap: var(--space-8); }
+.allowance-bars.is-compact .allowance-track { height: var(--space-4); }
+.allowance-bars.is-compact .allowance-label { font-size: var(--text-caption); }
+.allowance-bars.is-compact .usage-note { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.attention-fan-card[data-kind="allowances"] { gap: var(--space-8); }
+.attention-fan-card[data-kind="allowances"] .allowance-bars { flex: 1; overflow: hidden; }
+.allowance-report { text-align: left; max-width: 720px; }
+.usage-provider-details { font-size: var(--text-caption); color: var(--muted); }
+.usage-live-heading { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-8); margin-bottom: var(--space-16); }
+.usage-live-heading button { min-height: var(--control-touch); }
+@media (forced-colors: active) { .allowance-track { background: Canvas; outline: 1px solid CanvasText; } .allowance-track > span { background: Highlight; } }

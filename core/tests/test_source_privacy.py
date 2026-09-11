@@ -332,3 +332,18 @@ def test_failed_merge_check_restores_local_company_and_source(repo):
     assert git(repo, 'rev-parse', 'HEAD').stdout == before
     assert (repo / 'firmenbasis/FIRMA.md').read_text() == content
     assert git(repo, 'diff', '--cached', '--name-only').stdout == ''
+
+
+def test_truetype_fonts_require_an_exact_reviewed_hash(repo):
+    name = 'wrapper/ui/assets/fonts/Fixture.ttf'
+    raw = b'\x00\x01\x00\x00synthetic-font-fixture'
+    scanner = guard.Scanner(repo)
+    scanner.entry(name, raw)
+    assert [finding['type'] for finding in scanner.findings] == ['unreviewed-asset']
+    policy = json.loads((repo / 'system/source-policy.json').read_text())
+    policy['reviewedBinaryAssets'][name] = hashlib.sha256(raw).hexdigest()
+    scanner = guard.Scanner(repo, policy)
+    scanner.entry(name, raw)
+    assert scanner.findings == []
+    scanner.entry(name, raw + b'changed')
+    assert scanner.findings[-1]['type'] == 'unreviewed-asset'

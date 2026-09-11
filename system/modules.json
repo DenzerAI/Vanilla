@@ -123,7 +123,7 @@
         "meaning": "Gespeicherte Termine, letzter erfolgreicher Abgleich, Fehler und abgedeckter Zeitraum je Anschluss. Keine Feeds bedeutet noch keinen erfolgreichen Kalenderabgleich."
       },
       "limits": "Microsoft-Kalender lesen mit Paging und vollständigem Zeitfenster; Änderungen und Einladungen erfolgen beim Anbieter. Höchstens 93 Tage und 10.000 Vorkommen pro Abruf. Wetter und fachliche Briefing-Typisierung sind noch nicht implementiert.",
-      "version": 1,
+      "version": 2,
       "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten.",
       "keywords": [
         "Microsoft",
@@ -164,7 +164,7 @@
       },
       "limits": "Lokales Prüfergebnis über npm run source:check; HTTP bestätigt nur den Katalog.",
       "command": "node system/capabilities.mjs",
-      "version": 1,
+      "version": 2,
       "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
     },
     {
@@ -260,7 +260,17 @@
         "wrapper/ui/chat-start-heading.tsx",
         "wrapper/ui/chat-start-preferences.tsx",
         "wrapper/ui/chat-start.tsx",
-        "wrapper/ui/message-submit.mjs"
+        "wrapper/ui/message-submit.mjs",
+        "wrapper/chat-fork.mjs",
+        "wrapper/ui/activity-detail.mjs",
+        "wrapper/ui/chat-menu.mjs",
+        "wrapper/ui/composer-focus.tsx",
+        "wrapper/ui/composer-question.tsx",
+        "wrapper/ui/live-answer-cards-preview.tsx",
+        "wrapper/ui/pane-attention.mjs",
+        "wrapper/ui/pane-persistence.mjs",
+        "wrapper/ui/reply-card-preview.tsx",
+        "wrapper/ui/step-count.tsx"
       ],
       "entrypoints": [
         "GET /api/agent/files",
@@ -304,15 +314,21 @@
       ],
       "verification": [
         "wrapper/test/message-delivery.test.mjs",
-        "wrapper/test/message-submit.test.mjs"
+        "wrapper/test/message-submit.test.mjs",
+        "wrapper/test/chat-fork.test.mjs",
+        "wrapper/test/chat-scroll.test.mjs",
+        "wrapper/test/chat-start.test.mjs",
+        "wrapper/test/composer-dictation.test.mjs",
+        "wrapper/test/pane-persistence.test.mjs",
+        "wrapper/test/artifact-content.test.mjs"
       ],
       "status": {
         "endpoint": "GET /api/workers",
         "meaning": "Eingerichtet, verbunden und authentifiziert getrennt auswerten."
       },
       "limits": "Eingerichtet, verbunden und authentifiziert getrennt auswerten.",
-      "version": 2,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 3,
+      "migration": "Bestehende Chat-IDs, Entwürfe und native Sitzungen erhalten. Forkfamilie und Statistikfelder sind additiv; Fork-Zähler bei Rückkehr nicht aus alten Kopien erraten. Nachrichtenkennungen und persistente Übergabebelege bleiben führend. Native Rückfragen vor Adapterwechsel beantworten oder stoppen; UI-Präferenzen sind browserlokal."
     },
     {
       "id": "speech",
@@ -368,7 +384,9 @@
         "wrapper/scripts/setup-dictation.mjs",
         "wrapper/ui/dictation-audio.mjs",
         "wrapper/ui/dictation-storage.mjs",
-        "wrapper/ui/dictation.jsx"
+        "wrapper/ui/dictation.jsx",
+        "wrapper/ui/dictation-shortcut-settings.jsx",
+        "wrapper/ui/dictation-shortcut.mjs"
       ],
       "entrypoints": [
         "GET /api/dictation/status",
@@ -384,15 +402,16 @@
         "platform"
       ],
       "verification": [
-        "wrapper/test/dictation.test.mjs"
+        "wrapper/test/dictation.test.mjs",
+        "wrapper/test/dictation-shortcut.test.mjs"
       ],
       "status": {
         "endpoint": "GET /api/dictation/status",
         "meaning": "Lokales Modell oder explizit eingerichteter Anbieter."
       },
       "limits": "Lokales Modell oder explizit eingerichteter Anbieter.",
-      "version": 1,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 2,
+      "migration": "Keine Audio- oder Serverdatenmigration. Browserlokale validierte Tastenkürzel ergänzen den bestehenden Diktatweg; Entfernen der Präferenz stellt die Voreinstellung wieder her. Aufnahmen und Wiederherstellung bleiben erhalten."
     },
     {
       "id": "connections",
@@ -464,7 +483,11 @@
         "wrapper/worker-environment.mjs",
         "wrapper/worker-models.mjs",
         "wrapper/worker-rpc.mjs",
-        "wrapper/workers.mjs"
+        "wrapper/workers.mjs",
+        "wrapper/worker-questions.mjs",
+        "wrapper/usage.mjs",
+        "wrapper/claude-usage.mjs",
+        "wrapper/ui/usage.tsx"
       ],
       "entrypoints": [
         "GET /api/local-workers",
@@ -480,21 +503,25 @@
         "POST /api/workers/activate",
         "POST /api/workers/connect",
         "POST /api/workers/disconnect",
-        "POST /api/workers/preferences"
+        "POST /api/workers/preferences",
+        "GET /api/usage/allowances"
       ],
       "dependencies": [
         "platform"
       ],
       "verification": [
-        "wrapper/test/workers.test.mjs"
+        "wrapper/test/workers.test.mjs",
+        "wrapper/test/worker-questions.test.mjs",
+        "wrapper/test/worker-questions-http.test.mjs",
+        "wrapper/test/usage.test.mjs"
       ],
       "status": {
         "endpoint": "GET /api/workers",
         "meaning": "Programmfund ist kein Login. Nur eigene Profile und bestätigte Sitzung verwenden."
       },
       "limits": "Programmfund ist kein Login. Nur eigene Profile und bestätigte Sitzung verwenden.",
-      "version": 1,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 2,
+      "migration": "Bestehende eigene Anbieterprofile und natives Memory unverändert erhalten. Ergänzende nicht vertrauliche Fragequittungen verwenden tools.json, Verbrauchswerte additive Turn-/Chatfelder. Vor Rückkehr offene native Requests beenden. Kontingentabfrage nutzt denselben eigenen Profilweg, übernimmt keine Host-Anmeldungen und startet keine Modellantwort."
     },
     {
       "id": "jobs",
@@ -513,7 +540,8 @@
         "wrapper/job-templates.mjs",
         "wrapper/ui/job-notifications.jsx",
         "wrapper/ui/job-template-list.jsx",
-        "wrapper/ui/notification-bell.tsx"
+        "wrapper/ui/notification-bell.tsx",
+        "wrapper/ui/jobs-view.mjs"
       ],
       "entrypoints": [
         "GET /api/core/executions",
@@ -537,15 +565,17 @@
         "platform"
       ],
       "verification": [
-        "core/tests/test_routines.py"
+        "core/tests/test_routines.py",
+        "wrapper/test/jobs-view.test.mjs",
+        "core/tests/test_job_manifest_clock.py"
       ],
       "status": {
         "endpoint": "GET /api/notifications",
         "meaning": "Ausführung über Scheduler; Abschluss und Zustellbeleg prüfen."
       },
       "limits": "Ausführung über Scheduler; Abschluss und Zustellbeleg prüfen.",
-      "version": 1,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 2,
+      "migration": "Bestehende zentrale Jobordner, Kennungen und Laufbelege erhalten. Optionale Modell-/Effortfelder ergänzen das Manifest; vorhandene Zeitwerte werden weiterhin eindeutig eingelesen. Backup-Zeitplan erst nach erfolgreicher Prüfung des vorhandenen Archivs aktivieren. Keine Verschiebung in Bereichsordner."
     },
     {
       "id": "library",
@@ -584,7 +614,7 @@
         "meaning": "Dateibestand; Vorschau ist kein Suchindex."
       },
       "limits": "Dateibestand; Vorschau ist kein Suchindex.",
-      "version": 1,
+      "version": 2,
       "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
     },
     {
@@ -664,7 +694,7 @@
         "meaning": "FTS ist unabhängig von optionalen Embeddings; noch nicht indexierte Formate kennzeichnen."
       },
       "limits": "FTS ist unabhängig von optionalen Embeddings; noch nicht indexierte Formate kennzeichnen.",
-      "version": 1,
+      "version": 2,
       "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
     },
     {
@@ -714,7 +744,9 @@
         "core/settings.py",
         "wrapper/ui/voice-settings.jsx",
         "wrapper/ui/user-preferences.tsx",
-        "wrapper/ui/user-profile.mjs"
+        "wrapper/ui/user-profile.mjs",
+        "wrapper/ui/pane-shortcut-settings.jsx",
+        "wrapper/ui/pane-shortcuts.mjs"
       ],
       "entrypoints": [
         "GET /api/identity",
@@ -726,15 +758,16 @@
       ],
       "verification": [
         "core/tests/test_operations.py",
-        "wrapper/test/user-profile.test.mjs"
+        "wrapper/test/user-profile.test.mjs",
+        "wrapper/test/pane-shortcuts.test.mjs"
       ],
       "status": {
         "endpoint": "GET /api/system/settings",
         "meaning": "Persistierte Konfiguration dieser Installation."
       },
       "limits": "Persistierte Konfiguration dieser Installation.",
-      "version": 2,
-      "migration": "Vorhandene Einstellungen und Markdown-Abschnitte erhalten. Optionale Wetterkoordinaten ergänzen USER.md; alte Ortsnamen bleiben lesbar und werden bei Mehrdeutigkeit erst nach Auswahl verwendet."
+      "version": 3,
+      "migration": "Vorhandene Einstellungen und Markdown-Abschnitte erhalten. Optionale Wetterkoordinaten ergänzen USER.md; alte Ortsnamen bleiben lesbar und werden bei Mehrdeutigkeit erst nach Auswahl verwendet. Pane-Tastenkürzel liegen ausschließlich browserlokal; ungültige Werte verwenden den Standard, ohne Chatentwürfe zu ändern."
     },
     {
       "id": "operations",
@@ -795,7 +828,7 @@
         "meaning": "Prozess, vollständige lokale Basis und tatsächliche Worker-Ausführbarkeit getrennt prüfen; Kundenanschlüsse werden nicht pauschal als bereit erklärt."
       },
       "limits": "Betriebszustand, Login, Backup und Restore-Nachweis separat prüfen.",
-      "version": 1,
+      "version": 2,
       "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
     },
     {
@@ -918,7 +951,9 @@
         "wrapper/ui/workspace-review.jsx",
         "wrapper/updates.mjs",
         "wrapper/vite.config.ts",
-        "wrapper/ui/page-heading.tsx"
+        "wrapper/ui/page-heading.tsx",
+        "wrapper/ui/components/ui/pixel-field.mjs",
+        "wrapper/ui/vanilla-wordmark.tsx"
       ],
       "entrypoints": [
         "GET /internal/storage",
@@ -939,7 +974,7 @@
         "meaning": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen."
       },
       "limits": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen.",
-      "version": 1,
+      "version": 2,
       "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
     },
     {
@@ -949,29 +984,35 @@
       "stage": "implemented",
       "contract": "wrapper/surfaces/settings.md#dein-profil",
       "setup": "wrapper/surfaces/settings.md#dein-profil",
-      "data": "Ort und optionale Koordinaten liegen im Workspace in soul/USER.md. Wetterantworten werden zehn Minuten ausschließlich im Arbeitsspeicher zwischengespeichert.",
+      "data": "Ort und optionale Koordinaten liegen im Workspace in soul/USER.md. Wetterantworten werden zehn Minuten ausschließlich im Arbeitsspeicher zwischengespeichert. Berichtschats speichern den ausdrücklich angeforderten Wetterstand einschließlich Zeitraum und Quelle im vorhandenen Chat-/Snapshotformat.",
       "sources": [
         "wrapper/weather.mjs",
-        "wrapper/ui/weather-client.mjs"
+        "wrapper/ui/weather-client.mjs",
+        "wrapper/weather-report.mjs",
+        "wrapper/ui/components/ui/weather-scene.tsx",
+        "wrapper/ui/weather-motion.tsx",
+        "wrapper/ui/weather-preview.tsx"
       ],
       "entrypoints": [
         "GET /api/weather/locations",
-        "GET /api/weather/current"
+        "GET /api/weather/current",
+        "POST /api/weather/chat"
       ],
       "dependencies": [
         "platform",
         "settings"
       ],
       "verification": [
-        "wrapper/test/weather.test.mjs"
+        "wrapper/test/weather.test.mjs",
+        "wrapper/test/weather-report.test.mjs"
       ],
       "status": {
         "endpoint": "GET /api/status",
         "meaning": "Erreichbarkeit des lokalen Adapters; bestätigt keine Wetterverbindung. Der aktuelle Abruf benötigt bestätigte latitude/longitude an GET /api/weather/current."
       },
       "limits": "Öffentliche Open-Meteo-Dienste benötigen Internet. Ortssuche über GeoNames ist keine Adressprüfung. Fehler und veraltete Antworten werden benannt; keine Beispieldaten als Wetter.",
-      "version": 1,
-      "migration": "Additive optionale Koordinaten in USER.md; bestehender Ortsname und andere Markdown-Abschnitte bleiben erhalten. Löschen des Orts entfernt seine Koordinaten; der Cache ist nicht dauerhaft."
+      "version": 2,
+      "migration": "Additive optionale Koordinaten in USER.md; bestehender Ortsname und andere Markdown-Abschnitte bleiben erhalten. Löschen des Orts entfernt seine Koordinaten; der Cache ist nicht dauerhaft. Wetterberichte ergänzen normale Berichtschats mit einem datierten Vorhersagestand; wiederholte Request-IDs erzeugen keine Doppelarbeit. Alte Leser behalten den Berichtstext. Keine automatische Abfrage eines anderen Orts."
     },
     {
       "id": "ui-blueprint",
@@ -1002,6 +1043,121 @@
       "limits": "Lokale Hashprüfung ersetzt keine visuelle Prüfung oder Kontrolle des tatsächlich bedienten Ursprungs. Kein automatisches Git-Update oder Deployment.",
       "version": 1,
       "migration": "Vorhandene Daten und eigene Funktionen erhalten. Alte Builds ohne Integritätsmetadaten einmal mit npm run ui:prepare neu erzeugen."
+    },
+    {
+      "id": "firma",
+      "title": "Firma",
+      "purpose": "Firmenaufbau als klare Arbeitsliste mit kontextgebundenen Interviews, Quellen und bestätigtem Fortschritt.",
+      "stage": "implemented",
+      "contract": "wrapper/surfaces/firma.md",
+      "setup": "wrapper/surfaces/firma.md#ablauf",
+      "data": "Workspace/firma enthält Arbeitsstände und Entwürfe. Bestehende Firmenbasis führt Wissen. control/firma.json und additive Chatmetadaten halten Bestätigungen.",
+      "sources": [
+        "wrapper/firma.mjs",
+        "wrapper/firma-catalog.mjs",
+        "wrapper/ui/firma.tsx",
+        "wrapper/ui/firma.css"
+      ],
+      "entrypoints": [
+        "GET /api/firma",
+        "GET /api/firma/review",
+        "POST /api/firma/chat",
+        "POST /api/firma/confirm"
+      ],
+      "dependencies": [
+        "platform",
+        "chat",
+        "knowledge"
+      ],
+      "verification": [
+        "wrapper/test/firma.test.mjs",
+        "core/tests/test_firma_storage.py",
+        "wrapper/test/firma-http.test.mjs"
+      ],
+      "status": {
+        "endpoint": "GET /api/firma",
+        "meaning": "Gespeicherte Arbeitsstände mit nachgeprüften Quellen und bestätigten Kriterien; kein Nachweis eines verbundenen Workers."
+      },
+      "limits": "Gemeinsamer authentifizierter Workspace; keine personenbezogene Rollentrennung oder automatische Compliance. Inhaltliche Abnahme durch Nutzer und Worker, strukturelle Quellen-/Versionsprüfung im Server.",
+      "version": 1,
+      "migration": "Additive Formatversion 1 und optionale firmaItemId/firmaReview-Chatfelder. Fehlende Daten 0/32; bestehende Firmenakten bleiben erhalten. control/firma.json nutzt vorhandene SQLite-Storage- und Backupwege. Alter Code ignoriert Zusatzdaten. Unbekannte Version wird nicht überschrieben."
+    },
+    {
+      "id": "chat-privacy",
+      "title": "Private Chats",
+      "purpose": "Einzelne Gespräche mit tabbezogener PIN-Sperre aus gemeinsamen Ansichten und historischem Memory ausschließen.",
+      "stage": "implemented",
+      "version": 1,
+      "contract": "wrapper/surfaces/chat.md#chat-sperre-ohne-nutzerkonten",
+      "setup": "wrapper/surfaces/chat.md#chat-sperre-ohne-nutzerkonten",
+      "data": "PIN-Prüfwerte und Ausschlüsse liegen in SQLite records unter chat-privacy/. Entsperrungen sind flüchtig und pro Browser-Tab. Bestehende Chatdaten werden nicht verschlüsselt.",
+      "sources": [
+        "core/chat_privacy.py",
+        "wrapper/ui/chat-privacy-client.mjs",
+        "wrapper/ui/chat-privacy.tsx",
+        "wrapper/ui/chat-privacy.css"
+      ],
+      "entrypoints": [
+        "GET /api/chat/privacy/status",
+        "POST /api/chat/privacy/{action}",
+        "GET /internal/chat-privacy/ids"
+      ],
+      "dependencies": [
+        "platform",
+        "chat",
+        "knowledge"
+      ],
+      "verification": [
+        "core/tests/test_chat_privacy.py",
+        "core/tests/test_statistics_privacy.py"
+      ],
+      "status": {
+        "endpoint": "GET /api/chat/privacy/status",
+        "meaning": "Benötigt die konkrete Chat-ID und den Browser-Client; meldet dessen Sperrstatus, keine Benutzerrollen."
+      },
+      "limits": "Bildschirm-/API-Schutz im gemeinsamen Workspace, keine Verschlüsselung, Dateisandbox oder Sperre gegen Administratoren und native Werkzeuge. Firma-Arbeitschats bleiben gemeinschaftlich.",
+      "migration": "Additive Schutzdatensätze. Bei ausdrücklicher Einrichtung bestehende gemeinsame Memory-Auszüge entfernen; bei Bereinigungsfehler bleiben Quellen gesperrt. Nach Neustart erneut entsperren. Alter Code erzwingt diesen Schutz nicht: Rückkehr auf einen ungeschützten Stand nur nach ausdrücklicher Behandlung geschützter Chats."
+    },
+    {
+      "id": "statistics",
+      "title": "Gesprächsstatistik",
+      "purpose": "Datierte lokale Gesprächsaktivität und belegten Verbrauch mit Datenabdeckung anzeigen und als Bericht öffnen.",
+      "stage": "implemented",
+      "version": 1,
+      "contract": "wrapper/surfaces/chat.md#persönliche-statistik-und-fächer--version-120",
+      "setup": "wrapper/surfaces/chat.md#persönliche-statistik-und-fächer--version-120",
+      "data": "Liest normale eigene Workspace-Chats einschließlich Archiv. Optionale statisticsTurns und statisticsSnapshot Version 1 verwenden die bestehenden Chatmetadaten und Berichtssnapshots.",
+      "sources": [
+        "wrapper/statistics.mjs",
+        "wrapper/ui/statistics-client.tsx",
+        "wrapper/ui/statistics-data.mjs",
+        "wrapper/ui/statistics-preview.tsx",
+        "wrapper/ui/statistics.tsx",
+        "wrapper/ui/statistics.css",
+        "wrapper/ui/components/ui/activity-pixels.tsx",
+        "wrapper/ui/components/ui/activity-pixels.css"
+      ],
+      "entrypoints": [
+        "GET /api/statistics",
+        "POST /api/statistics/chat"
+      ],
+      "dependencies": [
+        "platform",
+        "chat",
+        "chat-privacy",
+        "workers"
+      ],
+      "verification": [
+        "wrapper/test/statistics.test.mjs",
+        "wrapper/test/usage.test.mjs",
+        "core/tests/test_statistics_privacy.py"
+      ],
+      "status": {
+        "endpoint": "GET /api/statistics",
+        "meaning": "Aktueller angefragter Workspace mit Datenabdeckung; historische Lücken sind keine Nullwerte. Benötigt den Core-Privatsperrenanschluss."
+      },
+      "limits": "Private Chats, Jobs, Messenger- und Berichtschats sind ausgeschlossen. Keine Produktivitätsmessung oder erfundene historische Tokenverteilung. Kontoweite Anbieterlimits bleiben davon getrennt.",
+      "migration": "Nur additive Chat-/Turnfelder und Snapshot Version 1; keine Massenmigration. Bestehende Berichte bleiben unverändert lesbar. Alte Leser zeigen den Berichtstext, ohne neue Details darzustellen."
     }
   ]
 }

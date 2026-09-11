@@ -21,7 +21,7 @@ Lizenz in `job-templates-sources.md`. Der Katalog aktiviert keine Hermes-Jobs.
 
 ## Hinzufügen und Bearbeiten
 
-„Auftrag erstellen“ öffnet das gemeinsame `Modal` mit `JobForm`. Bearbeiten verwendet dasselbe Formular mit geladenen Werten. Pflichtangaben und passende Worker-/Verbindungswahl, danach Speichern. Fehler lassen den Entwurf offen. Zeitplan-Ein/Aus nutzt `apple-switch`; manuelles Ausführen nutzt die bestehende Aktion. Status muss aus dem tatsächlichen Lauf kommen.
+„Auftrag erstellen“ öffnet rechts den Detailbereich mit `JobForm`. Bearbeiten verwendet denselben Bereich mit geladenen Werten. Unter 1100 px ersetzt der Detailbereich die Liste; Schließen führt zur Liste zurück. Einstiege außerhalb der Auftragsseite verwenden weiterhin das gemeinsame Modal. Pflichtangaben und passende Worker-/Verbindungswahl, danach Speichern. Fehler lassen den Entwurf offen. Zeitplan-Ein/Aus nutzt `apple-switch`; manuelles Ausführen nutzt die bestehende Aktion. Status muss aus dem tatsächlichen Lauf kommen.
 
 ## Erweiterungen
 
@@ -40,7 +40,7 @@ Aktionen werden nicht automatisch wiederholt. Noch wartende Aufträge bleiben
 erhalten. Zeitpläne verwenden die konfigurierte Zeitzone und holen höchstens
 den heutigen verpassten Termin nach.
 
-Python-Aufträge verwenden das vorhandene Formular: lokaler Skriptpfad, JSON-Eingabe, Zeitlimit und ausdrücklich idempotente Wiederholungen. Intervall- und Ereignispläne ergänzen täglich/werktäglich. Systemaufträge erscheinen in derselben Liste; Bearbeiten führt zu ihren Systemeinstellungen. Laufdetails lesen den echten SQLite-Lauf einschließlich Ergebnis, Fehler, Protokoll und Abbruch.
+Python-Aufträge verwenden das vorhandene Formular: lokaler Skriptpfad, JSON-Eingabe, Zeitlimit und ausdrücklich idempotente Wiederholungen. Intervall- und Ereignispläne ergänzen täglich/werktäglich. Systemaufträge erscheinen ausschließlich im Reiter System; ihre Details beschreiben die echte Funktion und verlinken die vorhandenen Systemeinstellungen. Laufdetails lesen den echten SQLite-Lauf einschließlich Ergebnis, Fehler, Protokoll und Abbruch.
 
 ## Laden der Liste
 
@@ -65,7 +65,7 @@ verwenden denselben Kernzeitplaner. Neue Routinen starten ab ihrer Einrichtung,
 ein bereits verstrichener heutiger Termin wird nicht sofort ausgelöst.
 
 `JobForm` bietet dieselben Wochen-/Einmalpläne und die Benachrichtigungsauswahl.
-Der Statusfilter heißt „Braucht Aufmerksamkeit“. Kategorien und eine Heute-Seite
+Fehlgeschlagene und ungültige Aufträge zeigen „Braucht Aufmerksamkeit“ in der Zeile. Kategorien und eine Heute-Seite
 sind für diesen Ablauf nicht erforderlich. PageHeading, Field, Modal,
 SettingsNavigationRow, IconButton und bestehende Schrift-/Abstandsrollen bleiben
 unverändert. Keine zweite Komponenten- oder Tokenpalette.
@@ -102,3 +102,29 @@ Wochentage verwenden die bestehende row mit Umbruch, damit auf Handybreite alle 
 ## Iconaktionen
 
 NotificationBell bewegt die erste sichtbare Glocke kurz bei einem neuen notification.created-Ereignis oder einer neuen Rückfrage. Gelesen-Markierungen und wiederholtes Laden lösen keine Bewegung aus. Der Ungelesen-Punkt und die zugängliche Beschriftung bleiben unabhängig von Animation verständlich.
+
+## Status und Detailbereich
+
+Die Reiter heißen Alle, Aktiv, Pausiert, Abgeschlossen, System und Vorlagen.
+Alle umfasst Nutzeraufträge; System bündelt ausschließlich verwaltete Wartung.
+Ein erfolgreicher wiederkehrender Lauf bleibt aktiv; Abgeschlossen bezeichnet
+einmalige oder manuelle erledigte Aufträge. Letzter Lauf und Zeitplanstatus
+werden getrennt benannt. Fehler bleiben in Alle sichtbar.
+
+Die Auswahl öffnet rechts JobForm mit Aufgabe, Workspace, Anbieter, Modell,
+Reasoning, Zeitplan und Benachrichtigung. Die Auswahl stammt aus dem vorhandenen
+Anbieterkatalog; Automatisch verwendet den Anbieterstandard. Eine feste Modellwahl
+bleibt an den festen Anbieter gebunden und wird beim Ausführen erneut validiert.
+Jeder Lauf erhält den bestehenden eigenen Chat im gewählten Workspace und den
+Auftragsordner mit input, output und runs. Keine automatisch erzeugten Projekte.
+Systemaufträge verwenden keine KI-Modellwahl. Backup-Aktivierung prüft zuerst
+das erreichbare Archiv mit seinem vorhandenen Schlüssel.
+
+PageHeading, Field, IconButton, CoreRunDetails, apple-switch und tabs bleiben
+die gemeinsamen Bausteine. jobs.css beschreibt ausschließlich den responsiven
+Liste-/Detailaufbau mit vorhandenen Tokens. Der Suchindex läuft bereits alle
+30 Sekunden im Kern; sein manueller Eintrag startet keinen zweiten Zeitplaner.
+
+Uhrzeiten bleiben beim YAML-Austausch zwischen Oberfläche und Kern Zeichenketten,
+auch unquoted 10:30, 16:00 und 23:59. Speichern und erneutes Einlesen dürfen
+keinen gültigen Tagesplan in einen ungültigen Auftrag verwandeln.

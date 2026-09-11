@@ -63,11 +63,7 @@
   width: 6px;
   cursor: col-resize;
   touch-action: none;
-  background: var(--border);
-}
-.pane-divider:hover,
-.pane-divider:focus-visible {
-  background: var(--blue);
+  background: transparent;
 }
 .chat-title-button {
   display: inline-flex;
@@ -247,3 +243,5 @@
 }
 
 .chat-dropdown > button { white-space: nowrap; }
+
+.chat-menu-separator { height: 1px; background: var(--border); margin: var(--space-4) var(--space-8); }

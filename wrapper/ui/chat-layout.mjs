@@ -34,3 +34,8 @@ export function conversationText(thread, title = "Chat") {
   );
   return `# ${title}\n\n${messages.join("\n\n")}\n`;
 }
+
+// One field spans all visible conversations; hidden drafts do not enable it.
+export function sharedParticlesEnabled(mode = 'on', sessions = []) {
+  return mode === 'all' || (mode === 'on' && sessions.some(session => session?.welcome));
+}

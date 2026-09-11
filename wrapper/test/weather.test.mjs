@@ -44,3 +44,39 @@ test('weather card distinguishes measurements, loading, errors and missing city'
  assert.match(card({status:'loading'}).description,/wird geladen/);
  assert.match(card({status:'unresolved'}).description,/bestätige/);
 });
+
+test('scene selection distinguishes precipitation, dry frost, night and unknown data',async()=>{
+ const {weatherScene,weatherLabel}=await import('../ui/weather-client.mjs');
+ const scene=(code,temperature=15,isDay=true)=>weatherScene({status:'ready',code,temperature,isDay});
+ assert.equal(scene(0),'sunny');assert.equal(scene(2),'partly');assert.equal(scene(3),'cloudy');
+ for(const c of [61,63,65,80,81,82])assert.equal(scene(c),'rain');
+ for(const c of [71,73,75,77,85,86])assert.equal(scene(c,-4),'snow');
+ for(const c of [56,57,66,67]){assert.equal(scene(c,-1),'ice');assert.equal(weatherLabel(c),'Gefrierender Regen');}
+ assert.equal(scene(0,-5),'frost');assert.equal(scene(3,-5),'cloudy');
+ assert.equal(scene(95),'storm');assert.equal(scene(45),'fog');
+ assert.equal(scene(0,15,false),'sunny');assert.equal(scene(999),'unavailable');
+ assert.equal(weatherScene({status:'error',code:0}),'unavailable');
+});
+test('day/night and daily extremes preserve zero and do not invent missing measurements',async()=>{
+ const now=1800000000000;
+ let requested;
+ const service=createWeatherService({now:()=>now,fetcher:async url=>{requested=new URL(url);return {ok:true,json:async()=>({current:{temperature_2m:0,weather_code:0,is_day:0,apparent_temperature:-3,time:now/1000},daily:{temperature_2m_max:[0],temperature_2m_min:[-8]}})};}});
+ const result=await service.current(0,0);
+ assert.equal(result.isDay,false);assert.equal(result.high,0);assert.equal(result.low,-8);
+ assert.ok(requested.searchParams.get('current').includes('is_day'));
+ const missing=createWeatherService({now:()=>now,fetcher:async()=>({ok:true,json:async()=>({current:{temperature_2m:0,weather_code:0,time:now/1000}})})});
+ const minimal=await missing.current(0,0);assert.equal(minimal.high,null);assert.equal(minimal.low,null);assert.equal(minimal.isDay,null);
+ assert.equal(result.warning,undefined);
+});
+
+
+test('daylight follows location sunrise and sunset across six phases, with honest missing-data fallback', async()=>{
+ const {weatherDaylight}=await import('../ui/weather-client.mjs');
+ const sunrise=Date.UTC(2026,5,21,4),sunset=Date.UTC(2026,5,21,20),h=3600000,w={sunrise,sunset,isDay:true};
+ for(const [time,phase] of [[sunrise-h/2,'dawn'],[sunrise+h/2,'morning'],[sunrise+6*h,'day'],[sunset-h/2,'sunset'],[sunset+h/2,'dusk'],[sunset+2*h,'night']])assert.equal(weatherDaylight(w,time).phase,phase);
+ assert.equal(weatherDaylight(w,sunset).night,true);
+ assert.equal(weatherDaylight({isDay:false},sunrise).phase,'night');
+ assert.equal(weatherDaylight({},sunrise).phase,'unknown');
+ assert.equal(weatherDaylight({...w,sunrise:NaN},sunrise).phase,'day');
+ assert.equal(weatherDaylight(w,sunrise+8*h).sunY,8);
+});

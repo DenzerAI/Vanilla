@@ -104,3 +104,10 @@ Dateiauswahl. Während ein ausdrücklich verlinkter Unterordner geladen wird,
 bleibt der Datei-Skeleton sichtbar. LibraryThumbnail bietet zusätzlich eine
 Kartenvariante mit lesbarer Dokumentbreite; normale Bibliotheksminiaturen
 behalten ihren Aufbau und ihre bisherigen Ladegrenzen.
+
+
+SVG verwendet dieselbe inaktive FileContent-Bildvorschau wie im Chat. Der
+Quelltext bleibt separat lesbar beziehungsweise im schreibbaren Workspace
+bearbeitbar. SVG-Dateien werden als Bilder klassifiziert und erhalten echte
+Miniaturen. Die bestehenden Pfadprüfungen und Downloadheader bleiben erhalten.
+Keine Datenmigration; ältere Oberflächen zeigen wieder den Quelltext.

@@ -1,4 +1,6 @@
-.chat-main:has(> .welcome-particles) { isolation: isolate; }
+.chat-panes:has(> .welcome-particles) { position: relative; isolation: isolate; }
+.chat-panes .app.embedded-chat,
+.chat-panes .app.embedded-chat > .main { background: transparent; }
 .welcome-particles {
   position: absolute;
   inset: 0;

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChatMenu } from "./chat-controls.jsx";
 import { Avatar } from "./avatar.jsx";
 import { Activity, Archive, RotateCcw, Settings } from "./icons.jsx";
@@ -17,6 +17,46 @@ type Props = {
   onRestart: () => void;
   preview?: boolean;
 };
+
+/** Fit the real text before resorting to ellipsis, including after font loading. */
+function AgentName({ name }: { name: string }) {
+  const container = useRef<HTMLSpanElement>(null);
+  const text = useRef<HTMLSpanElement>(null);
+  useLayoutEffect(() => {
+    const box = container.current;
+    const label = text.current;
+    if (!box || !label) return;
+    let disposed = false;
+    let lastWidth = -1;
+    const fit = () => {
+      if (disposed || !box.clientWidth) return;
+      lastWidth = box.clientWidth;
+      label.style.setProperty("--agent-name-scale", "1");
+      const naturalWidth = label.getBoundingClientRect().width;
+      const scale = naturalWidth ? Math.min(1, box.clientWidth / naturalWidth) : 1;
+      label.style.setProperty("--agent-name-scale", String(scale));
+    };
+    fit();
+    const observer = new ResizeObserver(() => {
+      if (box.clientWidth !== lastWidth) fit();
+    });
+    observer.observe(box);
+    // Covers theme/font-size preferences even when the sidebar width stays fixed.
+    const appearance = new MutationObserver(fit);
+    appearance.observe(document.documentElement, { attributes: true });
+    document.fonts.ready.then(fit);
+    document.fonts.addEventListener("loadingdone", fit);
+    return () => {
+      disposed = true;
+      observer.disconnect();
+      appearance.disconnect();
+      document.fonts.removeEventListener("loadingdone", fit);
+    };
+  }, [name]);
+  return <span ref={container} className="agent-menu-name" title={name}>
+    <span ref={text} className="agent-menu-name-text">{name}</span>
+  </span>;
+}
 
 function ServerDetails({ connectionState, preview }: Pick<Props, "connectionState" | "preview">) {
   const [status, setStatus] = useState<{ online: boolean; latency?: number; engine?: { name?: string; connected?: boolean } } | null>(null);
@@ -58,7 +98,7 @@ function ServerDetails({ connectionState, preview }: Pick<Props, "connectionStat
 export function AgentMenu({ theme, onThemeChange, name, avatar, avatarColor, connectionState, restartBusy = false, onNavigate, onRestart, preview = false }: Props) {
   const state = restartBusy ? "Startet neu …" : connectionState === "online" ? "Verbunden" : ["connecting", "reconnecting"].includes(connectionState) ? "Verbindet …" : "Verbindung unterbrochen";
   return <ChatMenu
-    label={`${name || "Agent"} · Agent-Menü · ${state}`}
+    label={`${name || "Vanilla"} · Agent-Menü · ${state}`}
     className="profile-button agent-menu-trigger"
     menuClassName="agent-menu"
     selected={undefined}
@@ -72,6 +112,6 @@ export function AgentMenu({ theme, onThemeChange, name, avatar, avatarColor, con
     ]}
   >
     <span className="agent-menu-avatar"><Avatar avatar={avatar} color={avatarColor} /><span aria-hidden="true" className={`status-dot ${connectionState === "online" && !restartBusy ? "online" : "offline"}`} /></span>
-    <span className="agent-menu-name">{name || "Agent"}</span>
+    <AgentName name={name || "Vanilla"} />
   </ChatMenu>;
 }

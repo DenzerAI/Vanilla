@@ -28,6 +28,7 @@ class Memory:
     def __init__(self, db, config, knowledge, settings):
         self.db, self.config, self.knowledge, self.settings = db, config, knowledge, settings
         self.crm = None
+        self.chat_privacy = None
         self.lock = threading.RLock()
         self.git_dir = config.data / "vault.git"
         self.pending = {r['key'].removeprefix('memory/pending/') for r in db.rows("SELECT key FROM records WHERE key LIKE 'memory/pending/%' AND value='true'")}
@@ -116,6 +117,8 @@ class Memory:
 
     def capture(self, chat_id):
         options = self.settings.values["memory"]
+        if self.chat_privacy and self.chat_privacy.record(chat_id):
+            return 0
         if not options["capture"] or chat_id in options["excluded_chats"]:
             return 0
         if not SAFE_ID.fullmatch(chat_id):
@@ -130,6 +133,8 @@ class Memory:
         target = f"{prefix}brain/daily/{day}/{chat_id}.md"
         count = 0
         with self.lock:
+            if self.chat_privacy and self.chat_privacy.record(chat_id):
+                return 0
             for turn in thread.get("turns", []):
                 if turn.get("status") != "completed":
                     continue
@@ -190,7 +195,7 @@ class Memory:
     def continuation(self, chat_id):
         if not SAFE_ID.fullmatch(chat_id):
             raise ValueError('Ungültiger Chat.')
-        if chat_id in self.settings.values['memory']['excluded_chats']:
+        if (self.chat_privacy and self.chat_privacy.record(chat_id)) or chat_id in self.settings.values['memory']['excluded_chats']:
             raise ValueError('Dieses Gespräch ist von der Memory-Aufnahme ausgeschlossen.')
         rows=self.db.rows('SELECT project_id FROM chats WHERE id=?',(chat_id,))
         thread=self.db.get(f'workspace/chats/{chat_id}/transcript.json')['value']

@@ -4,9 +4,9 @@ export const conversationStarters = [
   {id:'file',kind:'prompt',title:'Eine Datei verstehen',description:'Das Wesentliche finden und besprechen.',prompt:'Ich möchte eine Datei mit dir besprechen. Bitte warte, bis ich sie angehängt habe.'},
   {id:'project',kind:'prompt',title:'Projekt erkunden',description:'Überblick gewinnen und weiterkommen.',prompt:'Gib mir einen kurzen Überblick über dieses Projekt und seine nächsten Schritte.'},
 ];
-/** @param {{requests?: any[], notifications?: any[], chats?: any[], projectId?: string, jobs?: any[], entries?: any[], reports?: any[], now?: number, includeWeather?: boolean, userProfile?: {name?:string,location?:string}, profileError?: boolean, weather?:any}} options
+/** @param {{requests?: any[], notifications?: any[], chats?: any[], projectId?: string, jobs?: any[], entries?: any[], reports?: any[], now?: number, includeWeather?: boolean, userProfile?: {name?:string,location?:string}, profileError?: boolean, weather?:any, includeStatistics?:boolean, statistics?:any,includeAllowances?:boolean,allowances?:any}} options
  * @returns {any[]} */
-export function chatStartFeed({requests=[],notifications=[],chats=[],projectId='default',jobs:scheduledJobs=[],entries=[],reports=[],now=Date.now(),includeWeather=false,userProfile={},profileError=false,weather=null}={}) {
+export function chatStartFeed({requests=[],notifications=[],chats=[],projectId='default',jobs:scheduledJobs=[],entries=[],reports=[],now=Date.now(),includeWeather=false,userProfile={},profileError=false,weather=null,includeStatistics=false,statistics=null,includeAllowances=false,allowances=null}={}) {
   const result=[], seen=new Set();
   for(const request of requests) {
     const threadId=request.params?.threadId;
@@ -27,21 +27,23 @@ export function chatStartFeed({requests=[],notifications=[],chats=[],projectId='
   }).sort((a,b)=>Number(a.status==='completed')-Number(b.status==='completed'));
   for(const notice of receipts)result.push({id:'notice:'+notice.id,kind:notice.status==='completed'?'report':'notice',title:notice.title.replace(/ · (Fertig|Braucht Aufmerksamkeit)$/, ''),description:String(notice.body||'').replace(/\[([^\]]+)\]\([^)]*\)/g,'$1').replace(/[#*_`]/g,'').replace(/\s+/g,' ').trim().slice(0,110),noticeId:notice.id});
   for(const chat of [...chats].sort((a,b)=>b.updatedAt-a.updatedAt)) {
-    if(chat.projectId!==projectId || chat.archived || chat.channelOnly || chat.jobId || chat.briefingId || seen.has(chat.id) || chat.coreRunId || chat.lastTurnStatus!=='completed' || !chat.lastCompletedTurnId || chat.readTurnId===chat.lastCompletedTurnId)continue;
-    result.push({id:'chat:'+chat.id,kind:'chat',title:chat.title,description:'Eine neue Antwort ist bereit.',threadId:chat.id});
+    if(chat.projectId!==projectId || chat.archived || chat.private || chat.channelOnly || chat.jobId || chat.briefingId || seen.has(chat.id) || chat.coreRunId || chat.lastTurnStatus!=='completed' || !chat.lastCompletedTurnId || chat.readTurnId===chat.lastCompletedTurnId)continue;
+    result.push({id:'chat:'+chat.id+':'+chat.lastCompletedTurnId,kind:'chat',title:chat.title,description:'',threadId:chat.id,turnId:chat.lastCompletedTurnId});
   }
   const nextJob=scheduledJobs.filter(j=>!j.managed && j.status==='active' && (!j.projectId || j.projectId===projectId) && Number.isFinite(Date.parse(j.nextRun)) && Date.parse(j.nextRun)>now).sort((a,b)=>Date.parse(a.nextRun)-Date.parse(b.nextRun))[0];
   const latest=[...reports].sort((a,b)=>b.created_at-a.created_at)[0];
   const newReport=latest?{id:'notice:'+latest.id,kind:'report',title:latest.title.replace(/ · Fertig$/,''),description:previewText(latest.body),noticeId:latest.id}:result.find(i=>i.kind==='report');
-  const recentChat=[...chats].filter(c=>c.projectId===projectId && !c.archived && !c.channelOnly && !c.jobId && !c.briefingId && !c.coreRunId && !seen.has(c.id) && c.lastTurnStatus==='completed').sort((a,b)=>b.updatedAt-a.updatedAt)[0];
-  const continueCard=recentChat?{id:'chat:'+recentChat.id,kind:'chat',title:recentChat.title,description:'Hier kannst du das Gespräch fortsetzen.',continuation:true,threadId:recentChat.id}:null;
+  const recentChat=[...chats].filter(c=>c.projectId===projectId && !c.archived && !c.private && !c.channelOnly && !c.jobId && !c.briefingId && !c.coreRunId && !seen.has(c.id) && c.lastTurnStatus==='completed').sort((a,b)=>b.updatedAt-a.updatedAt)[0];
+  const continueCard=!result.some(item=>item.kind==='chat')&&recentChat?{id:'continue:'+recentChat.id,kind:'chat',title:recentChat.title,description:'Hier kannst du das Gespräch fortsetzen.',continuation:true,threadId:recentChat.id}:null;
   const jobCard=nextJob?{id:'job:'+nextJob.id,kind:'job',title:nextJob.name,description:`Geplant: ${new Date(nextJob.nextRun).toLocaleString('de-DE',{weekday:'short',hour:'2-digit',minute:'2-digit',day:'numeric',month:'short'})}`,job:nextJob}:null;
   const urgent=result.filter(i=>i.kind==='request'||i.kind==='notice');
   const candidates=[...urgent.slice(0,2),...result.filter(i=>i.kind==='chat'),newReport,continueCard,jobCard,...urgent.slice(2)].filter(Boolean);
   const unique=new Set();const mixed=candidates.filter(item=>{if(unique.has(item.id))return false;unique.add(item.id);return true;});
   if(!mixed.length)mixed.push(conversationStarters[0]);
-  const chosen=mixed.slice(0,includeWeather?4:5);
+  const chosen=mixed;
   if(includeWeather)chosen.push({id:'weather',kind:'weather',title:userProfile.location||'Dein Wetter',weather:profileError?null:weather,weatherConfigured:!!userProfile.location,description:profileError?'Dein Wetterort konnte nicht geladen werden.':userProfile.location?weatherDescription(weather):'Dein Ort ist noch nicht eingerichtet.'});
+  if(includeStatistics)chosen.push({id:"statistics",kind:"statistics",title:"Statistik",description:"Dein Arbeitsrhythmus mit deinem Agenten.",statistics});
+  if(includeAllowances)chosen.push({id:'allowances',kind:'allowances',title:'Kontingente',description:'Deine verfügbaren Kontingente und Reset-Zeiten.',allowances});
   return chosen;
 }
 export function startHeadline(kind, fallback) {
@@ -57,6 +59,8 @@ export function friendlyFileTitle(name='') {
 }
 export function headlineForItem(item, fallback) {
  if(!item)return fallback;
+ if(item.kind==='allowances')return 'Deine Kontingente im Blick.';
+ if(item.kind==='statistics')return item.statistics?.events?.length?'So sieht unsere Zusammenarbeit bisher aus.':'Hier entsteht unser gemeinsamer Arbeitsrhythmus.';
  if(item.continuation)return 'Hier können wir weitermachen.';
  if(item.kind==='weather'&&item.weatherConfigured)return item.weather?.status==='ready'?'So sieht das Wetter bei dir aus.':'Dein Wetterort ist hinterlegt.';
  if(item.kind==='artifact') {
@@ -66,9 +70,31 @@ export function headlineForItem(item, fallback) {
  }
  return ({request:'Hier brauche ich kurz deine Rückmeldung.',notice:'Schauen wir uns das kurz zusammen an?',report:'Dein Ergebnis ist da. Wollen wir reinschauen?',job:'Das steht als Nächstes an.',weather:'Für welchen Ort möchtest du das Wetter sehen?',chat:'Ich habe eine neue Antwort für dich.',prompt:'Was möchtest du heute mit mir angehen?'})[item.kind] || fallback;
 }
-export function headlinesForItem(item, fallback) {
- const first=headlineForItem(item,fallback);
+export function headlinesForItem(item, fallback, name='') {
+ const line=headlineForItem(item,fallback);
+ const personal=String(name).trim().split(/\s+/)[0].slice(0,32);
+ const first=personal?`Hey ${personal}, ${line[0].toLocaleLowerCase('de')}${line.slice(1)}`:line;
  if(!item)return [first];
- const detail=({request:'Mit deiner Antwort können wir weitermachen.',notice:'Den Hinweis findest du auf der Karte.',report:'Dein Ergebnis liegt hier zum Ansehen bereit.',artifact:'Der letzte Stand liegt hier für dich bereit.',job:'Die Einzelheiten findest du auf der Karte.',weather:item.weatherConfigured?'Wetter und Ort findest du in deinem Profil.':'Deinen Ort kannst du im Profil festlegen.',chat:'Wir können direkt daran anknüpfen.',prompt:'Wir können mit einer kleinen Idee anfangen.'})[item.kind];
+ const detail=({allowances:'Hier siehst du alle Kontingente und Reset-Zeiten.',statistics:'Ein Klick öffnet deine Statistik im Chat.',request:'Mit deiner Antwort können wir weitermachen.',notice:'Den Hinweis findest du auf der Karte.',report:'Dein Ergebnis liegt hier zum Ansehen bereit.',artifact:'Der letzte Stand liegt hier für dich bereit.',job:'Die Einzelheiten findest du auf der Karte.',weather:item.weatherConfigured?'Ein Klick öffnet deinen Wetterbericht mit Sieben-Tage-Ausblick.':'Deinen Ort kannst du im Profil festlegen.',chat:'Wir können direkt daran anknüpfen.',prompt:'Wir können mit einer kleinen Idee anfangen.'})[item.kind];
  return detail&&detail!==first?[first,detail]:[first];
+}
+
+/** Keep existing cards in place; append arrivals before persistent service cards. */
+export function reconcileFan(previous, items) {
+ const available=new Set(items.map(item=>item.id));
+ const retained=previous.ids.filter(id=>available.has(id));
+ const known=new Set(retained);
+ const added=items.filter(item=>!known.has(item.id)).map(item=>item.id);
+ const services=new Set(items.filter(item=>['weather','calendar','statistics','allowances'].includes(item.kind)).map(item=>item.id));
+ const ids=[...retained.filter(id=>!services.has(id)),...added.filter(id=>!services.has(id)),...retained.filter(id=>services.has(id)),...added.filter(id=>services.has(id))];
+ const oldIndex=previous.ids.indexOf(previous.selected);
+ const neighbor=previous.ids.slice(oldIndex+1).find(id=>available.has(id)) || previous.ids.slice(0,Math.max(0,oldIndex)).reverse().find(id=>available.has(id));
+ return {ids,selected:available.has(previous.selected)?previous.selected:neighbor||ids[0]||''};
+}
+
+export function replyPreview(thread, turnId) {
+ const turn=thread?.turns?.find(turn=>turn.id===turnId);
+ if(turn?.status!=='completed')return '';
+ const reply=turn.items?.filter(item=>item.type==='agentMessage'&&item.phase!=='commentary').at(-1);
+ return previewText(reply?.text);
 }

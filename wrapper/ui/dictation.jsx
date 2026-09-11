@@ -1,3 +1,5 @@
+import {useDictationShortcut} from './dictation-shortcut-settings.jsx';
+import {bindDictationShortcut,shortcutCode} from './dictation-shortcut.mjs';
 import React, {useState,useRef,useEffect} from 'react';
 import {Mic,ArrowUp,Pause,Play,Trash2,Check,X,Square,Volume2,Download} from './icons.jsx';
 import {write,sync,all,downloadLocal} from './dictation-storage.mjs';
@@ -7,7 +9,9 @@ import {VoiceWave,VoiceStatus} from './voice-visual';
 import {voiceWaveGeometry} from './design-system.mjs';
 import './dictation.css';
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-export function Dictation({api,notify,onText,onVoiceText,onSendText,chatId,reply,running=false,enabled=true,openSettings}) {
+export function Dictation({api,notify,onText,onVoiceText,onSendText,chatId,reply,running=false,enabled=true,shortcutEnabled=false,openSettings}) {
+  const shortcut=useDictationShortcut();
+  const shortcutState=useRef(null),shortcutBinding=useRef(null);
   const [awaitingId,setAwaitingId]=useState(null);
   const [phase,setPhase]=useState('idle'),[seconds,setSeconds]=useState(0),[levels,setLevels]=useState(Array(voiceWaveGeometry.samples).fill(0)),[sessionActive,setSessionActive]=useState(false),[output,setOutput]=useState('idle'),[issue,setIssue]=useState('');
   const current=useRef(null),mounted=useRef(true),stopRef=useRef(null),startRef=useRef(null),generation=useRef(0),session=useRef(null),playback=useRef(null),latest=useRef({reply,chatId});latest.current={reply,chatId,onSendText};
@@ -49,12 +53,13 @@ export function Dictation({api,notify,onText,onVoiceText,onSendText,chatId,reply
     }catch(e){session.current=null;setSessionActive(false);report(e);}
   }
   async function start(){
-    if(current.current)return;
-    const g=++generation.current;setPhase('starting');setIssue('');playback.current.cancel();
+    if(current.current || phaseRef.current==='starting')return;
+    const g=++generation.current;phaseRef.current='starting';setPhase('starting');setIssue('');playback.current.cancel();
     let stream,context;
     try{
       await all('recordings');
       try { await navigator.storage?.persist?.(); } catch { /* Persistence is optional; IndexedDB remains the required durable store. */ }
+      if(!mounted.current || g!==generation.current)return;
       stream=await microphone(navigator.mediaDevices,localStorage.getItem('agent-microphone') || '');
       if(!mounted.current || g!==generation.current){stream.getTracks().forEach(t=>t.stop());return;}
       // Use the hardware's native rate. Resampling happens in the worklet.
@@ -80,10 +85,28 @@ export function Dictation({api,notify,onText,onVoiceText,onSendText,chatId,reply
       context.createMediaStreamSource(stream).connect(node);node.connect(context.destination);
       stream.getTracks().forEach(t=>t.addEventListener('ended',()=>{setIssue('Mikrofon getrennt. Audio ist gesichert.');void stopRef.current?.(false,false);}));
       context.onstatechange=()=>{if(context.state==='suspended' && current.current===s && !s.stopping){node.port.postMessage('pause');setPhase('paused');}};
-      setSeconds(0);setLevels(Array(voiceWaveGeometry.samples).fill(0));setPhase('recording');
-    }catch(e){stream?.getTracks().forEach(t=>t.stop());await context?.close();if(mounted.current){setPhase('idle');report(new Error(microphoneError(e)));}}
+      setSeconds(0);setLevels(Array(voiceWaveGeometry.samples).fill(0));phaseRef.current='recording';setPhase('recording');
+    }catch(e){stream?.getTracks().forEach(t=>t.stop());await context?.close();if(mounted.current && g===generation.current){phaseRef.current='idle';setPhase('idle');report(new Error(microphoneError(e)));}}
   }
   startRef.current=start;
+  shortcutState.current={
+    available:()=>shortcutEnabled && enabled && !document.hidden && document.hasFocus() && !session.current && output==='idle' && !document.querySelector('[role="dialog"], [role="alertdialog"], [role="menu"]'),
+    phase:()=>phaseRef.current,
+    start:()=>{void startRef.current?.();},
+    finish:()=>{void stopRef.current?.(false,true);},
+    cancelPending:()=>{generation.current++;phaseRef.current='idle';setPhase('idle');},
+  };
+  useEffect(()=>{
+    if(!shortcutEnabled || !enabled)return;
+    const invoke=name=>(...args)=>shortcutState.current[name](...args);
+    const dispose=bindDictationShortcut(window,{key:shortcutCode(shortcut.key,navigator.platform),mode:shortcut.mode,available:invoke('available'),phase:invoke('phase'),start:invoke('start'),finish:invoke('finish'),cancelPending:invoke('cancelPending')});
+    shortcutBinding.current=dispose;
+    const hidden=()=>{if(document.hidden)dispose.interrupt?.();};
+    document.addEventListener('visibilitychange',hidden);
+    return()=>{document.removeEventListener('visibilitychange',hidden);dispose();};
+  },[shortcut.key,shortcut.mode,shortcutEnabled,enabled,chatId]);
+  useEffect(()=>{if(phase==='idle')shortcutBinding.current?.releaseOwnership?.();},[phase]);
+
   async function transcribe(id,g,conversation,direct=false){
     setPhase('recognizing');
     await api('/dictation/transcribe',{id});
@@ -110,7 +133,7 @@ export function Dictation({api,notify,onText,onVoiceText,onSendText,chatId,reply
   async function stop(trash=false,recognize=true,direct=false){
     const s=current.current;if(!s || s.stopping)return;
     s.stopping=true;const g=generation.current,conversation=session.current;
-    if(mounted.current)setPhase('saving');
+    if(mounted.current){phaseRef.current='saving';setPhase('saving');}
     let secured=false;
     try{
       await Promise.race([new Promise(resolve=>{s.stopped=resolve;s.node.port.postMessage('stop');}),delay(1500)]);await s.pending;

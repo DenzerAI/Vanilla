@@ -1,0 +1,15 @@
+.step-count { display: inline-flex; vertical-align: bottom; }
+.step-count-window { display: inline-block; position: relative; overflow: hidden; line-height: var(--leading-normal); font-variant-numeric: tabular-nums; }
+.step-count-current { display: block; }
+.step-count-old { position: absolute; right: 0; top: 0; opacity: 0; }
+.step-count-window[data-animate="true"] > .step-count-current { animation: step-count-enter var(--motion-activity-count-duration) ease-out both; }
+.step-count-window[data-animate="true"] > .step-count-old { animation: step-count-leave var(--motion-activity-count-duration) ease-out both; }
+.activity-step[data-new="true"] { animation: activity-step-enter var(--motion-activity-step-duration) ease-out both; }
+@keyframes step-count-enter { from { transform: translateY(100%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+@keyframes step-count-leave { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-100%); opacity: 0; } }
+@keyframes activity-step-enter { from { opacity: 0; transform: translateY(var(--space-2)); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) {
+  .step-count-window > span, .activity-steps > .activity-step { animation: none !important; }
+}
+:root[data-reduce-motion="on"] .step-count-window > span,
+:root[data-reduce-motion="on"] .activity-steps > .activity-step { animation: none; }

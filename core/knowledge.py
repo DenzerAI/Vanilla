@@ -141,7 +141,7 @@ class Knowledge:
                         ):
                             continue
                         relative = file.relative_to(self.config.workspace).as_posix()
-                        if relative in hidden:
+                        if relative in hidden or (getattr(self, 'chat_privacy', None) and self.chat_privacy.path_private(relative)):
                             continue
                         try:
                             safe = safe_path(self.config.workspace, relative)
@@ -249,6 +249,8 @@ class Knowledge:
             + " ORDER BY path",
             params,
         )
+        if getattr(self, 'chat_privacy', None):
+            docs = [d for d in docs if not self.chat_privacy.path_private(d['path'])]
         if not query:
             return [
                 self.result(d, 0, "recent")
@@ -393,6 +395,8 @@ class Knowledge:
         }
 
     def read(self, path):
+        if getattr(self, 'chat_privacy', None) and self.chat_privacy.path_private(path):
+            raise ValueError('Diese Chatquelle ist privat.')
         file = safe_path(self.config.workspace, path)
         if (
             file.suffix.lower() not in TEXT_EXTENSIONS
@@ -460,6 +464,9 @@ class Knowledge:
             finally:
                 temporary.unlink(missing_ok=True)
             self.index(path, project, text)
+            if getattr(self, 'chat_privacy', None) and self.chat_privacy.path_private(path):
+                # Managed cleanup needs a write receipt, never a private read bypass.
+                return {'path': path, 'projectId': project, 'version': digest(text)}
             return self.read(path)
 
     def context(self, query, project, chat_id=None, max_chars=8000):

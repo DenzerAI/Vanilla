@@ -1,5 +1,12 @@
 @import "./design-tokens.css";
 @font-face {
+  font-family: "Quicksand";
+  src: url("./assets/fonts/QuicksandVariable.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+}
+@font-face {
   font-family: "Inter";
   src: url("./assets/fonts/InterVariable.woff2") format("woff2");
   font-style: normal;
@@ -1957,6 +1964,17 @@ nav {
   max-height: 85dvh;
   padding: var(--space-24);
   box-shadow: var(--shadow);
+}
+/* Shared popup scroll areas stay operable without visible native scrollbars. */
+@media (forced-colors: none) {
+  :is(.modal, [role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], [popover]),
+  :is(.modal, [role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], [popover]) * {
+    scrollbar-width: none;
+  }
+  :is(.modal, [role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], [popover])::-webkit-scrollbar,
+  :is(.modal, [role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"], [popover]) *::-webkit-scrollbar {
+    display: none;
+  }
 }
 .modal.wide {
   width: min(650px, calc(100vw - 32px));

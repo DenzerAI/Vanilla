@@ -1,3 +1,4 @@
+import {DictationShortcutSettings} from './dictation-shortcut-settings.jsx';
 import {Skeleton} from './skeleton.tsx';
 import { SettingRow as SettingsRow } from "./settings-row.jsx";
 import React, {useState,useEffect,useRef} from 'react';
@@ -31,6 +32,7 @@ export function VoiceSettings({api,notify,openConnections,onText}) {
     <h3 className="section-heading">Diktat</h3>
     <div className="settings-group">
       <SettingsRow title="Erkennung" description={dictation?.provider==='groq'?'Audio wird mit Groq verarbeitet.':'Deutsch · auf diesem Mac.'}><select aria-label="Diktaterkennung" disabled={!dictation || saving} value={dictation?.provider || 'local'} onChange={e=>act(()=>api('/dictation/settings',{provider:e.target.value}))()}><option value="local">Whisper · lokal{dictation?.localReady?'':' · nicht bereit'}</option>{dictation?.groq && <option value="groq">Groq</option>}</select></SettingsRow>
+      <DictationShortcutSettings/>
       <SettingsRow title="Gesicherte Aufnahmen" description="Auch verworfene Aufnahmen bleiben erhalten."><button type="button" onClick={()=>setHistory(!history)}>{history?'Schließen':'Verwalten'}</button></SettingsRow>
     </div>
     {history && <div className="voice-recordings">

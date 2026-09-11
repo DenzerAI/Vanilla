@@ -23,6 +23,8 @@ from fastapi.responses import (
 from pydantic import BaseModel, Field
 from starlette.background import BackgroundTask
 
+from .chat_privacy import ChatPrivacy
+from fastapi import HTTPException
 from .config import Config
 from .database import Database
 from .crm import CRM
@@ -67,6 +69,9 @@ def create_app(config=None):
     settings = Settings(db)
     memory = Memory(db, config, knowledge, settings)
     memory.crm = crm
+    privacy = ChatPrivacy(db, memory)
+    memory.chat_privacy = privacy
+    knowledge.chat_privacy = privacy
     operations = Operations(db, config, settings, knowledge, memory)
     storage.system_jobs = operations.managed_jobs
     queue = JobQueue(db, storage, config.timezone)
@@ -108,6 +113,7 @@ def create_app(config=None):
     app.state.operations = operations
     app.state.crm = crm
     app.state.mail = mail
+    app.state.chat_privacy = privacy
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(request, error):
@@ -201,7 +207,46 @@ def create_app(config=None):
                 return JSONResponse(
                     {"error": "Sitzung abgelaufen. Bitte neu laden."}, status_code=403
                 )
+        client = request.headers.get("x-chat-client", "")
+        request.state.chat_client = client
+        if request.url.path.startswith('/api/') and not request.url.path.startswith('/api/chat/privacy/'):
+            data = dict(request.query_params)
+            if 'application/json' in request.headers.get('content-type', ''):
+                try:
+                    parsed = await request.json()
+                    if isinstance(parsed, dict):
+                        data.update(parsed)
+                except ValueError:
+                    pass
+            try:
+                for key in ('id', 'chatId', 'threadId', 'sourceChatId'):
+                    id = data.get(key)
+                    if isinstance(id, str):
+                        privacy.require(id, client)
+                        if privacy.record(id) and request.url.path in {'/api/fork', '/api/chat/provider', '/api/memory/compact'}:
+                            raise HTTPException(409, 'Bei privaten Chats ist diese Aktion nicht verfügbar.')
+                for key in ('path', 'file', 'directory'):
+                    if privacy.path_private(data.get(key)):
+                        raise HTTPException(423, 'Diese Chatdatei ist privat.')
+            except HTTPException as error:
+                return JSONResponse({'error': error.detail}, status_code=error.status_code)
         response = await call_next(request)
+        if request.url.path.startswith('/api/') and 'application/json' in response.headers.get('content-type', '') and response.status_code == 200:
+            raw = b''.join([chunk async for chunk in response.body_iterator])
+            payload = json.loads(raw)
+            if not request.url.path.startswith('/api/chat/privacy/'):
+                try:
+                    for key in ('id', 'chatId', 'threadId', 'sourceChatId'):
+                        if isinstance(data.get(key), str):
+                            privacy.require(data[key], client)
+                except HTTPException as error:
+                    return JSONResponse({'error': error.detail}, status_code=error.status_code, background=response.background, headers={'Cache-Control':'no-store'})
+            omit = request.url.path in {'/api/search', '/api/knowledge/search', '/api/notifications', '/api/planner/results'}
+            payload = privacy.sanitize(payload, client, omit)
+            if request.url.path == '/api/search' and isinstance(payload, dict):
+                payload['total'] = len(payload.get('results', []))
+            headers = {k: v for k, v in response.headers.items() if k.lower() != 'content-length'}
+            response = JSONResponse(payload, status_code=response.status_code, headers=headers, background=response.background)
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "no-referrer"
         response.headers["Cache-Control"] = "no-store"
@@ -210,6 +255,18 @@ def create_app(config=None):
             "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; media-src 'self' blob:; frame-src 'self'; frame-ancestors 'none'; base-uri 'self'",
         )
         return response
+
+    @app.get('/api/chat/privacy/status')
+    async def chat_privacy_status(id: str, request: Request):
+        return {'private': bool(privacy.record(id)), 'locked': not privacy.allowed(id, request.state.chat_client)}
+
+    @app.post('/api/chat/privacy/{action}')
+    async def chat_privacy_action(action: str, request: Request):
+        body = await request.json()
+        try:
+            return await asyncio.to_thread(privacy.change, action, body.get('id'), body.get('pin'), request.state.chat_client)
+        except HTTPException as error:
+            return JSONResponse({'error': error.detail}, status_code=error.status_code)
 
     @app.get("/api/core/status")
     async def status():
@@ -283,6 +340,11 @@ def create_app(config=None):
         response = JSONResponse({"ok": True})
         response.delete_cookie("agent_session")
         return response
+
+    @app.get('/internal/chat-privacy/ids')
+    async def private_chat_ids():
+        # The adapter only needs exclusions, never PIN hashes or unlock grants.
+        return {'ids': sorted(privacy.records())}
 
     @app.get("/internal/storage")
     async def record(key: str):
@@ -452,6 +514,9 @@ def create_app(config=None):
         if id in {j["id"] for j in operations.managed_jobs()}:
             enabled = body.get("status") == "active"
             if id == "system-backup":
+                if enabled:
+                    # Verify the configured archive and key before enabling its schedule.
+                    await asyncio.to_thread(operations.backups.command, "snapshots", "--json")
                 settings.set_group("backup", enabled=enabled)
             elif id == "system-memory":
                 settings.set_group("memory", dreaming=enabled)
@@ -469,7 +534,10 @@ def create_app(config=None):
             raise ValueError('Der einmalige Termin muss in der Zukunft liegen.')
         if not previous and 'notification' not in body:
             body['notification'] = await routines.validate_notification(db.get('notifications/preference')['value'] or {'target':'app','when':'always'})
-        result = await runtime.request("POST", "/api/jobs/save", json=body)
+        try:
+            result = await runtime.request("POST", "/api/jobs/save", json=body)
+        except RuntimeError as error:
+            raise ValueError(str(error)) from error
         storage.sync_jobs()
         db.event("job.changed", result.get("id"), {})
         return result
@@ -488,7 +556,7 @@ def create_app(config=None):
     @app.get("/api/events")
     async def events(request: Request):
         return StreamingResponse(
-            event_stream(runtime, db, request.headers.get("last-event-id", "")), media_type="text/event-stream", headers={"X-Accel-Buffering": "no"}
+            privacy.stream(event_stream(runtime, db, request.headers.get("last-event-id", "")), request.query_params.get("client", "")), media_type="text/event-stream", headers={"X-Accel-Buffering": "no"}
         )
 
     @app.api_route("/api/{route:path}", methods=["GET", "POST", "PUT", "DELETE"])
@@ -500,6 +568,18 @@ def create_app(config=None):
             body.extend(chunk)
             if len(body) > 34 * 1024 * 1024:
                 return JSONResponse({"error": "Anfrage zu groß."}, status_code=413)
+        if route == 'respond':
+            try:
+                request_body = json.loads(body)
+                upstream = await runtime.client.get(config.adapter_url + '/api/bootstrap', headers=runtime.headers)
+                upstream.raise_for_status()
+                pending = next((r for r in upstream.json().get('requests', []) if str(r.get('id')) == str(request_body.get('id'))), None)
+                if pending:
+                    privacy.require(pending.get('params', {}).get('threadId'), request.state.chat_client)
+            except HTTPException as error:
+                return JSONResponse({'error': error.detail}, status_code=error.status_code)
+            except (httpx.HTTPError, ValueError):
+                return JSONResponse({'error': 'Rückfrage kann gerade nicht geprüft werden.'}, status_code=503)
         headers = {**runtime.headers}
         if request.headers.get("content-type"):
             headers["content-type"] = request.headers["content-type"]
@@ -527,11 +607,13 @@ def create_app(config=None):
             payload["features"] = {
                 **payload.get("features", {}),
                 "mailInbox": True,
+                "chatPrivacy": True,
                 "knowledge": True,
                 "sqlite": True,
                 "crmCore": True,
                 "operations": True,
                 "routines": True,
+                "jobConfiguration": True,
             }
             return JSONResponse(payload)
         forwarded = {

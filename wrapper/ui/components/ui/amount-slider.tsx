@@ -1,3 +1,4 @@
+import {pixelHash as hash} from './pixel-field.mjs';
 "use client";
 import * as SliderPrimitive from "@radix-ui/react-slider";
 import * as React from "react";
@@ -6,11 +7,6 @@ import { amountSliderGeometry, amountSliderMotion, reasoningAnimationLevels } fr
 import "./amount-slider.css";
 
 const { cell: CELL, gap: GAP, thumb: THUMB } = amountSliderGeometry;
-function hash(x: number, y: number) {
-  const n = Math.sin(x * 127.1 + y * 311.7) * 43758.5453;
-  return n - Math.floor(n);
-}
-
 // Adapted from the supplied AmountSlider: one native option per magnetic stop.
 // No monetary readout. Keyboard, touch and pointer share Radix's commit path.
 export function AmountSlider({ value, onValueChange, onValueCommit, min = 0, max = 100,

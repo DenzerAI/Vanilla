@@ -1,3 +1,4 @@
+import {chatPrivacyClient} from './chat-privacy-client.mjs';
 // One transport per browser tab; every pane keeps its own conversation state.
 let source;
 const subscribers = new Set();
@@ -5,7 +6,7 @@ export function reconnectEventStream() {
   source?.close();
   source = null;
   if (!subscribers.size) return;
-  source = new EventSource("/api/events");
+  source = new EventSource("/api/events?client=" + encodeURIComponent(chatPrivacyClient));
   for (const name of ["open", "error", "message"]) {
     source.addEventListener(name, (event) => {
       for (const target of subscribers) target[`on${name}`]?.(event);

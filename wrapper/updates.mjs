@@ -31,7 +31,7 @@ export async function serverFingerprint(root) {
   return JSON.stringify(await Promise.all([
     fingerprint(wrapper, false, ['build.mjs', 'package.json', 'package-lock.json']),
     ...['backend', 'system', 'core'].map(dir => fingerprint(path.join(root, dir))),
-    ...['appearance.mjs', 'tool-content.mjs', 'artifact-content.mjs', 'agent-avatars.mjs', 'connection-catalog.mjs']
+    ...['statistics-data.mjs', 'appearance.mjs', 'tool-content.mjs', 'artifact-content.mjs', 'agent-avatars.mjs', 'connection-catalog.mjs']
       .map(file => readFile(path.join(wrapper, 'ui', file), 'utf8')),
     JSON.stringify(runtimeDependencies), JSON.stringify(runtimeLock),
   ]));

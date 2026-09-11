@@ -1,0 +1,52 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp, rm, readFile, writeFile } from 'node:fs/promises';
+import { spawn } from 'node:child_process';
+import { once } from 'node:events';
+import path from 'node:path';
+import net from 'node:net';
+import { fileURLToPath } from 'node:url';
+const root=fileURLToPath(new URL('../../',import.meta.url));
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+async function until(fn) {for(let i=0;i<200;i++){const value=await fn();if(value)return value;await delay(25);}throw Error('Timed out');}
+test('Firma HTTP creates one native work chat and supplies scoped context on later turns', {timeout:30000}, async t=>{
+  const dir=await mkdtemp(path.join(root,'.verify-firma-http-'));
+  const reservation=net.createServer().listen(0,'127.0.0.1');await once(reservation,'listening');const port=reservation.address().port;await new Promise(r=>reservation.close(r));
+  let child,exit,token,logs='';const base=`http://127.0.0.1:${port}/api`, state=path.join(dir,'worker.json');
+  const get=async route=>{const r=await fetch(base+route);if(!r.ok)throw Error(await r.text());return r.json();};
+  const post=async(route,body)=>{const r=await fetch(base+route,{method:'POST',headers:{'content-type':'application/json','x-uwe-token':token},body:JSON.stringify(body)});const result=await r.json();assert.equal(r.status,200,JSON.stringify(result));return result;};
+  const binary=path.join(dir,'worker.mjs');
+  await writeFile(binary, '#!'+process.execPath+'\n'+(await readFile(path.join(root,'wrapper/test/message-delivery-worker.fixture.mjs'),'utf8')).replace(/^#![^\n]*\n/,'').replace('process.env.DELIVERY_FIXTURE_STATE',JSON.stringify(state)),{mode:0o700});
+  const start=async()=>{
+    child=spawn(process.execPath,['wrapper/server.mjs'],{cwd:root,env:{...process.env,AGENT_CORE_URL:'',COMPANY_BASE:path.join(root,'firmenbasis'),SYSTEM_BASE:path.join(root,'system'),UWE_CODEX_SOURCE_HOME:'',UWE_PORT:String(port),UWE_WORKSPACE:path.join(dir,'workspace'),UWE_DATA_ROOT:path.join(dir,'control'),UWE_CODEX_BINARY:binary,DELIVERY_FIXTURE_STATE:state},stdio:['ignore','pipe','pipe']});exit=once(child,'exit');child.stderr.on('data',b=>logs+=b);child.stdout.on('data',b=>logs+=b);
+    await until(async()=>{if(child.exitCode!==null)throw Error(logs);try{return await get('/chats');}catch{return false;}});token=(await get('/bootstrap')).token;
+  };
+  const stop=async()=>{child.kill();await exit;};
+  t.after(async()=>{if(child?.exitCode===null)await stop();await rm(dir,{recursive:true,force:true});});
+  await start();await post('/workers/connect',{id:'codex'});
+  assert.equal((await get('/bootstrap')).features.firma,true);
+  const list=await get('/firma');assert.equal(list.total,32);assert.equal(list.complete,0);
+  const [one,two]=await Promise.all([post('/firma/chat',{itemId:'start-ziel'}),post('/firma/chat',{itemId:'start-ziel'})]);
+  assert.equal(one.thread.id,two.thread.id);const id=one.thread.id;
+  await until(async()=>!(await get('/chats')).active?.[id]);
+  let disk=JSON.parse(await readFile(state,'utf8'));
+  assert.equal(Object.keys(disk.threads).length,1);
+  assert.match(disk.calls[0].params.collaborationMode.settings.developer_instructions,/start-ziel/);
+  assert.match(disk.calls[0].params.collaborationMode.settings.developer_instructions,/Frage nur fehlende/);
+  assert.equal((await get('/firma')).complete,0);
+  await post('/turn',{id,text:'Unser Ziel ist weniger Nacharbeit bei Kundenanfragen.'});
+  await until(async()=>!(await get('/chats')).active?.[id]);
+  disk=JSON.parse(await readFile(state,'utf8'));assert.match(disk.calls.at(-1).params.collaborationMode.settings.developer_instructions,/firma[/\\]start-ziel.json/);
+  await post('/firma/chat',{itemId:'start-ziel'});assert.equal((await get('/chats')).chats.filter(c=>c.firmaItemId==='start-ziel').length,1);
+  assert.deepEqual(await get('/firma/review?id='+id),{review:null});
+  const draft={version:1,itemId:'start-ziel',summary:'Das Pilotziel ist weniger Nacharbeit bei eingehenden Kundenanfragen.',reviewReady:true,openQuestions:[],evidence:{c1:{finding:'Konkretes Ziel und Ergebnis stehen in der abgestimmten Pilotakte.',scope:'workspace',path:'firma/ziel.md'},c2:{finding:'Häufigkeit und priorisierte Aufgaben wurden in derselben Akte festgelegt.',scope:'workspace',path:'firma/ziel.md'}}};
+  await writeFile(path.join(dir,'workspace/firma/ziel.md'),'# Pilotziel\nWeniger Nacharbeit bei Kundenanfragen. Zehn Fälle pro Woche; drei priorisierte Aufgaben sind dokumentiert.');
+  await writeFile(path.join(dir,'workspace/firma/start-ziel.json'),JSON.stringify(draft));
+  await post('/turn',{id,text:'Bitte das Ergebnis zur Prüfung vorlegen.'});
+  const review=await until(async()=>(await get('/firma/review?id='+id)).review);
+  await until(async()=>!(await get('/chats')).active?.[id]);
+  const rejected=await fetch(base+'/firma/confirm',{method:'POST',headers:{'content-type':'application/json','x-uwe-token':token},body:JSON.stringify({id,code:review.code,fingerprint:'stale'})});assert.equal(rejected.ok,false);
+  await post('/firma/confirm',{id,code:review.code,fingerprint:review.fingerprint});assert.equal((await get('/firma')).complete,1);
+
+  await stop();await start();assert.equal((await post('/firma/chat',{itemId:'start-ziel'})).thread.id,id);assert.equal((await get('/firma')).complete,1);
+});

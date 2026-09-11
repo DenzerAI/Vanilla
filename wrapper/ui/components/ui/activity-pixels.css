@@ -1,0 +1,13 @@
+.activity-pixels { display: block; width: 100%; min-width: 0; }
+.activity-pixel-grid { display: grid; gap: var(--space-2); width: 100%; }
+.activity-pixel { position: relative; display: block; aspect-ratio: 1.5; border-radius: var(--radius-control); background: var(--raised); overflow: hidden; }
+.activity-pixels.is-compact .activity-pixel { aspect-ratio: 1.8; }
+.activity-pixel.level-1 { background: color-mix(in srgb, var(--brand-accent) 30%, var(--surface)); }
+.activity-pixel.level-2 { background: color-mix(in srgb, var(--brand-accent) 50%, var(--surface)); }
+.activity-pixel.level-3 { background: color-mix(in srgb, var(--brand-accent) 75%, var(--surface)); }
+.activity-pixel.level-4 { background: var(--brand-accent); }
+.activity-pixel-shimmer { position: absolute; inset: 0; background: var(--text); opacity: 0; animation-name: activity-pixel-shimmer; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
+.activity-pixel.level-0 .activity-pixel-shimmer { display: none; }
+@keyframes activity-pixel-shimmer { 0%, 65%, 100% { opacity: 0; } 80% { opacity: .12; } }
+@media (prefers-reduced-motion: reduce) { .activity-pixel-shimmer { animation: none; opacity: 0; } }
+@media (forced-colors: active) { .activity-pixel { background: Canvas; outline: 1px solid CanvasText; } .activity-pixel:not(.level-0) { background: Highlight; } .activity-pixel-shimmer { display: none; } }

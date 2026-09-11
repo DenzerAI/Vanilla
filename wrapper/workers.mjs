@@ -64,7 +64,10 @@ export class Workers extends EventEmitter {
     adapter.on("disconnected", error => {
       const intentional = this.stopping.has(id);
       if (!intentional) this.errors.set(id, error.message);
-      for (const [key, request] of this.requests) if (request.workerId === id) this.requests.delete(key);
+      for (const [key, request] of this.requests) if (request.workerId === id) {
+        this.requests.delete(key);
+        this.emit("notification", {method:"serverRequest/resolved",params:{requestId:key,threadId:request.params?.threadId},workerId:id});
+      }
       this.emit("disconnected", { ...error, workerId: id, intentional });
     });
     return adapter;

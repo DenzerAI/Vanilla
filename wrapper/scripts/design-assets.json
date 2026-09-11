@@ -84,8 +84,8 @@
     "reason": "Bundled themed avatar artwork using currentColor; SVG coordinates are illustration geometry, not UI spacing."
   },
   "public/app-icon.svg": {
-    "sha256": "f7049982cc53fec15ad6770985701f6f7d27eb4dc9e0f2e6bbb1b2088f8d8760",
-    "reason": "Installable application icon artwork; reviewed independently from CSS control styling."
+    "sha256": "3355b6ce1ce2ff433fc2daeaee7dee2d3b66ae3a553b6c86f71b090f4de22d04",
+    "reason": "Vanilla application icon derived from bundled avatars/faces/nori.svg, static neutral expression on existing light surface/text colors. PNG variants rasterized locally from public/app-icon.svg; no external artwork or private content."
   },
   "ui/assets/avatars/faces/pad.svg": {
     "sha256": "bf6168860bf60121bb23d490f34c755d28e1bb4eb8586f7bfe7a252f1fce3f51",
@@ -118,5 +118,29 @@
   "ui/assets/avatars/faces/nori.svg": {
     "sha256": "7f717f3518b5e60aa56ce3c8359d20ca035b044dba717fc2fc29f2daa62f44d9",
     "reason": "Original monochrome face artwork. No feet; Pixel and Pad use continuous grid silhouettes. Independent SVG expression layers, no masks or external content."
+  },
+  "public/app-icon-512.png": {
+    "sha256": "80af497fe41c1fcdf582904c2a247b7474a9b1fab63682af68d1aa35ca35b61f",
+    "reason": "Vanilla application icon derived from bundled avatars/faces/nori.svg, static neutral expression on existing light surface/text colors. PNG variants rasterized locally from public/app-icon.svg; no external artwork or private content."
+  },
+  "public/apple-touch-icon.png": {
+    "sha256": "bbe6c0931a9a8a606ef44cbd228c463dec5c34b7ec011661dd1a5fca4821ffe9",
+    "reason": "Vanilla application icon derived from bundled avatars/faces/nori.svg, static neutral expression on existing light surface/text colors. PNG variants rasterized locally from public/app-icon.svg; no external artwork or private content."
+  },
+  "public/app-icon-1024.png": {
+    "sha256": "2fe87f5a094926420378fd20e2cb53f0d8fb50a02b86ed43d4d425cbb5e616b6",
+    "reason": "Vanilla application icon derived from bundled avatars/faces/nori.svg, static neutral expression on existing light surface/text colors. PNG variants rasterized locally from public/app-icon.svg; no external artwork or private content."
+  },
+  "public/app-icon-192.png": {
+    "sha256": "fd489b706fcab141255c134c5f118965709abc5d03b0d5ec6f8cb78cd0e4425c",
+    "reason": "Vanilla application icon derived from bundled avatars/faces/nori.svg, static neutral expression on existing light surface/text colors. PNG variants rasterized locally from public/app-icon.svg; no external artwork or private content."
+  },
+  "public/favicon-32.png": {
+    "sha256": "bab4e29002d95cbc3a9c1dc9672137ac4f703fd332b1886a4f4b0228a08daf07",
+    "reason": "Vanilla application icon derived from bundled avatars/faces/nori.svg, static neutral expression on existing light surface/text colors. PNG variants rasterized locally from public/app-icon.svg; no external artwork or private content."
+  },
+  "public/vanilla-wordmark.svg": {
+    "sha256": "f455938b3ef2355a441b37af2c1cdeb413e8bf3d205757a16769fe5c0a1ea6b9",
+    "reason": "Original hand-drawn Vanilla vector lettering approved as the product wordmark; round strokes and antenna dot, no font dependency or external artwork. Uses currentColor."
   }
 }

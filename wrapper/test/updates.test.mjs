@@ -70,7 +70,7 @@ test('UI builds and development metadata only need reload; runtime changes need 
     const put = (name, content) => writeFile(path.join(dir, name), content);
     const manifest = {version:'1', dependencies:{react:'1'}, devDependencies:{vite:'1'}};
     await put('wrapper/package.json', JSON.stringify(manifest));
-    for (const file of ['appearance', 'tool-content', 'artifact-content', 'agent-avatars', 'connection-catalog']) await put(`wrapper/ui/${file}.mjs`, 'original');
+    for (const file of ['statistics-data', 'appearance', 'tool-content', 'artifact-content', 'agent-avatars', 'connection-catalog']) await put(`wrapper/ui/${file}.mjs`, 'original');
     await put('wrapper/server.mjs', 'original');
     const original = await serverFingerprint(dir);
     await put('wrapper/build.mjs', 'new build');
@@ -79,7 +79,7 @@ test('UI builds and development metadata only need reload; runtime changes need 
     await put('wrapper/ui/app.jsx', 'new layout');
     await put('wrapper/package.json', JSON.stringify({...manifest, version:'2', devDependencies:{vite:'2'}}));
     assert.equal(await serverFingerprint(dir), original);
-    for (const file of ['wrapper/server.mjs', 'wrapper/ui/artifact-content.mjs', 'core/app.py']) {
+    for (const file of ['wrapper/server.mjs', 'wrapper/ui/statistics-data.mjs', 'wrapper/ui/artifact-content.mjs', 'core/app.py']) {
       await put(file, 'changed');
       assert.notEqual(await serverFingerprint(dir), original, file);
       if (file === 'core/app.py') await rm(path.join(dir, file)); else await put(file, 'original');

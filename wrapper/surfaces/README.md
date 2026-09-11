@@ -22,6 +22,13 @@ Der gemeinsame Seitenleistenkopf zeigt AgentMenu mit konfiguriertem Avatar, Name
 
 Inbox, Aufträge und die verfügbare Bibliothek bilden das Hauptmenü; Die Gruppe „Workspace“ und ihre Chats folgen darunter. Verbindungen und Skills stehen in der vorhandenen Einstellungsnavigation mit ihren bisherigen Symbolen und Katalogansichten. Globale Suche und Querverweise öffnen den jeweiligen Einstellungsbereich direkt. Keine Modul-Platzhalter, zusätzliche Navigationsebene oder neue Seitengestaltung.
 
+## Gemeinsame Popups
+
+Modal, Modell-Popover und Auswahlmenüs verwenden die gemeinsame Scrollleistenregel
+aus `ui/styles.css`: Auch innere Scrollbereiche zeigen keine native Scrollleiste.
+Rad, Trackpad, Touch und Tastatur bleiben bedienbar. Die bisherigen Ausnahmen
+für erzwungenen Kontrast bleiben erhalten; keine Datenmigration erforderlich.
+
 ## Gemeinsamer Seitenkopf
 
 Aufträge, Verbindungen, Skills, Bibliothek und Einstellungen verwenden `PageHeading`: genau ein Seitentitel im Inhaltsbereich, daneben die unmittelbar zugehörigen Kopfaktionen. Keine zweite globale Titel- oder Tabzeile darüber. „Erstellen“ steht bei Aufträge; „Skill hinzufügen“ als Plus und „Skills neu laden“ stehen bei Skills. Verbindungen nutzt ausschließlich die vorhandenen Plus-Aktionen im Dienstekatalog. Die Bibliotheksaktionen stehen kompakt am PageHeading; der Ergebnisstatus unter den Dateien. Bei ausgeblendeter Seitenleiste steht ihr Öffnen-Button am Seitentitel; im Chat bei den Chataktionen. Die Navigation bleibt auch bei schmalen Fenstern erreichbar.
@@ -141,3 +148,13 @@ bleiben über die Suche nutzbar. Aufbau und Verhalten führt [chat.md](chat.md).
 Der gemeinsame PageHeading ist aus app.jsx nach ui/page-heading.tsx ausgelagert;
 Anwendung und neutraler UI-Bauplan verwenden denselben Baustein.
 Bei Übernahmen in andere Installationen gilt ../../docs/UI-UPDATES.md.
+
+## Browser und App-Installation
+
+`ui/index.html` und `public/manifest.webmanifest` verwenden die Produktmarke
+Vanilla und dasselbe statische Nori-App-Icon. Apple-Touch-Icon und lokale
+PNG-Varianten ergänzen das SVG. Die Identität im AgentMenu bleibt konfigurierbar.
+
+| Firma | [firma.md](firma.md) | firma.tsx, firma.css, firma.mjs |
+
+Firma ist ein eigener fachlicher Einstieg im Hauptmenü. Eine schlichte aufklappbare Arbeitsliste führt in bestehende Chats; keine weitere Modulübersicht. Siehe firma.md.

@@ -1,7 +1,7 @@
 import path from "node:path";
 
 export const coreEnabled = Boolean(process.env.AGENT_CORE_URL);
-const controlFiles = new Set(["message-delivery.json", "state.json", "workers.json", "library.json", "channels.json", "local-workers.json", "speech-settings.json", "dictation-settings.json"]);
+const controlFiles = new Set(["message-delivery.json", "firma.json", "state.json", "workers.json", "library.json", "channels.json", "local-workers.json", "speech-settings.json", "dictation-settings.json"]);
 
 export function recordKey(file) {
   if (!coreEnabled) return null;

@@ -31,7 +31,7 @@ Projektwechsel: tatsächlichen Zielordner und geladene Herkunftsdateien prüfen.
 
 ## Zuständige Quellen bei Bedarf
 
-- [UPDATE.md](UPDATE.md): führender Einstieg bei „Update“ mit Repository-Link,
+- [UPDATE.md](UPDATE.md) und der [feste Update-Einstieg](https://github.com/DenzerAI/Vanilla/blob/main/UPDATE.md): führender Einstieg bei „Update“ mit Repository-Link,
   auch für ältere Installationen und eigene Firmenrepositories. Vor der Übernahme
   vollständig lesen. Der Abschnitt zur Weiterentwicklung gilt bei jeder Änderung
   und Veröffentlichung: Modul-/Migrationsverträge pflegen und einen gepushten Stand

@@ -1,0 +1,37 @@
+@property --composer-focus-angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
+}
+.composer-entry.composer-focus { position: relative; transition: opacity var(--motion-feedback-duration); }
+.composer-focus[data-subdued="true"] { opacity: var(--composer-inactive-opacity); }
+.composer-entry.composer-focus[data-active="true"] {
+  box-shadow: var(--composer-glass-shadow), inset 0 0 0 var(--control-composer-border) var(--composer-focus-border);
+}
+.composer-focus-trail {
+  position: absolute; inset: 0; border-radius: inherit; padding: var(--control-composer-border);
+  pointer-events: none; opacity: 0;
+  background: conic-gradient(from var(--composer-focus-angle), transparent 0deg 210deg, var(--composer-focus-beam) 260deg 270deg, transparent 320deg 360deg);
+  -webkit-mask: linear-gradient(var(--text) 0 0) content-box, linear-gradient(var(--text) 0 0);
+  mask: linear-gradient(var(--text) 0 0) content-box, linear-gradient(var(--text) 0 0);
+  -webkit-mask-composite: xor; mask-composite: exclude;
+}
+.composer-focus[data-active="true"] > .composer-focus-trail {
+  opacity: 1;
+  animation: composer-focus-lap var(--motion-composer-focus-duration) linear infinite;
+}
+.composer-focus[data-running="false"] > .composer-focus-trail { animation-play-state: paused; }
+.composer-focus-preview { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-16); }
+.composer-focus-preview textarea { width: 100%; min-width: 0; background: transparent; color: var(--text); }
+@media (max-width: 650px) { .composer-focus-preview { grid-template-columns: minmax(0, 1fr); } }
+@keyframes composer-focus-lap {
+  0% { --composer-focus-angle: 0deg; }
+  100% { --composer-focus-angle: 360deg; }
+}
+:root[data-reduce-motion="on"] .composer-focus-trail { display: none; }
+@media (prefers-reduced-motion: reduce) { .composer-focus-trail { display: none; } }
+@media (forced-colors: active) {
+  .composer-focus-trail { display: none; }
+  .composer-focus[data-subdued="true"] { opacity: 1; }
+  .composer-focus[data-active="true"] { outline: 1px solid Highlight; }
+}

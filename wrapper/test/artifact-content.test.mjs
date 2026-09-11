@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {localFilePath,collectArtifacts,fileKind,diffLines} from '../ui/artifact-content.mjs';
+import {localFilePath,collectArtifacts,collectChatArtifacts,fileKind,diffLines} from '../ui/artifact-content.mjs';
 import {normalizeTool} from '../tool-events.mjs';
 
 test('local artifact paths reject remote schemes, encoded traversal and other workspaces',()=>{
@@ -23,8 +23,9 @@ test('Codex patches and Claude edits retain explicit diffs and error outcomes',(
   assert.equal(normalizeTool({type:'tool_result',tool_use_id:'a',is_error:true,content:'Permission denied'},call).status,'failed');
   assert.equal(normalizeTool({type:'tool_result',tool_use_id:'other',content:'OK'},call),null);
  }
- const lines=diffLines('@@ hunk\n--- a\n+++ b\n-old\n+new\n same',5);
+ const lines=diffLines('--- a\n+++ b\n@@ hunk\n-old\n+new\n same',5);
  assert.deepEqual(lines.lines.map(l=>l.kind),['header','header','header','removed','added']);assert.equal(lines.total,6);
+ assert.deepEqual(diffLines('@@ hunk\n--- removed text\n+++ added text').lines.map(l=>l.kind),['header','removed','added']);
 });
 
 test('relative artifacts stay in the originating project rather than the workspace root',()=>{
@@ -40,4 +41,28 @@ test('inline file links suppress matching artifacts regardless of order and path
  for(const items of [[tool,answer],[answer,tool]]) assert.deepEqual(collectArtifacts(items,'/workspace','/workspace/projects/demo').map(f=>f.path),['projects/demo/output/other.csv']);
  assert.equal(collectArtifacts([tool,{...answer,phase:'commentary'}],'/workspace','/workspace/projects/demo').length,2);
  assert.equal(collectArtifacts([tool,{...answer,text:'`[example](output/My%20Report.md)`'}],'/workspace','/workspace/projects/demo').length,2);
+});
+
+
+test('chat results contain human deliverables while source edits stay in the broader inventory',()=>{
+ const paths=['output/report.pdf','output/plan.docx','output/table.xlsx','output/chart.png','output/summary.md','output/data.csv','output/preview.html','output/bundle.zip','output/worker.mjs','output/composer.css','output/composer.tsx','docs/CORE.md','src/logo.png','output/source/wrapper/ui/icon.png','output/data.json'];
+ const items=[{type:'fileChange',status:'completed',changes:paths.map(path=>({path}))}];
+ assert.deepEqual(collectChatArtifacts(items,'/workspace').map(f=>f.path),paths.slice(0,8));
+ assert.equal(collectArtifacts(items,'/workspace').length,paths.length);
+ // Native output declarations do not turn source code into a reader artifact.
+ assert.deepEqual(collectChatArtifacts([{status:'completed',artifacts:[{path:'worker.mjs'},{path:'notes.md'}]}],'/workspace').map(f=>f.path),['notes.md']);
+});
+test('generated images are visible without duplicating inline images; failed output stays hidden',()=>{
+ const image={type:'imageGeneration',status:'completed',savedPath:'/workspace/output/chart.png'};
+ const link={type:'agentMessage',text:'[Bild öffnen](output/chart.png)'};
+ assert.equal(collectChatArtifacts([image,link],'/workspace').length,1);
+ assert.equal(collectChatArtifacts([link],'/workspace').length,1);
+ assert.equal(collectChatArtifacts([image,{...link,text:'![Diagramm](output/chart.png)'}],'/workspace').length,0);
+ assert.equal(collectChatArtifacts([{...image,status:'failed'}],'/workspace').length,0);
+ assert.equal(collectChatArtifacts([{type:'fileChange',status:'inProgress',changes:[{path:'output/report.pdf'}]}],'/workspace').length,0);
+});
+test('chat result classification respects originating projects and excludes deleted artifacts',()=>{
+ const items=[{type:'fileChange',status:'completed',changes:[{path:'output/report.pdf'},{path:'output/deleted.docx',kind:'delete'}]}];
+ assert.deepEqual(collectChatArtifacts(items,'/workspace','/workspace/projects/sample').map(f=>f.path),['projects/sample/output/report.pdf']);
+ assert.deepEqual(collectChatArtifacts(items,'/workspace','/outside'),[]);
 });

@@ -1,10 +1,22 @@
 import {ChatStartPreview} from './chat-start-preview';
+import {FirmaPreview} from './firma';
+import {StatisticsPreview} from './statistics-preview';
+import {ChatArtifactsPreview} from './chat-artifacts.jsx';
+import {ComposerQuestionPreview} from './composer-question';
+import {LiveAnswerCardsPreview} from './live-answer-cards-preview';
+import {ActivityPreview} from './chat-activity.jsx';
+import {ChatPrivacyPreview} from './chat-privacy';
+import {ComposerFocus} from './composer-focus';
+import {WeatherPreview} from './weather-preview';
+import { PaneDivider, ChatMenuPreview } from "./chat-controls.jsx";
+import { jobFilters } from './jobs-view.mjs';
 import { IconMotionPreview } from './icon-motion-preview';
 import {VoiceWave,VoiceStatus} from "./voice-visual";
 import { AvatarMotionSetting } from "./avatar-motion-setting.jsx";
 import { AvatarChoices } from "./avatar-picker.jsx";
 import { DefaultToggle } from "./components/ui/theme-toggle-demo";
 import GlassButtonDemo from "./components/ui/glass-button-demo";
+import { VanillaWordmark } from "./vanilla-wordmark";
 import { AgentMenu } from "./agent-menu";
 import {NotificationRow} from "./job-notifications.jsx";
 import { ChapterScrubber } from "./components/ui/chapter-scrubber";
@@ -30,6 +42,9 @@ import interLicense from "./assets/fonts/Inter-LICENSE.txt";
 import monoLicense from "./assets/fonts/IBMPlexMono-LICENSE.txt";
 
 export function DesignReference({ theme, tone, accent }) {
+  const [composerPreview, setComposerPreview] = useState(null);
+  const [seamPreview, setSeamPreview] = useState(50);
+  const [jobPreviewFilter, setJobPreviewFilter] = useState('all');
   const [modePreview, setModePreview] = useState("default");
   const [modelPreview, setModelPreview] = useState(["gpt-6-astra", "medium"]);
   const [avatarPreview, setAvatarPreview] = useState("kibo");
@@ -41,7 +56,7 @@ export function DesignReference({ theme, tone, accent }) {
   return (
     <section className="ci-reference design-reference-page" aria-labelledby="ci-title">
       <div className="ci-heading">
-        <h2 id="ci-title">AGENT</h2>
+        <h2 id="ci-title" aria-label="Vanilla"><VanillaWordmark /></h2>
         <span className="badge">CI {identity.version}</span>
       </div>
       <p className="ci-intro">
@@ -51,14 +66,28 @@ export function DesignReference({ theme, tone, accent }) {
       {section === 'icons' && <><h3 className="section-heading">Systemicons</h3><IconMotionPreview/></>}
       {section === 'components' && <>
       <h3 className="section-heading">Bedienelemente & Seitenaufbau</h3>
+      <section><h2>Firma</h2><FirmaPreview/></section>
       <SettingsPatterns/>
+      <h3 className="section-heading">Chat-Sperre · Beispiel</h3>
+      <ChatPrivacyPreview/>
+      <h3 className="section-heading">Rückfrage am Composer · Beispiel</h3>
+      <ComposerQuestionPreview/>
+      <h3 className="section-heading">Ergebnisse im Chat · Beispiel</h3>
+      <ChatArtifactsPreview/>
+      <h3 className="section-heading">Aufträge · Reiter</h3>
+      <div className="tabs" aria-label="Auftragsfilter als Beispiel">{jobFilters.map(([id,label])=><button key={id} type="button" className={id===jobPreviewFilter?'selected':''} aria-pressed={id===jobPreviewFilter} onClick={()=>setJobPreviewFilter(id)}>{label}</button>)}</div>
+      <p className="page-note">Nutzeraufträge nach Status; Systemwartung im eigenen Reiter. Die Auswahl öffnet die gemeinsamen Auftragsdetails.</p>
       <h3 className="section-heading">Glasbutton · Beispiel</h3>
       <GlassButtonDemo/>
       <h3 className="section-heading">Erscheinungsbild · Beispiel</h3>
       <DefaultToggle/>
       <h3 className="section-heading">Agent-Menü · Beispiel</h3>
-      <div className="sidebar-topbar agent-menu-preview"><AgentMenu name="Agent" avatar="nori" connectionState="online" preview onNavigate={()=>{}} onRestart={()=>{}} /></div>
+      <div className="sidebar-topbar agent-menu-preview"><AgentMenu name="Vanilla" avatar="nori" connectionState="online" preview onNavigate={()=>{}} onRestart={()=>{}} /></div>
       <p className="page-note">Avatar und Name öffnen das gemeinsame Menü. Der Verbindungspunkt gehört zur Identität; Serverdetails stehen im geöffneten Menü. Die Vorschau verändert keine Einstellungen und startet keinen Server neu.</p>
+      <h3 className="section-heading">Chat-Menü · Beispiel</h3>
+      <ChatMenuPreview/>
+      <h3 className="section-heading">Arbeitsverlauf · Schritte und Änderungen</h3>
+      <ActivityPreview/>
       <h3 className="section-heading">Agent-Gesichter · Beispiel</h3>
       <div data-avatar-style={avatarMotionPreview}>
         <AvatarChoices value={avatarPreview} onChange={setAvatarPreview} />
@@ -68,11 +97,19 @@ export function DesignReference({ theme, tone, accent }) {
       <div className="settings-group"><NotificationRow item={{title:'Tagesüberblick · Fertig',created_at:1788854400,read_at:null}} onClick={()=>{}}/></div>
       <h3 className="section-heading">Gesprächseinstieg · Fächer</h3>
       <ChatStartPreview/>
+      <h3 className="section-heading">Antwortkarten · Live-Beispiel</h3>
+      <LiveAnswerCardsPreview/>
+      <h3 className="section-heading">Unsere Zusammenarbeit · Pixelstatistik</h3>
+      <StatisticsPreview/>
+      <h3 className="section-heading">Wetter · Himmel im Glasfächer</h3>
+      <WeatherPreview/>
       <h3 className="section-heading">Sprache · Pegel und Erkennung</h3>
       <div className="composer-entry"><VoiceWave levels={Array.from({length:60},(_,i)=> i>18 && i<45 ? (1+Math.sin(i*.7))*.08 : 0)}/></div>
       <div className="composer-entry"><VoiceStatus label="Wird erkannt" busy/></div>
       <p className="page-note">Statischer Beispielpegel und gemeinsame Ladeanzeige. Kein Mikrofonzugriff.</p>
       <h3 className="section-heading">Composer · Glasfläche</h3>
+      <p className="page-note">Mehrfachansicht · Beispiel: Klicke oder tabbe in eine Eingabe. Nur ihr Rand wird hervorgehoben; ein weicher Schimmer läuft langsam durchgehend um die gedämpfte Kontur. Ein größerer dunkler Abschnitt macht die Bewegung erkennbar.</p>
+      <div className="composer-focus-preview">{[0,1,2,3].map(id=><ComposerFocus key={id} multiple active={composerPreview===id} onActivate={()=>setComposerPreview(id)}><textarea aria-label={`Beispieleingabe ${id+1}${composerPreview===id ? ', ausgewählt' : ''}`} placeholder={`Chat ${id+1}`} rows={1}/></ComposerFocus>)}</div>
       <div className="composer pill-composer"><div className="composer-entry"><textarea aria-label="Nachricht · Designvorschau" placeholder="Nachricht" value={suggestionDraft} rows={1} readOnly/></div></div>
       <p className="page-note">Einzeilige Pille mit gedämpftem Platzhalter, transparenter Tönung, Hintergrundunschärfe und feiner innerer Glaskante. Mehrzeiliger Text erweitert die Schreibfläche; reduzierte Transparenz erhält einen deckenden Hintergrund.</p>
       <h3 className="section-heading">Modellwahl · Anbieter und Denkaufwand</h3>
@@ -85,6 +122,9 @@ export function DesignReference({ theme, tone, accent }) {
       <InboxPatternPreview/>
       <h3 className="section-heading">Heute · Terminzeile</h3>
       <PlannerPatternPreview/>
+      <h3 className="section-heading">Chat-Trennung · Haarlinie</h3>
+      <div className="pane-seam-preview"><div className="pane-divider-slot"><PaneDivider value={seamPreview} min={0} max={100} onResize={delta=>setSeamPreview(value=>Math.max(0,Math.min(100,value+delta)))} onReset={()=>setSeamPreview(50)}/></div></div>
+      <p className="page-note">Leise Haarlinie mit weich auslaufenden Enden. Hover und Tastaturfokus zeigen den kurzen Griff. Beispielwert: {seamPreview} %.</p>
       <h3 className="section-heading">Flächenlicht</h3>
       <div className="panel-light-preview"><PanelLight mode="animated"/><span>Dezente Tiefe mit ruhiger Lichtbewegung</span></div>
       <h3 className="section-heading">Dateivorschau</h3>

@@ -1,1 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="40" fill="#171717"/><path d="M48 135 83 55h26l35 80h-24l-7-19H78l-7 19zm38-40h19L96 70z" fill="#fafafa"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none">
+  <title>Vanilla</title>
+  <rect width="64" height="64" fill="#eae7df"/>
+  <g transform="translate(6.4 5.6) scale(.8)" fill="#292720">
+    <path d="M30 12h4v8h-4z"/><circle cx="32" cy="10" r="3.5"/>
+    <rect x="7" y="18" width="50" height="34" rx="11"/>
+    <rect x="14" y="25" width="36" height="20" rx="8" fill="#eae7df"/>
+    <rect x="23" y="30" width="5" height="8" rx="2.5"/>
+    <rect x="37" y="30" width="5" height="8" rx="2.5"/>
+    <rect x="24" y="55" width="16" height="4" rx="2"/>
+  </g>
+</svg>

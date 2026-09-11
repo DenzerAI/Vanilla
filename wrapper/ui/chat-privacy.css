@@ -1,0 +1,9 @@
+.chat-privacy-form { display: flex; flex-direction: column; gap: var(--space-12); }
+.chat-privacy-form p { margin: 0; }
+.chat-privacy-form input { width: 100%; box-sizing: border-box; }
+.chat-privacy-form .row { margin-top: var(--space-8); flex-wrap: wrap; }
+.chat-privacy-locked { display: flex; flex: 1; flex-direction: column; align-items: center; justify-content: center; gap: var(--space-16); padding: var(--space-32); overflow-y: auto; }
+.chat-privacy-locked h2, .chat-privacy-locked p { margin: 0; }
+.chat-privacy-locked h2 { font-size: var(--text-reading); font-weight: var(--weight-semibold); }
+.chat-privacy-locked .chat-privacy-form { width: 100%; max-width: 280px; }
+.chat-row-lock { display: inline-flex; align-items: center; color: var(--muted); flex-shrink: 0; }

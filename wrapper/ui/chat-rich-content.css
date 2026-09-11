@@ -16,3 +16,11 @@
 .tool-images { display: grid; gap: var(--space-12); margin: var(--space-12) 0; }
 .copy-notice, .tool-provenance { font: var(--text-small) var(--font-ui); color: var(--muted); }
 .tool-provenance { margin: 0; padding: 0 var(--space-12) var(--space-8); overflow-wrap: anywhere; }
+.generated-image-open { display: block; max-width: 100%; padding: 0; border: 0; background: transparent; cursor: zoom-in; }
+.generated-image-actions { display: flex; padding-block: var(--space-4); font-size: var(--text-caption); }
+.generated-image-actions a { display: inline-flex; align-items: center; min-height: var(--control-height); }
+.generated-image-modal img { display: block; width: 100%; max-height: 75vh; object-fit: contain; }
+.chat-svg-preview { margin: var(--space-16) 0; max-width: 100%; }
+.chat-svg-preview > img { display: block; max-width: 100%; max-height: 480px; object-fit: contain; }
+.chat-svg-preview > details { margin-top: var(--space-8); color: var(--muted); font-size: var(--text-caption); }
+@media (pointer: coarse) { .generated-image-actions a, .chat-svg-preview summary { min-height: var(--control-touch); } }

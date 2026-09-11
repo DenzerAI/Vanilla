@@ -1,5 +1,11 @@
 import {installWeatherRoutes} from './weather.mjs';
 import {installationEnvironment} from './worker-environment.mjs';
+import {allowanceReader,recordUsage,tokenFields} from './usage.mjs';
+import {readClaudeUsage} from './claude-usage.mjs';
+import {Firma} from './firma.mjs';
+import {collectStatistics,statisticsChatOpener} from './statistics.mjs';
+import {questionReceipt} from './worker-questions.mjs';
+import {weatherChatOpener} from './weather-report.mjs';
 import {chatArchiveUpdater} from './chat-archive.mjs';
 import {briefingChatOpener} from './briefing-chat.mjs';
 import {demoBriefings} from './ui/planner-briefings.mjs';
@@ -31,6 +37,7 @@ import { applySessionSelection, sessionModelSelection, supportedEffort, visibleM
 import { markReplyRead } from "./chat-read-state.mjs";
 import { readAgentProfile } from "./identity-profile.mjs";
 import { assignChatTitle } from "./chat-title.mjs";
+import { registerFork } from "./chat-fork.mjs";
 import { conversationInstructions } from "./chat-style.mjs";
 import { validateAppearance } from "./ui/appearance.mjs";
 import http from "node:http";
@@ -194,6 +201,7 @@ workers.on("notification", (msg) => {
   }
   if (msg.method === "turn/started") {
     active.set(id, p.turn.id);
+    if(own(id)){const chat=store.chat(id);(chat.statisticsTurns ||= {})[p.turn.id] ||= {startedAt:Date.now(),model:p.turn.model || chat.model || null};}
     if (own(id)) store.chat(id).lastTurnStatus = "inProgress";
     touch(id);
   }
@@ -226,7 +234,7 @@ workers.on("notification", (msg) => {
     emit({ method: "wrapper/requestResolved", params: { id: requestId } });
   }
   if (msg.method === "thread/tokenUsage/updated" && own(id)) {
-    store.chat(id).tokenUsage = p.tokenUsage;
+    recordUsage(store.chat(id),p,msg.workerId || "codex");
     store.save();
   }
   emit(msg);
@@ -326,6 +334,7 @@ async function newChat({
     id: r.thread.id,
     workerId,
     fallbackFrom: selection.fallbackFrom,
+    usageBaseline:Object.fromEntries(tokenFields.map(key=>[key,0])),
     ...(channelOnly ? {channelOnly:true,connectionId} : {}),
     capabilities: workers.capability(workerId),
     models: workers.adapters.get(workerId)?.models?.(r.thread) || [],
@@ -372,6 +381,7 @@ async function finishThread(id, turn) {
   const c = store.chat(id);
   const artifacts=await library.registerThread(r.thread,c);
   const completedTurn=r.thread.turns?.find(t=>t.id===turn.id);
+  await firma.capture(c, completedTurn);
   await channels.complete(id,turn,(completedTurn?.items||[]).filter(i=>i.type==='agentMessage'&&i.phase!=='commentary').map(i=>i.text||'').join('\n\n'),artifacts.filter(a=>a.turnId===turn.id&&a.scope==='workspace'));
   emit({method:'wrapper/library'});
   emit({ method: "wrapper/thread", params: { thread: r.thread } });
@@ -481,8 +491,10 @@ async function sendTurnUnlocked(id, b, delivery) {
       b = {...b, model:selected.model, effort:supportedEffort(selected, b.nextSelection.effort)};
     }
   }
+  await firma.confirmFromMessage(c,b.text,b.attachments);
   const companyContext = await workerInstructions({ root, workspace, cwd: c.cwd })
     + await handoffInstructions(store, c)
+    + await firma.context(c)
     + await routedContext({query:b.text || "",projectId:c.projectId || "default",chatId:id})
     + (c.jobId
       ? '\n\nDies ist ein einzelner Lauf eines bereits eingerichteten Jobs. Führe die Aufgabe aus; lege keine neue Routine an. Die Arbeitsanweisung wurde aus SKILL.md im Auftragsordner geladen. Relative Ressourcenpfade beziehen sich auf diesen Ordner. Eingaben liegen in input/, Ergebnisse gehören in output/. Die fertige Antwort wird über die gespeicherte Benachrichtigungsregel zugestellt; versende keine zusätzliche Benachrichtigung selbst.'
@@ -598,7 +610,7 @@ const mime = {
 };
 const routes = new Map();
 const route = (method, url, fn) => routes.set(method + " " + url, fn);
-installWeatherRoutes(route);
+const weatherService=installWeatherRoutes(route);
 const restartGate = createRestartGate({
   sessions: () => [...new Set([...active].map(([id,turn])=>`${id}:${turn}`).concat([...turnLocks].map(id=>`${id}:starting`), [...voiceSessions].map(id=>`${id}:voice`), liveBrowserSessions()))],
   restart: async () => {
@@ -653,7 +665,7 @@ route("GET", "/api/bootstrap", async () => {
     token,
     identitySource: "soul/IDENTITY.md",
     workspaceToolsVersion: 1,
-    features: { serviceConnections:true, crmConnections:true, skillLibrary:true, library:true },
+    features: { firma:true, serviceConnections:true, crmConnections:true, skillLibrary:true, library:true },
     workspace,
     projects: store.state.projects,
     settings: store.state.settings,
@@ -676,7 +688,32 @@ route("GET", "/api/bootstrap", async () => {
   };
 });
 const updateChat = chatArchiveUpdater({store, workers, active, turnLocks, voiceSessions, loaded, restartGate, emit});
+const firma = await new Firma({store,companyRoot:companyRoot(root),newChat,sendTurn,emit,updateChat,isBusy:id=>active.has(id)}).init();
+route('GET', '/api/firma', () => firma.state());
+route('GET', '/api/firma/review', (_b,u) => firma.review(store.chat(u.searchParams.get('id'))));
+route('POST', '/api/firma/confirm', async b => {if(restartGate.restarting)throw Error('Der Server wird neu gestartet.');const chat=store.chat(b.id);if(!chat.firmaItemId||typeof b.code!=='string'||!/^[a-f0-9]{12}$/.test(b.code)||chat.firmaReview?.fingerprint!==b.fingerprint)throw Error('Ergebnis bitte erneut laden.');await firma.confirmFromMessage(chat,'Bestätigt '+b.code);return {ok:true};});
+route('POST', '/api/firma/chat', b => {if(restartGate.restarting)throw Error('Der Server wird neu gestartet.');return firma.open(b.itemId);});
 const openBriefingChat = briefingChatOpener({store, newChat, cache:threadCache, emit, updateChat});
+const readStatistics=async(projectId='default',timeZone='Europe/Berlin')=>{
+ await store.projectRoot(projectId);
+ const excluded=coreEnabled?await coreRequest('chat-privacy/ids'):{ids:[]};
+ if(!Array.isArray(excluded?.ids))throw Error('Privatsperren konnten nicht geprüft werden.');
+ const privateIds=new Set(excluded.ids);
+ return collectStatistics({store,threadCache,projectId,timeZone,isPrivate:async id=>privateIds.has(id)});
+};
+const openStatisticsChat=statisticsChatOpener({store,collect:readStatistics,openBriefing:openBriefingChat});
+route('GET','/api/statistics',(_b,url)=>readStatistics(url.searchParams.get('projectId')||'default',url.searchParams.get('timeZone')||'Europe/Berlin'));
+route('POST','/api/statistics/chat',b=>{
+ const policy=runMode(b.mode);
+ return openStatisticsChat({requestId:b.requestId,projectId:b.projectId,timeZone:b.timeZone,selection:{worker:b.worker||'auto',model:b.model,serviceTier:b.serviceTier||null,mode:policy.mode,permission:policy.permission}});
+});
+const openWeatherChat = weatherChatOpener({store,weather:weatherService,
+  readProfile:()=>readFile(path.join(workspace,'soul','USER.md'),'utf8'),
+  openBriefing:openBriefingChat,sendTurn,isRestarting:()=>restartGate.restarting});
+route('POST','/api/weather/chat',b=>{
+  const policy=runMode(b.mode);
+  return openWeatherChat({requestId:b.requestId,projectId:b.projectId,selection:{worker:b.worker||'auto',model:b.model,serviceTier:b.serviceTier||null,mode:policy.mode,permission:policy.permission}});
+});
 route("POST", "/api/planner/chat", async b => {
   let item;
   if (b.demoDate) {
@@ -992,18 +1029,7 @@ route("POST", "/api/fork", async (b) => {
     ...(c.mode === "plan" ? { approvalPolicy: "never" } : {}),
     ...(b.beforeTurnId ? { beforeTurnId: b.beforeTurnId } : {}),
   });
-  store.state.chats.unshift({
-    ...c,
-    id: r.thread.id,
-    workerThreadId: c.workerThreadId ? r.thread.id : undefined,
-    title: c.title + " · Kopie",
-    createdAt: Date.now(),
-    updatedAt: Date.now(),
-    archived: false,
-    pinned: false,
-    jobId: null,
-    runId: null,
-  });
+  registerFork(store.state.chats, c, r.thread.id);
   loaded.add(r.thread.id);
   const inheritedTools = (toolsByThread.get(b.id) || []).filter((record) =>
     r.thread.turns.some((t) => t.id === record.turnId),
@@ -1017,13 +1043,26 @@ route("POST", "/api/fork", async (b) => {
   );
   await store.save();
   await store.exportThread(r.thread);
+  emit({ method: "wrapper/chats" });
   return r;
 });
 route("POST", "/api/respond", async (b) => {
   const request = workers.requests.get(String(b.id));
   if (!request) throw new Error("Rückfrage nicht mehr verfügbar.");
   if (request.params?.threadId) store.chat(request.params.threadId);
+  const receipt = questionReceipt(request, b.result);
   workers.respond(b.id, b.result);
+  if (receipt && request.params?.threadId && request.params?.turnId) {
+    const {threadId,turnId} = request.params;
+    const records = toolsByThread.get(threadId) || [];
+    records.push({turnId,after:messageCounts.get(turnId) || 1,item:receipt});
+    toolsByThread.set(threadId,records);
+    emit({method:"item/completed",params:{threadId,turnId,item:receipt}});
+    // Delivery already succeeded. A storage failure must not invite a second reply.
+    await atomic(path.join(workspace,"chats",threadId,"tools.json"),records).catch(() => {
+      emit({method:"wrapper/error",params:{threadId,message:"Antwort übermittelt, Rückfrageverlauf konnte nicht gespeichert werden."}});
+    });
+  }
   emit({ method: "wrapper/requestResolved", params: { id: b.id } });
   return { ok: true };
 });
@@ -1093,6 +1132,8 @@ route("GET", "/api/computer-use", async (_b, url) => {
   } while (cursor && servers.length < 100);
   return {workerId, ...computerToolStatus(servers)};
 });
+const readAllowances=allowanceReader({enabled:()=>workers.settings.enabled,readCodex:()=>workers.call('account/rateLimits/read',{workerId:'codex'}),readClaude:()=>readClaudeUsage({dataRoot:store.dataRoot,cwd:workspace})});
+route('GET','/api/usage/allowances',()=>readAllowances());
 route("GET", "/api/usage", async () => {
   await engine();
   return workers.call("account/rateLimits/read", {});
@@ -1131,7 +1172,16 @@ route("GET", "/api/jobs", () => store.jobs());
 route('GET','/api/jobs/notification-targets',()=>({targets:notificationTargets(services,channels).map(({id,label,ready})=>({id,label,ready}))}));
 route('GET','/api/jobs/readiness',async()=>({ready:(await workers.status()).workers.some(w=>workers.routingOrder().includes(w.id)&&w.configured&&w.connected&&w.authenticated!==false)}));
 route('POST','/api/jobs/notify',b=>sendJobNotification(services,channels,b));
-route("POST", "/api/jobs/save", (b) => store.saveJob(b));
+route("POST", "/api/jobs/save", async b => {
+  store.project(b.projectId || 'default');
+  if (b.model) {
+    if (!b.worker || ['auto','python','n8n'].includes(b.worker)) throw Error('Für eine feste Modellwahl zuerst einen Anbieter wählen.');
+    const models = (await workers.modelLists())[b.worker] || [];
+    const model = models.find(m=>m.model===b.model && !m.hidden);
+    if (!model || b.effort && !model.supportedReasoningEfforts?.some(o=>o.reasoningEffort===b.effort)) throw Error('Modell oder Reasoning nicht verfügbar. Bitte erneut auswählen.');
+  } else if (b.effort) throw Error('Für Reasoning zuerst ein Modell wählen.');
+  return store.saveJob(b);
+});
 route("POST", "/api/jobs/run", (b) => runJob(b.id, null, b.coreRunId));
 route("POST", "/api/terminal", async (b) => {
   await engine();
@@ -1211,6 +1261,7 @@ async function runJob(id, slot = null, coreRunId = null) {
       title: job.name,
       worker: job.worker,
       projectId: job.projectId || 'default',
+      model: job.model || undefined,
       cwd: path.join(workspace, "jobs", id),
     });
     const c = store.chat(r.thread.id);
@@ -1221,6 +1272,7 @@ async function runJob(id, slot = null, coreRunId = null) {
     await store.save();
     await sendTurn(c.id, {
       text: job.instructions,
+      ...(job.model ? {nextSelection:{model:job.model, effort:job.effort || ''}} : {}),
     });
     emit({ method: "wrapper/jobs" });
     return { threadId: c.id, runId };

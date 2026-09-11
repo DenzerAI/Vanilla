@@ -1,3 +1,4 @@
+import {claudeTurnUsage,addTokens,count} from './usage.mjs';
 import { EventEmitter } from "node:events";
 import { randomUUID } from "node:crypto";
 import { readFile } from "node:fs/promises";
@@ -30,7 +31,7 @@ export class ACPWorker extends EventEmitter {
     if (this.starting) return this.starting;
     this.starting = (async () => {
       this.rpc.start();
-      const r = await this.rpc.call("initialize", { protocolVersion: 1, clientInfo: { name: "agent-control", version: "1.0.0" }, clientCapabilities: { fs: { readTextFile: false, writeTextFile: false }, terminal: false } });
+      const r = await this.rpc.call("initialize", { protocolVersion: 1, clientInfo: { name: "agent-control", version: "1.0.0" }, clientCapabilities: { fs: { readTextFile: false, writeTextFile: false }, terminal: false, elicitation: { form: {} } } });
       if (r?.protocolVersion !== 1 || !r.agentCapabilities) throw new Error("Dieser Anschluss spricht kein unterstütztes ACP. Installation prüfen.");
       this.info = { ...r, userAgent: r.agentInfo?.version || null };
       this.connected = true;
@@ -215,6 +216,12 @@ export class ACPWorker extends EventEmitter {
         this.event("item/completed", thread.id, { turnId: turn.id, item: turn.items[0] });
         this.rpc.call("session/prompt", { sessionId: thread.workerSession.sessionId, prompt }, 60 * 60 * 1000)
           .then(r => {
+            const usage=this.id==='claw-code'?claudeTurnUsage(r):null;
+            if(usage){
+              turn.usage=usage;
+              const total=thread.turns.reduce((sum,t)=>addTokens(sum,t.usage?.total),{});
+              this.event('thread/tokenUsage/updated',thread.id,{turnId:turn.id,tokenUsage:{total,last:usage.total,turn:usage}});
+            }
             const status = r?.stopReason === "cancelled" ? "interrupted" : r?.stopReason === "end_turn" ? "completed" : "failed";
             return this.finish(thread.id, status, status === "failed" ? { message: "Worker hat kein abgeschlossenes Ergebnis geliefert. Verlauf prüfen." } : null);
           })
@@ -242,7 +249,12 @@ export class ACPWorker extends EventEmitter {
     }
     const id = this.sessions.get(msg.params?.sessionId), turn = this.running.get(id);
     if (msg.id !== undefined) {
-      if (msg.method === "session/request_permission" && turn) {
+      if (msg.method === "elicitation/create" && turn && msg.params?.mode !== "url") {
+        const key = `${this.id}:${msg.id}`;
+        const request = {id:key, method:"mcpServer/elicitation/request", params:{...msg.params, threadId:id, turnId:turn.id, workerId:this.id}, native:msg};
+        this.requests.set(key, request);
+        this.emit("request", {id:key, method:request.method, params:request.params});
+      } else if (msg.method === "session/request_permission" && turn) {
         const key = `${this.id}:${msg.id}`;
         const request = { id: key, method: "item/commandExecution/requestApproval", params: { threadId: id, turnId: turn.id, reason: msg.params.toolCall?.title || "Worker bittet um Freigabe.", workerId: this.id }, native: msg };
         this.requests.set(key, request); this.emit("request", { id: key, method: request.method, params: request.params });
@@ -267,6 +279,9 @@ export class ACPWorker extends EventEmitter {
       const session = thread.workerSession;
       if (u.sessionUpdate === "available_commands_update" && Array.isArray(u.availableCommands)) session.availableCommands = u.availableCommands;
       else if (u.sessionUpdate === "config_option_update" && Array.isArray(u.configOptions)) session.configOptions = u.configOptions;
+      else if (u.sessionUpdate === 'usage_update') {
+        session.usage={contextUsed:count(u.used),contextSize:count(u.size),cost:count(u.cost?.amount),currency:typeof u.cost?.currency==='string'?u.cost.currency.slice(0,10):null,updatedAt:Date.now()};
+      }
       else if (u.sessionUpdate === "current_mode_update") session.modes = { ...session.modes, currentModeId: u.currentModeId };
       else {
         // Preserve the event type, never expose arbitrary private payloads as diagnostics.
@@ -307,6 +322,12 @@ export class ACPWorker extends EventEmitter {
   respond(id, result) {
     const request = this.requests.get(String(id));
     if (!request) throw new Error("Freigabe ist nicht mehr offen.");
+    if (request.native.method === "elicitation/create") {
+      if (!["accept", "decline", "cancel"].includes(result?.action)) throw new Error("Ungültige Rückfrageantwort.");
+      this.rpc.write({id:request.native.id, result});
+      this.requests.delete(String(id));
+      return;
+    }
     const approved = result?.decision === "accept" || result?.decision === "approved";
     const option = request.native.params.options?.find(o => o.kind === (approved ? "allow_once" : "reject_once"));
     if (approved && !option) throw new Error("Worker bietet keine einmalige Freigabe an.");

@@ -1,0 +1,38 @@
+.firma-page { overflow: auto; max-width: 856px; }
+.firma-content { width: 100%; max-width: 760px; margin: 0 auto; }
+.firma-progress { color: var(--muted); font-size: var(--text-small); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.firma-list { width: 100%; }
+.firma-step { border-bottom: 1px solid var(--border); }
+.firma-step > summary { display: flex; align-items: center; gap: var(--space-12); min-height: var(--control-heading-height); padding: var(--space-12) 0; cursor: pointer; list-style: none; }
+.firma-step > summary::-webkit-details-marker { display: none; }
+.firma-step > summary > svg { flex: none; color: var(--muted); transition: transform var(--motion-feedback-duration); }
+.firma-step[open] > summary > svg { transform: rotate(180deg); }
+.firma-step-number { flex: none; display: grid; place-items: center; width: 24px; height: 24px; font-size: var(--text-small); color: var(--muted); }
+.firma-step-number.complete { color: var(--success); }
+.firma-step-title { flex: 1; min-width: 0; font-size: var(--text-reading); font-weight: var(--weight-medium); overflow-wrap: anywhere; }
+.firma-count { flex: none; color: var(--muted); font-size: var(--text-caption); font-variant-numeric: tabular-nums; }
+.firma-items { padding: 0 0 var(--space-12) var(--space-32); }
+.firma-item { display: flex; width: 100%; gap: var(--space-12); justify-content: space-between; align-items: center; min-height: var(--control-touch); padding: var(--space-12) var(--space-4); border: 0; border-radius: var(--radius-small); text-align: left; background: transparent; font-size: var(--text-control); font-weight: var(--weight-regular); }
+.firma-item > span:first-child { min-width: 0; overflow-wrap: anywhere; }
+.firma-item:hover { background: var(--selected); }
+.firma-item-end { display: flex; flex: none; gap: var(--space-8); align-items: center; color: var(--muted); }
+.firma-item-status { font-size: var(--text-caption); }
+.firma-step > summary:focus-visible,.firma-item:focus-visible { outline: 1px solid var(--focus-ring); outline-offset: 2px; }
+.firma-hint { margin: var(--space-12) 0; font-size: var(--text-caption); color: var(--muted); }
+.firma-error { color: var(--danger); font-size: var(--text-small); margin: var(--space-16) 0; }
+.firma-preview { max-width: 760px; }
+@media (max-width: 600px) {
+ .firma-items { padding-left: var(--space-16); }
+ .firma-item { flex-wrap: wrap; gap: var(--space-4); }
+ .firma-item > span:first-child { flex: 1 1 65%; }
+ .firma-item-end { margin-left: auto; }
+}
+@media (prefers-reduced-motion: reduce) { .firma-step > summary > svg { transition: none; } }
+
+.firma-review { width: 100%; margin: 0 auto var(--space-8); font-size: var(--text-control); }
+.firma-review > summary { cursor: pointer; padding: var(--space-8) var(--space-16); color: var(--muted); }
+.firma-review-content { max-height: 35vh; overflow: auto; padding: var(--space-16); background: var(--surface); border-radius: var(--radius-panel); }
+.firma-review-content > div { margin: var(--space-16) 0; }
+.firma-review-content p { margin: var(--space-8) 0; }
+.firma-review > summary:focus-visible { outline: 1px solid var(--focus-ring); }
+.firma-back { color: var(--muted); font-size: var(--text-control); }

@@ -61,7 +61,8 @@ werden nicht durch den Standard ersetzt. Der gemeinsame Standard beschreibt
 kurze, warme, natürliche Kommunikation und vollständige, effiziente Arbeit.
 „Standard verwenden“ setzt nur den Entwurf zurück; danach ist Speichern nötig.
 Die gespeicherte Identität aktualisiert Seitenleiste und Antwortsignaturen in
-allen offenen Panels.
+allen offenen Panels. Die runde Namensschrift im Seitenleistenkopf bleibt beim
+Umbenennen erhalten; das Namensfeld verwendet weiterhin die normale UI-Schrift.
 
 ## Stimme
 
@@ -242,7 +243,7 @@ bleiben sichtbar. Reduzierte Bewegung in App oder System hat Vorrang.
 
 ## Dein Profil
 
-Direkt nach Dein Agent steht Dein Profil mit der vorhandenen Speicherzeile und SettingRow-Gruppen. Über dich enthält den Anzeigenamen des Nutzers; Wetter verwendet das vorhandene Eingabefeld mit einer um 400 ms verzögerten Open-Meteo-Ortssuche. Treffer stehen als SettingRow mit Stadt, Region, Land und nativem Auswählen-Button darunter. Veraltete Suchantworten werden verworfen. Speichern erfordert bei gesetztem Ort einen bestätigten Treffer und erhält dessen Koordinaten in USER.md. Löschen des Orts entfernt die Koordinaten. Der Wetterabruf startet nach erfolgreicher Speicherung und zeigt Erfolg oder Fehler getrennt vom Speicherstatus. Aktualisieren wiederholt den Abruf. Quellenlinks nennen Open-Meteo und GeoNames sowie die übermittelten Ortsdaten; keine amtliche Adressprüfung. Die Wetterkarte öffnet diesen Bereich direkt. Leere Werte sind erlaubt, maximal 100 Zeichen je Feld.
+Direkt nach Dein Agent steht Dein Profil mit der vorhandenen Speicherzeile und SettingRow-Gruppen. Über dich enthält den Anzeigenamen des Nutzers; Wetter verwendet das vorhandene Eingabefeld mit einer um 400 ms verzögerten Open-Meteo-Ortssuche. Treffer stehen als SettingRow mit Stadt, Region, Land und nativem Auswählen-Button darunter. Veraltete Suchantworten werden verworfen. Speichern erfordert bei gesetztem Ort einen bestätigten Treffer und erhält dessen Koordinaten in USER.md. Löschen des Orts entfernt die Koordinaten. Der Wetterabruf startet nach erfolgreicher Speicherung und zeigt Erfolg oder Fehler getrennt vom Speicherstatus. Aktualisieren wiederholt den Abruf. Quellenlinks nennen Open-Meteo und GeoNames sowie die übermittelten Ortsdaten; keine amtliche Adressprüfung. Eine nicht eingerichtete Wetterkarte öffnet diesen Bereich direkt; die eingerichtete Wetterkarte öffnet einen neuen Wetterbericht im Chat. Leere Werte sind erlaubt, maximal 100 Zeichen je Feld.
 
 UserPreferences liest und speichert soul/USER.md über die vorhandenen Workspace-Dateiendpunkte. Der Agentenname bleibt in IDENTITY.md. Andere Markdown-Abschnitte in USER.md werden erhalten. Vor jedem Speichern wird der geladene Text verglichen; bei Konflikt oder Fehler bleibt der Entwurf erhalten. Browser mit Web Locks koordinieren gleichzeitige Profil-Speicherungen desselben Ursprungs. Der allgemeine Datei-Endpunkt bietet keine atomare Versionsprüfung gegen externe Dateieditoren. Neue Arbeitsbereiche erhalten eine leere USER.md ohne erfundene Nutzerdaten.
 
@@ -256,3 +257,51 @@ nur den Vorschauzustand; Karten zeigen ihr Aktionsziel, ohne API oder Versand.
 Der separate Bauplan ergänzt Hell/Dunkel und eine schmale Inhaltsbreite. Die
 Vorschau speichert keine App-Einstellungen und benötigt keine Anmeldung.
 Die Übernahme in eigene Module führt ../../docs/UI-UPDATES.md.
+
+Unter Aussehen → Visuell folgt auf Lebendiger Starttext die gemeinsame WeatherMotionSetting-Zeile Wetterbewegung. Sie speichert lokal, synchronisiert Tabs und meldet Speicherfehler; reduzierte Bewegung hat Vorrang. Unser Design enthält WeatherPreview mit allen markierten Wetterbeispielen im produktiven AttentionFan.
+
+Direkt bei Wetterbewegung öffnet Wettervorschau öffnen eine lokale WeatherPreview in der Einstellungsseite. Der Knopf klappt sie wieder zu; Wetterzustände und sechs Tagesphasen sind ohne Datei-Link auswählbar. Die Vorschau ändert keine Wetterorte und startet keine Sessions.
+
+Der persönliche Chatstart verwendet den ersten Namensbestandteil aus Dein Profil, ohne den gespeicherten Anzeigenamen zu verändern. Fehlender Name ergibt eine neutrale Begrüßung.
+
+
+## Diktat-Tastenkürzel · Version 1.0.0
+
+Stimme → Diktat verwendet DictationShortcutSettings mit normalen SettingRows:
+Taste (Automatisch, rechte Command/Meta, rechte Strg, Aus) und Bedienung
+(Drücken zum Ein-/Ausschalten als Standard, optional Gedrückt halten).
+Automatisch verwendet auf Mac MetaRight und sonst ControlRight. Ausschließlich
+die ausgewählte sichtbare Chat-Pane im aktiven Fenster reagiert, keine globalen
+Betriebssystem-Hotkeys. Dialoge, Menüs und Sprachchat verhindern einen neuen Start.
+Umschalten erfolgt beim Loslassen einer allein gedrückten Taste; Kombinationen
+und Wiederholungen lösen es nicht aus. PTT startet beim Drücken und beendet beim
+Loslassen; zusätzliche Tastenkombinationen unterbrechen die PTT-Aufnahme.
+Fenster-/Panewechsel beendet eine per Kürzel gestartete Aufnahme. Ein Loslassen
+während der Mikrofonfreigabe bricht den ausstehenden PTT-Start ab. Erneuter Start
+braucht eine neue Geste. Beenden sichert und transkribiert ausschließlich in den
+Entwurf, ohne Nachricht zu senden. Vorhandene Audio-Wiederherstellung bleibt.
+Einstellungen sind browserlokal unter agent-dictation-shortcut-v1, validiert und
+zwischen Tabs synchronisiert; Speicherfehler werden angezeigt. Keine Migration
+bestehender Audio- oder Serverdaten. Entfernen des neuen Schlüssels stellt die
+plattformabhängige Voreinstellung wieder her. Systemtasten können vom Betriebssystem
+abgefangen werden; rechte Strg bleibt als Alternative auswählbar.
+
+
+## Direkte Pane-Tastenkürzel · Version 1.0.0
+
+Ctrl + Shift + 1–4 aktiviert Chat-Pane 1–4 gemäß ihrer festen Chatnummer.
+Die Zielpane muss geöffnet sein; verborgene oder maximierte Ansichten zeigen
+sie über die vorhandene aktive Panelauswahl. Ein eigener Mikrofonstart findet
+nicht statt. Nach Auswahl erhält ihr Composer Schreibfokus ohne Scrollsprung
+und die vorhandene Auswahlkontur. Gesperrte Chats erhalten keinen Schreibfokus.
+Nur ein Listener der äußeren App verarbeitet die Kürzel im aktiven Chatfenster;
+Dialoge, Menüs, Einstellungen, IME und Tastenwiederholung sind ausgeschlossen.
+Einstellungen → Tastenkürzel verwendet PaneShortcutSettings mit SettingRows:
+Belegung aufnehmen, je Pane deaktivieren und Standard wiederherstellen.
+Doppelte Belegungen und bestehende App-Kürzel werden abgewiesen; einzelne
+Schreibzeichen ohne Ctrl/Alt/Meta sind nicht erlaubt, F-Tasten sind möglich.
+Escape/Tab/Verlassen bricht das Aufnehmen ab. Auswahl wird erst nach erfolgreichem
+Speichern übernommen, Fehler bleiben sichtbar. Browserlokaler Schlüssel
+agent-pane-shortcuts-v1, validiert und zwischen Tabs synchronisiert. Keine
+Migration von Serverdaten oder Chatentwürfen; fehlende/ungültige Werte verwenden
+den Standard. System- und Browserbelegungen haben gegebenenfalls Vorrang.

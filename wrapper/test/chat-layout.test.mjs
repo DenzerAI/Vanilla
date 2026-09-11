@@ -123,3 +123,12 @@ test("all panels share one event stream, receive live updates and unsubscribe in
     globalThis.EventSource = previous;
   }
 });
+
+ test('shared starfield follows visible welcome states and preserves off/all modes', async () => {
+  const {sharedParticlesEnabled} = await import('../ui/chat-layout.mjs');
+  assert.equal(sharedParticlesEnabled('off', [{welcome:true}]), false);
+  assert.equal(sharedParticlesEnabled('all', [{welcome:false}]), true);
+  assert.equal(sharedParticlesEnabled('on', [{welcome:false}, {welcome:true}]), true);
+  assert.equal(sharedParticlesEnabled('on', [{welcome:false}, null]), false);
+  assert.equal(sharedParticlesEnabled(undefined, [{welcome:true}]), true);
+ });

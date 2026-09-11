@@ -25,6 +25,16 @@
       "file": "InterVariable.woff2",
       "source": "https://raw.githubusercontent.com/rsms/inter/v4.1/docs/font-files/InterVariable.woff2",
       "sha256": "693b77d4f32ee9b8bfc995589b5fad5e99adf2832738661f5402f9978429a8e3"
+    },
+    {
+      "file": "QuicksandVariable.ttf",
+      "source": "https://raw.githubusercontent.com/google/fonts/e3b5462bdd8153237ad58a3766d456d89c6a2f48/ofl/quicksand/Quicksand%5Bwght%5D.ttf",
+      "sha256": "39c9b64223561f56aaff6062a6f04063c4fc86809ad6768722c06614d977e1cc"
+    },
+    {
+      "file": "Quicksand-LICENSE.txt",
+      "source": "https://raw.githubusercontent.com/google/fonts/e3b5462bdd8153237ad58a3766d456d89c6a2f48/ofl/quicksand/OFL.txt",
+      "sha256": "14d28541780d90f6577bb7abcc6f005bf6969614294e75c82abb8758a696ad46"
     }
   ]
 }

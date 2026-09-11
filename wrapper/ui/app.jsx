@@ -1,6 +1,20 @@
 import {PageHeading} from './page-heading';
 import {submitMessage} from "./message-submit.mjs";
 import {MailConnectionForm} from "./mail-connection";
+import {PaneShortcutSettings,usePaneShortcuts} from './pane-shortcut-settings.jsx';
+import {matchPaneShortcut} from './pane-shortcuts.mjs';
+import {FirmaPage,FirmaReview} from './firma';
+import { sharedParticlesEnabled } from "./chat-layout.mjs";
+import {StatisticsDashboard} from './statistics';
+import {statisticsTimeZone} from './statistics-client';
+import {ComposerQuestion, useComposerQuestion} from './composer-question';
+import {questionRequest} from '../worker-questions.mjs';
+import {WeatherPreview} from './weather-preview';
+import {ChatPrivacyDialog, LockedChat} from './chat-privacy';
+import {chatPrivacyClient, privacyEvent, privacyChanged, locallyLocked, changeChatPrivacy, watchChatPrivacy} from './chat-privacy-client.mjs';
+import { WeatherMotionSetting } from './weather-motion';
+import { filterJobs, jobFilters, jobStateLabel } from './jobs-view.mjs';
+import './jobs.css';
 import { StartTextMotionSetting } from './chat-start-preferences';
 import { IconMotionSetting } from './icon-motion-setting';
 import { IconButton } from './icon-button';
@@ -40,6 +54,8 @@ import { LibraryPage, LibraryPreview, ImageForm } from './library.jsx';
 import { SkillDetails, SkillHub, CreateSkillForm } from './skill-details.jsx';
 import './library-connections.css';
 import { hasUnreadReply } from "../chat-read-state.mjs";
+import { canReadPaneReply } from "./pane-attention.mjs";
+import { ComposerFocus } from "./composer-focus";
 import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
 import { MotionConfig } from "motion/react";
 import { createRoot } from "react-dom/client";
@@ -121,6 +137,7 @@ import "./chat.css";
 import "./multi-chat.css";
 import { createEventSubscription } from "./chat-events.mjs";
 import { ChatMenu, ChatTitle, LayoutPicker, PaneDivider } from "./chat-controls.jsx";
+import { readPaneLayout, readPaneSession, writePaneState } from "./pane-persistence.mjs";
 import { MIN_CHAT_WIDTH, visiblePanes, selectPaneCount, conversationText } from "./chat-layout.mjs";
 import { UserPreferences } from "./user-preferences";
 import { AgentPreferences } from "./agent-preferences.jsx";
@@ -159,16 +176,22 @@ async function api(url, data, retry = true) {
   const r = await fetch(
     "/api" + url,
     data === undefined
-      ? {}
+      ? {headers:{"x-chat-client":chatPrivacyClient}}
       : {
           method: "POST",
-          headers: { "content-type": "application/json", "x-uwe-token": csrf },
+          headers: { "content-type": "application/json", "x-uwe-token": csrf, "x-chat-client":chatPrivacyClient },
           body: JSON.stringify(data),
         },
   );
   const j = await r.json();
+  // A response started before locking cannot put a title or approval back on screen.
+  if (j?.chats) j.chats = j.chats.map(c=>locallyLocked(c.id) ? {id:c.id,projectId:c.projectId,archived:c.archived,pinned:c.pinned,updatedAt:c.updatedAt,title:'Privater Chat',private:true,locked:true} : c);
+  if (j?.requests) j.requests = j.requests.filter(r=>!locallyLocked(r.params?.threadId));
+  const requestedChat = data?.id || new URL('/api'+url, location.origin).searchParams.get('id');
+  if (r.status === 423 && requestedChat) privacyChanged(requestedChat);
+  if (url.startsWith('/thread?') && locallyLocked(requestedChat)) throw Object.assign(new Error('Chat gesperrt.'), {status:423});
   if (r.status === 403 && data !== undefined && retry) {
-    const session = await fetch("/api/bootstrap");
+    const session = await fetch("/api/bootstrap", {headers:{"x-chat-client":chatPrivacyClient}});
     const b = await session.json();
     if (session.status === 401) throw Object.assign(new Error(b.error || "Bitte anmelden."), {status:401});
     if (b.token && b.token !== csrf) {
@@ -338,7 +361,8 @@ function RequestCard({ request, onReply }) {
   );
 }
 import { TurnStatus, ActivityGroup, ActivityIcon } from "./chat-activity.jsx";
-import { ChatArtifacts, DiffView, ToolText } from "./chat-artifacts.jsx";
+import { ChatArtifacts, DiffView, DiffStats, ToolText } from "./chat-artifacts.jsx";
+import {activityDetailLabel} from './activity-detail.mjs';
 import { FileContent } from "./file-content.jsx";
 import { localFilePath } from "./artifact-content.mjs";
 
@@ -361,7 +385,12 @@ function RelativeMessageTime({value, visible = true}) {
   const ms = timestamp(value);
   return ms == null ? null : <time dateTime={new Date(ms).toISOString()} title={new Date(ms).toLocaleString('de-DE')}>{relativeTimeLabel(value, now)}</time>;
 }
-function ChatTurn({ turn, running, waiting, visible, actionsDisabled, paneNumber = 0, workerId, ...actions }) {
+function ChatTurn({ turn, statisticsSnapshot, statisticsApi, running, waiting, visible, actionsDisabled, paneNumber = 0, workerId, ...actions }) {
+  // Keep explicit reading choices when the status moves beneath the final answer.
+  const [activityOpen, setActivityOpen] = useState(false);
+  const [toolOpen, setToolOpen] = useState({});
+  const seenSteps = useRef(new Set());
+  const onToolToggle = (id, open) => setToolOpen(old => old[id] === open ? old : {...old, [id]:open});
   const finalMessage = (turn.items || []).filter(i => i.type === "agentMessage" && i.phase !== "commentary").at(-1);
   const groups = groupItems(turn.items);
   const activity = groups.filter(group => group.type === "activity").flatMap(group => group.items);
@@ -380,24 +409,25 @@ function ChatTurn({ turn, running, waiting, visible, actionsDisabled, paneNumber
       </span>
     </div>
   </div>;
+  const artifacts = <ChatArtifacts items={turn.items} workspace={actions.workspace} directory={actions.directory} onFile={actions.onFile} api={api} />;
   const progress = <div className="turn-response-progress">
-    {(activity.length || collapseCommentary && history.length) ? <ActivityGroup items={activity} running={running} turn={turn} waiting={waiting} visible={visible}>
-      {(collapseCommentary ? history : activity).map(item => <Item key={item.id} item={item} workerId={workerId} {...actions} running={running} />)}
+    {(activity.length || collapseCommentary && history.length) ? <ActivityGroup items={activity} running={running} turn={turn} waiting={waiting} visible={visible} open={activityOpen} onOpenChange={setActivityOpen} seenSteps={seenSteps.current}>
+      {(collapseCommentary ? history : activity).map(item => <Item key={item.id} item={item} workerId={workerId} {...actions} running={running} toolOpen={toolOpen} onToolToggle={onToolToggle} />)}
     </ActivityGroup> : <TurnStatus turn={turn} running={running} waiting={waiting} visible={visible} />}
   </div>;
 
   return <section className="chat-turn" id={`pane-${paneNumber}-turn-${turn.id}`} tabIndex={-1} aria-label="Nachricht und Antwort">
     {messages.map((group, index) => <React.Fragment key={group.id}>
       {index === firstReply && header}
-      <Item item={group.item} beforeActions={index === lastReply ? progress : null} workerId={workerId} {...actions} running={actionsDisabled} sentAt={turn.startedAt} completedAt={!running && group.item.id === finalMessage?.id ? turn.completedAt : null} />
+      {statisticsSnapshot && turn.id === 'briefing-'+statisticsSnapshot.id && group.item.type==='agentMessage'?<StatisticsDashboard data={statisticsSnapshot} api={statisticsApi} visible={visible} reduceMotion={actions.agentProfile?.reduceMotion==='on'}/>:<Item item={group.item} beforeActions={index === lastReply ? <>{progress}{artifacts}</> : null} workerId={workerId} {...actions} running={actionsDisabled} sentAt={turn.startedAt} completedAt={!running && group.item.id === finalMessage?.id ? turn.completedAt : null} />}
     </React.Fragment>)}
-    {firstReply === -1 && <>{header}{progress}</>}
-    <ChatArtifacts items={turn.items} workspace={actions.workspace} directory={actions.directory} onFile={actions.onFile} api={api} />
+    {firstReply === -1 && <>{header}{progress}{artifacts}</>}
     {turn.error && <div className="inline-error">{icon(AlertCircle)}{turn.error.message}</div>}
   </section>;
 }
-function Item({ item, beforeActions, agentProfile, workerId, onFork, onEdit, onRetry, onDelete, onFile, running, sentAt, completedAt, workspace, directory }) {
+function Item({ item, beforeActions, agentProfile, workerId, onFork, onEdit, onRetry, onDelete, onFile, running, sentAt, completedAt, workspace, directory, toolOpen, onToolToggle }) {
   const i = item;
+  const disclosure = {open:!!toolOpen?.[i.id], onToggle:event=>{if(event.target === event.currentTarget) onToolToggle?.(i.id,event.currentTarget.open);}};
   if (i.type === "userMessage")
     return (
       <div className="user-message-row">
@@ -462,7 +492,7 @@ function Item({ item, beforeActions, agentProfile, workerId, onFork, onEdit, onR
     );
   if (i.type === "reasoning")
     return i.summary?.length || i.content?.length ? (
-      <details className="tool-item">
+      <details className="tool-item" {...disclosure}>
         <summary>
           {icon(BrainCircuit, 16)}Gedanken{icon(ChevronDown, 14)}
         </summary>
@@ -491,37 +521,44 @@ function Item({ item, beforeActions, agentProfile, workerId, onFork, onEdit, onR
     sleep: "Wartet",
     subAgentActivity: "Agentenaktivität",
   };
+  const changes = Array.isArray(i.changes) ? i.changes : [];
+  const rawOutput = <>
+    <ToolImages item={i}/>
+    {i.query && <ToolText value={i.query}/>}
+    {i.command && <ToolText value={i.command}/>}
+    {i.aggregatedOutput && !i.toolContent?.length && <ToolText value={i.aggregatedOutput}/>}
+    {i.error && <ToolText value={i.error}/>}
+    <ToolText value={toolOutputText(i)}/>
+  </>;
   return (
-    <details className="tool-item">
+    <details className="tool-item" {...disclosure}>
       <summary>
         <ActivityIcon item={i}/>
-        <span className={i.status === "failed" ? "activity-failed" : undefined}>{isComputerTool(i) && i.status !== "failed" ? i.arguments?.title || activityLabel(i, running && i.status === "inProgress") : activityLabel(i, running && i.status === "inProgress")}</span>
+        <span className={i.status === "failed" ? "activity-failed" : undefined}>{isComputerTool(i) && i.status !== "failed" ? i.arguments?.title || activityDetailLabel(i, running && i.status === "inProgress") : activityDetailLabel(i, running && i.status === "inProgress")}</span>
+        <DiffStats changes={changes} status={i.status}/>
 
 
         {icon(ChevronDown, 14)}
       </summary>
       <div className="tool-detail-label">{labels[i.type] || "Werkzeug"}{i.status === "failed" ? " · Fehlgeschlagen" : ""}</div>
       <div className="tool-provenance">{workerName(i.workerId || workerId || "codex")}{isComputerTool(i) ? " · Computer Use" : ""}</div>
-      <ToolImages item={i} />
-      {i.query && <ToolText value={i.query} />}
-      {i.command && <ToolText value={i.command} />}
-      {i.aggregatedOutput && !i.toolContent?.length && <ToolText value={i.aggregatedOutput} />}
-      {i.error && <ToolText value={i.error} />}
-      {(Array.isArray(i.changes) ? i.changes : []).map((c, n) => (
+      {!changes.length && rawOutput}
+      {changes.map((c, n) => (
         <div key={n}>
-          <button className="file-link" onClick={() => onFile(localFilePath(c.path, workspace, directory) || c.path)}>
+          <button className="file-link" title={c.path} onClick={() => onFile(localFilePath(c.path, workspace, directory) || c.path)}>
             {icon(FileText, 15)}
-            {c.path}
+            {c.path?.split(/[\\/]/).at(-1)}
           </button>
+          <DiffStats changes={[c]} status={i.status}/>
           <DiffView diff={c.diff} />
         </div>
       ))}
-      <ToolText value={toolOutputText(i)} />
+      {!!changes.length && <details className="tool-raw-output" open={!!toolOpen?.[`${i.id}:output`]} onToggle={event=>{if(event.target===event.currentTarget)onToolToggle?.(`${i.id}:output`,event.currentTarget.open);}}><summary>Werkzeugausgabe</summary>{rawOutput}</details>}
     </details>
   );
 }
 const projectGlyphs = { folder: Folder, code: Braces, briefcase: Briefcase, globe: Globe, idea: BrainCircuit, calendar: Calendar, message: MessageCircle, files: FileText };
-function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNumber = 0, showPaneHeader = false, isMaximized = false, onMaximize, onClosePane, onOpenFile, paneVisible = true, initialProject = "default" }) {
+function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNumber = 0, showPaneHeader = false, isMaximized = false, onMaximize, onClosePane, onOpenFile, paneVisible = true, paneActive = false, initialProject = "default" }) {
   const [libraryRevision,setLibraryRevision]=useState(0);
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     try { return Math.max(220, Math.min(400, Number(localStorage.getItem("sidebar-width")) || 268)); } catch { return 268; }
@@ -540,22 +577,27 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     setWorkspacePanel(next);
   }
   useEffect(() => { if (!embedded) { try { localStorage.setItem("sidebar-width", sidebarWidth); } catch {} } }, [sidebarWidth, embedded]);
-  const [paneOrder, setPaneOrder] = useState([0]);
-  const [mountedPanes, setMountedPanes] = useState([0]);
-  const [activePane, setActivePane] = useState(0);
+  const [savedLayout] = useState(() => readPaneLayout());
+  const [paneRestored, setPaneRestored] = useState(false);
+  const [paneOrder, setPaneOrder] = useState(savedLayout.order);
+  const [mountedPanes, setMountedPanes] = useState(() => [...new Set([0, ...savedLayout.order])]);
+  const [activePane, setActivePane] = useState(savedLayout.active);
   const [paneWidth, setPaneWidth] = useState(0);
-  const [paneWeights, setPaneWeights] = useState({});
+  const [paneWeights, setPaneWeights] = useState(savedLayout.weights);
   const [maximizedPane, setMaximizedPane] = useState(false);
   const [, redrawSessions] = useState(0);
   const sessions = useRef(Array.from({length:4}, () => ({current:null})));
   const selectedWorkspaceRef = useRef(initialProject);
-  const panesRef = useRef(null), activePaneRef = useRef(0), draftCache = useRef(new Map());
+  const panesRef = useRef(null), activePaneRef = useRef(savedLayout.active), draftCache = useRef(new Map());
   const [draftTitle, setDraftTitle] = useState("");
   const [draggingFiles, setDraggingFiles] = useState(false);
   const dragDepth = useRef(0), uploadCounts = useRef(new Map());
   const [pendingUploads, setPendingUploads] = useState([]);
   const draftKey = () => chatRef.current || `new:${projectRef.current}`;
   const sessionChanged = useCallback(() => redrawSessions(n => n + 1), []);
+  useEffect(() => {
+    if (!embedded) writePaneState("layout", {order:paneOrder, active:activePane, weights:paneWeights});
+  }, [embedded, paneOrder, activePane, paneWeights]);
   const visible = visiblePanes(paneOrder, activePane, paneWidth, maximizedPane);
   const activatePane = (id) => { activePaneRef.current = id; setActivePane(id); };
   function changePaneCount(count) {
@@ -583,6 +625,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const [greeting, setGreeting] = useState(nextChatGreeting);
   const [awayFromBottom, setAwayFromBottom] = useState(false);
   const [selectedTurn, setSelectedTurn] = useState(null);
+  const [replyTarget,setReplyTarget]=useState(null);
   const [expandedLists, setExpandedLists] = useState({});
   const [listClock, setListClock] = useState(Date.now());
   useEffect(() => { const timer = setInterval(() => setListClock(Date.now()), 30000); return () => clearInterval(timer); }, []);
@@ -593,9 +636,10 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const systemNoticeRef = useRef(null);
   const [boot, setBoot] = useState(null),
     [audioConnections, setAudioConnections] = useState({Groq:false, ElevenLabs:false}),
-    [view, setView] = useState(() => !embedded && ["inbox", "today", "calendar", "pipeline", "jobs", "work-evidence", "service"].includes(new URLSearchParams(window.location.search).get("view")) ? (["work-evidence", "service"].includes(new URLSearchParams(window.location.search).get("view")) ? "settings" : ["today", "pipeline"].includes(new URLSearchParams(window.location.search).get("view")) ? "chat" : new URLSearchParams(window.location.search).get("view")) : "chat"),
+    [view, setView] = useState(() => !embedded && ["inbox", "today", "calendar", "pipeline", "jobs", "firma", "work-evidence", "service"].includes(new URLSearchParams(window.location.search).get("view")) ? (["work-evidence", "service"].includes(new URLSearchParams(window.location.search).get("view")) ? "settings" : ["today", "pipeline"].includes(new URLSearchParams(window.location.search).get("view")) ? "chat" : new URLSearchParams(window.location.search).get("view")) : "chat"),
     [chatId, setChatId] = useState(null),
     [thread, setThread] = useState(null),
+    [privacyLocked, setPrivacyLocked] = useState(false),
     [chats, setChats] = useState([]),
     [active, setActive] = useState({}),
     [requests, setRequests] = useState([]),
@@ -664,6 +708,48 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     inputRef = useRef(null),
     uploadRef = useRef(null),
     followScroll = useRef(true);
+  const questionState = useComposerQuestion(requests, chatId, async (id, result) => {
+    await api("/respond", {id, result});
+    setRequests(rs => rs.filter(r => String(r.id) !== String(id)));
+  });
+  const ComposerInput = questionState.question?.isSecret ? "input" : "textarea";
+  const composerText = questionState.request ? questionState.text : text;
+  const setComposerText = value => questionState.request ? questionState.setText(typeof value === "function" ? value(questionState.text) : value) : setText(value);
+  const [engagedChatId, setEngagedChatId] = useState(undefined);
+  const paneShortcuts=usePaneShortcuts();
+  const paneShortcutState=useRef(null);
+  const selectedPane = embedded ? paneActive : activePane === 0;
+  const composerActive = selectedPane && engagedChatId === chatId;
+  const activateComposer = () => {
+    setEngagedChatId(chatId);
+    if (embedded) onActivate?.(); else activatePane(0);
+  };
+  paneShortcutState.current={bindings:paneShortcuts,view,modal,order:paneOrder,activate:activatePane};
+  useEffect(()=>{
+    if(embedded)return;
+    let frame;
+    const key=event=>{
+      const state=paneShortcutState.current;
+      if(state.view!=="chat" || state.modal || document.hidden || !document.hasFocus() || document.querySelector('[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"]'))return;
+      const id=matchPaneShortcut(event,state.bindings);
+      if(id<0)return;
+      event.preventDefault();
+      if(!state.order.includes(id)){notify(`Chat ${id+1} ist nicht geöffnet.`);return;}
+      state.activate(id);
+      cancelAnimationFrame(frame);
+      frame=requestAnimationFrame(()=>{
+        if(paneShortcutState.current.view==="chat" && activePaneRef.current===id)
+          sessions.current[id].current?.focusComposer();
+      });
+    };
+    window.addEventListener("keydown",key);
+    return()=>{window.removeEventListener("keydown",key);cancelAnimationFrame(frame);};
+  },[embedded]);
+  // A draft becoming a saved chat keeps intentional input focus. Restoration does not.
+  useEffect(() => {
+    setEngagedChatId(inputRef.current && document.activeElement === inputRef.current ? chatId : undefined);
+  }, [chatId]);
+  useEffect(() => { if (!selectedPane) setEngagedChatId(undefined); }, [selectedPane]);
   useEffect(() => {
     const field = inputRef.current;
     if (!field) return;
@@ -695,7 +781,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       observer.disconnect();
       document.fonts.removeEventListener("loadingdone", resize);
     };
-  }, [text, view, chatId, !!boot, boot?.settings?.textSize, boot?.settings?.uiFont, paneVisible]);
+  }, [composerText, view, chatId, !!boot, boot?.settings?.textSize, boot?.settings?.uiFont, paneVisible]);
   useLayoutEffect(() => {
     const area = inputRef.current?.closest(".composer-area");
     const pane = area?.closest(".chat-main");
@@ -752,9 +838,42 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         notify(e.message);
       }
     };
+  const chatLocked = privacyLocked || !!current?.locked;
+  useEffect(() => {
+    const changed = event => {
+      const {id, locked} = event.detail;
+      if (locked) {
+        setModal(null); setPanel(null); setSelectedFile(null); setTerminalOutput('');
+        setRequests(old=>old.filter(r=>r.params?.threadId !== id));
+        setChats(old=>old.map(c=>c.id === id ? {id:c.id,projectId:c.projectId,archived:c.archived,pinned:c.pinned,updatedAt:c.updatedAt,title:'Privater Chat',private:true,locked:true} : c));
+        setBoot(old=>old ? {...old,chats:[],requests:[]} : old);
+      }
+      if (chatRef.current === id) {
+        setPrivacyLocked(locked);
+        if (locked) {setThread(null);setLoading(false);}
+      }
+      refreshChats().catch(()=>{});
+    };
+    window.addEventListener(privacyEvent, changed);
+    return ()=>window.removeEventListener(privacyEvent, changed);
+  }, []);
+  useEffect(() => {
+    if (!chatId || !current?.private || chatLocked) return;
+    return watchChatPrivacy(api, chatId, ()=>{
+      changeChatPrivacy(api,'lock',chatId).catch(()=>notify('Chat hier gesperrt. Sperren auf anderen Geräten bitte nach Wiederverbindung erneut ausführen.'));
+    });
+  }, [chatId, current?.private, chatLocked]);
+  async function privacyUnlocked() {
+    setPrivacyLocked(false);
+    await refreshChats();
+    const id=chatRef.current;
+    const result=await api('/thread?id='+encodeURIComponent(id));
+    if(chatRef.current===id) setThread(result.thread);
+  }
   async function refreshChats() {
     const r = await api("/chats");
     setChats(r.chats);
+    for (const c of r.chats) if(c.locked && !locallyLocked(c.id)) privacyChanged(c.id);
     setActive(r.active);
   }
   useEffect(() => {
@@ -789,6 +908,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       sessionStorage.setItem(`agent-welcome:${b.workspace}`, "seen");
     }
     setChats(b.chats);
+    for (const c of b.chats) if(c.locked && !locallyLocked(c.id)) privacyChanged(c.id);
     setActive(b.active);
     setRequests(b.requests);
     setConnectionState(b.engine.connected ? "online" : "offline");
@@ -821,6 +941,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     es.onmessage = ({ data }) => {
       const e = JSON.parse(data),
         p = e.params || {};
+      if (e.method === 'chat/privacy') { api('/chat/privacy/status?id='+encodeURIComponent(p.id)).then(r=>privacyChanged(p.id,r.locked)).catch(()=>privacyChanged(p.id)); return; }
       if (e.method === 'wrapper/resync') { es.onopen?.(); api('/jobs').then(setJobs).catch(()=>{}); return; }
       if (e.method === 'core/event') {
         window.dispatchEvent(new CustomEvent('core/event', {detail:p}));
@@ -864,6 +985,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         return;
       }
       if (e.method === "wrapper/disconnected") {
+        setRequests(rs => rs.filter(r => r.workerId !== p.workerId));
         api("/status").then(s => setConnectionState(s.engine.connected ? "online" : "offline")).catch(() => setConnectionState("offline"));
         notify(p.message);
         return;
@@ -873,7 +995,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         return;
       }
       if (e.method === "wrapper/request") {
-        setRequests((r) => r.filter((x) => x.id !== p.id).concat(p));
+        setRequests(rs => rs.some(r => String(r.id) === String(p.id))
+          ? rs.map(r => String(r.id) === String(p.id) ? p : r) : [...rs,p]);
         return;
       }
       if (e.method === "wrapper/requestResolved") {
@@ -896,6 +1019,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         return;
       }
       setThread((prev) => {
+        if (locallyLocked(chatRef.current)) return null;
         if (!prev) return prev;
         const t = structuredClone(prev);
         t.turns ??= [];
@@ -991,6 +1115,25 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     scrollController.current?.sync();
   });
   useEffect(() => () => scrollController.current?.dispose(), []);
+  useEffect(()=>{
+    if(!replyTarget||loading||thread?.id!==replyTarget.chatId)return;
+    const frame=requestAnimationFrame(()=>{
+      const turn=document.getElementById(`pane-${paneNumber}-turn-${replyTarget.turnId}`);
+      if(turn){
+        followScroll.current=false;
+        const reply=turn.querySelector('.turn-response-header')||turn;
+        reply.scrollIntoView({block:'start',behavior:'instant'});
+        turn.focus({preventScroll:true});
+        setSelectedTurn(replyTarget.turnId);
+        setEngagedChatId(replyTarget.chatId);
+        const el=scrollRef.current;
+        setAwayFromBottom(!!el&&el.scrollHeight-el.scrollTop-el.clientHeight>24);
+      }
+      setReplyTarget(null);
+    });
+    return()=>cancelAnimationFrame(frame);
+  },[replyTarget,thread,loading,paneNumber]);
+
   useEffect(() => {
     if (embedded) return;
     function key(e) {
@@ -1126,6 +1269,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     setModal(null);
     setWorkspaceMenu(null);
     setView("chat");
+    setPrivacyLocked(false);
     setChatId(null);
     setThread(null);
     const nextWorker = draftWorker === "auto" ? boot.effectiveWorker || "codex" : draftWorker;
@@ -1139,22 +1283,41 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     setChatMenu(null);
     setTimeout(() => inputRef.current?.focus(), 50);
   }
-  async function openChat(id) {
+  const [weatherPreviewOpen,setWeatherPreviewOpen]=useState(false);
+  const statisticsRequestRef=useRef(null);
+  async function openStatisticsReport() {
+    if(statisticsRequestRef.current?.projectId!==projectRef.current)statisticsRequestRef.current={projectId:projectRef.current,requestId:crypto.randomUUID()};
+    const result=await api('/statistics/chat',{...statisticsRequestRef.current,timeZone:statisticsTimeZone(),worker:current?.workerId||draftWorker,model:pickerModel||model,serviceTier:current?.serviceTier||draftSpeed,mode});
+    await refreshChats();await openChat(result.thread.id,result.meta);statisticsRequestRef.current=null;
+  }
+  const weatherRequestRef=useRef(null);
+  async function openWeatherReport(item) {
+    if(!item.weatherConfigured || item.weather?.status==='unresolved'){openSettings('user');return;}
+    const key=projectRef.current+'|'+item.title;
+    if(weatherRequestRef.current?.key!==key)weatherRequestRef.current={key,requestId:crypto.randomUUID()};
+    const result=await api('/weather/chat',{requestId:weatherRequestRef.current.requestId,projectId:projectRef.current,worker:current?.workerId||draftWorker,model:pickerModel||model,serviceTier:current?.serviceTier||draftSpeed,mode});
+    await refreshChats();
+    await openChat(result.thread.id,result.meta);
+    weatherRequestRef.current=null;
+    if(result.summaryError)notify(result.summaryError);
+  }
+  async function openChat(id, restoredMetadata, targetTurnId) {
     if (!embedded) {
       const existing = paneOrder.find(slot => sessions.current[slot].current?.id === id);
-      if (existing != null && existing !== activePaneRef.current) { activatePane(existing); setView("chat"); return; }
+      if (existing != null && existing !== activePaneRef.current) { activatePane(existing); setView("chat"); if(targetTurnId)return sessions.current[existing].current.openChat(id, restoredMetadata, targetTurnId); return; }
       if (activePaneRef.current !== 0 && sessions.current[activePaneRef.current].current) {
         setView("chat");
-        return sessions.current[activePaneRef.current].current.openChat(id);
+        return sessions.current[activePaneRef.current].current.openChat(id, restoredMetadata, targetTurnId);
       }
     }
-    return openChatHere(id);
+    return openChatHere(id, restoredMetadata, targetTurnId);
   }
-  async function openChatHere(id) {
+  async function openChatHere(id, restoredMetadata, targetTurnId) {
     if (busy) { notify("Bitte warten, bis die Nachricht übertragen wurde."); return; }
+    if(targetTurnId){followScroll.current=false;setReplyTarget({chatId:id,turnId:targetTurnId});}
     if (chatRef.current === id) { setView("chat"); setModal(null); return; }
     saveDraft();
-    const metadata = chats.find((c) => c.id === id);
+    const metadata = restoredMetadata || chats.find((c) => c.id === id);
     chooseProject(metadata?.projectId || projectRef.current);
     setMode(metadata?.mode || "default");
     if (metadata?.model) setModel(metadata.model);
@@ -1167,17 +1330,19 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     setWorkspaceMenu(null);
     setView("chat");
     setChatId(id);
+    setPrivacyLocked(!!metadata?.locked);
     chatRef.current = id;
     setThread(null);
     setLoading(true);
     setChatMenu(null);
-    followScroll.current = true;
+    followScroll.current = !targetTurnId;
     try {
+      if (metadata?.locked) return;
       const r = await api("/thread?id=" + id);
       if (chatRef.current !== id) return;
       setThread(r.thread);
       if (r.thread.model) setModel(r.thread.model);
-      if (saved && !saved.following) { followScroll.current = false; requestAnimationFrame(() => { if (chatRef.current === id && scrollRef.current) scrollRef.current.scrollTop = saved.scroll; }); }
+      if (!targetTurnId && saved && !saved.following) { followScroll.current = false; requestAnimationFrame(() => { if (chatRef.current === id && scrollRef.current) scrollRef.current.scrollTop = saved.scroll; }); }
     } finally {
       if (chatRef.current === id) setLoading(false);
     }
@@ -1279,6 +1444,11 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   }
   async function submit(e, voiceText, includeDraft = false) {
     e?.preventDefault();
+    if (questionState.request) {
+      const answer = includeDraft ? [questionState.text, voiceText].filter(Boolean).join("\n") : voiceText ?? questionState.text;
+      await questionState.submit(answer);
+      return;
+    }
     const msg = includeDraft ? [text, voiceText].filter(Boolean).join("\n") : voiceText ?? text;
     const rejectVoice = message => {
       if (voiceText) {
@@ -1560,12 +1730,24 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   }, [projectId]);
   const linkOpened = useRef(false);
   useEffect(() => {
-    if (embedded || !boot || linkOpened.current) return;
+    if (!boot || linkOpened.current) return;
     linkOpened.current = true;
-    const id = new URL(window.location.href).searchParams.get("chat");
-    if (id) guard(() => openChatHere(id))();
+    const saved = readPaneSession(paneNumber);
+    const linkedId = !embedded && new URL(window.location.href).searchParams.get("chat");
+    const metadata = boot.chats.find(chat => chat.id === saved.chatId);
+    const id = linkedId || metadata?.id;
+    if (linkedId) { setPaneOrder(order => order.includes(0) ? order : [0, ...order.slice(1)]); activatePane(0); }
+    if (id) {
+      guard(() => openChatHere(id, linkedId ? undefined : metadata))();
+      if (!linkedId) setView(view);
+    }
+    else if (boot.projects.some(project => project.id === saved.projectId)) chooseProject(saved.projectId);
+    setPaneRestored(true);
   }, [!!boot]);
-  const chatTitle = current?.title || draftTitle || "Neuer Chat";
+  useEffect(() => {
+    if (paneRestored) writePaneState(`session:${paneNumber}`, {chatId, projectId});
+  }, [paneRestored, paneNumber, chatId, projectId]);
+  const chatTitle = chatLocked ? "Privater Chat" : current?.title || draftTitle || "Neuer Chat";
   const exportChat = () => {
     const blob = new Blob([conversationText(thread, chatTitle)], {type:"text/markdown;charset=utf-8"});
     const url = URL.createObjectURL(blob), a = document.createElement("a");
@@ -1574,24 +1756,26 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   };
   const copyConversation = guard(async () => { await navigator.clipboard.writeText(conversationText(thread, chatTitle)); notify("Gespräch kopiert."); });
   const localSession = {
+    welcome: !chatId && !loading && !thread?.turns?.length,
+    private:current?.private, locked:chatLocked, lock:guard(()=>changeChatPrivacy(api,"lock",chatId)),
     id:chatId, title:chatTitle, hasTitle:!!(current?.title || draftTitle), projectName:project?.name || "Allgemein",
     projectIcon:<span className="project-glyph" style={{color:projectColor(modal?.type === "project" && modal.project?.id === project?.id ? modal.color ?? project?.color : project?.color)}}>{icon(projectGlyphs[project?.icon] || Folder, 18)}</span>, running, busy, status:current?.lastTurnStatus, unread:hasUnreadReply(current),
     newDraft, openChat:openChatHere, projectId,
-    items:[
+    focusComposer:()=>{activateComposer();if(!chatLocked)inputRef.current?.focus({preventScroll:true});},
+    items:chatLocked ? [{id:'open',label:'PIN eingeben',icon:icon(Lock),action:()=>document.querySelector(`#chat-pane-${paneNumber} input`)?.focus()}, {id:'new',label:'Neuer Chat',icon:icon(Plus),disabled:busy,action:()=>newDraft(projectId)}] : [
+      ...(boot?.features?.chatPrivacy ? [{id:'privacy',label:current?.private ? 'Jetzt sperren' : 'Chat sperren …',icon:icon(Lock),disabled:!current || busy,action:current?.private ? guard(()=>changeChatPrivacy(api,'lock',chatId)) : ()=>setModal({type:'chat-privacy',action:'setup'})},
+        ...(current?.private ? [{id:'privacy-remove',label:'Schutz entfernen …',icon:icon(Lock),action:()=>setModal({type:'chat-privacy',action:'remove'})}] : [])] : []),
       {id:"rename",label:"Umbenennen",icon:icon(SquarePen),action:()=>setModal({type:"rename",chat:current || null})},
-      {id:"pin",label:current?.pinned ? "Loslösen" : "Anpinnen",icon:icon(Pin),disabled:!current,action:guard(()=>updateChat(current,{pinned:!current.pinned}))},
-      {id:"share",label:"Teilen …",icon:icon(ArrowUpRight),disabled:!current,action:()=>setModal("shareChat")},
-      {id:"fork",label:"Fork erstellen",icon:icon(GitBranch),disabled:!current || running || busy,action:guard(fork)},
-      ...(boot?.features?.operations?[{id:'compact',label:'Fortsetzungsnotiz erstellen',icon:icon(BrainCircuit),disabled:!current||running||busy,action:guard(async()=>{const note=await api('/memory/compact',{chatId});await openFile(note.path);setPanel('files');notify('Kompakte Fortsetzungsnotiz gespeichert. Das Originalgespräch bleibt erhalten.');})}]:[]),
-      {id:"copy",label:"Gespräch kopieren",icon:icon(Copy),disabled:!thread?.turns?.length,action:copyConversation},
-      {id:"export",label:"Als Markdown exportieren",icon:icon(Download),disabled:!thread?.turns?.length,action:exportChat},
-      {id:"switch",label:"Chat öffnen …",icon:icon(MessageCircle),action:()=>{setSearch("");setModal("search")}},
-      {id:"new",label:"Neuer Chat",icon:icon(Plus),action:()=>newDraft(projectId)},
+      {id:"pin",label:current?.pinned ? "Nicht mehr anpinnen" : "Anpinnen",icon:icon(Pin),disabled:!current || !!updatingChats[current?.id],action:guard(()=>updateChat(current,{pinned:!current.pinned}))},
+      {id:"share",label:"Teilen und exportieren …",icon:icon(ArrowUpRight),disabled:!current,action:()=>setModal("shareChat")},
+      {id:"fork",label:"Chat verzweigen",icon:icon(GitBranch),disabled:!current || current.private || running || busy || (current.capabilities?.fork ?? boot?.workers?.find(worker=>worker.id===pickerWorker)?.capabilities?.fork) !== true,action:guard(fork)},
+      ...(boot?.features?.operations?[{id:'compact',label:'Fortsetzungsnotiz erstellen',icon:icon(BrainCircuit),disabled:!current||current.private||!thread?.turns?.some(turn=>turn.status==="completed" && turn.items?.some(item=>["userMessage","agentMessage"].includes(item.type)))||running||busy,action:guard(async()=>{const note=await api('/memory/compact',{chatId});await openFile(note.path);setPanel('files');notify('Kompakte Fortsetzungsnotiz gespeichert. Das Originalgespräch bleibt erhalten.');})}]:[]),
+      {id:"new",label:"Neuer Chat",icon:icon(Plus),disabled:busy,action:()=>newDraft(projectId)},
       {id:"archive",label:"Archivieren",icon:icon(Archive),disabled:!current || running || busy || !!updatingChats[current?.id],action:guard(()=>updateChat(current,{archived:true}))},
     ],
   };
   (sessionRef || sessions.current[0]).current = localSession;
-  useEffect(() => { onSessionChange?.(); }, [chatId, chatTitle, project, running, busy, current?.pinned, current?.lastTurnStatus, current?.readTurnId, !!thread?.turns?.length]);
+  useEffect(() => { onSessionChange?.(); }, [loading, chatId, chatTitle, chatLocked, current?.private, project, running, busy, current?.pinned, current?.lastTurnStatus, current?.readTurnId, !!thread?.turns?.length]);
   const activeSession = !embedded && activePane !== 0 ? sessions.current[activePane].current : localSession;
   const headerSession = activeSession && {...activeSession, items:activeSession.items.map(item => ({...item, action:()=> (embedded ? sessionRef : sessions.current[activePane]).current?.items.find(current=>current.id===item.id)?.action()}))};
   const workspaceProject = boot?.projects?.find(p=>p.id === (headerSession?.projectId || projectId));
@@ -1609,19 +1793,28 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     (count, group) => count + group.skills.length,
     0,
   );
-  const visibleJobs = jobs.filter(
-    (j) =>
-      (jobFilter === "all" ||
-        (jobFilter === "manual" && j.schedule?.type === "manual") ||
-        (jobFilter === "scheduled" &&
-          j.schedule?.type !== "manual" &&
-          j.status !== "invalid") ||
-        (jobFilter === "attention" &&
-          (j.status === "invalid" ||
-            ["failed", "interrupted"].includes(j.lastRun?.status)))) &&
-      j.name.toLowerCase().includes(search.toLowerCase()),
-  );
+  useEffect(() => {
+    if (view !== 'jobs' || modal?.type !== 'job') return;
+    const frame = requestAnimationFrame(()=>document.querySelector('.job-detail-heading button')?.focus());
+    const close = e => { if (e.key === 'Escape' && !e.defaultPrevented) setModal(null); };
+    document.addEventListener('keydown', close);
+    return () => { cancelAnimationFrame(frame); document.removeEventListener('keydown', close); };
+  }, [view, modal?.type, modal?.job?.id, modal?.template?.id]);
+  const visibleJobs = filterJobs(jobs, jobFilter, search);
+  const jobEditor = modal?.type === 'job' && !modal.job?.managed ? <JobForm
+    key={modal.job?.id || modal.template?.id || 'new'}
+    routines={!!boot.features?.routines} configurationReady={!!boot.features?.jobConfiguration} initialTemplate={modal.template}
+    workers={boot.workers || []} projects={boot.projects || []}
+    modelsByWorker={boot.modelsByWorker || {}} defaultProjectId={projectId}
+    job={modal.job} connections={integrations.connections}
+    onSave={guard(async job => {
+      await api('/jobs/save', job);
+      setJobs(await api('/jobs'));
+      setModal(null);
+    })}
+  /> : null;
   const nav = [
+      ...(boot?.features?.firma?[["firma", Briefcase, "Firma"]]:[]),
       ["inbox", Inbox, "Inbox"],
       ["jobs", Clock, "Aufträge"],
       ...(boot?.features?.library?[["library", FileText, "Bibliothek"]]:[]),
@@ -1657,14 +1850,15 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const readablePane = embedded ? paneVisible : visible.includes(0);
   useEffect(() => {
     const last = thread?.turns?.at(-1);
-    if (!foreground || view !== "chat" || !readablePane || awayFromBottom || running || last?.status !== "completed" || !hasUnreadReply(current)) return;
+    if (!canReadPaneReply({foreground, visible:view === "chat" && readablePane, selected:selectedPane,
+      engagedChatId, chatId, away:awayFromBottom, running, completed:last?.status === "completed", unread:hasUnreadReply(current)})) return;
     const timer = setTimeout(() => {
       const el = scrollRef.current;
-      if (!el || el.scrollHeight - el.scrollTop - el.clientHeight > 150) return;
+      if (!el || document.visibilityState !== "visible" || !document.hasFocus() || el.scrollHeight - el.scrollTop - el.clientHeight > 150) return;
       api("/chat/read", {id:chatId,turnId:last.id}).then(result=>setChats(old=>old.map(c=>c.id===chatId ? {...c,readTurnId:result.readTurnId} : c))).catch(()=>{});
     }, 700);
     return () => clearTimeout(timer);
-  }, [foreground, view, readablePane, awayFromBottom, running, thread, chatId, current?.lastCompletedTurnId, current?.readTurnId]);
+  }, [foreground, view, readablePane, selectedPane, engagedChatId, awayFromBottom, running, thread, chatId, current?.lastCompletedTurnId, current?.readTurnId]);
   const notificationState = useJobNotifications(api, !!boot?.features?.routines && !embedded, notify);
   const [requestSignal, setRequestSignal] = useState(0);
   const previousRequests = useRef(null);
@@ -1742,7 +1936,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         ) : (
           <>
             <nav>
-              {nav.map(([id, I, label]) => (
+              {nav.filter(([id])=>id!=="firma").map(([id, I, label]) => (
                 <button
                   key={id}
                   className={
@@ -1757,6 +1951,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 </button>
               ))}
             </nav>
+            {boot.features?.firma&&<><div className="sidebar-section-label">Wissen und Abläufe</div><nav><button className={"nav-item "+(view==="firma"?"selected":"")} onClick={()=>setView("firma")}>{icon(Briefcase)}Firma</button></nav></>}
             <div className="workspace-projects">
               <div className="sidebar-section-label projects-heading"><span>Workspace</span><IconButton label="Neuer Workspace" onClick={()=>setModal({type:"project"})}>{icon(Plus,16)}</IconButton></div>
               {(boot.projects || []).map((space) => (
@@ -1806,12 +2001,14 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                             <span className="chat-row-title">{c.title}</span>
                             {c.pinned && <span className="chat-pin" title="Angepinnt">{icon(Pin, 12)}</span>}
                             <span className="chat-age">{relativeTime(c.updatedAt, listClock)}</span>
+                            {c.private && <span className="chat-row-lock" role="img" aria-label={c.locked ? "Gesperrt" : "Privat, entsperrt"}>{icon(Lock,15)}</span>}
                             <span className="chat-state" role="img" aria-label={active[c.id] ? "In Arbeit" : hasUnreadReply(c) ? "Ungelesene Antwort" : c.lastTurnStatus === "failed" ? "Fehlgeschlagen" : c.lastTurnStatus === "interrupted" ? "Gestoppt" : undefined}>
                               {active[c.id] ? <AppLoader /> : hasUnreadReply(c) ? <span className="chat-complete">{icon(Check, 15)}</span> : c.lastTurnStatus === "failed" ? icon(AlertCircle, 15) : c.lastTurnStatus === "interrupted" ? icon(Pause, 14) : null}
                             </span>
                           </button>
                           <IconButton
                             label={"Chat-Aktionen: " + c.title}
+                            disabled={c.locked}
                             onClick={() =>
                               setChatMenu(chatMenu === c.id ? null : c.id)
                             }
@@ -1868,6 +2065,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
             <div className="chat-workspace">
             {!embedded && view === "chat" && <header className="topbar chat-topbar floating-chat-topbar">
               <div className="row">
+                {chats.find(c=>c.id===headerSession?.id)?.firmaItemId&&<button type="button" className="firma-back" onClick={()=>setView("firma")}>Firma</button>}
                 {!sidebar && <IconButton label="Seitenleiste anzeigen" onClick={() => setSidebar(true)}>{icon(PanelLeft)}</IconButton>}
               </div>
               <div className="row">
@@ -1877,11 +2075,12 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               </div>
             </header>}
 
-            {!embedded && paneOrder.length > 1 && (visible.length < paneOrder.length || maximizedPane) && <div className="pane-tabs" role="tablist" aria-label="Offene Chat-Panels">
+            {!embedded && paneOrder.length > 1 && (visible.length < paneOrder.length || maximizedPane) && <div className="pane-tabs" role="tablist" aria-label="Offene Chats">
               {paneOrder.map(id => { const session=sessions.current[id].current; return <button key={id} role="tab" tabIndex={activePane===id ? 0 : -1} onKeyDown={e=>{const offset=e.key==="ArrowRight"?1:e.key==="ArrowLeft"?-1:0;if(offset){e.preventDefault();const next=paneOrder[(paneOrder.indexOf(id)+offset+paneOrder.length)%paneOrder.length];activatePane(next);requestAnimationFrame(()=>panesRef.current?.parentElement.querySelector(`[aria-controls="chat-pane-${next}"]`)?.focus())}}} aria-selected={activePane===id} aria-controls={`chat-pane-${id}`} onClick={()=>activatePane(id)}>{session?.running ? <AppLoader /> : session?.unread ? icon(Check,14) : icon(MessageCircle,14)}<span>{session?.title || `Chat ${id+1}`}</span></button> })}
               {maximizedPane && <IconButton label="Aufteilung wiederherstellen" onClick={()=>setMaximizedPane(false)}>{icon(PanelLeft,16)}</IconButton>}
             </div>}
             <div className={"chat-panes " + (!embedded && visible.length > 1 ? "multiple" : "")} ref={embedded ? undefined : panesRef}>
+            {!embedded && sharedParticlesEnabled(boot.settings.welcomeParticles || "on", visible.map(id => sessions.current[id].current)) && <WelcomeParticles reduceMotion={boot.settings.reduceMotion === "on"} theme={boot.settings.theme} />}
             <section
               id={`chat-pane-${paneNumber}`}
               role="region" aria-label={`Chat ${paneNumber+1}: ${chatTitle}`}
@@ -1889,22 +2088,22 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               data-trailing-pane={!embedded && visible.at(-1) === 0 ? "true" : undefined}
               hidden={!embedded && !visible.includes(0)}
               style={embedded ? undefined : {order:paneOrder.indexOf(0)*2, flexGrow:paneWeights[0] || 1}}
-              onPointerDownCapture={()=>embedded ? onActivate?.() : activatePane(0)}
-              onFocusCapture={()=>embedded ? onActivate?.() : activatePane(0)}
               className={"chat-main pane-slot " + ((!embedded && activePane === 0) ? "active-pane" : "") }
-              onDragEnter={e=>{if(!Array.from(e.dataTransfer.types).includes("Files")) return; e.preventDefault(); e.stopPropagation(); dragDepth.current++; setDraggingFiles(true);}}
+              onPointerDownCapture={activateComposer}
+              onFocusCapture={activateComposer}
+              onDragEnter={e=>{if(chatLocked) return; if(!Array.from(e.dataTransfer.types).includes("Files")) return; e.preventDefault(); e.stopPropagation(); dragDepth.current++; setDraggingFiles(true);}}
               onDragOver={e=>{if(!Array.from(e.dataTransfer.types).includes("Files")) return; e.preventDefault(); e.stopPropagation(); e.dataTransfer.dropEffect="copy";}}
               onDragLeave={e=>{e.stopPropagation(); if(--dragDepth.current <= 0) {dragDepth.current=0;setDraggingFiles(false);}}}
-              onDrop={e=>{if(!Array.from(e.dataTransfer.types).includes("Files")) return; e.preventDefault(); e.stopPropagation(); dragDepth.current=0; setDraggingFiles(false); void upload(e.dataTransfer.files);}}
+              onDrop={e=>{if(chatLocked) {e.preventDefault();return;} if(!Array.from(e.dataTransfer.types).includes("Files")) return; e.preventDefault(); e.stopPropagation(); dragDepth.current=0; setDraggingFiles(false); void upload(e.dataTransfer.files);}}
             >
-              {((boot.settings.welcomeParticles === "all") || (!chatId && !loading && !thread?.turns?.length && (boot.settings.welcomeParticles || "on") === "on")) && <WelcomeParticles reduceMotion={boot.settings.reduceMotion === "on"} theme={boot.settings.theme} />}
               {draggingFiles && <div className="chat-file-drop" role="status">{icon(Paperclip,24)}<span>Dateien hier anhängen</span></div>}
               {(embedded ? showPaneHeader : paneOrder.length > 1) && <div className="pane-header"><div className="row">
                 <ChatTitle session={localSession} compact extraItems={[
                   {id:"maximize-panel", label:(embedded ? isMaximized : maximizedPane) ? "Aufteilung wiederherstellen" : `Chat ${paneNumber+1} maximieren`, icon:icon(Maximize,16), action:()=>embedded ? onMaximize?.() : (activatePane(0),setMaximizedPane(v=>!v))},
-                  {id:"close-panel", label:`Panel ${paneNumber+1} schließen`, icon:icon(X,16), action:()=>embedded ? onClosePane?.() : closePane(0)},
+                  {id:"close-panel", label:`Chat ${paneNumber+1} schließen`, icon:icon(X,16), action:()=>embedded ? onClosePane?.() : closePane(0)},
                 ]}/>
               </div></div>}
+              {chatLocked ? <LockedChat key={chatId} id={chatId} api={api} onDone={()=>void privacyUnlocked().catch(error=>notify(error.message))}/> : <>
               <ChapterScrubber className="message-index" reduceMotion={boot.settings.reduceMotion === "on"}
                 chapters={(thread?.turns || []).filter(t=>t.items?.some(i=>i.type === "userMessage")).map((t,n)=>({
                   id:t.id, title:`Eingabe ${n+1}`, meta:<MessageTime value={t.startedAt}/>,
@@ -1921,13 +2120,14 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 {loading ? (
                   <Skeleton variant="chat" label="Gespräch wird geladen …"/>
                 ) : !thread?.turns?.length ? (
-                  <ChatStart api={api} routines={!!boot.features?.routines} revision={libraryRevision} composing={!!text.trim() || attachments.length>0} greeting={greeting} profile={boot.settings} requests={requests} notifications={notificationState.data?.items || []} chats={chats} projectId={projectId} error={notificationState.error}
+                  <ChatStart visible={foreground && view === "chat" && readablePane} api={api} routines={!!boot.features?.routines} revision={libraryRevision} composing={!!text.trim() || attachments.length>0} greeting={greeting} profile={boot.settings} requests={requests} notifications={notificationState.data?.items || []} chats={chats.filter(c=>!c.private)} projectId={projectId} error={notificationState.error}
                     onOpen={async item=>{
-                      if(item.kind==='weather'){openSettings('user');return;}
+                      if(item.kind==='statistics'){await openStatisticsReport();return;}
+                      if(item.kind==='weather'){await openWeatherReport(item);return;}
                       if(item.prompt){setText(item.prompt);inputRef.current?.focus();return;}
                       if(item.entry){setModal({type:'library-file',entry:item.entry,entries:[item.entry]});return;}
                       if(item.job){setModal({type:'job',job:item.job});return;}
-                      if(item.threadId){await openChat(item.threadId);return;}
+                      if(item.threadId){await openChat(item.threadId,undefined,item.turnId);return;}
                       if(item.kind==='request'){setModal("activity");return;}
                       if(item.kind==='report'){
                         const result=await api("/planner/chat",{id:item.noticeId});await refreshChats();await openChat(result.thread.id);
@@ -1943,14 +2143,14 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       const previous = dayLabel(thread.turns[index - 1]?.startedAt);
                       return <React.Fragment key={t.id}>
                         {date && date !== previous && <div className="chat-day-divider"><span>{date}</span></div>}
-                        <ChatTurn agentProfile={boot.settings} paneNumber={paneNumber} workerId={current?.workerId || "codex"} workspace={boot.workspace} directory={current?.cwd || boot.workspace} turn={t} running={running && t.id === active[chatId]} onFork={guard(() => fork(t))}
+                        <ChatTurn statisticsApi={api} statisticsSnapshot={current?.statisticsSnapshot} agentProfile={boot.settings} paneNumber={paneNumber} workerId={current?.workerId || "codex"} workspace={boot.workspace} directory={current?.cwd || boot.workspace} turn={t} running={running && t.id === active[chatId]} onFork={guard(() => fork(t))}
                           onEdit={guard(() => revise(t))} onRetry={guard(() => revise(t, true))}
                           onDelete={() => setModal({type: "delete-message", turn: t})}
                           actionsDisabled={running || busy} waiting={requests.some(r => r.params?.threadId === chatId)} visible={foreground && view === "chat" && readablePane} onFile={guard(openFile)} />
                       </React.Fragment>;
                     })}
                     {requests
-                      .filter((r) => r.params?.threadId === chatId)
+                      .filter((r) => r.params?.threadId === chatId && !questionRequest(r))
                       .map((r) => (
                         <RequestCard
                           key={r.id}
@@ -1965,8 +2165,10 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 )}
               </div>
               <div className="composer-area">
-                {awayFromBottom && <button className="jump-latest" aria-label="Zur neuesten Nachricht" onClick={()=>{followScroll.current=true;setAwayFromBottom(false);setSelectedTurn(null);scrollController.current?.sync()}}>{icon(ArrowUp,18)}</button>}
+                {chats.find(c=>c.id===chatId)?.firmaItemId&&<FirmaReview api={api} chatId={chatId} revision={(thread?.turns?.at(-1)?.id||"")+":"+(thread?.turns?.at(-1)?.status||"")} running={running||busy}/> }
+                {awayFromBottom && <button className="jump-latest" aria-label="Zur neuesten Nachricht" onClick={()=>{setSelectedTurn(null);scrollController.current?.resume()}}>{icon(ArrowUp,18)}</button>}
                 <form className={"composer pill-composer " + (mode === "plan" ? "planning" : "")} onSubmit={guard(submit)}>
+                  <ComposerQuestion state={questionState} onActivate={activateComposer} />
                   {(attachments.length > 0 || pendingUploads.some(item=>item.key === (chatId || `new:${projectId}`))) && (
                     <div className="attachments" aria-label="Angehängte Dateien">
                       {pendingUploads.filter(item=>item.key === (chatId || `new:${projectId}`)).map(item=><span className="attachment" key={item.id} role="status">{<AppLoader size={14} />}<span className="attachment-name">{item.name}</span><span>Wird angeheftet …</span></span>)}
@@ -1991,9 +2193,10 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       ))}
                     </div>
                   )}
-                  <div className="composer-entry">
+                  <ComposerFocus active={composerActive} multiple={embedded ? showPaneHeader : paneOrder.length > 1} visible={foreground && view === "chat" && readablePane} onActivate={activateComposer}>
                       <IconButton
                         label="Dateien anhängen"
+                        disabled={!!questionState.request}
                         onClick={(e) => {
                           e?.preventDefault();
                           uploadRef.current.click();
@@ -2001,14 +2204,16 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       >
                         {icon(Plus, 21)}
                       </IconButton>
-                  <textarea
+                  <ComposerInput
+                    type={questionState.question?.isSecret ? "password" : undefined}
                     ref={inputRef}
-                    placeholder="Nachricht"
-                    aria-label="Nachricht"
-                    value={text}
+                    placeholder={questionState.request ? "Sonstiges" : "Nachricht"}
+                    readOnly={!!questionState.request && (!questionState.question?.custom || questionState.pending)}
+                    aria-label={`${questionState.request ? "Sonstiges zur Rückfrage" : "Nachricht"} für Chat ${paneNumber+1}${composerActive ? ", ausgewählt" : ""}`}
+                    value={composerText}
                     rows={1}
-                    onChange={(e) => setText(e.target.value)}
-                    onPaste={e=>{const files=Array.from(e.clipboardData.files || []); if(files.length) {e.preventDefault(); void upload(files);}}}
+                    onChange={(e) => setComposerText(e.target.value)}
+                    onPaste={e=>{if(questionState.request) return; const files=Array.from(e.clipboardData.files || []); if(files.length) {e.preventDefault(); void upload(files);}}}
                     onKeyDown={(e) => {
                       if (
                         e.key === "Enter" &&
@@ -2020,9 +2225,16 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       }
                     }}
                   />
-                      <Dictation api={api} notify={notify} chatId={chatId || "draft:" + projectId} enabled={embedded ? paneVisible : visible.includes(0)} running={running || busy || !!uploadCounts.current.get(chatId || `new:${projectId}`)} onText={(transcript) => setText(previous => previous ? previous + "\n" + transcript : transcript)} onVoiceText={transcript => submit(undefined, transcript)} onSendText={transcript => submit(undefined, transcript, true)} reply={(() => { const t = thread?.turns?.filter(t => !t.clientPending && t.status !== "inProgress").at(-1); return t ? { id:t.id, chatId, status:t.status, text:t.items?.filter(i => i.type === "agentMessage" && i.phase !== "commentary").map(i => i.text || "").join("\n") || "" } : null; })()} openSettings={() => { setSettingsTab("voice"); setView("settings"); }} />
+                      <Dictation shortcutEnabled={foreground && view === "chat" && readablePane && selectedPane && !chatLocked} api={api} notify={notify} chatId={chatId || "draft:" + projectId} enabled={embedded ? paneVisible : visible.includes(0)} running={running || busy || questionState.pending || !!uploadCounts.current.get(chatId || `new:${projectId}`)} onText={(transcript) => setComposerText(previous => previous ? previous + "\n" + transcript : transcript)} onVoiceText={transcript => submit(undefined, transcript)} onSendText={transcript => submit(undefined, transcript, true)} reply={(() => { const t = thread?.turns?.filter(t => !t.clientPending && t.status !== "inProgress").at(-1); return t ? { id:t.id, chatId, status:t.status, text:t.items?.filter(i => i.type === "agentMessage" && i.phase !== "commentary").map(i => i.text || "").join("\n") || "" } : null; })()} openSettings={() => { setSettingsTab("voice"); setView("settings"); }} />
                     <div className="composer-send-actions">
-                      {running ? (
+                      {questionState.request ? (
+                        <>
+                          {running && <IconButton label="Antwort stoppen" onClick={guard(() => api("/stop", {id:chatId}))}>{icon(Square,17)}</IconButton>}
+                          <button className="send-button" type="submit" disabled={!questionState.canSend} aria-label={questionState.index < questionState.model.questions.length-1 ? "Antwort übernehmen und weiter" : "Rückfrage beantworten"}>
+                            {questionState.pending ? <AppLoader size={21}/> : icon(ArrowUp,21)}
+                          </button>
+                        </>
+                      ) : running ? (
                         <>
                           <IconButton
                             label="Antwort stoppen"
@@ -2052,7 +2264,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                         </button>
                       )}
                     </div>
-                  </div>
+                  </ComposerFocus>
                   <div className="composer-options" role="group" aria-label="Nachrichtenoptionen">
                       <ModelPicker
                         mode={mode} onModeChange={setMode} modeDisabled={running || busy}
@@ -2092,9 +2304,10 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                   onChange={guard((e) => upload(e.target.files))}
                 />
               </div>
+              </>}
             </section>
             {!embedded && mountedPanes.filter(id=>id!==0).map(id=><div key={id} data-pane={id} data-trailing-pane={visible.at(-1) === id ? "true" : undefined} hidden={!visible.includes(id)} className={"pane-slot secondary-pane " + (activePane===id ? "active-pane" : "")} style={{order:paneOrder.indexOf(id)*2, flexGrow:paneWeights[id] || 1}}>
-              <App embedded paneVisible={view === "chat" && visible.includes(id)} paneNumber={id} sessionRef={sessions.current[id]} onSessionChange={sessionChanged} initialProject={projectId} isMaximized={maximizedPane} showPaneHeader={paneOrder.length>1} onActivate={()=>activatePane(id)} onMaximize={()=>{activatePane(id);setMaximizedPane(v=>!v)}} onClosePane={()=>closePane(id)} onOpenFile={path=>{activatePane(id);requestAnimationFrame(()=>guard(openFile)(path))}}/>
+              <App embedded paneVisible={view === "chat" && visible.includes(id)} paneActive={activePane===id} paneNumber={id} sessionRef={sessions.current[id]} onSessionChange={sessionChanged} initialProject={projectId} isMaximized={maximizedPane} showPaneHeader={paneOrder.length>1} onActivate={()=>activatePane(id)} onMaximize={()=>{activatePane(id);setMaximizedPane(v=>!v)}} onClosePane={()=>closePane(id)} onOpenFile={path=>{activatePane(id);requestAnimationFrame(()=>guard(openFile)(path))}}/>
             </div>)}
             {!embedded && visible.slice(0,-1).map((id,index)=><div className="pane-divider-slot" key={`divider-${id}`} style={{order:paneOrder.indexOf(id)*2+1}}><PaneDivider value={Math.round(100*(paneWeights[id] || 1)/((paneWeights[id] || 1)+(paneWeights[visible[index+1]] || 1)))} onResize={delta=>resizePanes(id,visible[index+1],delta)}/></div>)}
             </div>
@@ -2209,12 +2422,15 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
             )}
           </div>
         )}
-        {view === "chat" ? null : view === "inbox" ? (
+        {view === "chat" ? null : view === "firma" ? (
+          <FirmaPage PageHeading={PageHeading} api={api} onShowSidebar={!sidebar?()=>setSidebar(true):undefined} onChat={async (id,warning)=>{await refreshChats();await openChat(id);if(warning)notify(warning);}}/>
+        ) : view === "inbox" ? (
           <InboxPage key={projectId} api={api} projectId={projectId} PageHeading={PageHeading} sidebarHost={inboxSidebarHost} sidebarVisible={sidebar} onShowSidebar={() => setSidebar(true)} onHideSidebar={() => setSidebar(false)} onBack={() => setView("chat")}/>
         ) : view === "today" || view === "calendar" ? (
           <PlannerPage key={projectId} projectId={projectId} PageHeading={PageHeading} section={view} onSection={setView} onShowSidebar={!sidebar ? () => setSidebar(true) : undefined} api={api} crmEnabled={!!boot.features?.crmCore} notifications={notificationState} notificationsEnabled={!!boot.features?.routines} requests={requests.length} onRequests={()=>setModal("activity")} onNotifications={id=>setModal(id?{type:"notifications",id}:"notifications")} onConnections={()=>{setSettingsTab("connections");setView("settings");}} onJobs={()=>setView("jobs")} onBriefing={async item=>{const result=await api("/planner/chat", {id:item.id, ...(item.demo?{demoDate:item.demoDate}: {})});await refreshChats();await openChat(result.thread.id);}}/>
         ) : view === "jobs" ? (
-          <div className="page">
+          <div className={`jobs-layout${modal?.type === 'job' ? ' has-detail' : ''}`}>
+          <div className="page jobs-page">
             <PageHeading title="Aufträge" onShowSidebar={!sidebar ? () => setSidebar(true) : undefined}>
               {boot.features?.routines&&<IconButton label="Benachrichtigungen öffnen" aria-haspopup="dialog" aria-expanded={modal === "notifications" || modal?.type === "notifications"} onClick={()=>setModal("notifications")}><NotificationBell signal={bellSignal} />{notificationState.data?.unread>0&&<i className="notification-dot"/>}</IconButton>}
               <button className="primary small-button" onClick={() => setModal({ type: "job" })}>{icon(Plus, 16)}Erstellen</button>
@@ -2228,13 +2444,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               placeholder={jobFilter === "templates" ? "Vorlagen suchen" : "Aufträge suchen"}
             />
             <div className="tabs">
-              {[
-                ["all", "Alle"],
-                ["manual", "Manuell"],
-                ["scheduled", "Routinen"],
-                ["attention", "Braucht Aufmerksamkeit"],
-                ["templates", "Vorlagen"],
-              ].map(([id, label]) => (
+              {jobFilters.map(([id, label]) => (
                 <button
                   key={id}
                   className={jobFilter === id ? "selected" : ""}
@@ -2249,7 +2459,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
             {jobFilter !== "templates" && jobsLoading && !jobs.length && !jobsError && <Skeleton layout="jobs" label="Aufträge werden geladen …"/>}
             {jobFilter !== "templates" && jobsError && <p role="alert">{jobsError} <button onClick={loadJobs}>Erneut laden</button></p>}
             {visibleJobs.map((j) => (
-              <div className="job-row" key={j.id}>
+              <div className={`job-row${modal?.job?.id === j.id ? ' selected' : ''}`} key={j.id}>
                 <div className="job-status">
                   {icon(
                     j.status === "invalid" || j.lastRun?.status === "failed"
@@ -2262,7 +2472,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 </div>
                 <button
                   className="job-info"
-                  onClick={() => j.managed ? (setSettingsTab(j.id==='system-memory'?'memory':j.id==='system-backup'||j.id==='system-cleanup'?'storage':'system'),setView('settings')) : setModal({ type: 'job', job: j })}
+                  onClick={() => setModal({ type: 'job', job: j })}
                 >
                   <strong>{j.name}</strong>
                   <span>
@@ -2279,22 +2489,20 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                             : "Täglich") +
                           " um " +
                           j.schedule?.time}{" "}
-                    · {workerName(j.worker)}
-                    {j.schedule?.type !== "manual" &&
-                      j.status === "paused" &&
-                      " · Pausiert"}
+                    · {j.managed ? 'System' : (boot.projects.find(p=>p.id === (j.projectId || 'default'))?.name || 'Workspace')} · {jobStateLabel(j)}
                     {j.lastRun &&
                       " · " +
                         {
                           completed:
                             j.worker === "n8n"
                               ? "Webhook beantwortet"
-                              : "Abgeschlossen",
+                              : "Letzter Lauf erfolgreich",
                           failed: "Fehlgeschlagen",
                           running: "Läuft",
                           queued: "In Warteschlange",
                           dispatching: "Wird übergeben",
                           interrupted: "Gestoppt",
+                          cancelled: "Abgebrochen",
                         }[j.lastRun.status]}
                   </span>
                 </button>
@@ -2350,12 +2558,12 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 )}
               </div>
             ))}
-            {jobFilter !== "templates" && jobs.length > 0 && visibleJobs.length === 0 && (
+            {jobFilter !== "templates" && jobs.some(j=>Boolean(j.managed)===(jobFilter==='system')) && visibleJobs.length === 0 && (
               <Empty Icon={Search} title="Keine passenden Aufträge">
                 Wähle einen anderen Filter oder ändere deinen Suchbegriff.
               </Empty>
             )}
-            {jobFilter !== "templates" && !jobsLoading && !jobsError && !jobs.length && (
+            {jobFilter !== "templates" && !jobsLoading && !jobsError && !jobs.some(j=>Boolean(j.managed)===(jobFilter==='system')) && (
               <Empty
                 Icon={Clock}
                 title="Dein erster Auftrag"
@@ -2373,9 +2581,25 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               </Empty>
             )}
             <div className="page-note">
-              {icon(Clock, 15)}Zeitpläne laufen, solange diese Schaltzentrale
-              auf dem Mac aktiv ist.
+              {icon(Clock, 15)}Zeitpläne laufen im Hintergrund, solange der Mac wach und der Dienst aktiv ist.
             </div>
+          </div>
+          {modal?.type === 'job' && <section className="job-detail" aria-label="Auftragsdetails">
+            <div className="row between job-detail-heading"><h2>{modal.job?.name || 'Neuer Auftrag'}</h2><IconButton label="Details schließen" onClick={()=>setModal(null)}>{icon(X,18)}</IconButton></div>
+            {modal.job?.managed ? <>
+              <p className="section-intro">{modal.job.description || modal.job.instructions}</p>
+              <p>{jobStateLabel(jobs.find(j=>j.id===modal.job.id) || modal.job)}</p>
+              {modal.job.id === 'system-index' && <p className="form-help">Der Suchindex wird im Hintergrund alle 30 Sekunden aktualisiert. „Jetzt ausführen“ stößt eine zusätzliche Aktualisierung an.</p>}
+              <button onClick={()=>{setSettingsTab(modal.job.id==='system-memory'?'memory':['system-backup','system-cleanup'].includes(modal.job.id)?'storage':'system');setModal(null);setView('settings');}}>Systemeinstellungen öffnen</button>
+              {modal.job.lastRun?.coreRunId && <CoreRunDetails api={api} id={modal.job.lastRun.coreRunId}/>}
+            </> : <>
+              {modal.job?.lastRun && <div className="row job-detail-links">
+                <button onClick={()=>setModal({type:'job-run',job:modal.job})}>Letzte Ausführung ansehen</button>
+                {modal.job.lastRun.threadId && <button onClick={guard(async()=>{const id=modal.job.lastRun.threadId;setModal(null);await openChat(id);})}>Ergebnis im Chat öffnen</button>}
+              </div>}
+              {jobEditor}
+            </>}
+          </section>}
           </div>
         ) : view === "library" ? (
           <LibraryPage revision={libraryRevision} api={api} notify={notify} projects={boot.projects} PageHeading={PageHeading} onShowSidebar={!sidebar?()=>setSidebar(true):undefined} onOpen={(entry,entries)=>setModal({type:'library-file',entry,entries})} onReuse={guard(async entry=>{const file=await api('/library/reuse',{id:entry.id,projectId});setAttachments(a=>[...a,file]);setView('chat');})} onSource={guard(async entry=>{if(chats.some(c=>c.id===entry.threadId))await openChat(entry.threadId);else notify('Das Quellgespräch ist nicht verfügbar.');})}/>
@@ -2555,6 +2779,9 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                     <select aria-label="Flächenlicht" value={boot.settings.panelLight || "animated"} onChange={e => guard(() => saveSettings({panelLight: e.target.value}))()}>{appearanceOptions.panelLight.options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
                   </SettingRow>
                   <StartTextMotionSetting/>
+                  <WeatherMotionSetting/>
+                  <SettingRow title="Wettervorschau" description="Wetterzustände und Tageszeiten direkt ausprobieren."><button type="button" aria-expanded={weatherPreviewOpen} onClick={()=>setWeatherPreviewOpen(value=>!value)}>{weatherPreviewOpen?'Vorschau schließen':'Wettervorschau öffnen'}</button></SettingRow>
+                  {weatherPreviewOpen&&<WeatherPreview/>}
                   <SettingRow title="Reiseeffekt" description="Sanft wandernde Lichtpunkte auf der Startansicht oder in allen Chats.">
                     <select aria-label="Reiseeffekt" value={boot.settings.welcomeParticles || "on"} onChange={e => guard(() => saveSettings({welcomeParticles: e.target.value}))()}>{appearanceOptions.welcomeParticles.options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
                   </SettingRow>
@@ -2728,7 +2955,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 </div>
               </>
             ) : settingsTab === "shortcuts" ? (
-              <div className="settings-group">
+              <><PaneShortcutSettings/><div className="settings-group">
                 {[
                   ["Neuer Chat", "⌘ N"],
                   ["Chats durchsuchen", "⌘ K"],
@@ -2743,7 +2970,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                     action={<kbd>{key}</kbd>}
                   />
                 ))}
-              </div>
+              </div></>
             ) : settingsTab === "archive" ? (
               <>
                 <SearchBox
@@ -2790,6 +3017,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         setBoot(old => ({...old, settings: {...old.settings, name:profile.name, avatar:profile.avatar, avatarColor:profile.avatarColor, avatarConfigured:true}}));
         setWelcome(false);
       }} />}
+      {modal?.type === 'chat-privacy' && <ChatPrivacyDialog id={chatId} action={modal.action} api={api} onClose={()=>setModal(null)} onDone={()=>{setModal(null);void refreshChats();}}/>}
       {modal?.type === "delete-message" && (
         <Modal title="Nachricht löschen?" onClose={() => setModal(null)}>
           <p>Diese Nachricht, die zugehörige Antwort und alle folgenden Nachrichten werden aus dem Gespräch gelöscht. Bereits ausgeführte Dateiänderungen bleiben bestehen.</p>
@@ -2856,13 +3084,13 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         </Modal>
       )}
       {modal === "shareChat" && <Modal title="Chat teilen" onClose={()=>setModal(null)}>
-        <p>Teile den Gesprächsinhalt als Text oder Markdown-Datei. Der lokale Link öffnet diesen Chat in dieser App auf diesem Rechner.</p>
+        <p>Kopiere den Gesprächsinhalt oder lade ihn als Markdown-Datei herunter. Der Chat-Link funktioniert nur mit Zugang zu dieser App.</p>
         <Field label="Lokaler Chat-Link"><input readOnly value={`${window.location.origin}/?chat=${encodeURIComponent(chatId)}`} onFocus={e=>e.target.select()}/></Field>
         <div className="action-list">
           <button onClick={guard(async()=>{await navigator.clipboard.writeText(`${window.location.origin}/?chat=${encodeURIComponent(chatId)}`);notify("Lokalen Chat-Link kopiert.")})}>{icon(Link)}Lokalen Link kopieren</button>
-          <button onClick={copyConversation}>{icon(Copy)}Gespräch kopieren</button>
-          <button onClick={exportChat}>{icon(Download)}Markdown herunterladen</button>
-          {typeof navigator.share === "function" && <button onClick={guard(async()=>{try {await navigator.share({title:chatTitle,text:conversationText(thread,chatTitle)});} catch(error){if(error.name!=="AbortError")throw error;}})}>{icon(ArrowUpRight)}Über System teilen …</button>}
+          <button disabled={!thread?.turns?.length} onClick={copyConversation}>{icon(Copy)}Gespräch kopieren</button>
+          <button disabled={!thread?.turns?.length} onClick={exportChat}>{icon(Download)}Markdown herunterladen</button>
+          {typeof navigator.share === "function" && <button disabled={!thread?.turns?.length} onClick={guard(async()=>{try {await navigator.share({title:chatTitle,text:conversationText(thread,chatTitle)});} catch(error){if(error.name!=="AbortError")throw error;}})}>{icon(ArrowUpRight)}Über System teilen …</button>}
         </div>
       </Modal>}
       {modal?.type === "project" && (
@@ -3189,26 +3417,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
           </>}
         </Modal>
       )}
-      {modal?.type === "job" && (
-        <Modal
-          title={modal.job ? "Auftrag bearbeiten" : "Neuer Auftrag"}
-          wide
-          onClose={() => setModal(null)}
-        >
-          <JobForm
-            routines={!!boot.features?.routines}
-            initialTemplate={modal.template}
-            workers={boot.workers || []}
-            job={modal.job}
-            connections={integrations.connections}
-            onSave={guard(async (job) => {
-              await api("/jobs/save", job);
-              setJobs(await api("/jobs"));
-              setModal(null);
-
-            })}
-          />
-        </Modal>
+      {modal?.type === "job" && view !== 'jobs' && (
+        <Modal title={modal.job ? "Auftrag bearbeiten" : "Neuer Auftrag"} wide onClose={() => setModal(null)}>{jobEditor}</Modal>
       )}
       {modal?.type === "skill" && (
         <Modal title={skillName(modal.skill)} onClose={() => setModal(null)}>
@@ -3237,13 +3447,17 @@ function SearchBox({ value, onChange, placeholder, autoFocus }) {
     </div>
   );
 }
-function JobForm({ job, initialTemplate, connections, workers, onSave, routines }) {
+function JobForm({ job, initialTemplate, connections, workers, projects, modelsByWorker, defaultProjectId, onSave, routines, configurationReady }) {
   const [templateId, setTemplateId] = useState(initialTemplate?.id || "");
   const template = jobTemplates.find(t => t.id === templateId);
   const [draft, setDraft] = useState(() => job || (initialTemplate ? jobFromTemplate(initialTemplate.id) : {}));
   const [active, setActive] = useState(job?.status === "active");
   const [schedule, setSchedule] = useState(job?.schedule?.type || initialTemplate?.schedule.type || "manual"),
     [worker, setWorker] = useState(job?.worker || "auto");
+  const [model, setModel] = useState(job?.model || '');
+  const [effort, setEffort] = useState(job?.effort || '');
+  const models = modelsByWorker[worker] || [];
+  const selectedModel = models.find(m=>m.model===model);
   return (
     <form
       onSubmit={(e) => {
@@ -3255,6 +3469,9 @@ function JobForm({ job, initialTemplate, connections, workers, onSave, routines 
           instructions: f.get("instructions"),
           worker,
           connectionId: f.get("connectionId"),
+          projectId: f.get('projectId'),
+          model: worker === 'auto' || ['python','n8n'].includes(worker) ? '' : model,
+          effort: model && worker !== 'auto' && !['python','n8n'].includes(worker) ? effort : '',
           ...(worker==='python'?{python:{handler:'script',script:f.get('script'),timeout:Number(f.get('timeout')),input:JSON.parse(String(f.get('pythonInput')||'{}'))},retry:{count:Number(f.get('retries')||0),idempotent:f.get('idempotent')==='on'}}:{}),
           ...(f.get('notificationTarget') ? {notification:{target:f.get('notificationTarget'),when:f.get('notificationWhen')||'always'}} : {}),
           schedule: {
@@ -3302,16 +3519,19 @@ function JobForm({ job, initialTemplate, connections, workers, onSave, routines 
       <Field label="Aufgabe">
         <textarea
           name="instructions"
-          rows={6}
+          rows={3}
           value={draft.instructions || ""}
           onChange={e => setDraft(d => ({...d, instructions: e.target.value}))}
           placeholder="Was soll erledigt werden? Welche Eingaben werden gebraucht? Wo soll das Ergebnis liegen?"
           required
         />
       </Field>
+      <Field label="Workspace" hint="Jeder Lauf erstellt einen eigenen Chat in diesem Workspace.">
+        <select name="projectId" defaultValue={job?.projectId || defaultProjectId || 'default'}>{projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select>
+      </Field>
       <div className="form-grid">
         <Field label="Ausführen mit">
-          <select value={worker} onChange={(e) => setWorker(e.target.value)}>
+          <select value={worker} onChange={(e) => {setWorker(e.target.value);setModel('');setEffort('');}}>
             <option value="auto">Automatisch · Standard und Vertretung</option>
             {workers.map(w => <option key={w.id} value={w.id} disabled={!w.configured}>{w.name}{!w.configured ? " · Noch nicht verbunden" : ""}</option>)}
             <option value="n8n">n8n · Fester Ablauf</option>
@@ -3332,11 +3552,17 @@ function JobForm({ job, initialTemplate, connections, workers, onSave, routines 
           </select>
         </Field>
       </div>
-      <p className="form-help">
-        {worker !== "n8n"
-          ? "Nutzt die gemeinsame Firmenbasis und speichert Ergebnisse beim Auftrag. Eine feste Worker-Auswahl bleibt verbindlich."
-          : "Startet einen vorhandenen Ablauf. Die Antwort des Webhooks wird protokolliert; sie bestätigt nicht automatisch das fachliche Ergebnis."}
-      </p>
+      {!['auto','python','n8n'].includes(worker) && <div className="form-grid">
+        <Field label="Modell"><select value={model} onChange={e=>{setModel(e.target.value);setEffort('');}}>
+          <option value="">Standard des Anbieters</option>
+          {model && !selectedModel && <option value={model} disabled>{model} · Nicht verfügbar</option>}
+          {models.filter(m=>!m.hidden).map(m=><option key={m.model} value={m.model}>{m.displayName || m.model}</option>)}
+        </select></Field>
+        <Field label="Reasoning"><select value={effort} disabled={!selectedModel?.supportedReasoningEfforts?.length} onChange={e=>setEffort(e.target.value)}>
+          <option value="">Standard des Modells</option>
+          {(selectedModel?.supportedReasoningEfforts || []).map(o=><option key={o.reasoningEffort} value={o.reasoningEffort}>{o.displayName || o.reasoningEffort}</option>)}
+        </select></Field>
+      </div>}
       {worker==='python'&&<>
         <Field label="Python-Datei im Auftragsordner" hint="Zum Beispiel main.py unter jobs/<Auftrags-ID>. Die JSON-Eingabe kommt über stdin, das Ergebnis über stdout. Ein Muster liegt unter examples/python-job.py."><input name="script" defaultValue={job?.python?.script||'main.py'} required pattern="[a-zA-Z0-9_./-]+\.py"/></Field>
         <Field label="Eingabe als JSON-Objekt"><textarea name="pythonInput" rows={4} defaultValue={JSON.stringify(job?.python?.input||{},null,2)} onChange={e=>{try{const v=JSON.parse(e.target.value);e.target.setCustomValidity(v&&typeof v==='object'&&!Array.isArray(v)?'':'Ein JSON-Objekt eingeben.');}catch{e.target.setCustomValidity('Gültiges JSON eingeben.');}}}/></Field>
@@ -3374,6 +3600,7 @@ function JobForm({ job, initialTemplate, connections, workers, onSave, routines 
       {schedule==='weekly'&&<Field label="Wochentage"><div className="row job-weekdays">{['Mo','Di','Mi','Do','Fr','Sa','So'].map((label,day)=><label key={day} className="checkbox-label"><input type="checkbox" name="days" value={day} defaultChecked={(job?.schedule?.days||[0]).includes(day)}/>{label}</label>)}</div></Field>}
       {schedule==='once'&&<Field label="Termin · Zeitzone dieses Geräts"><input type="datetime-local" name="at" required defaultValue={job?.schedule?.at ? new Date(new Date(job.schedule.at).getTime()-new Date(job.schedule.at).getTimezoneOffset()*60000).toISOString().slice(0,16) : ''}/></Field>}
       {routines&&<NotificationPreference api={api} Field={Field} job={job} form/>}
+      {!configurationReady && <p className="form-help" role="status">Die neuen Auftragseinstellungen werden nach dem Serverneustart verfügbar.</p>}
       <div className="row between">
         {schedule !== "manual" ? (
           <label className="checkbox-label">
@@ -3383,7 +3610,7 @@ function JobForm({ job, initialTemplate, connections, workers, onSave, routines 
         ) : (
           <span className="form-help">Nach dem Speichern manuell starten.</span>
         )}
-        <button className="primary">Auftrag speichern</button>
+        <button className="primary" disabled={!configurationReady}>Auftrag speichern</button>
       </div>
     </form>
   );

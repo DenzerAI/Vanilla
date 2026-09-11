@@ -6,7 +6,7 @@ test('reauthentication reconnects one shared stream and preserves every chat sub
   const original=globalThis.EventSource, sources=[];
   globalThis.EventSource=class {
     readyState=0; listeners={};
-    constructor(url){assert.equal(url,'/api/events');sources.push(this);}
+    constructor(url){assert.match(url,/^\/api\/events\?client=[a-f0-9]{64}$/);sources.push(this);}
     addEventListener(name,listener){this.listeners[name]=listener;}
     close(){this.readyState=2;}
   };

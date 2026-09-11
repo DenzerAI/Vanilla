@@ -68,3 +68,24 @@ zugeordnet; Profilwerte gehören zum Modul `settings`.
 Der neutrale UI-Bauplan und die Buildprüfung sind als Modul `ui-blueprint`
 registriert. Sie begleiten Designübernahmen in bestehende eigene Module;
 Anwendung, UI-Referenz und Designquellen werden gemeinsam gebaut und geprüft.
+
+## Gemeinsamer Entwicklungsstand
+
+Die Chat-Erweiterungen verwenden weiterhin dieselben Kernspeicher, nativen
+Worker-Anschlüsse und Nachrichtenübergaben. `firma`, `chat-privacy` und
+`statistics` sind mit eigenen Datenverträgen registriert. Rückfragen und
+Kontingente ergänzen `workers`, Tastenkürzel `dictation` und `settings`,
+Wetterberichte den vorhandenen `weather`-Anschluss. Gemeinsame Darstellung,
+Markenassets und Pixeltextur bleiben Plattformbausteine.
+
+Bestehende IDs, Workspace-/Jobordner, Firmenquellen, Anbieterprofile und
+Memory-Ablagen werden durch diese Integration nicht umbenannt oder verschoben.
+Die einzelnen Module dokumentieren additive Felder und Rückkehrgrenzen.
+Insbesondere setzt alter Code die neue Privatsperre nicht durch; eine Rückkehr
+darf den Schutz nicht unbemerkt aufheben. Native Rückfragen sind vor einem
+Adapterwechsel zu beantworten oder zu stoppen. Der zusätzliche Claude-
+Kontrollabruf verwendet dieselbe Installation wie der reguläre Worker.
+
+Das spätere Bereichskonzept ist damit noch nicht umgesetzt. Die bestehenden
+Projektkennungen und die zentrale Assistentenidentität bilden dessen Grundlage;
+dieser Stand führt keine zusätzlichen Bereichspersönlichkeiten ein.

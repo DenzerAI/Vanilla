@@ -78,6 +78,7 @@ backup*/
 !/wrapper/ui/assets/
 !/wrapper/ui/assets/fonts/
 !/wrapper/ui/assets/fonts/*.woff2
+!/wrapper/ui/assets/fonts/QuicksandVariable.ttf
 !/wrapper/ui/assets/fonts/*-LICENSE.txt
 !/wrapper/ui/assets/icons/
 !/wrapper/ui/assets/icons/*-LICENSE.txt
@@ -180,6 +181,7 @@ cache/
 !/wrapper/public/*.js
 !/wrapper/public/*.css
 !/wrapper/public/*.svg
+!/wrapper/public/*.png
 !/wrapper/public/*.webmanifest
 !/wrapper/ui/assets/a2a.svg
 !/wrapper/ui/assets/crm/

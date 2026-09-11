@@ -109,6 +109,39 @@ Ruhige neutrale Bedienelemente bestimmen die Oberfläche. Der bisherige Markenak
 
 Textfarben müssen mindestens 4,5:1 Kontrast zu ihren vorgesehenen Flächen erreichen. Status benötigt zusätzlich Text. Tastaturfokus muss sichtbar sein. Die CI-Werte stehen in der Unterseite „Unser Design“; interaktive Bausteinbeispiele verändern nur ihren lokalen Vorschauzustand. Nutzereinstellungen umfassen Hell/Dunkel, die Farbwelten Ausgewogen/Warm/Neutral, Hervorhebung in Terrakotta/Graphit/Salbei, Inter/Systemschrift, drei Schriftgrößen und reduzierte Bewegung. `ui/appearance.mjs` definiert die erlaubten Optionen für Oberfläche und Server gemeinsam. Schriftgrößen skalieren die Rollen aus `typography`, ohne eine zweite Größentabelle. Projektsymbole werden als stabile Schlüssel gespeichert. Chatlisten zeigen standardmäßig alle Gespräche im verfügbaren Scrollbereich; „Weniger anzeigen“ begrenzt auf fünf aktuelle Gespräche plus angepinnte Chats; alle Texte einschließlich „Neuer Chat“ und „Mehr anzeigen“ teilen dieselbe linke Kante. Statussymbole stehen links vor dem Chatnamen: rotierender Ring während der Arbeit, grüner Haken bei erfolgreichem Abschluss, eigene Symbole für Fehler und Unterbrechung. Die Farbe `chat-complete` ist zentral und für beide Themes definiert.
 
+### Aufmerksamkeit in der Chatliste
+
+In der Mehrfachansicht bestätigt Pointer-Aktivierung auf der gesamten Chat-Pane
+oder Tastaturfokus innerhalb der Pane die bewusste Auswahl eines Chats. Sichtbarkeit und wiederhergestellte
+Panelauswahl allein bestätigen keine Antwort als gelesen; dafür gelten zusätzlich
+Vordergrund, sichtbares aktives Panel, Antwortabschluss und Leseposition am Ende.
+Klicks auf Freiflächen, Nachrichten und Bedienelemente wählen die zugehörige Pane
+und aktivieren die vorhandene Composer-Kontur. Sie setzen keinen Schreibfokus;
+das Eingabefeld wird weiterhin direkt fokussiert. Scrollen allein wählt keine Pane.
+
+`ComposerFocus` markiert nur die Eingabehülle: inaktive Composer bleiben mit
+90 % Deckkraft leicht gedämpft, die aktive Eingabe behält ihre normale Deckkraft
+und eine 1-px-Kontur. Ein breiter, gedämpfter neutraler Schimmer läuft bei Auswahl kontinuierlich
+in 18 Sekunden entlang derselben Kante, mit gleichmäßigem nahtlosem Umlauf. Der Lichtbogen umfasst 110 Grad mit weichen Flanken; 250 Grad bleiben ohne Schimmer. Die ruhige Grundkontur ist schwächer als der wandernde Bogen (14 % in Dunkel, 18 % in Hell). Keine ganze Pane wird beleuchtet.
+Mehrzeilige Eingaben übernehmen dieselbe Rundung, Menüs und Trefferflächen bleiben
+frei. Farben, Deckkraft und Dauer liegen in der zentralen Designquelle. Verborgene
+Ansichten pausieren; reduzierte Bewegung zeigt nur die ruhige Kontur und erzwungener
+Kontrast eine Systemkontur. Die Dauerbewegung ist über Aussehen → Bewegung reduzieren abschaltbar;
+die statische Auswahlkontur bleibt dabei sichtbar.
+Unser Design zeigt vier Eingaben mit demselben Baustein. Visuelle Anregung:
+[Border Trail](https://21st.dev/community/components/motion-primitives/border-trail),
+eigene Umsetzung ohne importierten Fremdcode oder neue Abhängigkeit.
+
+Chatnamen ohne offenen Status verwenden `muted`; laufende Chats, ungelesene
+Antworten, Fehler und Unterbrechungen verwenden `text`. Der vorhandene
+zugänglich beschriftete Chatstatus steuert diese Hervorhebung auch bei Hover
+und Touch. Die Auswahlfläche bleibt davon unabhängig, die Reihenfolge stabil.
+Ungelesene abgeschlossene Antworten behalten den grünen Haken aus dem
+Iconkatalog mit einer zusätzlichen Kontur von 2 SVG-Einheiten; laufende Chats
+verwenden weiterhin den ausgewählten AppLoader. Keine neue Ladevariante.
+Nach bestätigtem Lesen entfällt die Hervorhebung über den bestehenden Lesestatus.
+Diese Darstellungsänderung benötigt keine Datenmigration.
+
 ## Schriften und Lizenznachweise
 
 Die Font-Dateien und vollständigen SIL-OFL-1.1-Lizenztexte liegen unter `ui/assets/fonts/`. Originalquellen und SHA-256-Prüfsummen stehen in `sources.json`. Die Originalschriften werden unverändert ausgeliefert. Inter stammt aus Release v4.1; die genaue IBM-Plex-Revision ist im Quellenverzeichnis festgehalten. Die Schriftlizenzen sind direkt in der Aussehen-Ansicht aufklappbar. Fonts werden ausschließlich vom lokalen Server geladen; keine Abhängigkeit von einem externen Font-CDN. Die bestehende Content Security Policy bleibt erhalten.
@@ -220,9 +253,17 @@ Lange Texte dürfen wachsen und umbrechen. Ohne Blur oder bei reduzierter
 Transparenz gelten surface/raised als deckende Ersatzflächen. Unser Design
 verwendet denselben Baustein mit einer lokalen Entwurfsvorschau.
 
-Die Seitenleiste ist eine nach innen versetzte Fläche mit großen Rundungen und Abstand zum Fensterrand. Der Composer verwendet die getönte Farbrolle `composer-blur` mit 40 px Hintergrundunschärfe, verstärkter Sättigung und einer dezenten inneren Glaskante aus `composer-glass-shadow`. Bei reduzierter Transparenz oder fehlender Blur-Unterstützung bleibt die Fläche deckend. Der Verlauf läuft dahinter weiter; sein Endabstand passt sich der Eingabehöhe an. Der Reiseeffekt ist unter Aussehen für neue oder alle Chats wählbar.
+Die Seitenleiste ist eine nach innen versetzte Fläche mit großen Rundungen und Abstand zum Fensterrand. Der Composer verwendet die getönte Farbrolle `composer-blur` mit 40 px Hintergrundunschärfe, verstärkter Sättigung und einer dezenten inneren Glaskante aus `composer-glass-shadow`. Bei reduzierter Transparenz oder fehlender Blur-Unterstützung bleibt die Fläche deckend. Der Verlauf läuft dahinter weiter; sein Endabstand passt sich der Eingabehöhe an. Anhang-Bubbles verwenden die gemeinsame dezente Tönung, Unschärfe und innere Kante aus glass-button-tint, glass-button-blur und glass-button-edge, mit deckender Ersatzfläche bei reduzierter Transparenz oder fehlendem Blur. Der Reiseeffekt ist unter Aussehen für neue oder alle Chats wählbar.
 
 Die Einzelansicht zeigt oben nur schwebende Kopfaktionen einschließlich kompaktem Chatmenü. Der Verlauf fadet oben und unter der Schreibfläche aus; Modus und Modell stehen frei auf der Grundfarbe. ScrollEdgeFade blendet scrollende Chat- und Suchlisten ausschließlich an überlaufenden Kanten aus: normalerweise 8 px, am unteren Rand der Seitenleisten-Chatliste 32 px bis zur Panelunterkante. Der Scrollbereich endet dort ohne zusätzliche abgeschnittene Textkante. Am Listenende entfällt der Fade; 32 px Inhaltsabstand halten den letzten Eintrag vollständig lesbar. Auswahlfläche und Fokus bleiben außerhalb dieses schmalen Randes klar; im erzwungenen Kontrastmodus entfällt die Maske. Lange Seitenleistennamen verwenden am rechten Textrand einen Fade statt Auslassungspunkten, die Ziehkante bleibt im Ruhezustand unsichtbar. Mikrofon und Senden teilen kreisrunde Bedienflächen.
+
+## Scrollleisten in Popups
+
+Dialoge, Popover und Auswahlmenüs verbergen native Scrollleisten einschließlich
+ihrer inneren Scrollbereiche über die gemeinsame Regel in `ui/styles.css`.
+Überlauf bleibt mit Rad, Trackpad, Touch und Tastatur erreichbar; Scrollhöhen,
+Fokusführung und Schließen bleiben unverändert. Im erzwungenen Kontrastmodus
+gelten die bisherigen Systemdarstellungen. Reine CSS-Änderung ohne Datenmigration.
 
 ## macOS-nahe Bausteine als verbindliche Referenz
 
@@ -404,7 +445,7 @@ Der rechte Bereich „Workspace“ verwendet die eigene Rolle `workspace-panel-b
 
 Ab Beginn steht über der Agentenantwort eine eigene Autorenzeile: ausgewählter Avatar, tatsächlicher Agentenname und relatives Nachrichtenalter (zum Beispiel „vor 2 Min.“). Der exakte Zeitstempel bleibt im Tooltip und time-Element zugänglich. Direkt unter dem jeweils neuesten Antworttext, vor den bei Hover eingeblendeten Nachrichtenaktionen, stehen ausgewählter AppLoader, Live-Status, Schrittanzahl und tatsächliche Bearbeitungszeit. Diese aufklappbare ActivityGroup wandert beim Streaming mit dem Text nach unten und bleibt nach Abschluss dort als kompakter Verlauf erhalten. Ohne Werkzeuge steht der kompakte Arbeitsstatus ebenfalls direkt unter dem Text vor den Aktionen. Die Aktionszeile reserviert keinen Platz zwischen Text und Status. Die Anzeige liegt im normalen Gesprächsfluss, ohne Inhalte zu überdecken; manuelles Hochscrollen pausiert weiterhin das automatische Mitlaufen. Der Spinner endet mit der Arbeit und behauptet keinen weiteren Fortschritt.
 
-Zwischenmeldungen bleiben während der Arbeit im Gespräch sichtbar. Sobald eine abschließende Antwort vorliegt und die Arbeit beendet ist, werden Zwischenmeldungen und Werkzeugschritte in ihrer ursprünglichen Reihenfolge in die automatisch geschlossene Gruppe aufgenommen. Aufklappen zeigt den vollständigen Ablauf. Laufende oder fehlgeschlagene Turns ohne Abschlussantwort verlieren ihre sichtbaren Zwischenmeldungen nicht. Nutzernachrichten und Antworten behalten ihre Reihenfolge; Nachträge werden nicht vor die erste Nutzernachricht verschoben.
+Zwischenmeldungen bleiben während der Arbeit im Gespräch sichtbar. Sobald eine abschließende Antwort vorliegt und die Arbeit beendet ist, werden Zwischenmeldungen und Werkzeugschritte in ihrer ursprünglichen Reihenfolge in die standardmäßig geschlossene Gruppe aufgenommen. Aufklappen zeigt den vollständigen Ablauf. Laufende oder fehlgeschlagene Turns ohne Abschlussantwort verlieren ihre sichtbaren Zwischenmeldungen nicht. Nutzernachrichten und Antworten behalten ihre Reihenfolge; Nachträge werden nicht vor die erste Nutzernachricht verschoben.
 
 Antworten nutzen die zentrale 15-px-Rolle conversation und die native Systemschrift (auf macOS San Francisco). Nutzernachrichten und Desktop-Eingabe nutzen control (14 px); Touch-Eingabe bleibt in reading. Links verwenden blue und Unterstreichung. Routinemäßige Prüfberichte werden nicht als Abschlussanhang erzeugt oder verlinkt. Dateien gehören in die Antwort, wenn sie ein angefragtes oder direkt nützliches Ergebnis liefern, etwa eine HTML-Visualisierung.
 
@@ -647,8 +688,11 @@ AttentionFan. Heute entfällt im Hauptmenü; Kalender und bestehende Direktlinks
 bleiben über die Suche nutzbar. Aufbau und Verhalten führt [surfaces/chat.md](surfaces/chat.md).
 
 
-Der leere Chat verwendet einen Composer im normalen Flexfluss unter dem separat
-scrollbaren Einstieg. Keine Karte oder Navigation liegt hinter der Eingabe.
+Der leere Chat verwendet denselben schwebenden Composer wie der Gesprächsverlauf.
+Der scrollbare Einstieg reicht bis zum unteren Panelrand: Karten und Text laufen
+hinter Eingabe und Anhängen weiter, ohne harte Schnittkante an deren Oberseite.
+Der gemeinsame untere Fade und der dynamische Composer-Endabstand halten die
+letzten Inhalte und die Kartennavigation vollständig erreichbar.
 Der größere Avatar steht mittig über dem rahmenlosen Text. Zwei feste Textzeilen halten den Einstieg beim Schreiben und beim Satzwechsel stabil. AttentionFan nutzt
 suggestion-glass, die gemeinsame Glaskante und 28 px Blur, mit deckenden Fallbacks.
 Maus-Hover hebt eine Karte in ihrer bestehenden Position an und betont ihre Kontur;
@@ -672,7 +716,7 @@ ungelesene Antworten, Routine-Ergebnisse, das letzte abgeschlossene Gespräch im
 Workspace und den nächsten geplanten Auftrag. Jede Karte benennt ihre Aktion.
 Beliebige zuletzt geänderte Dateien und nicht angebundenes Wetter werden nicht
 als Arbeitsanlass angeboten. Gespräche führen in ihren Chat, Ergebnisse in den
-Berichtschat, Aufträge in den bestehenden Dialog. Öffnen startet keine Arbeit.
+Berichtschat, Aufträge in den bestehenden Dialog. Diese Aktionen starten keine Arbeit; die eingerichtete Wetterkarte startet auf ausdrücklichen Klick ihren Bericht mit kurzer Einordnung.
 Ohne Anschluss bleibt ein Vorschlag, der nur den Entwurf vorbereitet.
 
 Der gemeinsame Skeleton mit Variante `attention` reserviert dieselbe Kartenhöhe,
@@ -702,7 +746,435 @@ bei einer einzelnen Karte ihre Höhe. Die Startreferenz zeigt denselben Avatar,
 Textbaustein und Fächer.
 
 
-Die angeschlossene Wetterkarte bleibt im Startfächer reserviert. Open-Meteo liefert Temperatur und Wetterlage; Quelle und Datenstand sind sichtbar. Ortssuche und bestätigte Koordinaten stehen unter Dein Profil. Speichern, erneutes Öffnen, Fokus und zehn Minuten im sichtbaren Chatstart aktualisieren das Wetter. Eindeutig passende alte Ortsnamen werden aufgelöst; mehrdeutige Orte erfordern Auswahl. Lade- und Abruffehler ersetzen keine Wetterwerte durch Beispiele. Wetter & Ort öffnet das Profil mit Aktualisieren-Aktion.
+Die angeschlossene Wetterkarte bleibt im Startfächer reserviert. Open-Meteo liefert Temperatur und Wetterlage; Quelle und Datenstand sind im Wetterbericht sichtbar. Ortssuche und bestätigte Koordinaten stehen unter Dein Profil. Speichern, erneutes Öffnen, Fokus und zehn Minuten im sichtbaren Chatstart aktualisieren das Wetter. Eindeutig passende alte Ortsnamen werden aufgelöst; mehrdeutige Orte erfordern Auswahl. Lade- und Abruffehler ersetzen keine Wetterwerte durch Beispiele. Ohne bestätigten Ort öffnet die Karte das Profil; mit eingerichtetem Ort öffnet sie einen neuen Wetterchat.
+
+### Aufträge mit Detailbereich
+
+Die Auftragsseite verwendet vorhandene Tabs für Nutzerstatus, System und Vorlagen.
+Ein ausgewählter Auftrag öffnet rechts das gemeinsame JobForm, auf schmalen
+Fenstern ersetzt es die Liste mit erreichbarer Schließen-Aktion. Die Liste
+verwendet job-row, Details die vorhandenen Formular- und Einstellungsbausteine.
+Zeitplanstatus und letzter Lauf bleiben unterscheidbar. Vollständiger Vertrag:
+[surfaces/jobs.md](surfaces/jobs.md).
+
+## Vanilla als App-Marke
+
+Browser und installierte Web-App heißen Vanilla. Ihr festes Icon unter
+`public/app-icon.svg` übernimmt die neutrale Nori-Geometrie aus
+`ui/assets/avatars/faces/nori.svg`, einschließlich Antenne, Augen und Sockel.
+Die deckende quadratische Fläche verwendet die bestehende helle Palette
+(surface #eae7df, text #292720). Das Motiv bleibt innerhalb der Maskierungszone;
+die Plattform bestimmt die Außenrundung. Keine im Bild eingebauten Schatten.
+PNG-Ausgaben in 192, 512 und 1024 px ergänzen das SVG im Manifest;
+180 px dienen als Apple-Touch-Icon und 32 px als Browser-Fallback.
+Die SVG-Datei ist die Quelle aller Rasterausgaben. Herkunft und geprüfte
+Asset-Hashes stehen in `scripts/design-assets.json` und der Source-Policy.
+Der frei konfigurierbare Agentenname und seine Avatarwahl bleiben eigenständig.
+
+Der Agentenname im gemeinsamen Seitenleistenkopf verwendet für jeden Namen die
+lokal gebündelte Rundschrift Quicksand über `font-agent-name`, Größe `section`
+und Gewicht `semibold`. Umbenennen ändert nur den Text, niemals die Typografie.
+Großschreibung bleibt erhalten; lange Namen werden mit Ellipse begrenzt, der
+Button nennt den vollständigen Namen. Der Startname ist Vanilla und frei änderbar.
+Die übrige Oberfläche behält ihre UI-Schrift. Unser Design zeigt die Namensschrift
+samt Lizenz und dasselbe AgentMenu. Die feste Produktwortmarke unter
+`public/vanilla-wordmark.svg` bleibt in der Markenreferenz über VanillaWordmark
+verfügbar; sie ersetzt keinen konfigurierbaren Agentennamen.
+
+
+Die Chat-Panels trennt eine leise, 1 px breite warmgraue Haarlinie aus der
+zentralen Theme-Rolle `pane-seam`. Oben und unten läuft sie über 96 px aus.
+Der vorhandene PaneDivider behält seine unsichtbare Trefferbreite von 14 px,
+Ziehen und Pfeiltasten; Hover, aktives Ziehen und Tastaturfokus zeigen den
+mittigen 2 × 32 px Griff. Erzwungener Kontrast verwendet eine Systemlinie.
+Unser Design zeigt denselben Baustein. Ein einziges WelcomeParticles-Canvas
+liegt hinter der gesamten Chat-Panelfläche, mit gemeinsamem Bewegungszentrum.
+Eingebettete Panels bleiben transparent. „Alle Chats“ aktiviert das gemeinsame
+Feld immer, „Nur neue Chats“ sobald mindestens ein sichtbares Panel einen neuen,
+geladenen Chat ohne Verlauf zeigt. Verborgene Panels aktivieren es nicht.
+Aus, reduzierte Bewegung und Pausieren unsichtbarer Ansichten bleiben erhalten.
+Keine Datenmigration; gespeicherte Auswahlwerte bleiben kompatibel.
+
+
+### Wetter im bestehenden Glasfächer
+
+Die Wetterkarte verwendet WeatherCardContent und WeatherScene innerhalb von
+AttentionFan. Fächergeometrie, Höhe, Navigation und Aktionen bleiben gemeinsam.
+Ort über großer Temperatur (Rolle weather, 56 px), Wetterlage, optional echte
+Tageshöchst-/Tiefstwerte; im Fuß steht nur Heute & 7 Tage. Quelle und Datenstand stehen im Bericht; der erforderliche Open-Meteo-Link bleibt bei ausgewählter echter Wetterkarte klein unter dem Fächer erreichbar. Fehlende Werte
+werden ausgelassen. Lade-, Fehler- und Einrichtungszustände behalten die bisherige
+neutrale Textkarte. Ohne Ort oder bei mehrdeutigem Altort öffnet ein Klick das Profil; bei eingerichtetem Ort startet er einen neuen Wetterchat im aktuellen Workspace.
+
+Eigene Himmelsszenen orientieren sich an Apples iOS-26-Wetterdarstellung:
+sattes Blau und gelbe Sonne, geschichtete weiche Wolken, Regen, Schnee, Frost,
+gefrierender Regen, Nebel und Gewitter. is_day bestimmt Tag/Nacht unabhängig
+vom App-Theme; bei fehlendem Tag/Nacht-Wert wird kein Nachtzustand behauptet.
+Temperaturen unter oder gleich null ergänzen bei klarem Wetter Frost. Reifnebel, Nieselregen, Starkregen, Hagel und stärkere Winde besitzen eigene Details.
+Wettercodes sind keine amtlichen Warnungen. Die ausdrücklich markierte Warnkarte
+in WeatherPreview ist nur ein Designbeispiel, bis eine Warnquelle angeschlossen ist.
+Apple-Referenzbilder werden nicht als Produktassets übernommen.
+
+Farben, Licht, Typografie und Bewegungsdauern führt weatherArtwork in der
+zentralen Designquelle. Glasrahmen und Fächerschatten bleiben erhalten; die
+Landschaft ist auf die Kartenfläche begrenzt. Die abdunkelnde Textebene hält
+Beschriftungen ruhig lesbar. Keine blitzenden Gewittereffekte. Aussehen → Visuell
+→ Wetterbewegung speichert den Ein-/Aus-Zustand lokal und synchronisiert Tabs;
+Speicherfehler bleiben sichtbar. Reduzierte Bewegung zeigt statische Szenen,
+Sichtbare seitliche Wetterkarten bewegen sich ebenfalls; unsichtbare Karten und versteckte Ansichten pausieren. Pointer-Parallaxe bewegt Hintergrund, Wolken und Niederschlag mit unterschiedlichen, zentral festgelegten Tiefen; die Schrift bleibt fest. Ein federnder Rücklauf und verschobenes Flächenlicht ergänzen die feine Liquid-Glass-Kante. Touch benötigt keine Bewegungssensoren. Sonne und Strahlen bewegen sich ruhig, aber klar sichtbar, Eis schimmert sanft. Forced Colors blendet die
+Dekoration aus. Unser Design zeigt alle Wetterzustände im produktiven Fächer
+mit ausdrücklich markierten Beispieldaten und Tag-/Nachtwahl.
+
+
+Die Chat-Mehrfachansicht speichert Panelanzahl, Reihenfolge, aktives Panel,
+Breiten und die Session-/Workspace-Zuordnung jedes Panels lokal im Browser.
+Hard Refresh und App-Neustart stellen diese Auswahl wieder her, einschließlich
+der wegen Platzmangels verborgenen Panels. Ohne gespeicherte Auswahl startet
+ein leerer Chat. Gelöschte Sessions ergeben ein leeres Panel; vorübergehende
+Ladefehler löschen die Zuordnung nicht. Explizite Chatlinks öffnen ihren Chat
+im ersten Panel und aktivieren dieses. Maximieren bleibt vorübergehend.
+
+
+Der Wetterklick liest den gespeicherten Ort serverseitig und holt eine aktuelle
+Open-Meteo-Vorhersage. Erst nach gültigen sieben Tagen entsteht über den bestehenden
+Berichtschat-Baustein eine neue Session im aktiven Workspace. Der dauerhaft gespeicherte
+Bericht enthält aktuelle Werte, sieben Tageszeilen und die nächsten Stunden mit
+Ortszeit, Einheiten, Quelle, Abrufzeit und fehlenden Werten als Strich. Er bleibt
+beim Wiederöffnen als zeitgebundener Bericht erkennbar. Danach startet genau eine
+kurze KI-Einordnung über den bestehenden Turn-Anschluss. Sie nutzt nur belegten
+persönlichen oder Projektkontext dieses Workspaces, maximal drei passende Hinweise;
+keine erfundenen Baustellen, keine Zuordnung fremder Orte und keine Arbeitsfreigaben.
+Ohne solchen Kontext genügt der allgemeine Ausblick. Fehlende Einordnung lässt den
+Datenbericht erreichbar. Wiederholungen desselben Klicks sind über requestId
+idempotent, ein neuer bewusster Klick erzeugt eine neue Session. Der Composer-Entwurf
+bleibt erhalten. Forecast-Fehler erzeugen keine leere Session. Die Quellenangabe
+entfällt auf der kompakten Kachel; unter dem Fächer steht bei ausgewähltem Wetter der Quellenlink. Die Quellenzeile reserviert ihre Höhe auch bei anderen Karten und im Skeleton. Ausführliche Quellen stehen im Wetterbericht und im Profil.
+
+
+### Private Chats
+
+Die Chat-Sperre verwendet das vorhandene animierte Lock-Icon über MotionGlyph
+und IconButton. Rechts in der Chatliste bleibt das Schloss neben „Privater Chat“
+auch bei Hover sichtbar. Ein entsperrter privater Chat zeigt die sofortige
+Sperraktion neben seinem Drei-Punkte-Menü. LockedChat ersetzt den Gesprächsbereich
+mit einer ruhigen PIN-Eingabe; ChatPrivacyForm teilt Einrichtungs- und
+Entsperrverhalten. Modal, maskierte native Eingabe, numerische Tastatur,
+Fehleransage und zentrale Tokens bleiben gemeinsam. Keine dekorative Unschärfe
+über weiterhin geladenem Chattext. Ablauf und Schutzgrenzen führt surfaces/chat.md.
+
+
+Die Wetterbeleuchtung unterscheidet Morgendämmerung, Morgen, Tag, Sonnenuntergang, Abenddämmerung und Nacht anhand gelieferter Sonnenauf- und Untergangszeiten am Wetterort. Der Sonnenbogen ist eine dekorative Annäherung innerhalb der Karte, kein astronomischer Positionsmesser. Ohne Sonnenzeiten gilt weiterhin is_day; ohne beides bleibt der Himmel neutral. Die Uhr wird bei sichtbarer Ansicht minütlich aktualisiert. Vorschauen zeigen dieselben sechs Phasen mit markierten Beispieldaten. Größere Wolkenwege, gegenläufige Ebenen, Sonnenstrahlen und dezentes Sternenfunkeln machen Motion erkennbar, ohne Text zu bewegen.
+
+
+Das Chat-Menü beginnt mit Neuer Chat, Anpinnen/Nicht mehr anpinnen und
+Umbenennen. Darauf folgen Chat verzweigen, Fortsetzungsnotiz und Teilen und
+exportieren. Kopieren, Markdown und der zugangsbeschränkte App-Link stehen
+ausschließlich im gemeinsamen Teilen-Dialog; die allgemeine Suche wird nicht
+als Chat öffnen dupliziert. Schutz, Ansicht und Archivieren bilden getrennte
+Gruppen. Chat N maximieren und Chat N schließen verwenden dieselbe Bezeichnung;
+Schließen entfernt nur die Ansicht, Archivieren bleibt die letzte Aktion.
+ChatMenu trennt Gruppen durch nicht fokussierbare Separatoren mit zentralen
+Abstands- und Farbrollen. ChatTitle verwendet in allen Ansichten dieselbe
+Reihenfolge. Verzweigen ist nur bei bestätigter Anbieterfähigkeit verfügbar,
+Fortsetzungsnotizen und Textexport erst bei geladenem Gesprächsinhalt.
+
+
+### Anpassungsfähiger Agentenname
+
+Der Seitenleistenkopf reserviert den verbleibenden Platz für den Namen: kein
+Zusatzabstand zwischen den Kopfaktionen, kompakte Iconbreite `control-height`
+bei Mausbedienung, unverändert `control-touch` bei Touch. Der Avatarabstand nutzt
+`space-8`. AgentName misst den Text nach Namenswechsel, Schriftladen und
+Breitenänderung und verkleinert ihn bei Bedarf von `section` bis `reading`.
+Erst wenn diese gut lesbare Mindestgröße nicht reicht, erscheint eine Ellipse;
+der vollständige Name bleibt als Tooltip und im zugänglichen Buttonnamen erhalten.
+Keine Datenmigration, keine Änderung gespeicherter Namen.
+
+
+### Lebende Antwortkarten · Version 1.1.0
+
+Der Startfächer zeigt die neueste ungelesene abgeschlossene Antwort jedes normalen
+Chats im aktiven Workspace als eigene Karte. Keine Begrenzung auf fünf Karten.
+Private, archivierte und auftragsgebundene Chats bleiben ausgeschlossen. Die
+Kartenkennung enthält Chat und Turn; gelesene Antworten verlassen den Fächer.
+Nur ohne ungelesene Chatantworten wird das letzte Gespräch als Weitermachen angeboten.
+Vorhandene Ereignisse aktualisieren den Fächer ohne Plus oder erneutes Öffnen.
+
+Bestehende Karten behalten Reihenfolge und Auswahl. Neue Einträge kommen vor
+festen Dienstkarten hinzu. Entfernen der Auswahl wählt den nächsten erhaltenen
+Nachbarn, am Ende den vorherigen. Keine automatische Rotation und kein Sprung
+auf neu angekommene Inhalte. Kartenhöhe, Kopftext und Navigation bleiben reserviert;
+der Zähler verwendet gleich breite Ziffern. Gleichzeitig sichtbar bleiben auf mindestens 460 px breiten Fächerflächen fünf,
+sonst drei Karten zuzüglich kurzer, nicht bedienbarer Ausblendungen.
+
+AttentionFan verwendet AnimatePresence und die zentralen attentionFanMotion-Werte:
+280 ms Einblenden aus geringer Tiefe, 180 ms Ausblenden mit leichtem Zurücknehmen,
+gedämpfte Positionsübergänge ohne Nachschwingen. Keine Unschärfe über der Schrift,
+keine dauernden Effekte. App-/Systemvorgaben für reduzierte Bewegung schalten
+Übergänge unmittelbar. Entfernte Karten sind während der Ausblendung inert.
+
+Sichtbare Antwortkarten laden ausschließlich den passenden abgeschlossenen Turn
+über die vorhandene geschützte Thread-API. Nur die letzte finale Agentenantwort
+liefert die gekürzte Vorschau, keine Werkzeuge oder Zwischenmeldungen. Fehlende
+Vorschau bleibt ausdrücklich erkennbar; verspätete Antworten überschreiben keinen
+neueren Turn. Klick öffnet den zuständigen Chat und springt zum Antwortanfang,
+auch bei bereits geöffnetem Panel. Gelesen wird weiterhin erst bei bewusster
+Auswahl und Leseposition am Ende bestätigt, niemals durch die Kartenvorschau.
+
+Unser Design enthält ein lokales Live-Beispiel zum Hinzufügen, Entfernen und
+Zurücksetzen. Beispiele verändern keine Chats. Keine neue Datenhaltung oder
+Migration; Rückkehr stellt nur bisherige Darstellung und Kartenbegrenzung wieder her.
+
+
+### Kompakter Arbeitsverlauf
+
+Die bestehende Trennung bleibt: graue Zwischenmeldungen während der Arbeit,
+helle finale Antwort nach Abschluss. Zwischenmeldungen bleiben chronologisch
+im aufklappbaren Verlauf erhalten. Standardmäßig ist dieser geschlossen;
+ein bewusst geöffneter Verlauf und seine Werkzeugdetails bleiben beim Abschluss
+offen. ChatTurn hält diese Leseentscheidungen auch beim Wechsel zur finalen Antwort.
+
+Werkzeugzeilen verwenden 28 px Mindesthöhe am Desktop, 44 px bei Touch,
+2 px vertikale Innenabstände und keine zusätzlichen Zeilenaußenabstände.
+Konkrete Titel stammen nur aus öffentlichen Aktionen, Dateinamen oder eindeutig
+erkannten Befehlen. Ausgabeinhalte liefern keine erfundenen Absichten oder Erfolge;
+Fehler und fehlende Abschlüsse bleiben ausdrücklich sichtbar.
+
+DiffStats zeigt hinzugefügte und entfernte Zeilen aus gelieferten Diffs bereits
+in der Schrittzeile. Bestätigte Änderungen verwenden success/danger mit +/−,
+unbestätigte Umfänge bleiben neutral und entsprechend beschriftet. Fehlende
+Diffs erhalten keine Zahlen, teilweise verfügbare Diffs sind gekennzeichnet.
+Dateidetails zeigen zuerst Dateiname und DiffView mit farbigen Einzelzeilen.
+Rohaufruf und Werkzeugausgabe bleiben darunter separat aufklappbar; der
+vollständige Dateipfad steht am Dateilink als Tooltip.
+
+StepCount bewegt nur eine tatsächlich geänderte Schrittzahl in 240 ms vertikal;
+die Daueranzeige bleibt statisch. Neue Zeilen im geöffneten Live-Verlauf erscheinen
+in 180 ms mit 2 px Bewegung. Farben, Maße und Zeiten sind zentrale Rollen.
+Reduzierte Bewegung zeigt statische Werte; abgeschlossene und verborgene Ansichten
+spielen keine Live-Animationen. Unser Design zeigt dieselben Bausteine mit
+lokalen Beispieldaten und einem abschließbaren Lauf. Keine Datenmigration.
+
+### Rückfrage am Composer
+
+`ComposerQuestion` zeigt native Rückfragen in einer schmalen zentrierten
+Glaskarte über der Eingabepille. Horizontaler Haarstrich, große Composerrundung
+(`radius-large`), `composer-blur`, `composer-glass-shadow` und die gemeinsame
+Unschärferolle aus der GlassButton-Materialfamilie bilden die Fläche.
+Status in caption, Frage und Antworten in control; Beschreibungen in caption.
+Native Radio-/Checkbox-Auswahlen liegen als flache Zeilen mit `radius-button`
+auf derselben Fläche. Der gewohnte Composer wird zu „Sonstiges“ und verwendet
+weiterhin seinen Sendepfeil. Keine zusätzliche Sendeleiste in der Karte.
+
+Ein kurzer Eintritt von unten verwendet picker-duration/picker-easing und
+space-8. App-/Systemvorgaben für reduzierte Bewegung deaktivieren ihn. Bei
+reduzierter Transparenz oder fehlendem Blur gilt die deckende Composerfläche;
+Forced Colors erhält Systemkonturen. Lange Karten scrollen innerhalb einer
+begrenzten Höhe, Eingabe und Senden bleiben außerhalb erreichbar. Desktop und
+schmale Panels behalten einen seitlichen Einzug gegenüber dem Composer.
+Unser Design zeigt die Produktionskomponente. Ablauf und Datenvertrag stehen
+in surfaces/chat.md unter Native Rückfragen am Composer.
+
+## Römische Forktitel · Version 1.0.0
+
+Beim ersten erfolgreichen Verzweigen erhält der ursprüngliche Chat `I · Titel`,
+der neue `II · Titel`. Weitere Abzweigungen derselben Familie zählen mit III, IV
+usw. weiter, auch beim Fork eines Forks. Ohne Fork bleibt der Titel unverändert.
+Die vorhandenen Chatzeilen, Suche und Panelmenüs zeigen denselben gespeicherten
+Titel mit der Nummer vorne; keine neuen Komponenten oder Stilwerte.
+Umbenennen bleibt frei und verändert andere Familienmitglieder nicht. Ein
+weiterer Fork übernimmt den aktuellen Quelltitel ohne dessen verwaltete Nummer.
+
+Datenvertrag: `chat-fork.mjs` ergänzt beim erfolgreichen Fork optional
+`forkFamilyId`, `forkIndex` und `forkSequence` im vorhandenen Chatdatensatz.
+Die Familienzuordnung folgt IDs, niemals gleichlautenden Titeln. Der höchste
+vergebene Zähler wird bei allen vorhandenen Familienmitgliedern mitgeführt;
+Archivieren, Löschen einzelner Mitglieder und Neuladen setzen ihn nicht zurück.
+Die Nummer wird erst nach erfolgreichem nativen Fork vergeben. Alle geöffneten
+Ansichten erhalten danach das bestehende `wrapper/chats`-Ereignis.
+
+Migration: additive Felder, keine Startmigration und keine Massenumbenennung.
+Alte Kopien ohne belegte Familienzuordnung bleiben eigenständige Chats; beim
+nächsten Fork beginnen sie eine neue Familie. Älterer Code kann Titel und
+Datensätze weiter lesen, vergibt aber wieder Kopie-Zusätze. Nach einer solchen
+Rückkehr erstellte Kopien müssen vor erneutem Einsatz gesondert zugeordnet werden,
+da alter Code Familienfelder ungeprüft kopieren kann. Native Sitzungsdaten und
+Kontextverwaltung bleiben unverändert.
+
+
+## Persönliche Statistik und Fächer · Version 1.2.0
+
+ChatStart begrüßt beim ersten Inhalt mit dem ersten Namensbestandteil aus dem
+bestehenden Nutzerprofil. Weitere Karten verwenden sachliche Anschlusssätze.
+Kein gespeicherter Name wird verändert; ohne Profilname bleibt die Ansprache neutral.
+
+AttentionFan zeigt ab 460 px verfügbarer Breite fünf Ebenen mit zwei zurückgesetzten
+Karten je Seite, darunter drei. Weniger Einträge werden nicht dupliziert. Horizontaler
+Trackpad-Scroll und Shift-Mausrad wechseln nach einer Wegschwelle mit begrenzter
+Folgegeschwindigkeit; vertikales Scrollen bleibt erhalten. Gedämpfte Federn,
+Tastatur, Touch, stabile Auswahl und inerte ausblendende Karten bleiben gemeinsam.
+Die zentrale attentionFanMotion enthält Geometrie, Schwellen und Federwerte.
+
+StatisticsCard ist eine feste Dienstkarte. StatisticsDashboard zeigt einen
+unveränderlichen Berichtsstand im normalen Chat mit Composer: Übersicht/Modelle,
+Zeitraumwahl über AmountSlider, Kennzahlen, Tagesaktivität und Datenabdeckung.
+ActivityPixels nutzt dieselbe pixelHash-Textur wie AmountSlider. Helligkeit bedeutet
+Nachrichten pro Tag; eine endliche Welle bildet beim Einblenden, Zeitraumwechsel
+und Druck das reale Muster. statisticsMotion führt Geometrie und Dauer.
+Keine Dauerschleife. Verborgene Ansichten und reduzierte Bewegung zeigen den
+statischen Datenstand. Farben, Schrift, Rundungen und Flächen sind gemeinsame Tokens;
+Forced Colors bleibt verständlich. Statistikflächen passen sich der Panelbreite an.
+StatisticsPreview unter Unser Design zeigt produktive Bausteine mit markierten
+Beispieldaten, ohne reale Gespräche anzulegen.
+
+GET /api/statistics liest ausschließlich lokale normale Gespräche des angefragten
+Workspaces einschließlich Archiv; die Core-Privatsperre wird vor dem Lesen geprüft.
+Private Chats, Aufträge, Messenger- und Berichtschats bleiben ausgeschlossen.
+Nachrichten sind Nutzereingaben und maximal eine finale Antwort pro Runde.
+Werkzeuge, Zwischenmeldungen und übernommene doppelte Turn-IDs zählen nicht.
+Aktivität und Serien verwenden lokale Kalendertage der Browserzeitzone; gestern
+hält eine laufende Serie bis zum Ende des heutigen Tages offen. Die Grafik zeigt
+maximal 26 Wochen, numerische Gesamtsummen bleiben vollständig für lesbare Daten.
+Fehlende Verläufe, Datums- und Modellwerte werden als Abdeckung genannt.
+Native kumulative Tokens sind nur insgesamt und ohne geerbte Verläufe ausgewiesen;
+keine erfundene Zeitraumaufteilung, Wortmenge, Kosten oder Produktivität.
+
+POST /api/statistics/chat erstellt über briefingChatOpener und saveHandoff einen
+Berichtschat; parallele und wiederholte requestIds öffnen denselben Bericht.
+Das Öffnen startet keine KI-Runde. Alle drei Zeiträume und Modellzahlen stehen
+im gespeicherten Text für spätere Rückfragen. Ein bewusster neuer Klick erzeugt
+einen aktuellen Bericht. Entwürfe und laufende Gespräche bleiben erhalten.
+
+Datenvertrag/Migration: additive optionale chat.statisticsTurns mit Startzeit und
+Modell für neue Runden sowie chat.statisticsSnapshot Version 1 für Berichtschats.
+Keine Massenmigration und kein neues Kontingentkonto. Ältere Daten bleiben gültig;
+fehlende historische Modellangaben werden nicht aus der letzten Auswahl geraten.
+Älterer Code kann den normalen gespeicherten Berichtstext anzeigen; nach Rückkehr
+können bei neu entstehenden Runden Modellangaben fehlen. Keine Datenlöschung.
+Prüfungen: Zählung, Zeitzonengrenzen, Serien, Duplikate, Privatsperre, Lücken,
+Berichtswiederholung, Fächerbedienung, beide Themes, schmale Breite, große Schrift,
+Tastatur, reduzierte Bewegung und Zeitraumwechsel.
+### Ergebnisse direkt am Arbeitsverlauf
+
+Die letzte Antwort bündelt Arbeitsverlauf → Ergebnisse → Aktionsicons.
+ChatArtifacts sitzt mit space-2/space-4 unmittelbar am Status, ohne unterhalb
+der Icons einen eigenen Abschlussblock anzuhängen. Die geschlossene
+„Ergebnisse“-Zeile verwendet caption, muted, bestehendes Dateiicon und Chevron.
+Aufgeklappte Dateizeilen verwenden dieselben kleinen Schriftrollen und gemeinsame
+Bedienhöhen, ohne zusätzliche volle Trennlinien. Bilder zeigen direkt die
+bestehende FileContent-Vorschau samt kompakter Dateizeile. Weitere Bilder bleiben
+über die vorhandene Aufklapplogik erreichbar. Touchziele behalten control-touch.
+
+Quellcode und technische Projektdateien bleiben in den Arbeitsschritten.
+Filter-, Vorschau- und Duplikatregeln führt surfaces/chat.md unter Ergebnisse
+für den Leser. Unser Design zeigt dieselbe ChatArtifacts-Komponente mit
+lokalen Beispieldokumenten; keine echten Dateien werden dadurch angelegt.
+
+
+### Unterbrechbares Mitlaufen beim Streaming
+
+createChatScroll bleibt der einzige Scrollbesitzer pro Panel. Erstes Öffnen
+positioniert den Verlauf direkt; Textwachstum und der Sprungbutton folgen mit
+einer gemeinsamen, abbrechbaren Bewegung aus chatScrollMotion. Neue Textstücke
+aktualisieren das Ziel, ohne die Bewegung neu zu starten. Aufwärtsbewegungen
+per Rad, Touch, Tastatur oder Scrollbar stoppen vor dem nächsten Schreibzugriff.
+Beim Lesen bleibt Browser-Scrollankern erlaubt; Layout- und Ankerbewegungen
+aktivieren das Folgen niemals. Erst bewusstes Herunterscrollen bis auf 2 px ans
+Ende oder der Sprungbutton aktiviert es wieder. Abschluss und eingeklappte
+Werkzeugausgaben überschreiben keine Leseposition. Reduzierte Bewegung setzt
+nur beim aktiven Folgen direkt ans Ende. Verborgene Panels und entfernte
+Controller stoppen ihre Animationsframes. Chatstart bleibt stabil.
+Keine Datenmigration; Entwürfe und gespeicherte Scrollpositionen bleiben kompatibel.
+
+Die AttentionFan-Karten verwenden 48 px Hintergrundunschärfe aus attentionFanMotion
+und eine stärkere Tönung der gemeinsamen surface-Fläche (72 %, vorne und bei Hover
+86 %). Überlagerte Texte bleiben dadurch ruhig lesbar; reduzierte Transparenz und
+fehlender Blur verwenden weiterhin deckende Flächen. Die Statistik verwendet
+direkte Zeitraumbuttons statt eines Reglers, einen kurzen Titel ohne Unterzeile
+und einen Rückweg zum Kachelstart. Unser Design zeigt dieselben Bausteine.
+
+
+## Diktat-Tastenkürzel · Version 1.0.0
+
+Stimme → Diktat verwendet DictationShortcutSettings mit normalen SettingRows:
+Taste (Automatisch, rechte Command/Meta, rechte Strg, Aus) und Bedienung
+(Drücken zum Ein-/Ausschalten als Standard, optional Gedrückt halten).
+Automatisch verwendet auf Mac MetaRight und sonst ControlRight. Ausschließlich
+die ausgewählte sichtbare Chat-Pane im aktiven Fenster reagiert, keine globalen
+Betriebssystem-Hotkeys. Dialoge, Menüs und Sprachchat verhindern einen neuen Start.
+Umschalten erfolgt beim Loslassen einer allein gedrückten Taste; Kombinationen
+und Wiederholungen lösen es nicht aus. PTT startet beim Drücken und beendet beim
+Loslassen; zusätzliche Tastenkombinationen unterbrechen die PTT-Aufnahme.
+Fenster-/Panewechsel beendet eine per Kürzel gestartete Aufnahme. Ein Loslassen
+während der Mikrofonfreigabe bricht den ausstehenden PTT-Start ab. Erneuter Start
+braucht eine neue Geste. Beenden sichert und transkribiert ausschließlich in den
+Entwurf, ohne Nachricht zu senden. Vorhandene Audio-Wiederherstellung bleibt.
+Einstellungen sind browserlokal unter agent-dictation-shortcut-v1, validiert und
+zwischen Tabs synchronisiert; Speicherfehler werden angezeigt. Keine Migration
+bestehender Audio- oder Serverdaten. Entfernen des neuen Schlüssels stellt die
+plattformabhängige Voreinstellung wieder her. Systemtasten können vom Betriebssystem
+abgefangen werden; rechte Strg bleibt als Alternative auswählbar.
+
+
+
+## Firma · Version 1
+
+Firma verwendet PageHeading, den kompakten Fortschrittswert und FirmaList: acht
+flache, native Aufklappzeilen mit je vier Chataktionen. Kein zusätzlicher Avatar,
+Rollen-Dropdown, Hero oder Dashboard. Texte brechen in einer Spalte um, Touchziele
+bleiben 44 px. FirmaReview zeigt im bestehenden Composerbereich die aufklappbare
+fachliche Abnahme für eine konkrete Version. Inter, Farben und Maße kommen aus
+der gemeinsamen Quelle; Chevron-Bewegung respektiert reduzierte Bewegung.
+Unser Design zeigt denselben FirmaList-Baustein mit neutralen Daten.
+Verhalten und Migrationsgrenzen stehen in surfaces/firma.md.
+
+
+## Kontingente und Verbrauch · Version 1.1.0
+
+Kontingente sind eine eigene Dienstkarte im AttentionFan. AllowanceBars zeigt
+schlichte, volle horizontale Balken untereinander: Anbieter/Modell, verbrauchter
+Prozentwert und Reset-Zeit. Die Karte zeigt höchstens zwei Zeilen, der Klick alle
+gemeldeten Kontingente, Credits und verfügbare Reset-Gutschriften ohne Einlösung.
+Tokenmengen stehen getrennt im Reiter Verbrauch der Statistik. Beide verwenden
+die vorhandenen Statistikflächen, Typografie, Farbtokens und Rücknavigation.
+StatisticsPreview zeigt dieselben Produktionsbausteine mit Beispieldaten.
+ActivityPixels füllt die gesamte Innenbreite als Raster. Gefüllte Tagesfelder
+schimmern langsam und leicht versetzt; die Datenhelligkeit bleibt maßgeblich.
+statisticsMotion führt die Dauer. Aussehen → Bewegung reduzieren schaltet den
+Effekt ab; Systemeinstellung, inaktive Karten und unsichtbare Ansichten pausieren
+bzw. deaktivieren ihn. Leere Tage bleiben ruhig, Forced Colors bleibt statisch.
+
+## Direkte Pane-Tastenkürzel · Version 1.0.0
+
+Ctrl + Shift + 1–4 aktiviert Chat-Pane 1–4 gemäß ihrer festen Chatnummer.
+Die Zielpane muss geöffnet sein; verborgene oder maximierte Ansichten zeigen
+sie über die vorhandene aktive Panelauswahl. Ein eigener Mikrofonstart findet
+nicht statt. Nach Auswahl erhält ihr Composer Schreibfokus ohne Scrollsprung
+und die vorhandene Auswahlkontur. Gesperrte Chats erhalten keinen Schreibfokus.
+Nur ein Listener der äußeren App verarbeitet die Kürzel im aktiven Chatfenster;
+Dialoge, Menüs, Einstellungen, IME und Tastenwiederholung sind ausgeschlossen.
+Einstellungen → Tastenkürzel verwendet PaneShortcutSettings mit SettingRows:
+Belegung aufnehmen, je Pane deaktivieren und Standard wiederherstellen.
+Doppelte Belegungen und bestehende App-Kürzel werden abgewiesen; einzelne
+Schreibzeichen ohne Ctrl/Alt/Meta sind nicht erlaubt, F-Tasten sind möglich.
+Escape/Tab/Verlassen bricht das Aufnehmen ab. Auswahl wird erst nach erfolgreichem
+Speichern übernommen, Fehler bleiben sichtbar. Browserlokaler Schlüssel
+agent-pane-shortcuts-v1, validiert und zwischen Tabs synchronisiert. Keine
+Migration von Serverdaten oder Chatentwürfen; fehlende/ungültige Werte verwenden
+den Standard. System- und Browserbelegungen haben gegebenenfalls Vorrang.
+
+
+### Bilder und SVG im Gespräch · Version 1.1.0
+
+Erzeugte Bilder gehören sichtbar in ChatArtifacts, auch bei eingeklappten
+Werkzeugschritten. ToolImages zeigt Bild, Vergrößern im gemeinsamen Modal und
+Download; Fehler und Wiederholen bleiben erreichbar. SVG-Dateien teilen die
+FileContent-Vorschau mit getrenntem Quelltext-/Bearbeitungsmodus. SVG-Codeblöcke
+zeigen eine inaktive Bildvorschau über ihrem aufklappbaren Quelltext samt
+CopyButton. Alle Vorschauen bleiben innerhalb der Nachrichtenspalte.
+Abstände, Schrift und Rundungen verwenden bestehende Tokens; keine neue
+Farbwelt oder Animation. Unser Design enthält ein Beispielorganigramm im
+produktiven Markdown-Renderer. Vollständiger Daten-/Migrationsvertrag unter
+surfaces/chat.md, Visuelle Chat-Ergebnisse.
 
 
 ## Portabler UI-Bauplan

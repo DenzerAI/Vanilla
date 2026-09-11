@@ -7,6 +7,15 @@ export const identity = {
 };
 export const fonts = [
   {
+    name: "Quicksand",
+    role: "Agentenname im Seitenleistenkopf",
+    token: "font-agent-name",
+    value: '\"Quicksand\", -apple-system, BlinkMacSystemFont, sans-serif',
+    source: "https://github.com/google/fonts/tree/main/ofl/quicksand",
+    license: "Quicksand-LICENSE.txt",
+    specimen: "Vanilla · Alex · Mika · José",
+  },
+  {
     name: "Systemschrift für Gespräche",
     role: "Antworten des Agenten",
     token: "font-conversation",
@@ -34,6 +43,7 @@ export const fonts = [
   },
 ];
 export const typography = [
+  {id: "weather", label: "Wettertemperatur", size: 56, line: 1, weight: 400, use: "Aktuelle Temperatur im Wetterfächer"},
   {
     id: "caption",
     label: "Zusatzinformation",
@@ -137,7 +147,7 @@ export const amountSliderGeometry = { cell: 6, gap: 1, thumb: 24 };
 export const amountSliderMotion = { magnet: .08, minDensity: .2, minSpread: .3, baseSpeed: .3, extraSpeed: 3.2, tail: .6, hint: .15, ultraSpeed: 3.5, ultraTail: .35, ultraIntensity: .6, ultraFalloff: .7 };
 // Visual intensity only: native capabilities still determine the available stops.
 export const reasoningAnimationLevels = { low: .03, medium: .35, high: .6, xhigh: .82, max: 1, ultra: 1 };
-export const controls = { "slider-thumb-width": `${amountSliderGeometry.thumb}px`, "turn-loader-slot": "19.2px", "composer-fallback":"112px", "nav-text-inset":"38px", "nav-group-inset":"46px", height: "32px", target: "40px", touch: "44px", "heading-height": "52px", "app-heading-height": "84px", "row-height": "48px", "switch-width": "36px", "switch-height": "20px", "switch-thumb": "16px", "switch-travel": "16px" };
+export const controls = { "activity-row": "28px", "composer-border": "1px", "slider-thumb-width": `${amountSliderGeometry.thumb}px`, "turn-loader-slot": "19.2px", "composer-fallback":"112px", "nav-text-inset":"38px", "nav-group-inset":"46px", height: "32px", target: "40px", touch: "44px", "heading-height": "52px", "app-heading-height": "84px", "row-height": "48px", "switch-width": "36px", "switch-height": "20px", "switch-thumb": "16px", "switch-travel": "16px" };
 export const typeMetrics = { "font-root-size": "16px", "tracking-title": "-0.65px", "tracking-heading": "-0.35px", "tracking-welcome": "-0.7px" };
 export const weights = { regular: 400, medium: 500, semibold: 600, bold: 700 };
 export const leading = { tight: 1.2, compact: 1.4, normal: 1.5, reading: 1.6 };
@@ -150,6 +160,7 @@ export const themes = {
     "workspace-backdrop": "#151413",
     "sidebar-sheen": "radial-gradient(ellipse at 90% 10%, #ffffff06, #ffffff00 65%), radial-gradient(ellipse at 10% 90%, #ffffff03, #ffffff00 60%)",
     "sidebar-material-shadow": "inset 0 0 0 1px #ffffff0a, inset 0 1px 0 #ffffff05, 0 4px 16px #0000000a",
+    "pane-seam": "#b8b4aa26",
     "workspace-panel-bg": "#000000",
     "workspace-panel-glass": "#000000f0",
     "workspace-panel-sheen": "radial-gradient(ellipse at 100% 0%, #ffffff0b, #ffffff00 65%), radial-gradient(ellipse at 0% 100%, #ffffff05, #ffffff00 55%)",
@@ -185,6 +196,9 @@ export const themes = {
     composer: "#282725",
     "composer-blur": "#28272599",
     "composer-glass-shadow": "inset 0 0 0 1px #ffffff12, inset 0 1px 0 #ffffff14, 0 4px 16px #00000018",
+    "composer-inactive-opacity": "0.90",
+    "composer-focus-border": "#f3f1ed24",
+    "composer-focus-beam": "#f3f1ed59",
     success: "#8dceb0",
     "switch-thumb": "#ffffff",
     "switch-on": "#858585",
@@ -230,6 +244,7 @@ export const themes = {
     "workspace-backdrop": "#f2f0e9",
     "sidebar-sheen": "radial-gradient(ellipse at 90% 10%, #ffffff40, #ffffff00 65%), radial-gradient(ellipse at 10% 90%, #00000003, #00000000 60%)",
     "sidebar-material-shadow": "inset 0 0 0 1px #39352e20, inset 0 1px 0 #ffffff40, 0 4px 16px #39352e0a",
+    "pane-seam": "#514c4326",
     "workspace-panel-bg": "#e6e3da",
     "workspace-panel-glass": "#e6e3da",
     "workspace-panel-sheen": "none",
@@ -267,6 +282,9 @@ export const themes = {
     composer: "#faf8f2",
     "composer-blur": "#faf8f2eb",
     "composer-glass-shadow": "inset 0 0 0 1px #39352e2e, 0 3px 12px #39352e0f",
+    "composer-inactive-opacity": "0.90",
+    "composer-focus-border": "#2927202e",
+    "composer-focus-beam": "#29272052",
     success: "#226644",
     "switch-thumb": "#ffffff",
     "switch-on": "#686868",
@@ -334,6 +352,9 @@ export function resolveDesign(theme = 'dark', tone = 'balanced', accent = 'terra
   const palette = {...themes[mode], ...(toneSurfaces[tone]?.[mode] || {})};
   const selectedAccent = designAccents.find(item => item.id === accent) || designAccents[0];
   return {...palette, accent: selectedAccent[mode], highlight: selectedAccent[mode],
+    'composer-inactive-opacity': '0.90',
+    'composer-focus-border': palette.text + (mode === 'light' ? '2e' : '24'),
+    'composer-focus-beam': palette.text + (mode === 'light' ? '52' : '59'),
     'glass-button-tint': palette.composer + '26',
     'composer-blur': palette.composer + (mode === 'light' ? 'eb' : '99'),
     'suggestion-glass': palette.glass + (mode === 'light' ? '66' : '52'),
@@ -453,10 +474,12 @@ export const iconMotion = {
   }
 };
 
-export const motion = { 'avatar-blink-duration': `${avatarMotion.blink}s`, 'avatar-gaze-duration': `${avatarMotion.gaze}s`, 'avatar-expression-duration': `${avatarMotion.expression}s`, 'avatar-gesture-duration': `${avatarMotion.gesture}s`, 'avatar-easing': 'cubic-bezier(.4, 0, .2, 1)', 'picker-duration': '280ms', 'picker-easing': 'cubic-bezier(.16, 1, .3, 1)', 'panel-light-duration': '48s', 'panel-light-easing': 'ease-in-out', 'feedback-duration': '160ms', 'progress-duration': '1000ms', 'skeleton-duration': '1600ms' };
+export const motion = { 'avatar-blink-duration': `${avatarMotion.blink}s`, 'avatar-gaze-duration': `${avatarMotion.gaze}s`, 'avatar-expression-duration': `${avatarMotion.expression}s`, 'avatar-gesture-duration': `${avatarMotion.gesture}s`, 'avatar-easing': 'cubic-bezier(.4, 0, .2, 1)', 'picker-duration': '280ms', 'picker-easing': 'cubic-bezier(.16, 1, .3, 1)', 'panel-light-duration': '48s', 'panel-light-easing': 'ease-in-out', 'composer-focus-duration': '18s', 'activity-count-duration': '240ms', 'activity-step-duration': '180ms', 'feedback-duration': '160ms', 'progress-duration': '1000ms', 'skeleton-duration': '1600ms' };
 export function renderDesignCSS() {
   const shared = Object.fromEntries([
+    ["fan-blur", `${attentionFanMotion.blur}px`],
     ...Object.entries(typeMetrics),
+    ...Object.entries(weatherArtwork),
     ...fonts.map((f) => [f.token, f.value]),
     ...typography.map((t) => [`text-${t.id}`, `${t.size / 16}rem`]),
     ...spacing.map((n) => [`space-${n}`, `${n / 16}rem`]),
@@ -484,6 +507,41 @@ export function renderDesignCSS() {
 
 export const scrubberSprings = { pointer: { stiffness: 700, damping: 52, mass: .5 }, strength: { stiffness: 260, damping: 30, mass: .6 } };
 
-export const attentionFanMotion = {hoverLift: -10, hoverScale: 1.02, rotation: 12, compactRotation: 6, depth: 18, scale: 0.94, spring: {stiffness: 180, damping: 25, mass: 0.8}};
+export const statisticsMotion = {shimmerDuration: 8,duration: .65, stagger: .28, pressDuration: .45, cell: 8, gap: 2, lift: 8};
+export const attentionFanMotion = {blur: 48,wideThreshold: 460, wideSpread: .10, outerRotation: 16, outerDepth: 36, outerScale: .84, wheelThreshold: 48, wheelCooldown: 360, hoverLift: -10, hoverScale: 1.02, rotation: 12, compactRotation: 6, depth: 18, scale: 0.94, spring: {stiffness: 170, damping: 29, mass: 1}, spread: .16, compactSpread: .12, arrivalY: 16, arrivalScale: .90, departureY: -8, departureScale: .96, enterDuration: .28, exitDuration: .18, ease: /** @type {[number, number, number, number]} */ ([.22, 1, .36, 1])};
 
 export const chatHeadingMotion = {character: 90, punctuation: 360, hold: 20000, fade: 900};
+
+// Own atmospheric illustrations, inspired by Apple's Weather hierarchy.
+// These fixed scene colors describe weather, independently of the app theme.
+export const weatherArtwork = {
+ 'weather-ink':'#ffffff', 'weather-shade':'#06182d',
+ 'weather-sunny-top':'#0755b6', 'weather-sunny-bottom':'#38a8ef',
+ 'weather-cloudy-top':'#425d79', 'weather-cloudy-bottom':'#8fa9bd',
+ 'weather-rain-top':'#1a304b', 'weather-rain-bottom':'#587e98',
+ 'weather-snow-top':'#54728e', 'weather-snow-bottom':'#b8d4e1',
+ 'weather-frost-top':'#285c96', 'weather-frost-bottom':'#82bddd',
+ 'weather-fog-top':'#556977', 'weather-fog-bottom':'#9fb3bd',
+ 'weather-storm-top':'#232a44', 'weather-storm-bottom':'#59657f',
+ 'weather-night-top':'#091a3a', 'weather-night-bottom':'#254f7a',
+ 'weather-sun-rays':'repeating-conic-gradient(from 8deg, transparent 0deg 16deg, #fff1a2 18deg, transparent 21deg 45deg)',
+ 'weather-sun':'#ffdf55', 'weather-sun-core':'#fff1a2',
+ 'weather-cloud':'#f4faff', 'weather-cloud-shadow':'#7992aa',
+ 'weather-ice':'#d1f4ff', 'weather-warning':'#ffe1a3',
+ 'weather-warning-bg':'#523613',
+ 'weather-text-shadow':'0 1px 5px #06182d66',
+ 'weather-cloud-duration':'9s', 'weather-rain-duration':'1400ms',
+ 'weather-snow-duration':'7s', 'weather-easing':'ease-in-out',
+ 'weather-sun-duration':'7s', 'weather-rays-duration':'36s', 'weather-frost-duration':'8s', 'weather-cloud-wind-duration':'5s', 'weather-rain-heavy-duration':'900ms',
+ 'weather-dawn-top':'#35466f', 'weather-dawn-bottom':'#cb8a8e',
+ 'weather-morning-top':'#397db9', 'weather-morning-bottom':'#f2c183',
+ 'weather-sunset-top':'#4b5a8c', 'weather-sunset-bottom':'#e8a06c',
+ 'weather-dusk-top':'#1d2b52', 'weather-dusk-bottom':'#865a7a',
+ 'weather-twinkle-duration':'5s', 'weather-light-duration':'8s',
+ 'weather-leading':'1', 'weather-tracking':'-2px',
+};
+
+export const weatherParallaxMotion = {stiffness:110,damping:24,mass:0.6};
+export const weatherDepth = {back:5,front:11,near:16,light:24};
+
+export const chatScrollMotion = {response: 90, maxFrame: 40, settle: 0.75, inputWindow: 240};

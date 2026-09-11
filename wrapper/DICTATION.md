@@ -39,3 +39,25 @@ Automatisierte Tests prüfen Neustart, Duplikate, widersprüchliche Uploads, Lü
 Später sinnvoll: Fachwortliste, Modellwahl Small/Large Turbo, dauerhaft warmgehaltenes Modell für kürzere Startlatenz, Suchfilter für viele Aufnahmen und ausdrücklich eingerichtete zweite Sicherung. Live-Teiltranskripte wären eine Komfortfunktion; die belastbare Originalaufnahme bleibt die Grundlage.
 
 Quellen: [faster-whisper](https://github.com/SYSTRAN/faster-whisper), [Groq Speech to Text](https://console.groq.com/docs/speech-to-text).
+
+
+## Diktat-Tastenkürzel · Version 1.0.0
+
+Stimme → Diktat verwendet DictationShortcutSettings mit normalen SettingRows:
+Taste (Automatisch, rechte Command/Meta, rechte Strg, Aus) und Bedienung
+(Drücken zum Ein-/Ausschalten als Standard, optional Gedrückt halten).
+Automatisch verwendet auf Mac MetaRight und sonst ControlRight. Ausschließlich
+die ausgewählte sichtbare Chat-Pane im aktiven Fenster reagiert, keine globalen
+Betriebssystem-Hotkeys. Dialoge, Menüs und Sprachchat verhindern einen neuen Start.
+Umschalten erfolgt beim Loslassen einer allein gedrückten Taste; Kombinationen
+und Wiederholungen lösen es nicht aus. PTT startet beim Drücken und beendet beim
+Loslassen; zusätzliche Tastenkombinationen unterbrechen die PTT-Aufnahme.
+Fenster-/Panewechsel beendet eine per Kürzel gestartete Aufnahme. Ein Loslassen
+während der Mikrofonfreigabe bricht den ausstehenden PTT-Start ab. Erneuter Start
+braucht eine neue Geste. Beenden sichert und transkribiert ausschließlich in den
+Entwurf, ohne Nachricht zu senden. Vorhandene Audio-Wiederherstellung bleibt.
+Einstellungen sind browserlokal unter agent-dictation-shortcut-v1, validiert und
+zwischen Tabs synchronisiert; Speicherfehler werden angezeigt. Keine Migration
+bestehender Audio- oder Serverdaten. Entfernen des neuen Schlüssels stellt die
+plattformabhängige Voreinstellung wieder her. Systemtasten können vom Betriebssystem
+abgefangen werden; rechte Strg bleibt als Alternative auswählbar.
