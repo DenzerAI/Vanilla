@@ -1,7 +1,8 @@
+import {execFileSync} from 'node:child_process';
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createRestartGate, fingerprint} from '../updates.mjs';
-import {mkdtemp, writeFile, rm} from 'node:fs/promises';
+import {createRestartGate, fingerprint, installationStatus} from '../updates.mjs';
+import {mkdtemp, writeFile, rm, mkdir} from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -90,4 +91,28 @@ test('UI builds and development metadata only need reload; runtime changes need 
     await put('wrapper/package.json', JSON.stringify({...manifest, dependencies:{react:'2'}}));
     assert.notEqual(await serverFingerprint(dir), original);
   } finally { await rm(dir, {recursive:true, force:true}); }
+});
+
+
+test('installation times distinguish commits, local pushes and fetches; missing Git remains readable', async()=>{
+  const root=await mkdtemp(path.join(os.tmpdir(),'installation-status-'));
+  try {
+    await mkdir(path.join(root,'system'));
+    await writeFile(path.join(root,'system/version.json'),JSON.stringify({version:'0.1.3'}));
+    assert.deepEqual(await installationStatus(root),{version:'0.1.3',commit:null,committedAt:null,pushedAt:null});
+    const git=(...args)=>execFileSync('git',args,{cwd:root,stdio:['ignore','pipe','pipe']}).toString().trim();
+    git('init');git('config','user.email','test@example.invalid');git('config','user.name','Test');
+    git('add','.');git('commit','-m','initial');
+    const initial=await installationStatus(root);
+    assert.ok(initial.commit);assert.ok(Date.parse(initial.committedAt));assert.equal(initial.pushedAt,null);
+    // Reflog fixtures reproduce Git's remote-reference messages without network access.
+    git('update-ref','--create-reflog','-m','fetch origin: storing head','refs/remotes/origin/main','HEAD');
+    assert.equal((await installationStatus(root)).pushedAt,null);
+    git('commit','--allow-empty','-m','next');
+    git('update-ref','-m','update by push','refs/remotes/origin/main','HEAD');
+    const pushed=await installationStatus(root);assert.ok(Date.parse(pushed.pushedAt));
+    git('commit','--allow-empty','-m','fetched');
+    git('update-ref','-m','fetch origin: fast-forward','refs/remotes/origin/main','HEAD');
+    assert.equal((await installationStatus(root)).pushedAt,pushed.pushedAt);
+  } finally {await rm(root,{recursive:true,force:true});}
 });

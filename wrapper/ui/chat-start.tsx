@@ -23,7 +23,7 @@ export function ChatStart({greeting,profile,requests,notifications,chats,project
     <Avatar avatar={profile.avatar} color={profile.avatarColor} large/>
     <ChatStartHeading paused={composing || busy} pauseAdvance={interacting} texts={headlinesForItem(items.find(item=>item.id===selected) || items[0],greeting,(!selected||selected===firstCard.current)?data.userProfile.name:'')} reduceMotion={profile.reduceMotion==='on'}/>
     </div>
-    <AttentionFan api={api} items={items} onOpen={open} onActiveChange={choose} reduceMotion={profile.reduceMotion==='on'} disabled={busy} autoplay={visible&&!composing&&!busy&&!interacting}/>
+    <AttentionFan api={api} items={items} onOpen={open} onActiveChange={choose} reduceMotion={profile.reduceMotion==='on'} disabled={busy} autoplay={visible&&!composing&&!busy}/>
     {(failure || error || data.error)&&<p role="alert" className="chat-start-error">{failure || data.error || 'Neue Hinweise konnten gerade nicht geladen werden. Die Glocke bleibt erreichbar.'}</p>}
   </div>;
 }

@@ -115,7 +115,7 @@ export function AgentMenu({ theme, onThemeChange, name, avatar, avatarColor, con
     footer={<span className="agent-theme-row"><button type="button" role="menuitem" className="agent-restart-button" disabled={restartBusy} onClick={onRestart}><RotateCcw size={14} strokeWidth={1.55}/>{restartBusy ? "Startet neu …" : "Neu starten"}</button><ThemeToggle theme={theme} onThemeChange={onThemeChange} menuItem /></span>}
     header={<ServerDetails connectionState={connectionState} preview={preview} />}
     items={[
-      { id: "usage", label: "Nutzung & Statistik", icon: <Activity size={18} strokeWidth={1.55} />, action: () => onNavigate("usage") },
+      { id: "usage", label: "Nutzung", icon: <Activity size={18} strokeWidth={1.55} />, action: () => onNavigate("usage") },
       { id: "settings", label: "Einstellungen", icon: <Settings size={18} strokeWidth={1.55} />, action: () => onNavigate("general") },
     ]}
   >

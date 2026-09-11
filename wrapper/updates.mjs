@@ -1,7 +1,7 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 import { createHash, randomUUID } from 'node:crypto';
-import { readdir, readFile } from 'node:fs/promises';
+import { readdir, readFile, realpath } from 'node:fs/promises';
 import path from 'node:path';
 
 export async function fingerprint(root, recursive = false, exclude = []) {
@@ -70,10 +70,12 @@ export async function installationStatus(root) {
     try { return (await execGit('git', args, {cwd:root, timeout:3000, maxBuffer:256 * 1024})).stdout.trim(); }
     catch { return ''; }
   };
+  const repositoryRoot = await git('rev-parse', '--show-toplevel');
+  const isRepository = repositoryRoot && await realpath(root) === await realpath(repositoryRoot);
   const [version, commit, refs] = await Promise.all([
     readFile(path.join(root, 'system/version.json'), 'utf8').then(JSON.parse).then(v=>v.version).catch(()=>null),
-    git('log', '-1', '--format=%h%n%cI'),
-    git('for-each-ref', '--format=%(refname)', 'refs/remotes/'),
+    isRepository ? git('log', '-1', '--format=%h%n%cI') : '',
+    isRepository ? git('for-each-ref', '--format=%(refname)', 'refs/remotes/') : '',
   ]);
   const pushes = await Promise.all(refs.split('\n').filter(Boolean).map(ref =>
     git('reflog', 'show', '-1', '--date=iso-strict', '--format=%gD', '--grep-reflog=^update by push$', ref)));
