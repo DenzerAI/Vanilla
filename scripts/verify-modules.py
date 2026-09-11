@@ -86,10 +86,13 @@ def verify(files, previous=None):
         owned.update(m.get('sources',[]))
         if previous and ident in old and any(files.get(p) != previous.get(p) for p in m.get('sources',[])):
             docs = [m.get('contract','').split('#')[0],m.get('setup','').split('#')[0]]
-            if m == old[ident] and all(files.get(p)==previous.get(p) for p in docs): errors.append(f'{ident}: Quelländerung ohne aktualisierten Vertrag oder Bauplan.')
+            if m == old[ident] and all(files.get(p)==previous.get(p) for p in docs):
+                changed = [p for p in m.get('sources',[]) if files.get(p) != previous.get(p)]
+                errors.append(f'{ident}: Quelländerung ohne aktualisierten Vertrag oder Bauplan. Geändert: {", ".join(changed[:5])}. '
+                              f'Entweder "version" des Moduls {ident} in system/modules.json erhöhen oder den Vertrag {docs[0] or "(kein Vertrag)"} ergänzen.')
     # Fail on a new route even when it lives in an already registered module file.
-    errors += [f'Unregistrierter Anschluss: {route}' for route in sorted(routes-registered)]
-    errors += [f'Quelldatei ohne Modul: {name}' for name in sorted(files) if application_source(name) and name not in owned]
+    errors += [f'Unregistrierter Anschluss: {route}. In system/modules.json unter "entrypoints" des zuständigen Moduls eintragen.' for route in sorted(routes-registered)]
+    errors += [f'Quelldatei ohne Modul: {name}. In system/modules.json unter "sources" des zuständigen Moduls eintragen.' for name in sorted(files) if application_source(name) and name not in owned]
     def visit(ident, stack):
         if ident in stack: errors.append('Zyklische Modulabhängigkeit: ' + ' -> '.join([*stack,ident])); return
         module = next((m for m in modules if m.get('id')==ident),{})

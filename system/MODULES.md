@@ -75,7 +75,7 @@ Aktionsleisten an Nachrichten erscheinen bei Zeigerkontakt oder sichtbarem Tasta
 
 Eine Wartungspause (`data/control/updates/maintenance.json`) kann der zugehörige Operator über `POST /internal/maintenance/resume` (Kopfzeile `x-agent-update` mit der Nonce der Pause, Body mit derselben `id`) im laufenden Betrieb beenden: Wrapper-Pause aufheben, Auftragswarteschlange und Suchindex nachholen, Mail- und Kalenderschleifen starten. Damit braucht eine Live-Aktivierung nur einen Neustart. Ohne aktive Pause antwortet die Route mit `resumed: false`.
 
-Der Kern beobachtet die Bau-Kette (`core/stall_watch.py`): Steht ein Bauauftrag oder eine Veröffentlichung länger als 15 Minuten in derselben Phase (Warteschlange, Prüfung, GitHub-Prüfungen, Vorbereitung, Installation), erscheint einmal die Benachrichtigung „Bauauftrag hängt“. Das Warten auf eine Pause des Nutzers vor der Aktivierung gilt nicht als Hänger.
+Der Kern beobachtet die Bau-Kette (`core/stall_watch.py`): Steht ein Bauauftrag oder eine Veröffentlichung länger als 15 Minuten in derselben Phase (Warteschlange, Prüfung, GitHub-Prüfungen, Vorbereitung, Installation), erscheint einmal die Benachrichtigung „Bauauftrag hängt“. Das Warten auf eine Pause des Nutzers vor der Aktivierung gilt nicht als Hänger. Ein begonnener Bauauftrag, der nach 30 Minuten noch nicht mit „ready“ übergeben ist, wird einmal als „Bauauftrag nicht bereitgemeldet“ gemeldet.
 
 ## Gemeinsamer Entwicklungsstand
 
