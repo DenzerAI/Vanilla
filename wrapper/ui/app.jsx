@@ -2626,9 +2626,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               {boot.features?.routines&&<IconButton label="Benachrichtigungen öffnen" aria-haspopup="dialog" aria-expanded={modal === "notifications" || modal?.type === "notifications"} onClick={()=>setModal("notifications")}><NotificationBell signal={bellSignal} />{notificationState.data?.unread>0&&<i className="notification-dot"/>}</IconButton>}
               <button className="primary small-button" onClick={() => setModal({ type: "job" })}>{icon(Plus, 16)}Erstellen</button>
             </PageHeading>
-            <p className="section-intro">
-              Im Chat beauftragen. Hier Routinen ändern, pausieren und Ergebnisse öffnen.
-            </p>
             <SearchBox
               value={search}
               onChange={setSearch}
@@ -2750,31 +2747,14 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 )}
               </div>
             ))}
-            {jobFilter !== "templates" && jobs.some(j=>Boolean(j.managed)===(jobFilter==='system')) && visibleJobs.length === 0 && (
-              <Empty Icon={Search} title="Keine passenden Aufträge">
-                Wähle einen anderen Filter oder ändere deinen Suchbegriff.
-              </Empty>
+            {/* A quiet, left-aligned empty line; the page keeps only title, create, search, filters and the list. */}
+            {jobFilter !== "templates" && !jobsLoading && !jobsError && visibleJobs.length === 0 && (
+              <p className="section-intro" role="status">
+                {jobs.some(j=>Boolean(j.managed)===(jobFilter==='system'))
+                  ? "Keine passenden Aufträge"
+                  : jobFilter === 'system' ? "Keine Systemaufträge" : "Noch keine Aufträge"}
+              </p>
             )}
-            {jobFilter !== "templates" && !jobsLoading && !jobsError && !jobs.some(j=>Boolean(j.managed)===(jobFilter==='system')) && (
-              <Empty
-                Icon={Clock}
-                title="Dein erster Auftrag"
-                action={
-                  <button
-                    className="primary"
-                    onClick={() => setModal({ type: "job" })}
-                  >
-                    {icon(Plus, 16)}Auftrag erstellen
-                  </button>
-                }
-              >
-                Beschreibe die Aufgabe, wähle einen Worker und lege fest, ob du
-                sie selbst startest oder regelmäßig ausführen lässt.
-              </Empty>
-            )}
-            <div className="page-note">
-              {icon(Clock, 15)}Zeitpläne laufen im Hintergrund, solange der Mac wach und der Dienst aktiv ist.
-            </div>
           </div>
           {modal?.type === 'job' && <section className="job-detail" aria-label="Auftragsdetails">
             <div className="row between job-detail-heading"><h2>{modal.job?.name || 'Neuer Auftrag'}</h2><IconButton label="Details schließen" onClick={()=>setModal(null)}>{icon(X,18)}</IconButton></div>
