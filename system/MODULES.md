@@ -148,7 +148,8 @@ wrapper/surfaces/library.md. Keine Migration von Dateien, Chats oder Jobmanifest
 
 
 Die gemeinsame Chat-Feinausrichtung verwendet ComposerHeading aus chat-controls.jsx:
-Identität links und ModelPicker rechts oberhalb der unten bündigen Schreibpille.
+ModelPicker rechts oberhalb der unten bündigen Schreibpille, eingerückt auf die
+Achse des Sendepfeils. Die Identität bleibt ausschließlich im Seitenleistenkopf.
 Antworten verzichten auf wiederholte Autorenzeilen. Der obere Fade ist um 20 %
 verkürzt, Sprungmarken stehen mittig am linken Panelrand, Nachrichtenaktionen
 bleiben auch unter der globalen Hoverregel ungefüllt und kompakt. Skeleton und

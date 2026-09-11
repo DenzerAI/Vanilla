@@ -1,4 +1,3 @@
-import { Avatar } from "./avatar.jsx";
 import { arrangeChatMenu } from "./chat-menu.mjs";
 import {IconButton} from './icon-button';
 import { LayoutGlyph } from './icon-variants.jsx';
@@ -13,15 +12,9 @@ import React, {
 import { createPortal } from "react-dom";
 import { Check, ChevronDown, MoreHorizontal, Lock, Plus, Pin, SquarePen, ArrowUpRight, Maximize, X, Archive } from "./icons.jsx";
 
-/** Shared identity and model row, immediately above the writing surface. */
-export function ComposerHeading({profile = {}, children}) {
-  return <div className="composer-options" role="group" aria-label="Assistent und Nachrichtenoptionen">
-    <span className="composer-identity" title={profile.name || "Agent"}>
-      <span aria-hidden="true"><Avatar avatar={profile.avatar} color={profile.avatarColor}/></span>
-      <span className="composer-identity-name">{profile.name || "Agent"}</span>
-    </span>
-    {children}
-  </div>;
+/** Model controls sit inside the pill's outer edge, above the send action. */
+export function ComposerHeading({children}) {
+  return <div className="composer-options" role="group" aria-label="Nachrichtenoptionen">{children}</div>;
 }
 
 export function ChatMenu({

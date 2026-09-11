@@ -2369,7 +2369,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       ))}
                     </div>
                   )}
-                  <ComposerHeading profile={boot.settings}>
+                  <ComposerHeading>
                       <ModelPicker
                         workerSession={sameWorker ? thread?.workerSession : undefined}
                         onSessionChange={async change => {

@@ -447,7 +447,7 @@ Der rechte Bereich „Workspace“ verwendet die eigene Rolle `workspace-panel-b
 
 ## Ruhiger Gesprächsfluss
 
-Antworten beginnen direkt mit ihrem Inhalt. Der konfigurierte Avatar und Agentenname stehen in ComposerHeading links über der Eingabe, ModelPicker rechts. Eine wiederholte Autorenzeile und relatives Nachrichtenalter entfallen; der genaue Antwortzeitpunkt bleibt als Tooltip des Antwortblocks verfügbar. Direkt unter dem jeweils neuesten Antworttext, vor den bei Hover eingeblendeten Nachrichtenaktionen, stehen ausgewählter AppLoader, Live-Status, Schrittanzahl und tatsächliche Bearbeitungszeit. Diese aufklappbare ActivityGroup wandert beim Streaming mit dem Text nach unten und bleibt nach Abschluss dort als kompakter Verlauf erhalten. Ohne Werkzeuge steht der kompakte Arbeitsstatus ebenfalls direkt unter dem Text vor den Aktionen. Die Aktionszeile reserviert keinen Platz zwischen Text und Status. Die Anzeige liegt im normalen Gesprächsfluss, ohne Inhalte zu überdecken; manuelles Hochscrollen pausiert weiterhin das automatische Mitlaufen. Der Spinner endet mit der Arbeit und behauptet keinen weiteren Fortschritt.
+Antworten beginnen direkt mit ihrem Inhalt. Der konfigurierte Avatar und Agentenname bleiben im Seitenleistenkopf. ComposerHeading zeigt nur ModelPicker rechts, mit Einzug auf die Achse des Sendepfeils. Eine wiederholte Autorenzeile und relatives Nachrichtenalter entfallen; der genaue Antwortzeitpunkt bleibt als Tooltip des Antwortblocks verfügbar. Direkt unter dem jeweils neuesten Antworttext, vor den bei Hover eingeblendeten Nachrichtenaktionen, stehen ausgewählter AppLoader, Live-Status, Schrittanzahl und tatsächliche Bearbeitungszeit. Diese aufklappbare ActivityGroup wandert beim Streaming mit dem Text nach unten und bleibt nach Abschluss dort als kompakter Verlauf erhalten. Ohne Werkzeuge steht der kompakte Arbeitsstatus ebenfalls direkt unter dem Text vor den Aktionen. Die Aktionszeile reserviert keinen Platz zwischen Text und Status. Die Anzeige liegt im normalen Gesprächsfluss, ohne Inhalte zu überdecken; manuelles Hochscrollen pausiert weiterhin das automatische Mitlaufen. Der Spinner endet mit der Arbeit und behauptet keinen weiteren Fortschritt.
 
 Zwischenmeldungen bleiben während der Arbeit im Gespräch sichtbar. Sobald eine abschließende Antwort vorliegt und die Arbeit beendet ist, werden Zwischenmeldungen und Werkzeugschritte in ihrer ursprünglichen Reihenfolge in die standardmäßig geschlossene Gruppe aufgenommen. Aufklappen zeigt den vollständigen Ablauf. Laufende oder fehlgeschlagene Turns ohne Abschlussantwort verlieren ihre sichtbaren Zwischenmeldungen nicht. Nutzernachrichten und Antworten behalten ihre Reihenfolge; Nachträge werden nicht vor die erste Nutzernachricht verschoben.
 
@@ -476,7 +476,7 @@ Kopf und Bereichsauswahl nutzen control (14 px), Dateizeilen und Begleittexte sm
 „Befehle“ verwendet normale UI-Schrift im Leerzustand, Monospace nur für Eingabe und tatsächliche Ausgabe. Der kurze Hinweis benennt Einzelaufrufe und das 30-Sekunden-Limit. Die Eingabe bleibt unten als kompakte getönte Zeile. Die gemeinsame schwarze Materialfläche, feine Kante und Lichtbewegung bleiben in allen Ansichten sichtbar. Der Bereich ist kein persistentes Terminal und bietet keine neu erfundene native Finder-/Terminal-Anbindung.
 
 
-Die erste Nachrichtenaktion und das Fortschrittssymbol teilen dieselbe senkrechte Mittelachse. Avatar und Name stehen ausschließlich in der gemeinsamen Composerzeile. Lange Namen kürzen dort mit Ellipse; der vollständige Name bleibt im Tooltip erhalten.
+Die erste Nachrichtenaktion und das Fortschrittssymbol teilen dieselbe senkrechte Mittelachse. Avatar und Name bleiben im Seitenleistenkopf; der Composer zeigt keine zusätzliche Identität.
 
 ## Inbox
 
@@ -1356,7 +1356,7 @@ Unser Design und damit im gemeinsamen UI-Bauplan. Verhalten: surfaces/chat.md.
 
 ### Einheitliche Claude- und Codex-Bedienung
 
-Über jedem Composer stehen Identität und ModelPicker in einer gemeinsamen Zeile. Separate native
+Über jedem Composer steht rechts ModelPicker mit Einzug auf die Achse des Sendepfeils. Separate native
 Worker-Menüs entfallen auch bei Claude. Der nativ verfügbare Fast-Schalter
 verwendet denselben Blitz und Statusindikator im Modellfenster. Die bestätigte
 Beschreibung des nativen Default-Modells liefert, sofern gemeldet, seinen
@@ -1420,7 +1420,7 @@ Hover-/Tastaturdarstellung bestehen; Unser Design zeigt denselben Baustein.
 Abgeschlossene erfolgreiche Werkzeugverläufe sind mobil ausgeblendet; laufende
 Arbeit, Rückfragen, Fehler und unvollständige Schritte bleiben erreichbar.
 Die laufende Statuszeile zeigt mobil keine Schrittzahl oder Laufzeit.
-Auch mobil steht die Identität einmal über dem Composer; eine Autorenzeile über jeder Antwort entfällt.
+Auch mobil bleibt die Identität im Seitenleistenkopf; eine Autorenzeile über jeder Antwort entfällt.
 Nachrichtenabstände verwenden space-8, Status-/Kopfabstände space-4.
 Keine Datenmigration: Originalverlauf, Geräte, Einstellungen und Exporte bleiben
 unverändert. Ein älterer UI-Stand zeigt wieder die ausführliche Darstellung.
@@ -1465,9 +1465,10 @@ Fortschritt beträgt space-4, die Aktionszeile hat keine zusätzlichen Blockrän
 
 ### Feinausrichtung im Chat
 
-ComposerHeading teilt sich die vorhandene Modellzeile mit der konfigurierten
-Identität, links Avatar und Name, rechts Modell und Denkstufe. Die Reihenfolge
-ist Rückfragen/Slash-Liste, Anhänge, Identität/Modell, Schreibpille. Unter der
+ComposerHeading zeigt ausschließlich Modell und Denkstufe rechts über der Pille.
+Der horizontale Einzug entspricht space-8 plus der halben Sende-Trefferbreite
+(control-target, bei Touch control-touch). Die Identität bleibt im Seitenleistenkopf.
+Die Reihenfolge ist Rückfragen/Slash-Liste, Anhänge, Modellwahl, Schreibpille. Unter der
 Pille stehen keine Zusatzzeilen. Die Unterkante liegt mit space-8 bündig zur
 Seitenleiste; sichere Displayränder gehen vor. Mehrzeiliger Text wächst nach oben.
 Antworten beginnen ohne wiederholte Autorenzeile; der genaue Zeitpunkt steht im
