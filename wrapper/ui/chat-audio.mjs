@@ -42,9 +42,10 @@ export class ChatAudio {
   resume=async()=>{
     if(!this.player) return;
     if(microphoneBusy()) { this.emit({error:'Bitte zuerst das Diktat beenden.'}); return; }
+    const revision=this.revision;
     clearTimeout(this.timer); this.emit({error:''});
-    try { await this.player.resume(); if(!this.draining) {this.emit({status:'waiting'}); void this.drain();} }
-    catch(error) { this.fail(error); }
+    try { await this.player.resume(); if(revision!==this.revision) return; if(!this.draining) {this.emit({status:'waiting'}); void this.drain();} }
+    catch(error) { if(revision===this.revision) this.fail(error); }
   };
   async drain() {
     if(this.draining===this.revision+1 || this.state.status==='paused') return;
