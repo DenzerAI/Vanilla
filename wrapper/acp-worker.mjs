@@ -102,7 +102,7 @@ export class ACPWorker extends EventEmitter {
   }
   async setup(method, params) {
     this.setupCount++;
-    try { return await this.rpc.call(method, params); }
+    try { return await this.rpc.call(method, params, 60000); }
     finally { this.setupCount--; }
   }
   applyEarly(thread) {
@@ -144,6 +144,7 @@ export class ACPWorker extends EventEmitter {
       if (!this.sessions.has(sid)) {
         if (!this.info.agentCapabilities.loadSession) throw new Error(`${this.name} kann diesen Chat nach Neustart nicht fortsetzen. Verlauf bleibt erhalten; bitte neuen Chat beginnen.`);
         // Ignore replay updates until load finishes: our persisted transcript is the display source.
+        const since = this.authRevision;
         let result, sessionId = sid;
         try {
           result = await this.setup("session/load", { sessionId: sid, cwd: p.cwd, mcpServers: await this.mcpServers(p.cwd) });
@@ -156,6 +157,12 @@ export class ACPWorker extends EventEmitter {
           result = await this.recreateEmptySession(thread, p.cwd);
           sessionId = result.sessionId;
         }
+        this.setupCount++;
+        try { await this.checkAuthentication(since); }
+        catch (error) {
+          this.earlyUpdates = this.earlyUpdates.filter(m => m.params.sessionId !== sessionId);
+          throw error;
+        } finally { this.setupCount--; }
         thread.workerSession = { ...result, sessionId };
         thread.cwd = p.cwd; this.sessions.set(sessionId, thread.id); this.applyEarly(thread);
         await this.persist(thread); this.publishSession(thread);
@@ -188,6 +195,7 @@ export class ACPWorker extends EventEmitter {
     if (method === "turn/start") {
       if (this.running.has(thread.id)) throw new Error("Bitte die laufende Antwort abwarten oder stoppen.");
       if (p.collaborationMode?.mode === "plan" || p.sandboxPolicy?.type === "readOnly") throw new Error(`${this.name} bietet hier keinen geschützten Planmodus.`);
+      await this.checkAuthentication();
       const context = p.collaborationMode?.settings?.developer_instructions;
       const nativeCommand = p.input[0]?.type === "text" && p.input[0].text.startsWith("/");
       // Some native adapters concatenate text blocks without a separator. End

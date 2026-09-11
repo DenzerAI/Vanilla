@@ -949,7 +949,7 @@ route("POST", "/api/chat/provider", async b => {
       if (active.has(id)) throw new Error("Der bisherige Anbieter hat das Stoppen noch nicht bestätigt. Bitte erneut versuchen.");
     }
     await finishing.get(id);
-    const previous = mergeTools((await workers.call("thread/read", {threadId:id, includeTurns:true})).thread, toolsByThread.get(id));
+    const previous = mergeTools((await readThread(id)).thread, toolsByThread.get(id));
     const snapshot = await saveHandoff(store, id, previous);
     const old = {...c}, selection = sessionModelSelection(r.thread.workerSession);
     Object.assign(c, {workerId:b.workerId, workerThreadId:r.thread.id, handoffSnapshot:snapshot,

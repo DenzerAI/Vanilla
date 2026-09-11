@@ -149,7 +149,6 @@ import { Dictation } from "./dictation.jsx";
 import { SettingRow } from "./settings-row.jsx";
 import { ModelPicker } from "./model-picker.jsx";
 import { effortConfig, modelConfig, preferredModel, sessionModelSelection, supportedEffort } from "../worker-models.mjs";
-import { WorkerSessionControls } from "./worker-session-controls";
 import { groupSkills } from "./skill-categories.mjs";
 import { FilterPicker } from "./filter-picker.jsx";
 import {
@@ -1505,12 +1504,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     setBusy(true);
     const sourceChat = chatRef.current, sourceProject = projectRef.current;
     try {
-      const state = await api("/workers/activate", {id: workerId});
-      setBoot(old => ({...old, workers: state.workers, modelsByWorker: {...old.modelsByWorker, [workerId]: state.models}}));
-      if (chatRef.current !== sourceChat || projectRef.current !== sourceProject) return;
-      const worker = state.workers.find(w => w.id === workerId);
-      const nextModel = preferredModel(state.models, workerId, workerId === pickerWorker ? model : "");
-      if (worker.adapter === "codex" && !nextModel) throw new Error("Codex meldet noch keine Modelle der 5.6- oder 6er-Serie. Bitte die CLI-Anmeldung prüfen.");
       if (sourceChat) {
         const result = await api("/chat/provider", {id:sourceChat, workerId, expectedWorker:pickerWorker, expectedTurnId:active[sourceChat] || null, stop:running});
         setChats(old => old.map(c => c.id === sourceChat ? result.meta : c));
@@ -1521,6 +1514,12 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         }
         return;
       }
+      const state = await api("/workers/activate", {id: workerId});
+      setBoot(old => ({...old, workers: state.workers, modelsByWorker: {...old.modelsByWorker, [workerId]: state.models}}));
+      if (chatRef.current !== sourceChat || projectRef.current !== sourceProject) return;
+      const worker = state.workers.find(w => w.id === workerId);
+      const nextModel = preferredModel(state.models, workerId, workerId === pickerWorker ? model : "");
+      if (worker.adapter === "codex" && !nextModel) throw new Error("Codex meldet noch keine Modelle der 5.6- oder 6er-Serie. Bitte die CLI-Anmeldung prüfen.");
       // ACP negotiates its exact model/effort options when the empty session is opened.
       const result = worker.adapter === "acp" ? await api("/chats", {worker: workerId, mode: "default", projectId: sourceProject, title: !sourceChat ? draftTitle || undefined : undefined}) : null;
       if (chatRef.current !== sourceChat || projectRef.current !== sourceProject) return;
@@ -2448,6 +2447,12 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                   </ComposerFocus>
                   <div className="composer-options" role="group" aria-label="Nachrichtenoptionen">
                       <ModelPicker
+                        workerSession={thread?.workerSession}
+                        onSessionChange={async change => {
+                          const id = chatId;
+                          const r = await api("/worker-session", {id, ...change});
+                          if (chatRef.current === id) setThread(old => old ? {...old, workerSession:r.thread.workerSession} : old);
+                        }}
                         mode={mode} onModeChange={setMode} modeDisabled={running || busy}
                         planAvailable={current ? current.capabilities?.plan !== false : draftWorker !== "auto" ? boot.workers?.find(w => w.id === draftWorker)?.capabilities?.plan !== false : boot.planAvailable !== false}
                         models={pickerModels} model={pickerModel} effort={pickerEffort} reduceMotion={boot.settings.reduceMotion === "on"}
@@ -2458,23 +2463,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                         context={nextSelection ? "Nächste Nachricht" : running ? "Auswahl für die nächste Nachricht" : current?.fallbackFrom ? `${workerName(current.workerId)} übernimmt als Vertretung für ${workerName(current.fallbackFrom)}.` : undefined}
                         onChange={changePickerSelection}
                       />
-                      {thread?.workerSession && <WorkerSessionControls
-                        session={thread.workerSession}
-                        disabled={running || busy}
-                        onCommand={command => {
-                          setText(previous => {
-                            const args = previous.startsWith("/") ? previous.replace(/^\/\S+\s?/, "") : previous;
-                            return command + (args ? (command.endsWith(" ") ? "" : " ") + args : "");
-                          });
-                          requestAnimationFrame(() => inputRef.current?.focus());
-                        }}
-                        onChange={async change => {
-                          const id = chatId;
-                          const r = await api("/worker-session", { id, ...change });
-                          if (chatRef.current === id) setThread(old => old ? { ...old, workerSession: r.thread.workerSession } : old);
-                        }}
-                        onError={notify}
-                      />}
                   </div>
                 </form>
                 <input

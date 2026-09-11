@@ -18,7 +18,7 @@ const data=localPath(process.env.UWE_DATA_ROOT || 'data/control');
 const command=(!process.env[entry.env] && id!=='claw-code' && await managedCommand(data,entry)) || await findWorkerCommand({...entry,command:native[id][0], ...(id==='claw-code'?{env:'UWE_CLAUDE_BINARY',adapter:'native'}:{})});
 if (!command) throw Error(`${native[id][0]} ist noch nicht installiert. Siehe wrapper/WORKERS.md.`);
 await mkdir(data,{recursive:true,mode:0o700});
-const scoped=await installationEnvironment(data);
+const scoped=await installationEnvironment(data, id);
 console.log('Anmeldung für diese Vanilla-Installation. Es werden keine vorhandenen Hostprofile übernommen.');
 const child=spawn(command,native[id][1],{cwd:root,stdio:'inherit',env:{...workerEnvironment(),...scoped}});
 child.on('error',()=>{console.error('Worker konnte nicht gestartet werden. Programmpfad prüfen.');process.exitCode=1;});

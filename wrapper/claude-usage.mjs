@@ -5,7 +5,7 @@ export async function readClaudeUsage({dataRoot,cwd,queryFactory,environment=pro
  // SDK launches must use the same installation profile as the ACP worker.
  // Explicitly unset inherited keys as SDK versions may merge their environment.
  const env={...Object.fromEntries(Object.keys(environment).map(key=>[key,undefined])),
-  ...workerEnvironment(environment),...await installationEnvironment(dataRoot)};
+  ...workerEnvironment(environment),...await installationEnvironment(dataRoot, 'claw-code', environment)};
  let release;const idle=new Promise(resolve=>release=resolve);
  async function* input(){await idle;}
  const abortController=new AbortController();

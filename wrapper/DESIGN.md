@@ -1332,3 +1332,16 @@ Keine zusätzliche Daueranimation.
 Die Kalenderkachel folgt Fächerbewegung, Reduced Motion und Kontrastvorgaben.
 CalendarPreview zeigt denselben Produktionsbaustein mit markierten Beispieldaten in
 Unser Design und damit im gemeinsamen UI-Bauplan. Verhalten: surfaces/chat.md.
+
+
+### Einheitliche Claude- und Codex-Bedienung
+
+Unter jedem Composer steht ausschließlich ModelPicker. Separate native
+Worker-Menüs entfallen auch bei Claude. Der nativ verfügbare Fast-Schalter
+verwendet denselben Blitz und Statusindikator im Modellfenster. Die bestätigte
+Beschreibung des nativen Default-Modells liefert, sofern gemeldet, seinen
+lesbaren Modellnamen. Die nativen IDs und Denkstufen bleiben unverändert.
+Im ruhenden Chat startet der Anbieterbutton den Wechsel unmittelbar; eine
+laufende Antwort verwendet weiterhin „Stoppen und wechseln“. Kein zusätzlicher
+Ladeschritt oder neues Dialogmuster. Gemeinsame Fehlermeldung, Fokusführung,
+Touchziele und reduzierte Bewegung bleiben wirksam.

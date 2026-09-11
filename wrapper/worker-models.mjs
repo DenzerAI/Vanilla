@@ -6,7 +6,7 @@ export function sessionModelSelection(session) {
   const config = modelConfig(session), thinking = effortConfig(session);
   const model = config?.currentValue || (session?.configOptions === undefined ? session?.models?.currentModelId : '') || '';
   const effort = thinking?.currentValue || '';
-  const nativeModels = config ? optionValues(config).map(o => ({model: o.value, displayName: o.name || o.value}))
+  const nativeModels = config ? optionValues(config).map(o => ({model: o.value, displayName: o.value === 'default' && o.description ? o.description : o.name || o.value}))
     : session?.configOptions === undefined ? (session?.models?.availableModels || []).map(m => ({model: m.modelId, displayName: m.name || m.modelId})) : [];
   return {model, effort, models: nativeModels.map(m => ({...m, isDefault: m.model === model,
     supportedReasoningEfforts: m.model === model ? optionValues(thinking).map(o => ({reasoningEffort: o.value, displayName: o.name || o.value, description: o.description})) : [],
@@ -45,3 +45,11 @@ export async function applySessionSelection(session, requested, change) {
 }
 
 export const fastTier = model => model?.serviceTiers?.find(t => t.id === "priority" || t.id === "fast") || null;
+
+// The installed ACP adapter advertises this select fallback to non-boolean clients.
+export function sessionFast(session) {
+  const option = session?.configOptions?.find(o => o.id === 'fast' && o.type === 'select');
+  const values = optionValues(option);
+  if (!values.some(o => o.value === 'on') || !values.some(o => o.value === 'off') || !['on','off'].includes(option.currentValue)) return null;
+  return {id:option.id, enabled:option.currentValue === 'on', on:'on', off:'off'};
+}

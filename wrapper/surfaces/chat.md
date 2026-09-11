@@ -76,7 +76,7 @@ Die gemeinsame Darstellung verarbeitet normalisierte öffentliche Werkzeugdaten.
 ## Austauschbare Worker
 
 Der Composer zeigt die Modelle und unterstützten Funktionen des tatsächlichen Workers. Eine Übernahme wird innerhalb der Modellwahl mit dem tatsächlichen Worker und „Vertretung“ erklärt. Eine zusätzliche dauerhafte Worker-Beschriftung unter der Eingabe entfällt. Ein
-Planmodus ohne wirksamen Schreibschutz wird nicht angeboten. Die gemeinsame Modellwahl bietet Codex und Claude Code immer als anklickbare Bereiche mit Original-Icons aus `BrandIcon`. Andere bestehende Worker erscheinen dort, wenn sie das aktuelle Gespräch führen. Standard und Vertretung bleiben unter Einstellungen → Worker. Ein ausdrücklicher Anbieterwechsel setzt denselben sichtbaren Chat fort. Chat-ID, Titel, Projekt, Entwurf, Anhänge und Verlauf bleiben erhalten. Im Leerlauf heißt die Aktion „Mit … fortsetzen“, während einer Antwort „Stoppen und wechseln“. Erst wird die Zielanmeldung geprüft, dann gegebenenfalls die bisherige Antwort gestoppt und deren Abschluss bestätigt. Der neue Worker erhält eine eigene native Sitzung und den bisherigen Gesprächskontext. Fehler vor der Übernahme verändern die bisherige Zuordnung nicht. Automatische Jobs und Kanalgespräche bleiben fest zugeordnet. Die Anbieterwahl im Chat verändert den globalen Standard nicht.
+Planmodus ohne wirksamen Schreibschutz wird nicht angeboten. Die gemeinsame Modellwahl bietet Codex und Claude Code immer als anklickbare Bereiche mit Original-Icons aus `BrandIcon`. Andere bestehende Worker erscheinen dort, wenn sie das aktuelle Gespräch führen. Standard und Vertretung bleiben unter Einstellungen → Worker. Ein ausdrücklicher Anbieterwechsel setzt denselben sichtbaren Chat fort. Chat-ID, Titel, Projekt, Entwurf, Anhänge und Verlauf bleiben erhalten. Im Leerlauf wechselt ein Klick auf den Anbieter direkt, ohne zusätzlichen Lade- oder Fortsetzen-Button; während einer Antwort bleibt „Stoppen und wechseln“ ausdrücklich beschriftet. Erst wird die Zielanmeldung geprüft, dann gegebenenfalls die bisherige Antwort gestoppt und deren Abschluss bestätigt. Der neue Worker erhält eine eigene native Sitzung und den bisherigen Gesprächskontext. Fehler vor der Übernahme verändern die bisherige Zuordnung nicht. Automatische Jobs und Kanalgespräche bleiben fest zugeordnet. Die Anbieterwahl im Chat verändert den globalen Standard nicht.
 
 
 ## Dateien anheften
@@ -171,15 +171,14 @@ Seitenleisten-Chatliste, Gesprächsverlauf und Composer behalten Scrollfunktion 
 
 ## Native Sitzungsauswahl
 
-Bei ACP-Chats stehen gemeldete Slash-Befehle neben Modus und Modell in einem
-kompakten Menü. Das Menü zeigt Beschreibung und Eingabehinweis. Die Auswahl setzt den Befehl in den Entwurf;
-erst Senden führt ihn aus. Nicht gemeldete und ausdrücklich leere Listen sind
-unterschiedlich beschriftet. Manuell eingegebene Befehle bleiben möglich.
-Gemeldete Sitzungseinstellungen erscheinen in ihrer nativen Reihenfolge als
-Auswahlmenüs an derselben Stelle. Native Modi sind keine Zusage eines
-Wrapper-Schreibschutzes. Änderungen warten auf die Worker-Bestätigung und sind
-während laufender Arbeit gesperrt. Unbekannte Optionstypen und Updatearten
-erscheinen als nicht bedienbar beziehungsweise im Hinweismenü.
+ACP und Codex verwenden dieselbe kompakte Composerzeile mit ausschließlich
+ModelPicker. Native Slash-Befehle können direkt in die Eingabe geschrieben werden;
+erst Senden führt sie aus. Separate Menüs für Befehle, Mode, Fast und interne
+Updatehinweise entfallen. Modell und Denkaufwand verwenden die bestätigten
+nativen Optionen. Der native Claude-Fast-Schalter sitzt wie Codex links im
+Modellfenster; während einer laufenden Claude-Antwort ist er gesperrt.
+Nicht eingeblendete native Einstellungen behalten ihren Wert; Berechtigungen
+werden durch die vereinfachte Darstellung nicht geändert.
 
 Die Überschrift „Workspace“ und die Projektzeilen bleiben beim Scrollen fest stehen. Nur die Chatliste des aufgeklappten Projekts scrollt im verbleibenden Platz. Die Chatliste verwendet den gemeinsamen ScrollEdgeFade: oben über 8 px und unten über 32 px bis zur tatsächlichen Unterkante der Seitenleiste, ausschließlich wenn in dieser Richtung weiterer Inhalt außerhalb des sichtbaren Bereichs liegt. Am Listenanfang und -ende entfällt der jeweilige Fade. Auswahlflächen bleiben außerhalb dieses schmalen Randes deckend; 32 px Endabstand halten den letzten Eintrag vollständig erreichbar. Im erzwungenen Kontrastmodus entfällt die Maske. Die Agentenzeile bleibt außerhalb des Scrollbereichs.
 
@@ -280,7 +279,7 @@ Während einer laufenden Antwort bleiben Modell und Denkaufwand auswählbar. Die
 
 Codex zeigt ausschließlich gemeldete, sichtbare Modelle der GPT-5.6- und GPT-6-Serie. Bereits vorhandene Gespräche mit älteren Modellen behalten ihren tatsächlichen Modellnamen. Die Stufen kommen exakt aus `supportedReasoningEfforts`, mit unveränderten nativen Werten und lediglich großgeschriebenen Anzeigenamen. Beim Modellwechsel bleibt eine Stufe nur erhalten, wenn das neue Modell sie anbietet.
 
-Claude Code lädt seine echten Modelle beim Öffnen einer leeren nativen Sitzung. Vorhandene CLI-/OAuth-Anmeldung wird durch den bestehenden ACP-Anschluss verwendet. Ein erfolgreicher Handshake alleine gilt nicht als Modellzugang. Ohne Anmeldung bleiben verständlicher Fehler, erneuter Versuch und der Original-Einrichtungslink erreichbar. Es wird keine Nachricht gesendet und kein Modellkatalog erfunden. Native `configOptions` sind führend: Modell- und Effort-Auswahl stehen gemeinsam im Picker und erscheinen nicht nochmals neben dem Composer. Ein Modellwechsel übernimmt erst die vollständige Antwort mit den zu diesem Modell passenden Stufen; abgewiesene Werte bleiben unverändert. Übrige Sitzungseinstellungen und Befehle behalten ihre bisherigen Plätze.
+Claude Code lädt seine echten Modelle beim Öffnen einer leeren nativen Sitzung. Vorhandene CLI-/OAuth-Anmeldung wird durch den bestehenden ACP-Anschluss verwendet. Ein erfolgreicher Handshake alleine gilt nicht als Modellzugang. Ohne Anmeldung bleiben verständlicher Fehler, erneuter Versuch und der Original-Einrichtungslink erreichbar. Es wird keine Nachricht gesendet und kein Modellkatalog erfunden. Native `configOptions` sind führend: Modell- und Effort-Auswahl stehen gemeinsam im Picker und erscheinen nicht nochmals neben dem Composer. Ein Modellwechsel übernimmt erst die vollständige Antwort mit den zu diesem Modell passenden Stufen; abgewiesene Werte bleiben unverändert. Separate Sitzungseinstellungen entfallen im Composer; native Befehle bleiben per Texteingabe verfügbar.
 
 
 Die Eingabenavigation verwendet `ChapterScrubber` unter `ui/components/ui`. Position links bei 20 % und maximale Höhe 45 % bleiben erhalten. Eine gemeinsame Federbewegung erzeugt eine Kosinuswelle über benachbarte Striche; die einzelne Glasvorschau folgt innerhalb des Panels. Die Werte stehen in `scrubberSprings`. Klick und Enter springen weiterhin zur Nutzernachricht; Pfeiltasten, Home und End steuern den einzigen Tabstopp. App- und Systemvorgaben für reduzierte Bewegung zeigen die Welle ohne zeitliche Animation. Keine dauerhafte Dekoration.
@@ -300,7 +299,7 @@ Der verbindliche Ablauf steht unter [Aufträge](jobs.md#routinen-aus-dem-chat-un
 
 Der ReasoningSlider bewegt sich zwischen den Punkten frei, zieht nahe Punkte magnetisch an und übernimmt beim Loslassen genau eine native Stufe. Keine unteren Low-/Ultra-Labels und kein diagonaler Popover-Verlauf. Native Default-/Auto-Werte erscheinen separat als Rücksetzen, nicht als zusätzliche Denkstufe. Anzahl und Namen bleiben modellspezifisch.
 
-Codex bietet einen flachen Blitz-Button „Fast“, sofern `model/list.serviceTiers` eine passende Option meldet. Native IDs werden unverändert verwendet. Die Wahl gilt erst für die nächste Nachricht, bleibt pro bestehendem Chat gespeichert und wird über `serviceTierForTurn` übertragen; Standard wird ausdrücklich mit `default` gesendet. Ein nicht mehr unterstützter Tier wird nicht an das neue Modell übertragen. Der Tooltip nennt den höheren Verbrauch. Claude behält seine nativ angebotenen übrigen Sitzungseinstellungen.
+Codex bietet einen flachen Blitz-Button „Fast“, sofern `model/list.serviceTiers` eine passende Option meldet. Native IDs werden unverändert verwendet. Die Wahl gilt erst für die nächste Nachricht, bleibt pro bestehendem Chat gespeichert und wird über `serviceTierForTurn` übertragen; Standard wird ausdrücklich mit `default` gesendet. Ein nicht mehr unterstützter Tier wird nicht an das neue Modell übertragen. Der Tooltip nennt den höheren Verbrauch. Claude verwendet denselben Fast-Blitz für seine bestätigte native on/off-Option.
 
 Anbieterübernahmen speichern einen unveränderlichen Verlaufsschnappschuss. Neue native Ereignisse werden auf die sichtbare Chat-ID zugeordnet; verspätete Ereignisse der alten Sitzung verändern den neuen Verlauf nicht. Die Kontextübergabe enthält einen begrenzten Gesprächsauszug und den vollständigen lesbaren Export, ohne private Reasoning-Inhalte. Neustart und erneutes Öffnen behalten Zuordnung und Verlauf. Verzweigen bleibt nach dem Übergabepunkt möglich; Löschen über die Anbietergrenze hinweg wird vor nativen Änderungen abgewiesen.
 
@@ -1132,3 +1131,18 @@ Diese Aktion darf den Worker starten; bloßes Anzeigen der Kachel tut es nicht.
 Kalender öffnen im Tageschat führt zur bestehenden Kalenderansicht ohne neuen
 Hauptmenüpunkt. Eigene und angebundene Termine teilen dieselbe Projektion, bleiben
 nach Herkunft unterscheidbar. Kalenderdaten und Migrationsvertrag: docs/PLANNER.md.
+
+
+### Gemeinsamer Workerwechsel · Version 2
+
+Der bestehende Chat wechselt über einen einzigen Übergabeaufruf. Eine zusätzliche
+Aktivierungsanfrage entfällt. Verlauf und Entwurf bleiben sichtbar; ausschließlich
+die Auswahl zeigt die tatsächliche ausstehende Bestätigung. Der vollständige
+unveränderliche Verlauf bleibt erhalten. Der begrenzte Kontextblock enthält bei
+langen Chats sowohl den ursprünglichen Auftrag als auch den jüngsten Stand,
+mit Verweis auf die vollständige Datei, ohne zusätzlichen Zusammenfassungsaufruf.
+Bei ausgefallener Quellverbindung verwendet die Übergabe den vorhandenen lokalen
+Verlauf über denselben Leseanschluss wie der Chat. Aktive Arbeit muss weiterhin
+bestätigt beendet sein. Kein automatisches Wiederholen von Nachrichten.
+Keine Datenmigration; bestehende Übergabedateien und Modellwerte bleiben lesbar.
+Ein älterer UI-Stand zeigt wieder die separaten ACP-Menüs.
