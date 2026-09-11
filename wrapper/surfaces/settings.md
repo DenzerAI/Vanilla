@@ -402,8 +402,11 @@ offene Veröffentlichungen mit ihrer Phase (veröffentlicht, GitHub prüft, gepr
 aktiviert samt Aktivierungsschritt, Prüfung fehlgeschlagen, Aktivierung blockiert) und
 die letzten acht Arbeitsstände mit Name, Zeitpunkt, Kandidatencommit und Status.
 Blockierte Stände nennen den gemeldeten Grund; ein Veröffentlichungsfehler erscheint
-als eigene Zeile. Ersetzte Stände werden nicht einzeln aufgeführt. `integrated` heißt
-ausdrücklich noch nicht live. Reine Anzeige ohne Aktionen: Bereitmelden, Push und
+als eigene Zeile. Ersetzte Stände und fehlgeschlagene Prüfungen vor dem aktuellen
+Live-Stand werden nicht einzeln aufgeführt; führt das Journal mehrere Live-Einträge,
+gilt der jüngste. Integrierte Stände, deren Abschluss vor der Veröffentlichung des
+Live-Stands liegt, heißen Live und sind darin enthalten; spätere heißen Integriert und
+sind ausdrücklich noch nicht live. Reine Anzeige ohne Aktionen: Bereitmelden, Push und
 Aktivierung bleiben beim Worker und dem Prozessmanager. Ohne eingerichtete
 Quellübergabe fehlt die Gruppe. Die vorhandene Aktualisierung der Systemseite alle
 15 Sekunden gilt mit. `ui/source-work-status.mjs` übersetzt die Kernzustände; unbekannte
