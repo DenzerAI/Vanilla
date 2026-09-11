@@ -171,6 +171,7 @@ const StatisticsDashboard = lazySurface(() => import('./statistics'), 'Statistic
 const WeatherPreview = lazySurface(() => import('./weather-preview'), 'WeatherPreview', 'list');
 const WeatherMotionSetting = lazySurface(() => import('./weather-motion'), 'WeatherMotionSetting', 'list');
 const ServiceSettings = lazySurface(() => import('./work-evidence.tsx'), 'ServiceSettings', 'list');
+const ComposerCommandController = lazySurface(() => import('./composer-commands'), 'ComposerCommandController', 'list');
 const PlannerPage = lazySurface(() => import('./planner'), 'PlannerPage', 'list');
 const InboxPage = lazySurface(() => import('./inbox'), 'InboxPage', 'list');
 const ChatStart = lazySurface(() => import('./chat-start'), 'ChatStart', 'attention');
@@ -1574,6 +1575,18 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     };
     if ((!msg.trim() && !attachments.length) || busy) { if (voiceText) rejectVoice("Chat ist beschäftigt."); return; }
     if (uploadCounts.current.get(draftKey())) { rejectVoice("Dateien werden noch angeheftet."); return; }
+    if (boot?.features?.slashCommands && msg.startsWith('/')) {
+      if(slashPending.current)return;
+      const origin=draftKey();slashPending.current=true;
+      try {
+        const {submitComposerCommand}=await import('./composer-command-submit.mjs');
+        if(draftKey()!==origin)return;
+        if(await submitComposerCommand(msg,{workerId:pickerWorker,running,chatId,sameWorker,attachments,api,
+          setMode,setBusy,notify,report:rejectVoice,currentId:()=>chatRef.current,
+          clearDraft:()=>{if(!voiceText || includeDraft)setText('');}}))return;
+        if(draftKey()!==origin)return;
+      } finally {slashPending.current=false;}
+    }
     if(boot?.features?.messageDelivery){
       const targetId=chatRef.current;
       if(targetId && outboxEntries.some(e=>(e.chatId===targetId || e.localId===targetId) && ["sending","offline","accepted"].includes(e.status))){
@@ -2010,6 +2023,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     return () => window.removeEventListener("wrapper/appearance", receive);
   }, []);
   const readablePane = embedded ? paneVisible : visible.includes(0);
+  const commandControl = useRef(null), slashPending = useRef(false);
   useEffect(() => {
     const last = thread?.turns?.at(-1);
     if (!canReadPaneReply({foreground, visible:view === "chat" && readablePane, selected:selectedPane,
@@ -2339,6 +2353,11 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 {chats.find(c=>c.id===chatId)?.firmaItemId&&<FirmaReview api={api} chatId={chatId} revision={(thread?.turns?.at(-1)?.id||"")+":"+(thread?.turns?.at(-1)?.status||"")} running={running||busy}/> }
                 {awayFromBottom && <button className="jump-latest" aria-label="Zur neuesten Nachricht" onClick={()=>{setSelectedTurn(null);scrollController.current?.resume()}}>{icon(ArrowUp,18)}</button>}
                 <form className={"composer pill-composer " + (mode === "plan" ? "planning" : "")} onSubmit={guard(submit)}>
+                  {boot?.features?.slashCommands && composerText.startsWith('/') && !questionState.request && !chatLocked && foreground && view === 'chat' && readablePane && <ComposerCommandController
+                    text={composerText} workerId={pickerWorker} chatId={chatId} projectId={projectId}
+                    nativeCommands={sameWorker ? thread?.workerSession?.availableCommands : undefined}
+                    enabled={true} api={api} controlRef={commandControl} inputRef={inputRef}
+                    onSelect={value=>{setText(value);inputRef.current?.focus();}} />}
                   <ComposerQuestion state={questionState} onActivate={activateComposer} />
                   {(attachments.length > 0 || pendingUploads.some(item=>item.key === (chatId || `new:${projectId}`))) && (
                     <div className="attachments" aria-label="Angehängte Dateien">
@@ -2386,6 +2405,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                     onChange={(e) => setComposerText(e.target.value)}
                     onPaste={e=>{if(questionState.request) return; const files=Array.from(e.clipboardData.files || []); if(files.length) {e.preventDefault(); void upload(files);}}}
                     onKeyDown={(e) => {
+                      if(commandControl.current?.onKeyDown(e))return;
                       if (
                         e.key === "Enter" &&
                         !e.shiftKey &&

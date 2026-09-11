@@ -1,0 +1,4 @@
+.composer-command { width: 100%; text-align: left; }
+.composer-command[aria-selected="true"] { background: var(--hover); }
+.composer-commands [role="listbox"] { max-height: 30dvh; overflow-y: auto; }
+.composer-commands .composer-question-status button { font-size: var(--text-caption); }

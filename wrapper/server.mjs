@@ -1,3 +1,4 @@
+import {slashCommand, canonicalCommand, commandCatalog, codexTurnCommand, codexControl, goalAction} from './worker-commands.mjs';
 import {AIMaintenance, managedCommand, installAIMaintenanceRoutes} from "./ai-maintenance.mjs";
 import {installUpdateReviewRoutes} from "./update-review.mjs";
 import {calendarChatOpener} from './calendar-chat.mjs';
@@ -472,8 +473,21 @@ async function sendTurnUnlocked(id, b, delivery) {
     b = {...b, model:b.nextSelection.model || c.model, effort:b.nextSelection.effort || c.effort, mode:c.mode};
   } else c = await ensure(id);
   if (b.nextSelection && !b.nextSelection.model) b = {...b, nextSelection:{...b.nextSelection, model:c.model}};
+  const originalCommand = slashCommand(b.text);
+  let commandTurn;
+  if (originalCommand) {
+    if (active.has(id)) throw Error("Bitte die laufende Antwort vor einem Slash-Befehl abwarten oder stoppen.");
+    b = {...b, text:canonicalCommand(b.text)};
+    if (workers.entry(workers.owner(id)).adapter === "codex") {
+      const known = ['goal','plan','compact'].includes(slashCommand(b.text).name);
+      const commands = known ? commandCatalog('codex') : (await workerCommands(id,workers.owner(id),c.projectId)).commands;
+      commandTurn = codexTurnCommand(b.text,commands);
+      if (commandTurn?.mode) b = {...b,mode:commandTurn.mode};
+    }
+  }
   const input = [];
   if (b.text?.trim()) input.push({ type: "text", text: b.text });
+  if (commandTurn?.skill) input.push(commandTurn.skill);
   for (const attachment of b.attachments || []) {
     const file = await inside(workspace, attachment.path);
     const ext = path.extname(file).toLowerCase();
@@ -603,7 +617,13 @@ async function sendTurnUnlocked(id, b, delivery) {
       },
     };
   if (delivery?.continuation) p.collaborationMode.settings.developer_instructions += '\nDiese Nachricht wurde als Ergänzung des vorherigen Auftrags gesendet, der inzwischen endete. Bearbeite sie im Zusammenhang mit diesem Auftrag und behalte unerledigte Arbeit bei.';
+  // Keep the exact slash text in the native transcript and delivery receipt.
+  // The native goal API owns continuation and usage accounting, never a prompt imitation.
   checkDelivery();
+  if (commandTurn?.objective || commandTurn?.resume) {
+    await workers.call('thread/goal/set',{threadId:id,...(commandTurn.objective ? {objective:commandTurn.objective} : {}),status:'active'});
+    p.collaborationMode.settings.developer_instructions += '\nThe user has explicitly set the native thread goal. Work toward that goal using the native goal tools; do not treat the slash command as an unknown instruction.';
+  }
   const r = await workers.call("turn/start", p);
   if (!finishedTurns.has(id + ':' + r.turn.id)) active.set(id, r.turn.id);
   // Title work runs independently and never delays or pollutes the conversation.
@@ -746,7 +766,7 @@ route("GET", "/api/bootstrap", async (_body, url) => {
     token,
     identitySource: "soul/IDENTITY.md",
     workspaceToolsVersion: 1,
-    features: { messageDelivery:true, workspaceSpecialization:true, jobCategories:true, firma:true, serviceConnections:true, crmConnections:true, skillLibrary:true, library:true },
+    features: { slashCommands:true, messageDelivery:true, workspaceSpecialization:true, jobCategories:true, firma:true, serviceConnections:true, crmConnections:true, skillLibrary:true, library:true },
     workspace,
     projects: store.state.projects,
     workspaceWarnings: store.workspaces.warnings,
@@ -993,6 +1013,41 @@ route("POST", "/api/chat/provider", async b => {
   turnLocks.add(id);
   try { return await switchProviderUnlocked(id, b.workerId); }
   finally { turnLocks.delete(id); }
+});
+async function workerCommands(id,workerId,projectId) {
+  if (id) {
+    const chat = store.chat(id);
+    if (workerId !== workers.owner(id)) return {commands:commandCatalog(workerId),notice:'Weitere Befehle nach dem Anbieterwechsel.'};
+    projectId = chat.projectId;
+    await ensure(id);
+    if (workers.entry(workerId).adapter === 'acp') {
+      const {thread} = await workers.call('thread/read',{threadId:id});
+      return {commands:commandCatalog(workerId,thread.workerSession?.availableCommands),notice:thread.workerSession?.availableCommands === undefined ? 'Der Worker hat noch keine Befehlsliste gemeldet.' : ''};
+    }
+  }
+  if (workerId !== 'codex') return {commands:commandCatalog(workerId),notice:'Weitere native Befehle erscheinen nach der ersten Nachricht.'};
+  const cwd = await store.projectRoot(projectId || 'default');
+  const result = await workers.call('skills/list',{workerId,cwds:[cwd],forceReload:true});
+  const entries = result.data || [];
+  return {commands:commandCatalog(workerId,undefined,entries.flatMap(entry=>entry.skills || [])),notice:entries.some(entry=>entry.errors?.length) ? 'Einige Skills konnten nicht geladen werden.' : ''};
+}
+route("GET", "/api/worker-commands", async (_b,u) => {
+  const id=u.searchParams.get('id'), workerId=u.searchParams.get('workerId') || (id ? workers.owner(id) : workers.effectiveWorker);
+  workers.entry(workerId);
+  return workerCommands(id,workerId,u.searchParams.get('projectId'));
+});
+route("POST", "/api/worker-command", async b => {
+  const id=b.id;
+  store.chat(id);
+  if (workers.owner(id) !== 'codex' || b.workerId !== 'codex') throw Error('Der Anbieter wurde geändert. Bitte den Befehl erneut auswählen.');
+  const command=slashCommand(canonicalCommand(b.text));
+  const duringTurn=command?.name === 'goal' && ['get','pause','clear'].includes(goalAction(command.argument));
+  if ((!duringTurn && (active.has(id) || finishing.has(id))) || turnLocks.has(id) || restartGate.restarting || updateHold || backupHold || process.env.VANILLA_RECOVERY_HOLD === '1') throw Error('Bitte die laufende Arbeit oder Wartung abwarten.');
+  turnLocks.add(id);
+  try {
+    await ensure(id);
+    return await codexControl((method,params)=>workers.call(method,params),id,b.text);
+  } finally {turnLocks.delete(id);}
 });
 route("POST", "/api/worker-session", async b => {
   const id = b.id;

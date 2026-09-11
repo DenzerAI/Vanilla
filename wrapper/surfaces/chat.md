@@ -173,7 +173,7 @@ Seitenleisten-Chatliste, Gesprächsverlauf und Composer behalten Scrollfunktion 
 
 ACP und Codex verwenden dieselbe kompakte Composerzeile mit ausschließlich
 ModelPicker. Native Slash-Befehle können direkt in die Eingabe geschrieben werden;
-erst Senden führt sie aus. Separate Menüs für Befehle, Mode, Fast und interne
+`/` öffnet die unten beschriebene Vorschlagsliste, erst Senden führt sie aus. Separate Menüs für Befehle, Mode, Fast und interne
 Updatehinweise entfallen. Modell und Denkaufwand verwenden die bestätigten
 nativen Optionen. Der native Claude-Fast-Schalter sitzt wie Codex links im
 Modellfenster; während einer laufenden Claude-Antwort ist er gesperrt.
@@ -1319,3 +1319,64 @@ Die Autorenzeile behält Avatar und Namen, verzichtet mobil auf das relative Alt
 Nachrichtenabstände verwenden space-8, Status-/Kopfabstände space-4.
 Keine Datenmigration: Originalverlauf, Geräte, Einstellungen und Exporte bleiben
 unverändert. Ein älterer UI-Stand zeigt wieder die ausführliche Darstellung.
+
+
+## Slash-Befehle im Composer · Version 1.0.0
+
+Ein führendes `/` öffnet ComposerCommands unmittelbar über der Eingabe, ohne
+zusätzlichen dauerhaften Menübutton. Tippen filtert Namen und Beschreibungen;
+Pfeiltasten wechseln, Enter/Tab oder Klick übernehmen nur in den Entwurf.
+Ein weiteres Senden führt aus. Escape schließt die Vorschläge. Anhänge und
+normale Rückfragen behalten ihren vorhandenen Ablauf. Die Liste scrollt mit
+Maus, Touch und Tastatur und bleibt auf die jeweilige Pane begrenzt. Aussehen →
+Unser Design zeigt denselben Baustein mit ausschließlich lokalen Beispielen.
+
+GET /api/worker-commands liest die Befehle der konkreten nativen Sitzung.
+ACP available_commands_update ersetzt die Liste auch im Leerlauf vollständig;
+unbekannte Namen und Argumenthinweise werden automatisch übernommen, entfernte
+Befehle verschwinden. Vor der ersten Nachricht beziehungsweise vor einem
+vorgemerkten Anbieterwechsel gibt es noch keine vollständige Sitzungsliste;
+das wird direkt an der Auswahl erklärt. Claude /goal ist auch ohne interaktive
+Terminaloberfläche verfügbar. Codex lädt bei jeder Öffnung und über Neu laden
+skills/list mit forceReload und dem bestätigten Workspace neu. Deaktivierte
+Skills erscheinen nicht; Aufruf über /Skillname ergänzt den nativen Skillinput.
+
+/goal und /ziel verwenden dieselbe native Zielfunktion. /ziel ersetzt nur den
+Befehlsnamen, Argumente und Zeilenumbrüche bleiben erhalten. Claude bekommt
+/goal als unveränderten nativen Prompt. Codex setzt vor turn/start das native
+Ziel über thread/goal/set. Zielsetzung und Aufgabenbeginn laufen unter derselben
+Turnsperre im vorhandenen dauerhaften Postausgang. Die native Zielverwaltung
+besitzt Fortsetzung, Abschluss und Verbrauch; Vanilla imitiert keine Zielschleife
+mit einem Prompt. Eine native Ablehnung verhindert den Aufgabenbeginn. Nach
+unklarem Ausgang wird nicht automatisch erneut ausgeführt.
+
+Bei Codex liest /goal (auch /goal status) den aktuellen Stand. pause/resume
+verwenden thread/goal/set; resume startet anschließend über den dauerhaften
+Postausgang eine neue Runde mit unverändertem Ziel und Verbrauchsstand.
+clear und stop/off/reset/none/cancel verwenden
+thread/goal/clear. POST /api/worker-command führt ausschließlich diese festen
+Steueraufrufe für Status, Pause und Löschen sowie /compact über thread/compact/start aus. Aktueller Anbieter,
+Chat-Privatsperre, Turnsperre und Betriebspausen werden geprüft; Entwurf bleibt
+bei Fehlern erhalten. Steuerbefehle erzeugen keine künstliche Modellantwort.
+Ein laufender Turn muss vor neuen Slash-Aufträgen regulär beendet oder gestoppt
+werden. Codex-Zielstatus, Pause und clear bleiben während einer Antwort nutzbar;
+clear beendet das Ziel, unterbricht aber nicht den bereits laufenden Turn.
+/plan ohne Text setzt nur die Codex-Composerwahl, mit Text verwendet es den
+vorhandenen geschützten Planmodus. /plan ist kein Alias für ein Ausführungsziel.
+
+Grenzen: ACP meldet nur seine ausführbaren Befehle; der Anbieteradapter filtert
+reine Terminaldialoge. Codex hat keinen allgemeinen Slash-Katalog/Dispatcher
+im App-Server. Hier sind goal/ziel, plan, compact und frisch gemeldete Skills
+angeschlossen. Andere Codex-Slash-Befehle werden ausdrücklich abgewiesen statt
+als scheinbar ausgeführter Befehl an das Modell geschickt. Neue ACP-Befehle und
+Skills brauchen keine Vanilla-Namensliste; neue Codex-Terminalaktionen benötigen
+weiterhin eine konkrete API-Anbindung. Kein automatisches Ausführen von
+Katalogtexten, Skripten, CLI-Logins oder Providerwechseln.
+
+Keine neue Zieldatenbank oder Migration: native Ziele, Sitzungen und vorhandene
+Nachrichtenbelege bleiben führend. Vor Rückkehr auf ältere Composer offene
+Nachrichten abarbeiten und native Ziele beenden, da deren Steueranschluss fehlt.
+Ältere native CLIs ohne Ziel-API melden ihren tatsächlichen Fehler. Ein erfolgreicher
+Protokolltest ersetzt keinen authentifizierten Modelllauf beim jeweiligen Anbieter.
+Prüfung: worker-commands, worker-commands-http, acp-session, Chat-Privatsperre,
+Typecheck, Designprüfung und Desktop/mobile Browseremulation.

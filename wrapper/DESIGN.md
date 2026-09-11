@@ -1435,3 +1435,15 @@ vorhandenen umbrechenden Aktionszeilen. Speichern, Fehler und Rückkehr zur Kate
 des Auftrags bleiben in der Vorschau. Unser Design zeigt denselben Baustein.
 Die beiden Querverweise verwenden vorhandene Buttons ohne neue Palette oder Motion.
 Daten- und Rückkehrvertrag: surfaces/library.md und surfaces/jobs.md.
+
+
+### Slash-Vorschläge über der Eingabe
+
+ComposerCommands verwendet die vorhandene ComposerQuestion-Glasfläche, Schrift-,
+Abstands-, Fokus- und Touchrollen. Eine flache Liste mit Befehlsname und optionaler
+Beschreibung öffnet ausschließlich bei führendem Slash; die Modellzeile bleibt
+unverändert. Ausgewählter Treffer nutzt hover, kein neues Material oder Effekt.
+Die Liste scrollt innerhalb von 30dvh; Neu laden, Ladezustand und Meldungen bleiben
+erreichbar. Reduzierte Bewegung/Transparenz und Forced Colors folgen dem bestehenden
+Baustein. Tastaturwahl übernimmt nur in den Entwurf, Escape schließt. Unser Design
+zeigt denselben Produktionsbaustein. Vertrag: surfaces/chat.md, Slash-Befehle im Composer.

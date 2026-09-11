@@ -70,10 +70,11 @@ def test_setup_masks_lists_and_enforces_every_chat_route(fixture):
     assert result['requests'] == [] and result['active'] == {}
     assert 'Confidential' not in json.dumps(result)
     before = len(requests)
-    for route in ('turn', 'stop', 'fork', 'turn/delete', 'chat/update', 'worker-session', 'voice/start', 'chat/read', 'chat/provider', 'messages', 'messages/edit', 'messages/resume'):
+    for route in ('turn', 'stop', 'fork', 'turn/delete', 'chat/update', 'worker-command', 'worker-session', 'voice/start', 'chat/read', 'chat/provider', 'messages', 'messages/edit', 'messages/resume'):
         assert client.post('/api/' + route, json={'id': 'private-example'}).status_code == 423
     assert client.get('/api/thread?id=private-example').status_code == 423
     assert client.get('/api/messages?id=private-example').status_code == 423
+    assert client.get('/api/worker-commands?id=private-example').status_code == 423
     assert len(requests) == before
     for route in ('file/raw', 'file/text', 'file/info', 'file/preview', 'agent/files'):
         assert client.get('/api/' + route, params={'path': 'chats/private-example/transcript.json'}).status_code == 423

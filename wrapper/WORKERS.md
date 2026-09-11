@@ -450,3 +450,21 @@ Modellkatalog gilt das native Standardmodell; unbekannte explizite Werte bleiben
 Fehler. Automatische Jobs und Kanalgespräche behalten ihre feste Engine.
 Migration und Rückkehrgrenze offener Nachrichten: surfaces/chat.md, Auswahl für
 die nächste Nachricht. Prüfung: workers, message-delivery, message-outbox.
+
+
+## Composer-Slash-Anschluss · Version 11
+
+Der bestehende Nachrichtenweg interpretiert /ziel als /goal und führt Codex-Ziele
+über thread/goal/set vor dem regulären turn/start aus. ACP erhält den nativen
+Slash-Prompt. GET /api/worker-commands liefert vollständige aktuelle ACP-Listen
+beziehungsweise frisch geladene Codex-Skills und die explizit angebundenen
+Codex-Aktionen goal/ziel, plan und compact. POST /api/worker-command bedient
+Codex-Zielstatus, Pause/Löschen und Komprimierung ohne Modellprompt. /goal resume
+setzt das native Ziel aktiv und startet eine neue Runde über den Postausgang.
+Native RPC-Fehler bleiben sichtbar, keine universelle Terminalemulation oder
+stille Befehlsnachbildung. Neue ACP-Namen und Skills sind ohne App-Update nutzbar;
+zusätzliche Codex-Terminalaktionen benötigen ihren API-Anschluss.
+Keine eigene Zielablage oder Datenmigration. Ziele vor Rückkehr auf ältere
+Composer beenden; aktive native Ziele können weiterhin Arbeit fortsetzen.
+Berechtigungen, Wiederholungsschutz, Sitzungsgrenzen und Bedienvertrag:
+surfaces/chat.md, Slash-Befehle im Composer.

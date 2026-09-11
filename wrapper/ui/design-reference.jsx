@@ -1,3 +1,4 @@
+import {ComposerCommandsPreview} from './composer-commands';
 import {VoiceProfilesPreview} from './voice-profiles.jsx';
 import {WorkspaceSettingsPreview} from './workspace-settings';
 
@@ -81,6 +82,7 @@ export function DesignReference({ theme, tone, accent }) {
       <ChatPrivacyPreview/>
       <h3 className="section-heading">Rückfrage am Composer · Beispiel</h3>
       <ComposerQuestionPreview/>
+      <h3 className="section-heading">Slash-Befehle · Beispiel</h3><ComposerCommandsPreview/>
       <h3 className="section-heading">Ergebnisse im Chat · Beispiel</h3>
       <ChatArtifactsPreview/>
       <h3 className="section-heading">Aufträge · Reiter</h3>
