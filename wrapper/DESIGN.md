@@ -168,7 +168,7 @@ Bestehende Chats und benannte Entwürfe zeigen ein Drei-Punkte-Menü; unbenannte
 
 Der Agent steht oben links als gemeinsamer Avatar-/Namensbutton mit einem dezenten, nicht separat bedienbaren Verbindungspunkt. Sein zugänglicher Name nennt den Verbindungszustand. Klick öffnet das gemeinsame ChatMenu mit Serveradresse, tatsächlich gemeldeter Engine und gemessener HTTP-Antwortzeit, gefolgt von Nutzung, Einstellungen, archivierten Chats und Serverneustart. Fehlende Messwerte bleiben ausdrücklich nicht verfügbar; die Zeit behauptet keine Modellgeschwindigkeit. Es gibt keinen separaten Serverstatusbutton und keinen zweiten Agenteneinstieg unten. SystemNotice behält echte Fehler, Anmeldung und Update-/Neustarthinweise.
 
-Die Seitenleiste verwendet eine gemeinsame Textkante für Navigation, Projektnamen, neue und bestehende Chats sowie „Neuer Workspace“. Fertig- und Aktivitätsstatus teilen sich die linke Symbolspalte vor dem Chatnamen mit den Chat-Aktionen; bei Hover, Tastaturfokus und geöffnetem Aktionsmenü wird dort nur die Aktion angezeigt. Der Online-Punkt ist vertikal zur Agent-Zeile zentriert. Die Layoutauswahl enthält ausschließlich die vier Optionen ohne Unterzeilen oder erklärenden Fußtext.
+Die Seitenleiste verwendet eine gemeinsame Textkante für Navigation, Projektnamen, neue und bestehende Chats sowie „Neuer Workspace“. Fertig- und Aktivitätsstatus teilen sich die linke Symbolspalte vor dem Chatnamen mit den Chat-Aktionen; bei Hover, Tastaturfokus und geöffnetem Aktionsmenü wird dort nur die Aktion angezeigt. Die animierte 16-px-Nadel angehefteter Chats bleibt rechts und teilt dort Größe und Mittelachse mit dem Plus des Workspace; nur diese Zeilen reservieren die kompakte Aktionsbreite. Der Online-Punkt ist vertikal zur Agent-Zeile zentriert. Die Layoutauswahl enthält ausschließlich die vier Optionen ohne Unterzeilen oder erklärenden Fußtext.
 
 Neue Chats werden über das Plus ganz rechts am Projektordner angelegt; das Projekt-Plus erscheint an der Überschrift „Workspace“ bei Hover oder Tastaturfokus. Projektmenü und Einklapp-Pfeil erscheinen bei Hover/Fokus, auf Touch-Geräten bleiben sie erreichbar. Neben der Agentenidentität öffnet ein kreisrunder Such-Iconbutton dieselbe Suche wie Cmd/Ctrl+K. „Neuer Chat“-Zeile und „Neuer Workspace“-Zeile entfallen; Cmd/Ctrl+N bleibt erhalten. Offene Rückfragen erscheinen bei Bedarf neben dem Such-Iconbutton.
 
@@ -203,7 +203,7 @@ Farbauswahl zeigt die Wirkung unmittelbar am Projektsymbol im Dialog und am bear
 
 ## Eine Überschrift pro Seite
 
-Aufträge, Verbindungen, Skills, Bibliothek und Einstellungen zeigen ihren Titel ausschließlich im gemeinsamen `PageHeading` im Inhaltsbereich. Zugehörige Kopfaktionen stehen auf derselben Linie; eine weitere globale Titel-/Tabzeile entfällt. Verbindungen wird über die Plus-Aktionen des Katalogs erweitert. Ein ausgeblendetes Seitenmenü lässt sich direkt am Seitentitel wieder öffnen. Bestehende Chats werden über Seitenleiste, Suche oder das vorhandene Chatmenü erreicht; im leeren Gespräch steht kein zusätzlicher Öffnen-Link.
+Aufträge, Verbindungen, Skills, Ergebnisse und Einstellungen zeigen ihren Titel ausschließlich im gemeinsamen `PageHeading` im Inhaltsbereich. Zugehörige Kopfaktionen stehen auf derselben Linie; eine weitere globale Titel-/Tabzeile entfällt. Verbindungen wird über die Plus-Aktionen des Katalogs erweitert. Ein ausgeblendetes Seitenmenü lässt sich direkt am Seitentitel wieder öffnen. Bestehende Chats werden über Seitenleiste, Suche oder das vorhandene Chatmenü erreicht; im leeren Gespräch steht kein zusätzlicher Öffnen-Link.
 
 Die Profilseite bietet einen editierbaren Standard für kurze, warme Kommunikation und effiziente, vollständige Arbeit. Die Arbeitsgrundlage bleibt als Einstellungsgruppe direkt sichtbar. Ein überspringbarer Dialog bietet beim ersten Öffnen Avatar und Namenswahl an. Details zum Speichern, Zurücksetzen und bestehenden Vorgaben stehen im Vertrag unter `surfaces/settings.md`.
 
@@ -338,7 +338,7 @@ Wertetabelle.
 
 ## Kompakte Navigation und Suche
 
-Das Hauptmenü zeigt Inbox, Aufträge, die verfügbare Bibliothek und Firma in dieser Reihenfolge, darunter Workspaces und Chats. Firma verwendet dieselbe nav-item-Zeile ohne eigene Abschnittsüberschrift. Skills und Verbindungen sind eigene Einträge der vorhandenen Einstellungsnavigation. Der Einstieg bleibt im Agentenmenü. Bestehende Icons, Textkanten, Abstände und Inhaltsansichten bleiben erhalten; keine Platzhalter oder reservierten Leerzeilen für künftige Module. Suche und Querverweise öffnen beide Kataloge direkt mit ausgewähltem Einstellungsbereich. Die Einstellungsnavigation scrollt bei Platzmangel innerhalb der Seitenleiste; Zurück-Einstieg und Agentenzeile bleiben erreichbar.
+Das Hauptmenü zeigt Inbox, Aufträge, die verfügbaren Ergebnisse und Firma in dieser Reihenfolge, darunter Workspaces und Chats. Firma verwendet dieselbe nav-item-Zeile ohne eigene Abschnittsüberschrift. Skills und Verbindungen sind eigene Einträge der vorhandenen Einstellungsnavigation. Der Einstieg bleibt im Agentenmenü. Bestehende Icons, Textkanten, Abstände und Inhaltsansichten bleiben erhalten; keine Platzhalter oder reservierten Leerzeilen für künftige Module. Suche und Querverweise öffnen beide Kataloge direkt mit ausgewähltem Einstellungsbereich. Die Einstellungsnavigation scrollt bei Platzmangel innerhalb der Seitenleiste; Zurück-Einstieg und Agentenzeile bleiben erreichbar.
 
 Oben in der Seitenleiste steht der konfigurierte Agent: 32-px-Avatar mittig in der 18-px-Symbolspalte der Navigation, Name auf derselben Textkante mit reading (16 px), semibold und bestehender UI-Schrift. Daneben stehen Suche als kreisrunder Iconbutton, bei Bedarf Benachrichtigungen sowie Einklappen. Der Agentenbutton nutzt die bestehende Hoverfläche und das gemeinsame ChatMenu mit Fokusführung, Pfeiltasten, Escape und Außenklick; das Portal hält das Menü im Viewport. Auch Inbox und Einstellungen behalten diesen Einstieg. Der Such-Iconbutton öffnet den Suchdialog mit fokussierter Eingabe und nennt Cmd/Ctrl+K im Tooltip und zugänglichen Tastaturhinweis. Suche umfasst Gesprächstitel, lokal gespeicherte Nutzer- und Agententexte einschließlich archivierter Chats über alle Projekte, Projektnamen und Navigation/Einstellungen. Treffer zeigen Kontext und Textausschnitt; moderate Tippfehler, Buchstabendreher und Akzente werden toleriert. Werkzeugausgaben, interne Überlegungen und reine Kanalgespräche sind ausgeschlossen. Fehlende lokale Exporte werden als eingeschränkte Inhaltssuche kenntlich gemacht; es wird kein Worker für die Suche gestartet.
 
@@ -441,9 +441,9 @@ ihren bestehenden Arbeitsstatus. Aussehen → Unser Design zeigt die Bausteine.
 
 Der rechte Bereich „Workspace“ verwendet die eigene Rolle `workspace-panel-bg`: in allen dunklen Farbwelten Schwarz als Basis. Die fast deckende `workspace-panel-glass`-Fläche mit 32 px Hintergrundunschärfe, zwei sehr schwachen diffusen Helligkeitsverläufen (`workspace-panel-sheen`), einer feinen inneren Lichtkante und weichem Außenschatten (`workspace-panel-shadow`) gibt dem Bereich dezente Tiefe. Diese Materialgestaltung folgt der Apple-Bildreferenz; sie bleibt klar vom Chat abgegrenzt. Ohne Blur-Unterstützung oder bei reduzierter Transparenz wird die schwarze Basis deckend. Im hellen Erscheinungsbild bleibt die bisherige Farbzuordnung erhalten. App-Grundfläche und Suche behalten `workspace-backdrop`. Nur diese rechte Fläche wird dunkler; die linke Navigation behält `sidebar`. Der Workspace öffnet direkt Dateien; die drei großen Startkacheln entfallen. Dateien, Änderungen und die Nebenfunktion Befehle sind über die kompakte Auswahl im Kopf erreichbar. Rundung, Innenabstand und Farbzuordnung gelten ebenso in schmaler und vergrößerter Ansicht. Die Bausteinreferenz zeigt die gemeinsame Workspace-Basisfarbe.
 
-## Bibliotheksvorschau
+## Ergebnisvorschau
 
-`LibraryPreview` erweitert den gemeinsamen Modal um Quick Look: dieselbe transparente `sheet-glass`-Fläche und weichgezeichnete Kulisse wie die Suche, kompakter Titel, große Medienfläche und ruhige Aktionen. Dateidetails sind aufklappbar; Pfeile navigieren durch die zuletzt geänderten gefilterten Dateien. Reduzierte Transparenz erhält die deckende `glass`-Ersatzfläche. Die Bibliothek verwendet kompakte flache Ergebniszeilen mit Name, Art und Änderungsdatum oder ein umschaltbares Bildraster ohne Kartenhintergründe. Ein Klick markiert und zeigt rechts den gemeinsamen Workspace-Stil mit FileContent; Vergrößern öffnet Quick Look. Die Reiter Dateien/Wissen und Notizen entfallen. Suche und Filter sind kompakt, die Ansichtspräferenz bleibt lokal gespeichert.
+`LibraryPreview` erweitert den gemeinsamen Modal um Quick Look: dieselbe transparente `sheet-glass`-Fläche und weichgezeichnete Kulisse wie die Suche, kompakter Titel, große Medienfläche und ruhige Aktionen. Dateidetails sind aufklappbar; Pfeile navigieren durch die zuletzt geänderten gefilterten Dateien. Reduzierte Transparenz erhält die deckende `glass`-Ersatzfläche. Die Ergebnisansicht verwendet kompakte flache Ergebniszeilen mit Name, Art und Änderungsdatum oder ein umschaltbares Bildraster ohne Kartenhintergründe. Ein Klick markiert und zeigt rechts den gemeinsamen Workspace-Stil mit FileContent; Vergrößern öffnet Quick Look. Die Reiter Dateien/Wissen und Notizen entfallen. Suche und Filter sind kompakt, die Ansichtspräferenz bleibt lokal gespeichert.
 
 ## Ruhiger Gesprächsfluss
 
@@ -484,7 +484,7 @@ Inbox verwendet das offene Ablagefach `Tray` aus Framework7 Icons über den geme
 
 Die Inbox übernimmt wie Einstellungen die bestehende linke Seitenleiste mit Zurück-Einstieg, Suche und kompakter Gesprächsliste. Kanal-Icon, Name, Uhrzeit und Ungelesen-Punkt genügen; Betreff-/Vorschauunterzeilen entfallen. Die volle Hauptfläche zeigt Verlauf und eine automatisch wachsende, ausschließlich vertikal scrollende Antwortzeile. Bis 650 px Fensterbreite wechseln Liste und Verlauf in voller Breite. Beispiele und Speichergrenzen werden ausschließlich im Konzeptdialog erklärt. PageHeading, FilterPicker, BrandIcon, Modal und zentrale Tokens bleiben gemeinsam; InboxConversationRow steht unter Unser Design. Aufbau und Verhalten führt [surfaces/inbox.md](surfaces/inbox.md).
 
-Bibliotheks-Quick-Look bleibt eine reine Großansicht ohne doppelte Dateiverwaltung. Dateiaktionen stehen im rechten Workspace. Markdown nutzt dort den bestehenden bereinigten Renderer mit kompakten Dokumentrollen statt Editorfläche. Der Liste/Raster-Umschalter verwendet die gemeinsame runde Iconauswahl ohne rechteckige Auswahlfüllung; sämtliche Iconbuttons bleiben rund.
+Ergebnis-Quick-Look bleibt eine reine Großansicht ohne doppelte Dateiverwaltung. Dateiaktionen stehen im rechten Workspace. Markdown nutzt dort den bestehenden bereinigten Renderer mit kompakten Dokumentrollen statt Editorfläche. Der Liste/Raster-Umschalter verwendet die gemeinsame runde Iconauswahl ohne rechteckige Auswahlfüllung; sämtliche Iconbuttons bleiben rund.
 
 
 Der leere Composer zeigt auf Desktop und Handy nur „Nachricht“ in der zurückhaltenden Rolle `faint`, vertikal zentriert mit 2 px optischer Absenkung. Die leere Schreibzeile bleibt eine volle Pille; ausschließlich tatsächlicher mehrzeiliger Text oder die aktive Aufnahme erweitern die Rundung. Die Höhenmessung berücksichtigt den Textinnenabstand und ignoriert Platzhalterumbrüche für den Mehrzeilenzustand.
@@ -511,9 +511,9 @@ bleibt HTML frei scrollbar. Dateititel, gemeinsame IconButtons und ein kompakter
 Folienzähler sind die einzigen zusätzlichen Elemente. Im Vollbild bleiben die
 Steuerelemente erreichbar; andere Workspace-Aktionen liegen außerhalb der Bühne.
 Bearbeiten bleibt getrennt. Das vollständige Dokumentprotokoll steht im
-Bibliotheksvertrag.
-Die Bibliothek nutzt denselben HtmlPreview-Baustein und ihre bestehende Großansicht.
-Darstellung, Bearbeitung und Isolation führt [der Bibliotheksvertrag](surfaces/library.md#html-dokumente-im-workspace-und-in-der-großansicht).
+Ergebnisvertrag.
+Die Ergebnisansicht nutzt denselben HtmlPreview-Baustein und ihre bestehende Großansicht.
+Darstellung, Bearbeitung und Isolation führt [der Ergebnisvertrag](surfaces/library.md#html-dokumente-im-workspace-und-in-der-großansicht).
 
 
 ## Modellwahl mit Anbieterbereichen
@@ -690,7 +690,7 @@ zeigen einen dünnen runden Rand aus `border-strong` und das betonte Icon auf
 transparentem Grund. Ein transparenter Rand gleicher Stärke reserviert den Platz
 auch ohne Auswahl. Fokus bleibt zusätzlich sichtbar, im erzwungenen Kontrast
 verwendet der Auswahlring Highlight. Textnavigation, Listenzeilen, Schalter und
-primäre Sendeaktionen behalten ihren jeweiligen Aufbau. Bibliotheks-Ansichtswechsel,
+primäre Sendeaktionen behalten ihren jeweiligen Aufbau. Ergebnis-Ansichtswechsel,
 Fast, Workspace und Menüs verwenden keine eigenen Auswahlfarben oder Kacheln.
 Unser Design zeigt zusätzlich einen schaltbaren Einzelicon-Auswahlzustand.
 
@@ -1387,3 +1387,51 @@ Die Modellliste zeigt Claude-Familie und native Version einschließlich .0; Kont
 `VoiceProfiles` verwendet gemeinsame SettingRows, kreisrunde Iconaktionen und den vorhandenen Modal: Plus öffnet Voice-ID und optionalen Namen. Gespeicherte Namen bleiben vorn, IDs stehen als sekundäre Beschreibung. Die Auswahl verwendet Check mit aria-pressed; Bearbeiten und Entfernen haben eindeutige Beschriftungen. Fehler bleiben am Formular, während Speicherung sind Aktionen gesperrt. `VoiceProfilesPreview` zeigt denselben Baustein in Unser Design ohne Anbieteraufrufe.
 
 Hinweise zur Zugangsspeicherung benennen jetzt die lokale .env im Vanilla-Ordner. Die bestehenden Verbindungsdialoge, Secret-Zeilen und der Status der Schlüsselablage bleiben die gemeinsamen Bausteine; es gibt keine zusätzlichen Mac-Passwortfelder.
+
+
+### Unmittelbare Composer-Auswahl
+
+Engine, Modell und Denkaufwand verwenden weiterhin denselben ModelPicker und
+seine beiden Ansichten. Die Auswahl wird sofort lokal angezeigt, ohne Ladeanzeige
+oder Sperre für den Hintergrund-Speichervorgang. „Nächste Nachricht“ bezeichnet die
+Vormerkung; die laufende Antwort bleibt unberührt. Fehlende Modelloptionen zeigen
+den nativen Standard für die nächste Nachricht. Verbindungsaufbau und native
+Bestätigung gehören erst zum vorhandenen Nachrichten-Postausgang beim Senden.
+Speicherfehler verwenden die bestehende Fehlermeldung. Keine neuen Tokens,
+Komponenten oder Animationen. Verhalten und Migration: surfaces/chat.md.
+
+
+## Vereinfachter mobiler Chat · Version 1.1.0
+
+Bis 650 CSS-Pixel schließen Chatwahl (auch derselbe Chat oder ein anderes Panel),
+neuer Chat und die Auswahl eines Hauptmenü- oder Einstellungseintrags die linke
+Navigation. Die Inbox behält ihren eigenen Wechsel zwischen Liste und Gespräch.
+Die seitliche Nachrichtennavigation entfällt auf dem Handy. Nachrichten selbst
+bleiben vollständig erhalten; die Inhaltsränder nutzen space-16.
+
+MessageActions aus chat-controls.jsx bündelt mobile Aktionen hinter einem
+beschrifteten Mehr-Icon mit aria-expanded. Erneutes Tippen oder Escape schließt
+sie, Escape stellt den Fokus wieder her. CopyButton, Bearbeiten, Verzweigen,
+Wiederholen, Löschen und Vorlesen verwenden ihre bisherigen Anschlüsse.
+Aktive Sprachwiedergabe und deren Fehler bleiben auch bei geschlossenen Aktionen
+sichtbar. Touchziele behalten control-touch. Auf Desktop bleibt die vorhandene
+Hover-/Tastaturdarstellung bestehen; Unser Design zeigt denselben Baustein.
+
+Abgeschlossene erfolgreiche Werkzeugverläufe sind mobil ausgeblendet; laufende
+Arbeit, Rückfragen, Fehler und unvollständige Schritte bleiben erreichbar.
+Die laufende Statuszeile zeigt mobil keine Schrittzahl oder Laufzeit.
+Die Autorenzeile behält Avatar und Namen, verzichtet mobil auf das relative Alter.
+Nachrichtenabstände verwenden space-8, Status-/Kopfabstände space-4.
+Keine Datenmigration: Originalverlauf, Geräte, Einstellungen und Exporte bleiben
+unverändert. Ein älterer UI-Stand zeigt wieder die ausführliche Darstellung.
+
+
+### Aufträge und Ergebnisse
+
+Die Navigation verwendet Inbox, Aufträge, Ergebnisse und Firma. Die Ergebnisansicht
+ergänzt den vorhandenen FilterPicker um Kategorie; Dateiart und Workspace bleiben
+getrennt. ResultCategoryEditor verwendet native Formular-/Datalist-Felder und die
+vorhandenen umbrechenden Aktionszeilen. Speichern, Fehler und Rückkehr zur Kategorie
+des Auftrags bleiben in der Vorschau. Unser Design zeigt denselben Baustein.
+Die beiden Querverweise verwenden vorhandene Buttons ohne neue Palette oder Motion.
+Daten- und Rückkehrvertrag: surfaces/library.md und surfaces/jobs.md.

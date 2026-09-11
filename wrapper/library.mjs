@@ -2,6 +2,7 @@ import path from 'node:path';
 import {readdir,stat,mkdir,readFile,writeFile,copyFile} from 'node:fs/promises';
 import {createHash,randomUUID} from 'node:crypto';
 import {atomic,jsonFile,inside} from './storage.mjs';
+import {normalizeJobCategory,jobCategoryOptions} from './ui/job-categories.mjs';
 import {collectArtifacts,fileKind} from './ui/artifact-content.mjs';
 
 export class Library {
@@ -23,7 +24,7 @@ export class Library {
       const result=[];
       for(const turn of thread.turns||[]) {
         const items=(turn.items||[]).filter(i=>i.type==='agentMessage'||i.type==='imageGeneration'||i.artifacts);
-        for(const f of collectArtifacts(items,this.store.root,meta.cwd||this.store.root)) {
+        for(const f of collectArtifacts(items,this.store.root,meta.cwd||this.store.root,{includeLinkedFiles:true})) {
           try{const e=await this.add(f.path,{threadId:thread.id,turnId:turn.id,projectId:meta.projectId,worker:meta.workerId||'codex',origin:meta.channelOnly?'Kanal':meta.jobId?'Auftrag':'Chat',jobId:meta.jobId});if(e)result.push(e);}catch{}
         }
       }
@@ -47,28 +48,47 @@ export class Library {
         }
       };
       for(const project of this.store.state.projects)await scan(this.store.root,path.join(project.path,'output'),{projectId:project.id,origin:'Output'});
-      for(const job of await this.store.jobs())await scan(this.store.root,path.join('jobs',job.id,'output'),{jobId:job.id,origin:'Auftrag'});
+      const jobs=await this.store.jobs();
+      for(const job of jobs)await scan(this.store.root,path.join('jobs',job.id,'output'),{jobId:job.id,projectId:job.status==='invalid'?undefined:job.projectId||'default',origin:'Auftrag'});
       await scan(this.artifactRoot,'',{scope:'artifacts',origin:'Order-System'});
       // Retain explicit files outside output/, and restore richer provenance after scanning.
       for(const chat of this.store.state.chats){
         try{
           const thread=await jsonFile(path.join(this.store.root,'chats',chat.id,'transcript.json'),null);if(!thread)continue;
-          for(const turn of thread.turns||[])for(const f of collectArtifacts((turn.items||[]).filter(i=>i.type==='agentMessage'||i.type==='imageGeneration'||i.artifacts),this.store.root,chat.cwd||this.store.root)) {
-            try{await this.add(f.path,{threadId:chat.id,turnId:turn.id,projectId:chat.projectId,worker:chat.workerId||'codex',origin:chat.channelOnly?'Kanal':chat.jobId?'Auftrag':'Chat'});}catch{}
+          for(const turn of thread.turns||[])for(const f of collectArtifacts((turn.items||[]).filter(i=>i.type==='agentMessage'||i.type==='imageGeneration'||i.artifacts),this.store.root,chat.cwd||this.store.root,{includeLinkedFiles:true})) {
+            try{await this.add(f.path,{threadId:chat.id,turnId:turn.id,projectId:chat.projectId,worker:chat.workerId||'codex',origin:chat.channelOnly?'Kanal':chat.jobId?'Auftrag':'Chat',jobId:chat.jobId});}catch{}
           }
         }catch{warnings.push('Ein Gesprächsexport konnte nicht gelesen werden.');}
       }
       for(const entry of Object.values(this.state.entries).filter(e=>e.missing)) {
         try{await this.add(entry.path,{...entry});this.state.entries[entry.id].missing=false;}catch{}
       }
+      for(const entry of Object.values(this.state.entries)) {
+        const job=jobs.find(j=>j.id===entry.jobId);
+        entry.jobAvailable=!!job&&job.status!=='invalid';
+        if(entry.jobAvailable){entry.jobCategory=normalizeJobCategory(job.category);entry.jobName=job.name;entry.projectId=job.projectId||'default';}
+        entry.category=entry.categoryOverride??entry.jobCategory??'';
+      }
       await atomic(this.file,this.state);
-      return {entries:this.entries(),warnings:[...new Set(warnings)],truncated:count>=5000};
+      return {entries:this.entries(),categories:jobCategoryOptions([...jobs,...this.entries()]),warnings:[...new Set(warnings)],truncated:count>=5000};
     });
     try{return await this.refreshing;}finally{this.refreshing=null;}
   }
   entries(){return Object.values(this.state.entries).sort((a,b)=>b.createdAt-a.createdAt);}
-  async resolve(file,scope){if(!this.entries().some(e=>e.path===file&&e.scope===scope))throw Error('Datei ist nicht in der Bibliothek registriert.');return inside(scope==='artifacts'?this.artifactRoot:this.store.root,file);}
+  async resolve(file,scope){if(!this.entries().some(e=>e.path===file&&e.scope===scope))throw Error('Datei ist nicht unter Ergebnisse registriert.');return inside(scope==='artifacts'?this.artifactRoot:this.store.root,file);}
   async favorite(id,value){return this.exclusive(async()=>{const e=this.state.entries[id];if(!e)throw Error('Ergebnis nicht gefunden.');e.favorite=value===true;await atomic(this.file,this.state);return e;});}
+  async category(id,value) {
+    if(value!==null&&typeof value!=='string')throw Error('Kategorie muss ein kurzer Name sein.');
+    const category=value===null?null:normalizeJobCategory(value);
+    return this.exclusive(async()=>{
+      const before=this.state.entries[id];if(!before)throw Error('Ergebnis nicht gefunden.');
+      const job=(await this.store.jobs()).find(j=>j.id===before.jobId&&j.status!=='invalid');
+      const entry={...before,jobAvailable:!!job,...(job?{jobCategory:normalizeJobCategory(job.category),jobName:job.name}:{}),categoryOverride:category};
+      entry.category=category??entry.jobCategory??'';
+      const next={...this.state,entries:{...this.state.entries,[id]:entry}};
+      await atomic(this.file,next);this.state=next;return entry;
+    });
+  }
   async reuse(id,projectId){const entry=this.state.entries[id];if(!entry)throw Error('Ergebnis nicht gefunden.');const file=await this.resolve(entry.path,entry.scope),project=this.store.project(projectId);const dir=await inside(this.store.root,path.join(project.path,'input'));const name=randomUUID()+'-'+entry.name;await copyFile(file,path.join(dir,name));return {name:entry.name,path:path.join(project.path,'input',name),size:entry.size};}
   async generate(services,{connectionId,projectId='default',prompt}) {
     const c=services.get(connectionId);if(c.provider!=='openai-image')throw Error('Eine Bildverbindung auswählen.');
@@ -85,6 +105,7 @@ export class Library {
 }
 export function installLibraryRoutes({route,library,services}) {
   route('GET','/api/library',()=>library.refresh());
+  route('POST','/api/library/category',b=>library.category(b.id,b.category));
   route('POST','/api/library/favorite',b=>library.favorite(b.id,b.favorite));
   route('POST','/api/library/reuse',b=>library.reuse(b.id,b.projectId));
   route('POST','/api/library/image',b=>library.generate(services,b));

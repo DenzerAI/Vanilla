@@ -129,7 +129,7 @@ readline.createInterface({input:process.stdin}).on('line', line => {
  if(m.method==='turn/start'){
   const turn={id:require('node:crypto').randomUUID(),status:'completed',items:[{type:'userMessage',content:p.input},{type:'agentMessage',text:'Codex fixture result'}]};
   threads.get(p.threadId).turns.push(turn);reply({turn});
-  setTimeout(()=>send({method:'turn/completed',params:{threadId:p.threadId,turn}}),30);return;
+  setTimeout(()=>send({method:'turn/completed',params:{threadId:p.threadId,turn}}),p.input?.some(i=>i.text==='Slow engine selection')?500:30);return;
  }
  if(m.method==='initialize')return reply({userAgent:'Fixture 1',protocolVersion:1,agentCapabilities:{loadSession:true,promptCapabilities:{image:true}},agentInfo:{name:'fixture',version:'1'}});
  if(m.method==='model/list')return reply({data:[{model:'fixture-model',displayName:'Fixture',isDefault:true},{model:'gpt-5.6-sol',displayName:'GPT-5.6 Sol',supportedReasoningEfforts:[{reasoningEffort:'low'}],serviceTiers:[{id:'priority',name:'Fast'}]}]});
@@ -311,6 +311,49 @@ test("actual HTTP server routes ACP chats and jobs, protects mutations and survi
   assert.equal(dispatched.params.serviceTierForTurn,'priority');
   assert.match(dispatched.params.collaborationMode.settings.developer_instructions,/Übernahme nach Neustart/);
   assert.equal((await call('/chats')).chats.filter(c=>c.id===codexChat.thread.id).length,1);
+  // Choosing an engine is a preference write, even while the current turn runs.
+  const beforeSelection = (await readFile(path.join(dir,'wire.ndjson'),'utf8')).trim().split('\n').map(JSON.parse);
+  await call('/turn',{id:codexChat.thread.id,text:'Slow engine selection',model:'gpt-5.6-sol'});
+  const selection = {selectionId:'next-engine-choice',workerId:'hermes',model:null,effort:''};
+  await call('/chat/provider',{id:codexChat.thread.id,defer:true,...selection});
+  const pendingChats = await call('/chats');
+  assert.ok(pendingChats.active[codexChat.thread.id]);
+  assert.equal(pendingChats.chats.find(c=>c.id===codexChat.thread.id).workerId,'codex');
+  assert.deepEqual(pendingChats.chats.find(c=>c.id===codexChat.thread.id).composerSelection,selection);
+  const afterSelection = (await readFile(path.join(dir,'wire.ndjson'),'utf8')).trim().split('\n').map(JSON.parse);
+  assert.equal(afterSelection.filter(m=>m.method==='session/new').length,beforeSelection.filter(m=>m.method==='session/new').length);
+  assert.equal(afterSelection.filter(m=>m.method==='turn/interrupt'||m.method==='session/cancel').length,beforeSelection.filter(m=>m.method==='turn/interrupt'||m.method==='session/cancel').length);
+  const queuedId = '32345678-1234-1234-1234-123456789012';
+  const receipt = await call('/delivery',{clientMessageId:queuedId,id:codexChat.thread.id,text:'Deferred engine message',nextSelection:selection});
+  assert.equal(receipt.status,'accepted');
+  assert.equal((await call('/delivery?clientMessageId='+queuedId)).status,'accepted');
+  for(let i=0;i<150;i++) {
+    const receipt=await call('/delivery?clientMessageId='+queuedId);
+    if(receipt.status==='started') break;
+    assert.equal(receipt.status,'accepted',receipt.error);
+    await new Promise(r=>setTimeout(r,20));
+  }
+  assert.equal((await call('/delivery?clientMessageId='+queuedId)).status,'started');
+  await finished(codexChat.thread.id);
+  const afterDeferred = await call('/chats');
+  assert.equal(afterDeferred.chats.find(c=>c.id===codexChat.thread.id).workerId,'hermes');
+  assert.equal(afterDeferred.chats.find(c=>c.id===codexChat.thread.id).appliedComposerSelectionId,selection.selectionId);
+  const deferredWire=(await readFile(path.join(dir,'wire.ndjson'),'utf8')).trim().split('\n').map(JSON.parse);
+  assert.match(deferredWire.findLast(m=>m.method==='session/prompt').params.prompt[0].text,/Slow engine selection/);
+  assert.equal(deferredWire.filter(m=>m.method==='session/prompt'&&m.params.prompt.some(p=>p.text==='Deferred engine message')).length,1);
+  // Later choices are persisted independently of an already submitted message.
+  const nextChoice={selectionId:'return-choice',workerId:'codex',model:'gpt-5.6-sol',effort:'low'};
+  await call('/chat/provider',{id:codexChat.thread.id,defer:true,...nextChoice});
+  child.kill();await exited;await start();
+  assert.deepEqual((await call('/chats')).chats.find(c=>c.id===codexChat.thread.id).composerSelection,nextChoice);
+  await call('/turn',{id:codexChat.thread.id,text:'Chosen model after restart',nextSelection:nextChoice});
+  await finished(codexChat.thread.id);
+  const restoredWire=(await readFile(path.join(dir,'wire.ndjson'),'utf8')).trim().split('\n').map(JSON.parse);
+  const restoredTurn=restoredWire.findLast(m=>m.method==='turn/start'&&m.params.input?.some(i=>i.text==='Chosen model after restart'));
+  assert.equal(restoredTurn.params.model,'gpt-5.6-sol');
+  assert.equal(restoredTurn.params.collaborationMode.settings.reasoning_effort,'low');
+
+
 
 
 });

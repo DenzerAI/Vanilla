@@ -29,7 +29,7 @@ test('empty query only loads recent chats; failing catalogs can retry without lo
   return {results:[]};
  });
  await search('');assert.equal(calls.length,1);
- let result=await search('Rechnung');assert.equal(result.results[0].kind,'chat');assert.match(result.warnings.join(),/Bibliothek/);
+ let result=await search('Rechnung');assert.equal(result.results[0].kind,'chat');assert.match(result.warnings.join(),/Ergebnisse/);
  fail=false;result=await search('Rechnung');assert.equal(result.warnings.length,0);assert.equal(result.results.length,2);
  assert.deepEqual(orderSearchResults([{kind:'page',id:'a'},{kind:'chat',id:'b'}]).map(r=>r.id),['b','a']);
 });

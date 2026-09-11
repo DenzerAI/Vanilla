@@ -463,7 +463,15 @@ async function sendTurn(id, b, delivery) {
   try { return await sendTurnUnlocked(id, b, delivery); } finally { turnLocks.delete(id); deliveries.kick(id); }
 }
 async function sendTurnUnlocked(id, b, delivery) {
-  const c = await ensure(id);
+  let c;
+  if (b.nextSelection?.workerId && b.nextSelection.workerId !== workers.owner(id)) {
+    if (active.has(id)) throw Object.assign(new Error("Die Nachricht wartet auf die laufende Antwort."), {deliveryPaused:true});
+    await switchProviderUnlocked(id, b.nextSelection.workerId);
+    c = store.chat(id);
+    // A provider-only choice uses the new native default, never the old model.
+    b = {...b, model:b.nextSelection.model || c.model, effort:b.nextSelection.effort || c.effort, mode:c.mode};
+  } else c = await ensure(id);
+  if (b.nextSelection && !b.nextSelection.model) b = {...b, nextSelection:{...b.nextSelection, model:c.model}};
   const input = [];
   if (b.text?.trim()) input.push({ type: "text", text: b.text });
   for (const attachment of b.attachments || []) {
@@ -510,7 +518,7 @@ async function sendTurnUnlocked(id, b, delivery) {
   }
   if (workers.entry(workers.owner(id)).adapter === "codex") modelCache = (await workers.call("model/list", {workerId:workers.owner(id)})).data || [];
   if (b.nextSelection) {
-    if (!b.nextSelection.model || typeof b.nextSelection.model !== "string" || (b.nextSelection.effort && typeof b.nextSelection.effort !== "string")) throw new Error("Ungültige vorgemerkte Modellwahl.");
+    if ((!b.nextSelection.model && !b.nextSelection.workerId) || (b.nextSelection.model && typeof b.nextSelection.model !== "string") || (b.nextSelection.effort && typeof b.nextSelection.effort !== "string")) throw new Error("Ungültige vorgemerkte Modellwahl.");
     if (workers.entry(workers.owner(id)).adapter === "codex") {
       const selected = visibleModels(modelCache).find(model => model.model === b.nextSelection.model);
       if (!selected || b.nextSelection.effort && supportedEffort(selected, b.nextSelection.effort) !== b.nextSelection.effort) throw new Error("Die vorgemerkte Modellwahl ist nicht mehr verfügbar. Bitte erneut auswählen.");
@@ -539,7 +547,7 @@ async function sendTurnUnlocked(id, b, delivery) {
   if (c.serviceTier && !modelCache.find(m => m.model === c.model)?.serviceTiers?.some(t => t.id === c.serviceTier)) c.serviceTier = null;
   if (workers.entry(workers.owner(id)).adapter === "acp") {
     let native = (await workers.call("thread/read", {threadId:id})).thread.workerSession;
-    if (b.nextSelection) native = await applySessionSelection(native, b.nextSelection, async change => {
+    if (b.nextSelection?.model) native = await applySessionSelection(native, b.nextSelection, async change => {
       const result = await workers.call(change.configId ? "session/set_config_option" : "session/set_model", {threadId:id, ...change});
       return result.thread.workerSession;
     });
@@ -548,6 +556,10 @@ async function sendTurnUnlocked(id, b, delivery) {
       Object.assign(c, {model:selection.model, effort:selection.effort, models:selection.models});
       if (b.nextSelection) b = {...b, model:selection.model, effort:selection.effort};
     }
+  }
+  if (b.nextSelection?.selectionId) {
+    c.appliedComposerSelectionId = b.nextSelection.selectionId;
+    c.composerSelection ||= {...b.nextSelection};
   }
   await store.save();
   const pp = perms(permission);
@@ -929,51 +941,58 @@ route("POST", "/api/chat/speed", async b => {
     emit({method:"wrapper/chats"}); return {serviceTier:c.serviceTier};
   } finally { turnLocks.delete(b.id); }
 });
-route("POST", "/api/chat/provider", async b => {
-  const id = b.id, c = store.chat(id);
-  if (turnLocks.has(id) || restartGate.restarting) throw new Error("Bitte die laufende Übertragung abwarten.");
+async function switchProviderUnlocked(id, workerId) {
+  const c = store.chat(id), b = {workerId};
   if (c.jobId || c.channelOnly) throw new Error("Der Anbieter dieses automatischen Laufs bleibt fest zugeordnet.");
   if (voiceSessions.has(id)) throw new Error("Bitte zuerst die Sprachsession beenden.");
+  if (active.has(id)) throw new Error("Die laufende Antwort ist noch nicht abgeschlossen.");
+  // Prepare/authenticate first. A failed target leaves the current session intact.
+  await workers.connect(b.workerId);
+  const target = workers.entry(b.workerId), capabilities = workers.capability(b.workerId);
+  if (target.adapter === "codex") {
+    const account = await workers.call("account/read", {workerId:b.workerId});
+    if (account.requiresOpenaiAuth === true && !account.account) throw new Error("Codex ist nicht angemeldet. Bitte zuerst in der CLI anmelden.");
+  }
+  const mode = capabilities.plan ? c.mode || "default" : "default";
+  const models = target.adapter === "codex" ? (await workers.call("model/list", {workerId:b.workerId})).data || [] : [];
+  const model = visibleModels(models).find(m => m.isDefault) || visibleModels(models)[0];
+  if (target.adapter === "codex" && !model) throw new Error("Codex meldet keine verfügbaren Modelle der 5.6- oder 6er-Serie.");
+  const r = await workers.call("thread/start", {workerId:b.workerId, cwd:await store.projectRoot(c.projectId || "default"), model:model?.model || null,
+    ...perms(runMode(mode).permission), approvalsReviewer:"user", historyMode:"legacy", experimentalRawEvents:true});
+  await finishing.get(id);
+  const previous = mergeTools((await readThread(id)).thread, toolsByThread.get(id));
+  const snapshot = await saveHandoff(store, id, previous);
+  const old = {...c}, selection = sessionModelSelection(r.thread.workerSession);
+  Object.assign(c, {workerId:b.workerId, workerThreadId:r.thread.id, handoffSnapshot:snapshot,
+    capabilities, fallbackFrom:null, mode, permission:runMode(mode).permission, model:model?.model || selection.model,
+    effort:model ? supportedEffort(model) : selection.effort, models:model ? models : selection.models, serviceTier:null});
+  try { await store.save(); } catch (error) { Object.assign(c, old); for (const key of Object.keys(c)) if (!(key in old)) delete c[key]; throw error; }
+  loaded.add(id);
+  const thread = joinHandoff(id, previous, r.thread);
+  threadCache.set(id, thread);
+  await store.exportThread(thread);
+  emit({method:"wrapper/chats"}); emit({method:"wrapper/thread", params:{thread}});
+  return {thread, meta:c};
+}
+route("POST", "/api/chat/provider", async b => {
+  const id = b.id, c = store.chat(id);
+  if (b.defer === true) {
+    workers.entry(b.workerId);
+    if ((c.jobId || c.channelOnly) && b.workerId !== workers.owner(id)) throw new Error("Der Anbieter dieses automatischen Laufs bleibt fest zugeordnet.");
+    if (typeof b.selectionId !== "string" || !b.selectionId || (b.model != null && typeof b.model !== "string") || (b.effort != null && typeof b.effort !== "string")) throw new Error("Ungültige Auswahl.");
+    const previous = c.composerSelection;
+    c.composerSelection = {selectionId:b.selectionId, workerId:b.workerId, model:b.model || null, effort:b.effort || ""};
+    try { await store.save(); } catch (error) { c.composerSelection = previous; throw error; }
+    emit({method:"wrapper/chats"});
+    return {selection:c.composerSelection};
+  }
+  if (turnLocks.has(id) || restartGate.restarting) throw new Error("Bitte die laufende Übertragung abwarten.");
   if (b.expectedWorker !== workers.owner(id)) throw new Error("Der Anbieter wurde inzwischen geändert. Bitte erneut auswählen.");
-  if (b.workerId === workers.owner(id)) return {thread:(await workers.call("thread/read", {threadId:id, includeTurns:true})).thread, meta:c};
-  if (active.has(id) && b.expectedTurnId !== active.get(id)) throw new Error("Die laufende Antwort wurde inzwischen geändert. Bitte erneut auswählen.");
-  if (active.has(id) && b.stop !== true) throw new Error("Bitte die laufende Antwort zuerst stoppen.");
+  if (b.workerId === workers.owner(id)) return {thread:(await readThread(id)).thread, meta:c};
+  if (active.has(id)) throw new Error("Die laufende Antwort ist noch nicht abgeschlossen. Wähle den Anbieter für die nächste Nachricht.");
   turnLocks.add(id);
-  try {
-    // Prepare/authenticate first. A failed target leaves the current session intact.
-    await workers.connect(b.workerId);
-    const target = workers.entry(b.workerId), capabilities = workers.capability(b.workerId);
-    if (target.adapter === "codex") {
-      const account = await workers.call("account/read", {workerId:b.workerId});
-      if (account.requiresOpenaiAuth === true && !account.account) throw new Error("Codex ist nicht angemeldet. Bitte zuerst in der CLI anmelden.");
-    }
-    const mode = capabilities.plan ? c.mode || "default" : "default";
-    const models = target.adapter === "codex" ? (await workers.call("model/list", {workerId:b.workerId})).data || [] : [];
-    const model = visibleModels(models).find(m => m.isDefault) || visibleModels(models)[0];
-    if (target.adapter === "codex" && !model) throw new Error("Codex meldet keine verfügbaren Modelle der 5.6- oder 6er-Serie.");
-    const r = await workers.call("thread/start", {workerId:b.workerId, cwd:await store.projectRoot(c.projectId || "default"), model:model?.model || null,
-      ...perms(runMode(mode).permission), approvalsReviewer:"user", historyMode:"legacy", experimentalRawEvents:true});
-    if (active.has(id)) {
-      await workers.call("turn/interrupt", {threadId:id, turnId:active.get(id)});
-      const deadline = Date.now() + 30000;
-      while (active.has(id) && Date.now() < deadline) await new Promise(resolve => setTimeout(resolve, 50));
-      if (active.has(id)) throw new Error("Der bisherige Anbieter hat das Stoppen noch nicht bestätigt. Bitte erneut versuchen.");
-    }
-    await finishing.get(id);
-    const previous = mergeTools((await readThread(id)).thread, toolsByThread.get(id));
-    const snapshot = await saveHandoff(store, id, previous);
-    const old = {...c}, selection = sessionModelSelection(r.thread.workerSession);
-    Object.assign(c, {workerId:b.workerId, workerThreadId:r.thread.id, handoffSnapshot:snapshot,
-      capabilities, fallbackFrom:null, mode, permission:runMode(mode).permission, model:model?.model || selection.model,
-      effort:model ? supportedEffort(model) : selection.effort, models:model ? models : selection.models, serviceTier:null});
-    try { await store.save(); } catch (error) { Object.assign(c, old); for (const key of Object.keys(c)) if (!(key in old)) delete c[key]; throw error; }
-    loaded.add(id);
-    const thread = joinHandoff(id, previous, r.thread);
-    threadCache.set(id, thread);
-    await store.exportThread(thread);
-    emit({method:"wrapper/chats"}); emit({method:"wrapper/thread", params:{thread}});
-    return {thread, meta:c};
-  } finally { turnLocks.delete(id); }
+  try { return await switchProviderUnlocked(id, b.workerId); }
+  finally { turnLocks.delete(id); }
 });
 route("POST", "/api/worker-session", async b => {
   const id = b.id;
@@ -1027,7 +1046,7 @@ route("POST", "/api/messages/edit", async b => {
 });
 messageDelivery = await new BrowserMessageDelivery({
   store, createChat:createUiChat, send:sendTurn, emit,
-  paused:()=>restartGate.restarting, locked:id=>turnLocks.has(id),
+  paused:()=>restartGate.restarting, locked:(id, payload)=>turnLocks.has(id) || !!payload?.nextSelection && (active.has(id) || finishing.has(id)),
 }).init();
 route("POST", "/api/delivery", b => messageDelivery.accept(b));
 route("GET", "/api/delivery", (b,u) => messageDelivery.transaction(() => messageDelivery.get(u.searchParams.get("clientMessageId"))));

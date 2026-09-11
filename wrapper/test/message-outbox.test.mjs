@@ -127,3 +127,18 @@ test('delivery rendering preserves history references and memoizes acknowledged 
   assert.equal(first[1].items[0].delivery.status,'accepted');
   assert.equal(deliveryView(thread,[])[0],history);
 });
+
+test('selected next engine is durably queued without blocking a different chat',async()=>{
+  const calls=[];const f=await fixture(async(id,payload)=>{calls.push({id,payload});return {turn:{id:'next'}};});
+  let active=true;
+  f.queue.locked=(id,payload)=>id==='chat' && active && !!payload.nextSelection;
+  const selection={workerId:'hermes',model:null,selectionId:'selected'};
+  await f.queue.accept({...input(),nextSelection:selection});
+  await flush();assert.equal(f.calls(),0);
+  assert.deepEqual(f.disk().messageDelivery.entries[0].payload.nextSelection,selection);
+  await f.queue.accept({...input('42345678-1234-1234-1234-123456789012'),id:'other'});
+  await flush();assert.equal(calls[0].id,'other');
+  active=false;f.queue.kick();await flush();
+  assert.equal(calls[1].id,'chat');assert.deepEqual(calls[1].payload.nextSelection,selection);
+  f.queue.kick();await flush();assert.equal(calls.length,2);
+});

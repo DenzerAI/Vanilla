@@ -110,10 +110,10 @@
 .user-actions time { margin: 0 0 0 var(--space-8); }
 @media (hover: hover) and (pointer: fine) {
   .agent-actions > :is(button, .copy-feedback), .user-actions > :is(button, .copy-feedback), .user-actions .message-more { opacity: 0; transition: opacity 140ms ease; }
-  /* Keyboard focus keeps the actions visible; a mouse click must not pin them after the pointer leaves. */
-  .agent-message:hover .agent-actions > :is(button, .copy-feedback), .agent-message:has(:focus-visible) .agent-actions > :is(button, .copy-feedback),
-  .user-message-row:hover .user-actions > :is(button, .copy-feedback), .user-message-row:has(:focus-visible) .user-actions > :is(button, .copy-feedback),
-  .user-message-row:hover .message-more, .user-message-row:has(:focus-visible) .message-more { opacity: 1; }
+  /* Pointer contact is tracked by message-hover.mjs (:hover goes stale while scrolling); keyboard focus keeps the actions visible, a mouse click must not pin them. */
+  .agent-message[data-pointer-hover] .agent-actions > :is(button, .copy-feedback), .agent-message:has(:focus-visible) .agent-actions > :is(button, .copy-feedback),
+  .user-message-row[data-pointer-hover] .user-actions > :is(button, .copy-feedback), .user-message-row:has(:focus-visible) .user-actions > :is(button, .copy-feedback),
+  .user-message-row[data-pointer-hover] .message-more, .user-message-row:has(:focus-visible) .message-more { opacity: 1; }
 }
 /* One writing surface; settings stay outside the pill. */
 .pill-composer { padding: 0; background: transparent; box-shadow: none; border-radius: 0; }
@@ -325,8 +325,8 @@
 .activity-group > summary > svg { width: 14px; height: 14px; }
 @media (hover: hover) and (pointer: fine) {
   .agent-actions > :is(button, .copy-feedback):not([aria-pressed="true"]), .user-actions > :is(button, .copy-feedback) { pointer-events: none; }
-  .agent-message:is(:hover, :has(:focus-visible)) .agent-actions > :is(button, .copy-feedback),
-  .user-message-row:is(:hover, :has(:focus-visible)) .user-actions > :is(button, .copy-feedback) { pointer-events: auto; }
+  .agent-message:is([data-pointer-hover], :has(:focus-visible)) .agent-actions > :is(button, .copy-feedback),
+  .user-message-row:is([data-pointer-hover], :has(:focus-visible)) .user-actions > :is(button, .copy-feedback) { pointer-events: auto; }
   .agent-actions > :is(button, .copy-feedback)[aria-pressed="true"] { opacity: 1; }
 }
 @media (pointer: coarse) {
@@ -384,3 +384,23 @@
 .message-delivery > button { min-width: var(--control-target); min-height: var(--control-target); padding: var(--space-4); }
 .delivery-checks { display: block; overflow: visible; }
 @media (pointer: coarse) { .message-delivery > button { min-width: var(--control-touch); min-height: var(--control-touch); } }
+
+/* Phone conversations prioritize text; the existing actions stay discoverable. */
+.message-actions > .message-actions-toggle { display: none; }
+@media (max-width: 650px) {
+  .chat-main, .message-column, .composer-area { --chat-gutter: var(--space-16); }
+  .chapter-scrubber.message-index { display: none; }
+  .message-actions > .message-actions-toggle {
+    display: inline-flex; opacity: 1; pointer-events: auto;
+  }
+  .message-actions[data-actions-open="false"] > :is(button, .copy-feedback):not(.message-actions-toggle):not([aria-pressed="true"]) { display: none; }
+  .message-actions[data-actions-open="true"] > :is(button, .copy-feedback) { opacity: 1; pointer-events: auto; }
+  .message-actions .icon-button { min-width: var(--control-touch); min-height: var(--control-touch); }
+  .user-message-row { margin-block: var(--space-8); }
+  .turn-response-header, .turn-response-progress { margin-block: var(--space-4); }
+  .turn-author-meta > time { display: none; }
+  .turn-author .agent-signature { margin-right: 0; }
+  .turn-response-progress[data-mobile-complete="true"] { display: none; }
+  .turn-activity-status > :is(.turn-step-count, .turn-duration) { display: none; }
+  .activity-group { margin-block: 0; }
+}

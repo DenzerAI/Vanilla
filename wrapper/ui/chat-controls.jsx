@@ -260,3 +260,14 @@ export function ChatMenuPreview() {
     {id:"close-panel",label:"Chat 2 schließen",icon:<X size={16}/>,action:()=>setAction("Schließen ausgewählt")},
   ]}/><p className="page-note" role="status">{action || "Lokale Menüvorschau mit Gruppen und deaktivierter Aktion."}</p></>;
 }
+
+// Shared by user and assistant messages; the desktop action row stays intact.
+export function MessageActions({className = "", children}) {
+  const [open, setOpen] = useState(false);
+  const trigger = useRef(null);
+  return <div className={`message-actions ${className}`} data-actions-open={open}
+    onKeyDown={event=>{if(event.key === 'Escape' && open){event.stopPropagation();setOpen(false);trigger.current?.focus();}}}>
+    <IconButton ref={trigger} className="message-actions-toggle" label={open ? "Nachrichtenaktionen schließen" : "Nachrichtenaktionen anzeigen"} aria-expanded={open} onClick={()=>setOpen(value=>!value)}><MoreHorizontal size={16}/></IconButton>
+    {children}
+  </div>;
+}

@@ -76,3 +76,44 @@ def test_live_receipt_must_match_commit(queue, tmp_path, monkeypatch):
     service.save({'version': 1, 'releases': [{'target': 'right', 'phase': 'activating', 'attempt': str(attempt)}]})
     monkeypatch.setattr(service, 'publish', lambda *_: None)
     assert service.tick()['releases'][0]['phase'] == 'activation-blocked'
+
+
+def test_newer_checked_commit_takes_over_a_waiting_restart_window(queue, tmp_path, monkeypatch):
+    import subprocess
+    work, _ = queue
+    service = SourceRelease(work.directory.parent)
+    service.directory.mkdir()
+    service.config_file.write_text(json.dumps({'operator': ['/usr/bin/true']}))
+    attempt = tmp_path / 'attempt'
+    attempt.mkdir()
+    (attempt / 'status.json').write_text(json.dumps({'phase': 'waiting-for-sessions', 'target': 'a'}))
+    service.save({'version': 1, 'releases': [
+        {'target': 'a', 'phase': 'activating', 'attempt': str(attempt), 'publishedAt': 1.0},
+        {'target': 'b', 'phase': 'checked', 'publishedAt': 2.0},
+        {'target': 'c', 'phase': 'checked', 'publishedAt': 3.0}]})
+    service.process = subprocess.Popen(['sleep', '60'])
+    monkeypatch.setattr(service, 'publish', lambda *_: None)
+    state = service.tick()
+    assert [(r['target'], r['phase']) for r in state['releases']] == [('a', 'superseded'), ('b', 'superseded'), ('c', 'activating')]
+    assert state['releases'][0]['supersededBy'] == 'c' and state['releases'][1]['supersededBy'] == 'c'
+
+
+def test_started_activation_is_never_replaced(queue, tmp_path, monkeypatch):
+    import subprocess
+    work, _ = queue
+    service = SourceRelease(work.directory.parent)
+    service.directory.mkdir()
+    service.config_file.write_text(json.dumps({'operator': ['/usr/bin/true']}))
+    attempt = tmp_path / 'attempt'
+    attempt.mkdir()
+    (attempt / 'status.json').write_text(json.dumps({'phase': 'installing', 'target': 'a'}))
+    service.save({'version': 1, 'releases': [
+        {'target': 'a', 'phase': 'activating', 'attempt': str(attempt), 'publishedAt': 1.0},
+        {'target': 'b', 'phase': 'checked', 'publishedAt': 2.0}]})
+    process = subprocess.Popen(['sleep', '60'])
+    service.process = process
+    monkeypatch.setattr(service, 'publish', lambda *_: None)
+    state = service.tick()
+    assert [(r['target'], r['phase']) for r in state['releases']] == [('a', 'activating'), ('b', 'checked')]
+    assert process.poll() is None
+    process.kill()

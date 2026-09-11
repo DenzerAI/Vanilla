@@ -187,7 +187,7 @@
       },
       "limits": "Lokales Prüfergebnis über npm run source:check; HTTP bestätigt nur den Katalog.",
       "command": "node system/capabilities.mjs",
-      "version": 6,
+      "version": 7,
       "migration": "Additives lokales source-work/state.json mit Format 1. Ohne lokale Einrichtung inaktiv. Arbeitskopien und Commits bleiben bei Abschaltung erhalten; unterbrochene Prüfungen werden blockiert, nicht automatisch wiederholt. Additiver, ausdrücklich konfigurierter source-release-Status (Format 1). Push unabhängig von Sessions; Aktivierung über bestehenden lokalen Operator. Abschalten erhält Commits und Rückkehrjournale."
     },
     {
@@ -283,6 +283,7 @@
         "wrapper/ui/chat-presentation.mjs",
         "wrapper/ui/chat-rich-content.jsx",
         "wrapper/ui/chat-rich-content.mjs",
+        "wrapper/ui/message-hover.mjs",
         "wrapper/ui/chat-scroll.mjs",
         "wrapper/ui/chat-start-data.tsx",
         "wrapper/ui/chat-start-feed.mjs",
@@ -350,6 +351,7 @@
         "wrapper/test/message-delivery.test.mjs",
         "wrapper/test/message-submit.test.mjs",
         "wrapper/test/chat-fork.test.mjs",
+        "wrapper/test/message-hover.test.mjs",
         "wrapper/test/chat-scroll.test.mjs",
         "wrapper/test/chat-start.test.mjs",
         "wrapper/test/composer-dictation.test.mjs",
@@ -367,8 +369,8 @@
         "meaning": "Eingerichtet, verbunden und authentifiziert getrennt auswerten."
       },
       "limits": "Eingerichtet, verbunden und authentifiziert getrennt auswerten.",
-      "version": 17,
-      "migration": "Bestehende Chat-IDs, Entwürfe und native Sitzungen erhalten. Forkfamilie und Statistikfelder sind additiv; Fork-Zähler bei Rückkehr nicht aus alten Kopien erraten. Nachrichtenkennungen und persistente Übergabebelege bleiben führend. Native Rückfragen vor Adapterwechsel beantworten oder stoppen; UI-Präferenzen sind browserlokal. workspaceOnboarding ist ein optionaler Verweis auf den einzigen Einrichtungschat je Workspace; Forks übernehmen ihn nicht. Einrichtung verwendet die bestehende Nachrichtenübergabe. Der separate Adapter liefert gebaute Assets direkt aus dist aus und meldet fehlende Dateien mit 404 statt HTML. Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Restore markiert offene Nachrichtenübergaben als unknown. Die gemeinsame Betriebspause blockiert neue Übergaben bis zur ausdrücklichen Fortsetzung; unbestätigte alte Nachrichten bleiben einzeln prüfpflichtig. Vertrag docs/OPERATIONS.md. Hintergrundabgleiche erhalten bereits gestreamte Inhalte; Zustellstatus kopiert nur betroffene Nutzerbeiträge. Keine Datenmigration oder neue Speicherung. Pane-Kürzel bedienen vorhandenes Diktat mit explizitem Direktsenden und Escape-Abbruch; keine Datenmigration. Ältere UI verwendet wieder reine Fokusaktionen. Diktatkürzel und Chatbeschriftungen folgen der geöffneten Ansichtsreihenfolge, unabhängig von internen Pane-IDs. Einzelfeld ist immer Chat 1. Keine Datenmigration; Rückkehr verwendet interne Nummern. Zugangsformat ENV: vorhandene verschlüsselte Zugänge vor neuen Schreibvorgängen offline mit core.vault_migrate übernehmen. .env bleibt privat und wird mit Daten kopiert. Rückweg benötigt vorherigen vollständigen Datenstand. Sicherungsschema 5 mit .env; Schema 2–4 werden bei Restore lokal konvertiert. Details docs/VAULT.md."
+      "version": 21,
+      "migration": "Bestehende Chat-IDs, Entwürfe und native Sitzungen erhalten. Forkfamilie und Statistikfelder sind additiv; Fork-Zähler bei Rückkehr nicht aus alten Kopien erraten. Nachrichtenkennungen und persistente Übergabebelege bleiben führend. Native Rückfragen vor Adapterwechsel beantworten oder stoppen; UI-Präferenzen sind browserlokal. workspaceOnboarding ist ein optionaler Verweis auf den einzigen Einrichtungschat je Workspace; Forks übernehmen ihn nicht. Einrichtung verwendet die bestehende Nachrichtenübergabe. Der separate Adapter liefert gebaute Assets direkt aus dist aus und meldet fehlende Dateien mit 404 statt HTML. Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Restore markiert offene Nachrichtenübergaben als unknown. Die gemeinsame Betriebspause blockiert neue Übergaben bis zur ausdrücklichen Fortsetzung; unbestätigte alte Nachrichten bleiben einzeln prüfpflichtig. Vertrag docs/OPERATIONS.md. Hintergrundabgleiche erhalten bereits gestreamte Inhalte; Zustellstatus kopiert nur betroffene Nutzerbeiträge. Keine Datenmigration oder neue Speicherung. Pane-Kürzel bedienen vorhandenes Diktat mit explizitem Direktsenden und Escape-Abbruch; keine Datenmigration. Ältere UI verwendet wieder reine Fokusaktionen. Diktatkürzel und Chatbeschriftungen folgen der geöffneten Ansichtsreihenfolge, unabhängig von internen Pane-IDs. Einzelfeld ist immer Chat 1. Keine Datenmigration; Rückkehr verwendet interne Nummern. Zugangsformat ENV: vorhandene verschlüsselte Zugänge vor neuen Schreibvorgängen offline mit core.vault_migrate übernehmen. .env bleibt privat und wird mit Daten kopiert. Rückweg benötigt vorherigen vollständigen Datenstand. Sicherungsschema 5 mit .env; Schema 2–4 werden bei Restore lokal konvertiert. Details docs/VAULT.md. Additive composerSelection/appliedComposerSelectionId im Chat. Engineauswahl wird ohne Sitzungsstart gespeichert und beim nächsten Senden nach Turnabschluss übernommen. Offene Nachrichten mit nextSelection.workerId vor Rückkehr auf ältere Versionen abarbeiten; diese führen das neue Feld nicht aus. Bestehende Sessions, Verlauf und globale Vorgaben bleiben erhalten. Mobile Chatdarstellung und gemeinsame Nachrichtenaktions-Vorschau verwenden bestehende Daten; keine Datenmigration. Produktstand 0.1.1. Rückkehr zeigt dieselben Inhalte ausführlich. Vertrag: wrapper/surfaces/chat.md. Navigation nennt die bestehende library-Ansicht Ergebnisse; direkte Verweise verbinden Auftragsdetails und zugehörige Dateien. Keine Chatdatenmigration."
     },
     {
       "id": "speech",
@@ -575,8 +577,8 @@
         "meaning": "Programmfund ist kein Login. Nur eigene Profile und bestätigte Sitzung verwenden."
       },
       "limits": "Programmfund ist kein Login. Nur eigene Profile und bestätigte Sitzung verwenden. Automatische Installation nur für installierte Codex/Gemini ohne festen Programmpfad. Modellkatalog ist kein Zugangsnachweis.",
-      "version": 9,
-      "migration": "Bestehende eigene Anbieterprofile und natives Memory unverändert erhalten. Ergänzende nicht vertrauliche Fragequittungen verwenden tools.json, Verbrauchswerte additive Turn-/Chatfelder. Vor Rückkehr offene native Requests beenden. Kontingentabfrage nutzt denselben eigenen Profilweg, übernimmt keine Host-Anmeldungen und startet keine Modellantwort. Gemeinsame Modellwahl und anbieterbezogene Profilprüfung ohne Datenmigration; vorhandene native Einstellungen und Übergabeverläufe bleiben erhalten. Optionale installationslokale worker-auth.json Version 1 bindet ausdrücklich einen vorhandenen Claude-Dienstzugang; keine automatische Übernahme und keine Änderung von Zugangsdaten oder Chats. Ohne Bindung bleibt der Profilstart unverändert. Native temporäre Codex-Programmverknüpfungen bleiben beim erneuten Start zulässig; übrige Profilgrenzen unverändert. Keine Datenmigration. Optionale profileLinks in der lokalen Worker-Bindung erhalten ausdrücklich konfigurierte native Speicherorte. Ohne Bindung unveränderte Isolation; keine Kopie von Zugangsdaten, automatische Übernahme oder Datenmigration. Additive resolvedModel-Metadaten aus derselben Claude-Sitzung; keine Datenmigration. Externe Adapter und bestehende Auswahlwerte bleiben erhalten. Bestätigte konkrete Claude-Anfangsstufe pro nativer Sitzung, bestehende explizite Werte erhalten. Default-Modellalias wird nur bei exakter resolvedModel-Übereinstimmung visuell zugeordnet. Keine Datenmigration; ältere Stände lesen die native Einstellung."
+      "version": 10,
+      "migration": "Bestehende eigene Anbieterprofile und natives Memory unverändert erhalten. Ergänzende nicht vertrauliche Fragequittungen verwenden tools.json, Verbrauchswerte additive Turn-/Chatfelder. Vor Rückkehr offene native Requests beenden. Kontingentabfrage nutzt denselben eigenen Profilweg, übernimmt keine Host-Anmeldungen und startet keine Modellantwort. Gemeinsame Modellwahl und anbieterbezogene Profilprüfung ohne Datenmigration; vorhandene native Einstellungen und Übergabeverläufe bleiben erhalten. Optionale installationslokale worker-auth.json Version 1 bindet ausdrücklich einen vorhandenen Claude-Dienstzugang; keine automatische Übernahme und keine Änderung von Zugangsdaten oder Chats. Ohne Bindung bleibt der Profilstart unverändert. Native temporäre Codex-Programmverknüpfungen bleiben beim erneuten Start zulässig; übrige Profilgrenzen unverändert. Keine Datenmigration. Optionale profileLinks in der lokalen Worker-Bindung erhalten ausdrücklich konfigurierte native Speicherorte. Ohne Bindung unveränderte Isolation; keine Kopie von Zugangsdaten, automatische Übernahme oder Datenmigration. Additive resolvedModel-Metadaten aus derselben Claude-Sitzung; keine Datenmigration. Externe Adapter und bestehende Auswahlwerte bleiben erhalten. Bestätigte konkrete Claude-Anfangsstufe pro nativer Sitzung, bestehende explizite Werte erhalten. Default-Modellalias wird nur bei exakter resolvedModel-Übereinstimmung visuell zugeordnet. Keine Datenmigration; ältere Stände lesen die native Einstellung. Additive composerSelection/appliedComposerSelectionId im Chat. Engineauswahl wird ohne Sitzungsstart gespeichert und beim nächsten Senden nach Turnabschluss übernommen. Offene Nachrichten mit nextSelection.workerId vor Rückkehr auf ältere Versionen abarbeiten; diese führen das neue Feld nicht aus. Bestehende Sessions, Verlauf und globale Vorgaben bleiben erhalten."
     },
     {
       "id": "jobs",
@@ -631,13 +633,13 @@
         "meaning": "Ausführung über Scheduler; Abschluss und Zustellbeleg prüfen."
       },
       "limits": "Ausführung über Scheduler; Abschluss und Zustellbeleg prüfen.",
-      "version": 6,
+      "version": 7,
       "migration": "Bestehende zentrale Jobordner, Kennungen und Laufbelege erhalten. Optionale Modell-/Effortfelder ergänzen das Manifest; vorhandene Zeitwerte werden weiterhin eindeutig eingelesen. Backup-Zeitplan erst nach erfolgreicher Prüfung des vorhandenen Archivs aktivieren. Keine Verschiebung in Bereichsordner. category ist optional und rein organisatorisch; fehlend oder leer heißt Allgemein. Alte Leser ignorieren die Zusatzangabe. Workspace, Zeitplan und Ablage bleiben unverändert. Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Nach Restore gilt recovery/not-before als Zeitplangrenze. Normale Neustarts erhalten bestehende Wiederholungsregeln. Keine Tabellen entfernt."
     },
     {
       "id": "library",
-      "title": "Bibliothek und Arbeitsdateien",
-      "purpose": "Bibliothek und Arbeitsdateien über die bestehenden Anschlüsse bedienen und erweitern.",
+      "title": "Ergebnisse und Arbeitsdateien",
+      "purpose": "Ergebnisse aus Aufträgen und Chats mit gemeinsamen Kategorien finden und wiederverwenden.",
       "stage": "implemented",
       "contract": "wrapper/surfaces/library.md",
       "setup": "docs/CUSTOMER-SETUP.md#library",
@@ -658,21 +660,24 @@
         "POST /api/library/favorite",
         "POST /api/library/image",
         "POST /api/library/reuse",
-        "POST /api/upload"
+        "POST /api/upload",
+        "POST /api/library/category"
       ],
       "dependencies": [
-        "platform"
+        "platform",
+        "jobs"
       ],
       "verification": [
-        "wrapper/test/artifact-content.test.mjs"
+        "wrapper/test/artifact-content.test.mjs",
+        "wrapper/test/service-platform.test.mjs"
       ],
       "status": {
         "endpoint": "GET /api/library",
         "meaning": "Dateibestand; Vorschau ist kein Suchindex."
       },
       "limits": "Dateibestand; Vorschau ist kein Suchindex.",
-      "version": 2,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Während Sicherung und Wiederherstellungsprüfung weist der gemeinsame Server Schreibaktionen ab; lesende Bibliotheksansichten bleiben erreichbar. Kein Dateiformat geändert. Vertrag docs/OPERATIONS.md."
+      "version": 3,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Während Sicherung und Wiederherstellungsprüfung weist der gemeinsame Server Schreibaktionen ab; lesende Bibliotheksansichten bleiben erreichbar. Kein Dateiformat geändert. Vertrag docs/OPERATIONS.md. Additive Indexfelder categoryOverride (null/fehlend: erben, leer: Allgemein), category, jobCategory, jobName und jobAvailable. Keine Dateiverschiebung. Alte Leser ignorieren Zusatzfelder; vorhandene Overrides bleiben erhalten. Vertrag wrapper/surfaces/library.md."
     },
     {
       "id": "skills",
@@ -897,7 +902,7 @@
         "meaning": "Prozess, vollständige lokale Basis und tatsächliche Worker-Ausführbarkeit getrennt prüfen; Kundenanschlüsse werden nicht pauschal als bereit erklärt."
       },
       "limits": "Betriebszustand, Login, Backup und Restore-Nachweis separat prüfen.",
-      "version": 7,
+      "version": 8,
       "migration": "Alte Tresorformate 1/2 werden ausdrücklich nach .env migriert; vollständigen vorherigen Datenstand für den Rückweg erhalten. Details docs/VAULT.md. Fehlende oder fehlerhafte Suchberechnung bleibt als Einschränkung sichtbar; der Volltextindex bleibt nutzbar. Sicherungsschema 4; Schema 2/3 weiter lesbar. Restore setzt eine dauerhafte Betriebspause, quarantänisiert offene Übergaben und verhindert alte Zeitpläne. Details docs/OPERATIONS.md. Zugangsformat ENV: vorhandene verschlüsselte Zugänge vor neuen Schreibvorgängen offline mit core.vault_migrate übernehmen. .env bleibt privat und wird mit Daten kopiert. Rückweg benötigt vorherigen vollständigen Datenstand. Sicherungsschema 5 mit .env; Schema 2–4 werden bei Restore lokal konvertiert. Details docs/VAULT.md."
     },
     {
@@ -1060,8 +1065,8 @@
         "meaning": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen."
       },
       "limits": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen.",
-      "version": 23,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der bestehende Projektindex erhält abgeleitete Workspace-Metadaten. Jobkategorien werden aus dem optionalen Manifestfeld gelesen; keine Verschiebung von Dateien. Alte Tresorformate 1/2 werden ausdrücklich nach .env migriert; vollständigen vorherigen Datenstand für den Rückweg erhalten. Details docs/VAULT.md. Lokales MiniLM wird anhand der festgelegten Dateiprüfsummen geprüft und repariert; source.json allein bestätigt keine Bereitschaft. Bestehende Modellordner bleiben erhalten. Nach Restore gilt recovery/not-before als Zeitplangrenze. Normale Neustarts erhalten bestehende Wiederholungsregeln. Keine Tabellen entfernt. Gemeinsame Modellwahl und anbieterbezogene Profilprüfung ohne Datenmigration; vorhandene native Einstellungen und Übergabeverläufe bleiben erhalten. Streaming-Abgleiche erhalten sichtbare Inhalte und projizieren große Abschlussereignisse. Keine Datenmigration; ursprüngliche Worker-Verläufe bleiben erhalten. Modellwahl ohne Default-Rücksetzaktion; expliziter Denkaufwand bleibt pro Chat soweit unterstützt. Keine Datenmigration. Bestätigte konkrete Claude-Anfangsstufe pro nativer Sitzung, bestehende explizite Werte erhalten. Default-Modellalias wird nur bei exakter resolvedModel-Übereinstimmung visuell zugeordnet. Keine Datenmigration; ältere Stände lesen die native Einstellung. Zugangsformat ENV: vorhandene verschlüsselte Zugänge vor neuen Schreibvorgängen offline mit core.vault_migrate übernehmen. .env bleibt privat und wird mit Daten kopiert. Rückweg benötigt vorherigen vollständigen Datenstand. Sicherungsschema 5 mit .env; Schema 2–4 werden bei Restore lokal konvertiert. Details docs/VAULT.md."
+      "version": 25,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der bestehende Projektindex erhält abgeleitete Workspace-Metadaten. Jobkategorien werden aus dem optionalen Manifestfeld gelesen; keine Verschiebung von Dateien. Alte Tresorformate 1/2 werden ausdrücklich nach .env migriert; vollständigen vorherigen Datenstand für den Rückweg erhalten. Details docs/VAULT.md. Lokales MiniLM wird anhand der festgelegten Dateiprüfsummen geprüft und repariert; source.json allein bestätigt keine Bereitschaft. Bestehende Modellordner bleiben erhalten. Nach Restore gilt recovery/not-before als Zeitplangrenze. Normale Neustarts erhalten bestehende Wiederholungsregeln. Keine Tabellen entfernt. Gemeinsame Modellwahl und anbieterbezogene Profilprüfung ohne Datenmigration; vorhandene native Einstellungen und Übergabeverläufe bleiben erhalten. Streaming-Abgleiche erhalten sichtbare Inhalte und projizieren große Abschlussereignisse. Keine Datenmigration; ursprüngliche Worker-Verläufe bleiben erhalten. Modellwahl ohne Default-Rücksetzaktion; expliziter Denkaufwand bleibt pro Chat soweit unterstützt. Keine Datenmigration. Bestätigte konkrete Claude-Anfangsstufe pro nativer Sitzung, bestehende explizite Werte erhalten. Default-Modellalias wird nur bei exakter resolvedModel-Übereinstimmung visuell zugeordnet. Keine Datenmigration; ältere Stände lesen die native Einstellung. Zugangsformat ENV: vorhandene verschlüsselte Zugänge vor neuen Schreibvorgängen offline mit core.vault_migrate übernehmen. .env bleibt privat und wird mit Daten kopiert. Rückweg benötigt vorherigen vollständigen Datenstand. Sicherungsschema 5 mit .env; Schema 2–4 werden bei Restore lokal konvertiert. Details docs/VAULT.md. Additive composerSelection/appliedComposerSelectionId im Chat. Engineauswahl wird ohne Sitzungsstart gespeichert und beim nächsten Senden nach Turnabschluss übernommen. Offene Nachrichten mit nextSelection.workerId vor Rückkehr auf ältere Versionen abarbeiten; diese führen das neue Feld nicht aus. Bestehende Sessions, Verlauf und globale Vorgaben bleiben erhalten. Mobile Chatdarstellung und gemeinsame Nachrichtenaktions-Vorschau verwenden bestehende Daten; keine Datenmigration. Produktstand 0.1.1. Rückkehr zeigt dieselben Inhalte ausführlich. Vertrag: wrapper/surfaces/chat.md."
     },
     {
       "id": "weather",
@@ -1382,8 +1387,8 @@
         "meaning": "Installation v1: separat eingerichteter macOS-Operator, Standarddatenablagen, unveränderte Laufzeitabhängigkeiten, kompatible Datenformate und vollständige Prüfungen. Neue Versionen erfordern ein freigegebenes Manifest; keine Aktivierung durch main-Push."
       },
       "limits": "Installation v1: separat eingerichteter macOS-Operator, Standarddatenablagen, unveränderte Laufzeitabhängigkeiten, kompatible Datenformate und vollständige Prüfungen. Neue Versionen erfordern ein freigegebenes Manifest; keine Aktivierung durch main-Push.",
-      "version": 1,
-      "migration": "Additive lokale records; Benachrichtigungen erhalten optionale kind/subject_id-Felder. Bestehende Jobs, Firmenbasis, Verbindungen und Lesestatus erhalten. Keine automatische Migration unbekannter Datenformate."
+      "version": 3,
+      "migration": "Additive lokale records; Benachrichtigungen erhalten optionale kind/subject_id-Felder. Bestehende Jobs, Firmenbasis, Verbindungen und Lesestatus erhalten. Keine automatische Migration unbekannter Datenformate. Mobile Chatdarstellung und gemeinsame Nachrichtenaktions-Vorschau verwenden bestehende Daten; keine Datenmigration. Produktstand 0.1.1. Rückkehr zeigt dieselben Inhalte ausführlich. Vertrag: wrapper/surfaces/chat.md."
     },
     {
       "id": "contributions",

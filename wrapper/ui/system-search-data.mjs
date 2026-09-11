@@ -27,11 +27,11 @@ export function createSystemSearch(api) {
       return score ? [{kind,id:item.id,title:name,detail:detail(item),score,entry:item}] : [];
     });
     if (query) sources.push(
-      {label:'Bibliothek',load:async()=>{
+      {label:'Ergebnisse',load:async()=>{
         const data=await catalog('/library');
-        if(data.truncated) warnings.push('Bibliothek: Die Erfassung ist auf 5.000 Dateien begrenzt.');
-        if(data.warnings?.length) warnings.push('Bibliothek: Einige Dateien konnten nicht erfasst werden.');
-        return {results:match(data.entries || [],'file',e=>e.name,e=>['Bibliothek',e.origin,e.missing?'Datei fehlt':''].filter(Boolean).join(' · '),e=>`${e.path} ${e.origin || ''} ${e.worker || ''}`)};
+        if(data.truncated) warnings.push('Ergebnisse: Die Erfassung ist auf 5.000 Dateien begrenzt.');
+        if(data.warnings?.length) warnings.push('Ergebnisse: Einige Dateien konnten nicht erfasst werden.');
+        return {results:match(data.entries || [],'file',e=>e.name,e=>['Ergebnisse',e.origin,e.missing?'Datei fehlt':''].filter(Boolean).join(' · '),e=>`${e.path} ${e.origin || ''} ${e.worker || ''} ${e.category || 'Allgemein'} ${e.jobName || ''}`)};
       }},
       {label:'Aufträge',load:async()=>({results:match(await catalog('/jobs'),'job',j=>j.name,()=> 'Auftrag',j=>`${j.instructions || ''} ${j.description || ''}`)})},
       {label:'Skills',load:async()=>{
@@ -46,7 +46,7 @@ export function createSystemSearch(api) {
     );
     await Promise.all(sources.map(async source=>{
       try {const data=await source.load();collected.push(...data.results);total+=data.total ?? data.results.length;}
-      catch {warnings.push(`${source.label} ist derzeit nicht erreichbar.`);}
+      catch {warnings.push(`${source.label}: derzeit nicht erreichbar.`);}
       onUpdate(snapshot());
     }));
     return snapshot();

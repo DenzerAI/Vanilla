@@ -80,7 +80,7 @@ export function SystemSettings({api, section, chats, onJobs, onLibrary, onConnec
         {toggle('memory','shared_notes','Gemeinsame Notizen in Projekte einbeziehen','Gibt notes/shared aus Allgemein für die Kontextsuche anderer Projekte frei.')}
         {toggle('memory','history','Änderungen versionieren','Lokale Git-Historie für Notizen; unabhängig vom GitHub-Repository des Programmcodes.')}
         {number('memory','context_characters','Kontextbudget in Zeichen',1000,16000,'Der Router wählt passende Textstellen und hält Herkunft und Version fest.')}
-        <SettingRow title="Quellen" description={`${status.memory.sources} übernommene Beiträge · ${status.memory.pending} noch zu prüfen · lokale Verdichtung`}><button onClick={onLibrary}>Bibliothek öffnen</button></SettingRow>
+        <SettingRow title="Quellen" description={`${status.memory.sources} übernommene Beiträge · ${status.memory.pending} noch zu prüfen · lokale Verdichtung`}><button onClick={onLibrary}>Ergebnisse öffnen</button></SettingRow>
         <SettingRow title="Memory jetzt pflegen"><button onClick={()=>run('memory')}>Dreaming starten</button></SettingRow>
         <SettingRow title="Vorhandene Gespräche aufnehmen" description="Durchsucht auch abgeschlossene Chats aus der Zeit vor der Einrichtung. Ausgeschlossene Chats werden übersprungen."><button onClick={()=>act(()=>api('/memory/capture',{backfill:true}),'Vorhandene Gespräche wurden geprüft.')}>Nachtragen</button></SettingRow>
       </Group>

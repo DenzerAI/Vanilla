@@ -93,7 +93,7 @@ export function TurnStatus({ turn, running, waiting, visible = true, compact = f
   return <Tag ref={ref} className={compact ? "turn-activity-status" : `turn-meta turn-progress${running ? ' working' : ''}`}>
     {running && !waiting && <AppLoader size={16} preview />}
     {(running || !compact || ['failed', 'interrupted'].includes(turn.status)) && <span className="turn-status-label" role="status" aria-live="polite" aria-atomic="true">{label}</span>}
-    {compact && <span>{count ? <><StepCount value={count} animate={awake}/> {count === 1 ? 'Schritt' : 'Schritte'}</> : 'Verlauf'}</span>}
+    {compact && <span className="turn-step-count">{count ? <><StepCount value={count} animate={awake}/> {count === 1 ? 'Schritt' : 'Schritte'}</> : 'Verlauf'}</span>}
     {elapsed != null && <span className="turn-duration">{compact ? '·' : running ? 'seit' : 'in'} {workingDurationLabel(elapsed)}</span>}
   </Tag>;
 }

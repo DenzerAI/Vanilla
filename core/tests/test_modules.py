@@ -69,3 +69,12 @@ def test_index_gate_cannot_be_satisfied_by_an_unstaged_document(tmp_path):
     assert any('ohne aktualisierten Vertrag' in e for e in gate.verify(gate.tree(tmp_path,git('write-tree')),before))
     git('add','docs/demo.md')
     assert gate.verify(gate.tree(tmp_path,git('write-tree')),before)==[]
+
+
+def test_pure_interface_changes_need_no_new_module_version():
+    before=gate.tree(ROOT);after=dict(before)
+    after['wrapper/ui/app.jsx'] += b'\n// visual adjustment\n'
+    assert not any('Quelländerung' in e for e in gate.verify(after,before))
+    after['wrapper/server.mjs'] += b'\n// behaviour change\n'
+    errors=[e for e in gate.verify(after,before) if 'Quelländerung' in e]
+    assert errors and 'wrapper/server.mjs' in errors[0] and 'wrapper/ui/app.jsx' not in errors[0]

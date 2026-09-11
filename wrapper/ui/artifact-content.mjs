@@ -50,7 +50,7 @@ export function diffLines(diff = '', limit = 400) {
   }) };
 }
 
-export function collectArtifacts(items = [], workspace = '', directory = workspace, {previewLinkedImages = false} = {}) {
+export function collectArtifacts(items = [], workspace = '', directory = workspace, {previewLinkedImages = false, includeLinkedFiles = false} = {}) {
   const files = new Map(), linked = new Set();
   const add = (value, label) => {
     const path = localFilePath(value, workspace, directory);
@@ -62,7 +62,7 @@ export function collectArtifacts(items = [], workspace = '', directory = workspa
         if (token.type === 'link' || token.type === 'image') {
           const path = localFilePath(token.href, workspace, directory);
           if (path) {
-            if (previewLinkedImages && token.type === 'link' && fileKind(path) === 'image') add(token.href);
+            if (includeLinkedFiles || previewLinkedImages && token.type === 'link' && fileKind(path) === 'image') add(token.href);
             else linked.add(path);
           }
         }

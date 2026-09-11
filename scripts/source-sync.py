@@ -71,6 +71,21 @@ def restore_company(root, directory, previous):
             shutil.copy2(saved, target)
 
 
+def merge_candidate(root, head, target):
+    """Return the merged tree and the conflicting paths; conflicts are a message, not a failure."""
+    result = subprocess.run(['git', '-C', str(root), 'merge-tree', '--write-tree', '--name-only', head, target],
+                            capture_output=True, text=True)
+    if result.returncode > 1:
+        raise ValueError('Codeabgleich benötigt Klärung. Die Arbeitskopie bleibt erhalten.')
+    lines = result.stdout.splitlines()
+    conflicts = []
+    for line in lines[1:]:
+        if not line:
+            break
+        conflicts.append(line)
+    return lines[0], sorted(set(conflicts))
+
+
 def merge(root, target, check_only=False):
     root = root.resolve()
     if Path(guard.git(root, 'rev-parse', '--show-toplevel').decode().strip()).resolve() != root:
@@ -83,7 +98,10 @@ def merge(root, target, check_only=False):
     scanner.history(target)
     if scanner.findings:
         return {'merged': False, 'findings': scanner.findings}
-    candidate = guard.git(root, 'merge-tree', '--write-tree', head, target).splitlines()[0].decode()
+    candidate, conflicts = merge_candidate(root, head, target)
+    if conflicts:
+        return {'merged': False, 'conflicts': conflicts, 'error': 'Konflikt mit dem neueren gemeinsamen Stand: '
+                + ', '.join(conflicts[:5]) + '. Neuen Arbeitsstand vom aktuellen Stand beginnen und die Änderung dort erneut übernehmen.'}
     fast_forward = subprocess.run(['git', '-C', str(root), 'merge-base', '--is-ancestor', head, target], capture_output=True).returncode == 0
     scanner.tree(candidate)
     if scanner.findings:
@@ -157,7 +175,7 @@ def main():
     try:
         result = merge(args.root, args.revision, args.check)
         print(json.dumps(result))
-        return bool(result.get('findings'))
+        return bool(result.get('findings') or result.get('conflicts'))
     except (OSError, ValueError) as error:
         print(json.dumps({'merged':False, 'error':str(error)}))
         return 1

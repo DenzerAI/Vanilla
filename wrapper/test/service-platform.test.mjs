@@ -149,6 +149,44 @@ test('library indexes outputs, preserves provenance/favorites and rejects outsid
   await rm(path.join(f.store.root,'output/result.txt'));await lib.refresh();assert.equal(lib.state.entries[e.id].missing,true);
 });
 
+test('result categories inherit jobs, persist overrides and retain missing-job provenance',async t=>{
+  const f=await fixture(t);
+  await f.store.saveJob({id:'campaign',name:'Kampagne',category:'Marketing',projectId:'default',instructions:'Text erstellen',worker:'auto',schedule:{type:'manual'},status:'paused'});
+  await mkdir(path.join(f.store.root,'jobs/campaign/output'),{recursive:true});
+  await writeFile(path.join(f.store.root,'jobs/campaign/output/result.txt'),'Ergebnis');
+  const lib=await new Library({store:f.store,root:f.root}).init();
+  let list=await lib.refresh(),entry=list.entries[0];
+  assert.equal(entry.category,'Marketing');assert.equal(entry.jobId,'campaign');assert.equal(entry.projectId,'default');assert.equal(entry.jobAvailable,true);
+  await lib.favorite(entry.id,true);
+  await lib.category(entry.id,'Vertrieb');
+  const restarted=await new Library({store:f.store,root:f.root}).init();
+  entry=(await restarted.refresh()).entries[0];assert.equal(entry.category,'Vertrieb');assert.equal(entry.favorite,true);
+  await f.store.saveJob({... (await f.store.jobs())[0],category:'Angebote'});
+  entry=(await restarted.refresh()).entries[0];assert.equal(entry.category,'Vertrieb');assert.equal(entry.jobCategory,'Angebote');
+  entry=await restarted.category(entry.id,null);assert.equal(entry.category,'Angebote');
+  entry=await restarted.category(entry.id,'Allgemein');assert.equal(entry.category,'');
+  assert.equal((await restarted.refresh()).entries[0].category,'');
+  await assert.rejects(restarted.category(entry.id,'x'.repeat(81)),/80 Zeichen/);
+  await assert.rejects(restarted.category(entry.id,{name:'x'}),/Kategorie/);
+  await assert.rejects(restarted.category('missing','Marketing'),/nicht gefunden/);
+  entry=await restarted.category(entry.id,null);
+  await rm(path.join(f.store.root,'jobs/campaign/job.yaml'));
+  entry=(await restarted.refresh()).entries[0];assert.equal(entry.jobAvailable,false);assert.equal(entry.category,'Angebote');assert.equal(entry.missing,false);
+  assert.equal(await readFile(path.join(f.store.root,entry.path),'utf8'),'Ergebnis');
+});
+
+test('result index restores job links from existing chat exports outside job output',async t=>{
+  const f=await fixture(t);
+  await f.store.saveJob({id:'report',name:'Bericht',category:'Marketing',instructions:'Bericht',worker:'auto',schedule:{type:'manual'},status:'paused'});
+  await writeFile(path.join(f.store.root,'output/report.md'),'Bericht');
+  f.store.state.chats.push({id:'report-chat',projectId:'default',jobId:'report'});
+  await mkdir(path.join(f.store.root,'chats/report-chat'),{recursive:true});
+  await writeFile(path.join(f.store.root,'chats/report-chat/transcript.json'),JSON.stringify({turns:[{id:'t',items:[{type:'agentMessage',text:'[Bericht](output/report.md)'}]}]}));
+  const lib=await new Library({store:f.store,root:f.root}).init();
+  const entry=(await lib.refresh()).entries[0];
+  assert.equal(entry.jobId,'report');assert.equal(entry.threadId,'report-chat');assert.equal(entry.category,'Marketing');
+});
+
 test('image output is validated and registered through the configured provider',async t=>{
   const f=await fixture(t),c=await connection(f,'openai-image',{}, {token:'synthetic-image-key'}),lib=await new Library({store:f.store,root:f.root}).init();let request;
   f.services.json=async(url,options)=>{request=JSON.parse(options.body);assert.equal(url,'https://api.openai.com/v1/images/generations');return {data:[{b64_json:'iVBORw0KGgo='}]};};

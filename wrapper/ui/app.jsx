@@ -46,6 +46,7 @@ const NetworkConnection = lazySurface(() => import('./device-connection.tsx'), '
 import { uploadAttachmentBatch } from "./attachment-upload.mjs";
 import "./workspace-layout.css";
 import { createChatScroll } from "./chat-scroll.mjs";
+import { createMessageHover } from "./message-hover.mjs";
 import { connectionCatalog, connectionCategories, connectionCategory } from "./connection-catalog.mjs";
 import './library-connections.css';
 import { hasUnreadReply } from "../chat-read-state.mjs";
@@ -131,7 +132,7 @@ import "./styles.css";
 import "./chat.css";
 import "./multi-chat.css";
 import { createEventSubscription } from "./chat-events.mjs";
-import { ChatMenu, ChatTitle, LayoutPicker, PaneDivider } from "./chat-controls.jsx";
+import { ChatMenu, ChatTitle, LayoutPicker, PaneDivider, MessageActions } from "./chat-controls.jsx";
 import { readPaneLayout, readPaneSession, writePaneState } from "./pane-persistence.mjs";
 import { MIN_CHAT_WIDTH, visiblePanes, selectPaneCount, conversationText } from "./chat-layout.mjs";
 import { AgentWelcome } from "./avatar-picker.jsx";
@@ -149,7 +150,7 @@ import { nextChatGreeting } from "./chat-greetings.mjs";
 import { Dictation } from "./dictation.jsx";
 import { SettingRow } from "./settings-row.jsx";
 import { ModelPicker } from "./model-picker.jsx";
-import { effortConfig, modelConfig, preferredModel, sessionModelSelection, supportedEffort } from "../worker-models.mjs";
+import { preferredModel, sessionModelSelection, supportedEffort } from "../worker-models.mjs";
 import { groupSkills } from "./skill-categories.mjs";
 import { FilterPicker } from "./filter-picker.jsx";
 import {
@@ -444,7 +445,7 @@ const ChatTurn = React.memo(function ChatTurn({ onForkTurn, onEditTurn, onRetryT
     </div>
   </div>;
   const artifacts = <ChatArtifacts items={turn.items} workspace={actions.workspace} directory={actions.directory} onFile={actions.onFile} api={api} />;
-  const progress = <div className="turn-response-progress">
+  const progress = <div className="turn-response-progress" data-mobile-complete={!running && turn.status === "completed" && !activity.some(item=>["failed", "inProgress"].includes(item.status))}>
     {(activity.length || collapseCommentary && history.length) ? <ActivityGroup items={activity} running={running} turn={turn} waiting={waiting} visible={visible} open={activityOpen} onOpenChange={setActivityOpen} seenSteps={seenSteps.current}>
       {(collapseCommentary ? history : activity).map(item => { const View=item.detailsDeferred?DeferredItem:Item; return <View key={item.id} {...(item.detailsDeferred?{api,chatId,turnId:turn.id,Item}:{})} item={item} workerId={workerId} {...actions} running={running} toolOpen={toolOpen} onToolToggle={onToolToggle} />; })}
     </ActivityGroup> : <TurnStatus turn={turn} running={running} waiting={waiting} visible={visible} />}
@@ -469,6 +470,7 @@ function DeliveryMark({receipt}) {
 }
 function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, agentProfile, workerId, onFork, onEdit, onRetry, onDelete, onFile, running, sentAt, completedAt, workspace, directory, toolOpen, onToolToggle }) {
   const i = item;
+  const UserActions = i.delivery && !i.delivery.turnId ? "div" : MessageActions;
   const disclosure = {open:!!toolOpen?.[i.id], onToggle:event=>{if(event.target === event.currentTarget) onToolToggle?.(i.id,event.currentTarget.open);}};
   if (i.type === "userMessage")
     return (
@@ -489,7 +491,7 @@ function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, 
           ),
         )}
         </div>}
-        <div className="message-actions user-actions">
+        <UserActions className={UserActions === "div" ? "message-actions user-actions" : "user-actions"}>
           {!i.delivery?.turnId && i.delivery ? null : <>
           <IconButton label="Nachricht erneut ausführen" disabled={running} onClick={onRetry}>{icon(RotateCcw, 14)}</IconButton>
 
@@ -504,7 +506,7 @@ function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, 
           <IconButton label="Nachricht löschen" disabled={running} onClick={onDelete}>{icon(Trash2,14)}</IconButton>
           </>}
           <span className="message-meta"><MessageTime value={sentAt} /><DeliveryMark receipt={i.delivery}/></span>
-        </div>
+        </UserActions>
       </div>
     );
   if (i.type === "agentMessage" || i.type === "plan")
@@ -518,7 +520,7 @@ function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, 
         {i.type === "plan" && <span className="eyebrow">Plan</span>}
         <Markdown text={i.text} onFile={onFile} workspace={workspace} directory={directory} />
         {beforeActions}
-        <div className="message-actions agent-actions">
+        <MessageActions className="agent-actions">
           {i.type === "agentMessage" && i.phase !== "commentary" && <MessageSpeech text={i.text} disabled={running} api={api} Button={IconButton} />}
           <CopyButton label="Antwort kopieren" size={15} text={i.text} />
           <IconButton label="Ab dieser Antwort verzweigen" disabled={running} onClick={onFork}>
@@ -531,7 +533,7 @@ function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, 
           >
             {icon(RotateCcw, 15)}
           </IconButton>
-        </div>
+        </MessageActions>
       </div>
     );
   if (i.type === "reasoning")
@@ -606,6 +608,8 @@ function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, 
 const projectGlyphs = { folder: Folder, code: Braces, briefcase: Briefcase, globe: Globe, idea: BrainCircuit, calendar: Calendar, message: MessageCircle, files: FileText };
 function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNumber = 0, panePosition = 0, showPaneHeader = false, isMaximized = false, onMaximize, onClosePane, onOpenFile, onOpenCalendar, paneVisible = true, paneActive = false, initialProject = "default" }) {
   const [libraryRevision,setLibraryRevision]=useState(0);
+  const [libraryJob,setLibraryJob]=useState(null);
+  const [resultCategories,setResultCategories]=useState([]);
   const historyReads=useRef(null);
   historyReads.current ||= createLatestRead((url,signal)=>api(url,undefined,true,signal));
   useEffect(()=>()=>historyReads.current.cancel(),[]);
@@ -741,7 +745,11 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const [updatesTab, setUpdatesTab] = useState("version");
   const connectionsActive = view === "settings" && settingsTab === "connections";
   const skillsActive = view === "settings" && settingsTab === "skills";
+  function closeMobileNavigation() {
+    if (window.matchMedia("(max-width: 650px)").matches) setSidebar(false);
+  }
   function openSettings(section) {
+    closeMobileNavigation();
     setSettingsTab(section);
     setView("settings");
   }
@@ -757,6 +765,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const projectRef = useRef(initialProject),
     chatRef = useRef(null),
     scrollRef = useRef(null),
+    hoverController = useRef(null),
     scrollController = useRef(null),
     inputRef = useRef(null),
     uploadRef = useRef(null),
@@ -852,12 +861,19 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const current = chats.find((c) => c.id === chatId),
     running = !!active[chatId],
     project = boot?.projects?.find((p) => p.id === projectId);
-  const pickerWorker = current?.workerId || (draftWorker === "auto" ? boot?.effectiveWorker || "codex" : draftWorker);
-  const nativeSelection = thread?.workerSession ? sessionModelSelection(thread.workerSession) : null;
-  const pickerModels = nativeSelection?.models || boot?.modelsByWorker?.[pickerWorker] || current?.models || [];
-  const nextSelection = nextSelections[chatId];
-  const pickerModel = nextSelection?.model ?? (nativeSelection ? nativeSelection.model : model);
-  const pickerEffort = nextSelection?.effort ?? (nativeSelection ? nativeSelection.effort : supportedEffort(pickerModels.find(m => m.model === model), effort));
+  const selectionKey = chatId || `new:${projectId}`;
+  const composerSelection = nextSelections[selectionKey] || current?.composerSelection;
+  const actualWorker = current?.workerId || (draftWorker === "auto" ? boot?.effectiveWorker || "codex" : draftWorker);
+  const pickerWorker = composerSelection?.workerId || actualWorker;
+  const sameWorker = pickerWorker === actualWorker;
+  const nativeSelection = sameWorker && thread?.workerSession ? sessionModelSelection(thread.workerSession) : null;
+  const knownModels = workerId => boot?.modelsByWorker?.[workerId]?.length ? boot.modelsByWorker[workerId]
+    : chats.find(c => c.workerId === workerId && c.models?.length)?.models || [];
+  const pickerModels = nativeSelection?.models || (sameWorker && current?.models?.length ? current.models : knownModels(pickerWorker));
+  const nextSelection = composerSelection && composerSelection.selectionId !== current?.appliedComposerSelectionId ? composerSelection : undefined;
+  const pickerModel = composerSelection?.model || (sameWorker ? nativeSelection?.model || model : "");
+  const pickerEffort = composerSelection?.effort || (sameWorker ? nativeSelection?.effort || supportedEffort(pickerModels.find(m => m.model === model), effort) : "");
+  const selectionWrites = useRef(new Map());
   const toastTimer = useRef(null);
   const notify = useCallback((msg) => {
     if (embedded) {
@@ -1173,10 +1189,12 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       scrollController.current = element
         ? createChatScroll(element, followScroll, setAwayFromBottom)
         : null;
+      hoverController.current?.dispose();
+      hoverController.current = element ? createMessageHover(element) : null;
     }
     scrollController.current?.sync();
   });
-  useEffect(() => () => scrollController.current?.dispose(), []);
+  useEffect(() => () => { scrollController.current?.dispose(); hoverController.current?.dispose(); }, []);
   useEffect(()=>{
     if(!replyTarget||loading||thread?.id!==replyTarget.chatId)return;
     const frame=requestAnimationFrame(()=>{
@@ -1347,6 +1365,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     draftCache.current.set(chatRef.current || `new:${projectRef.current}`, {text, attachments, title:draftTitle, scroll:scrollRef.current?.scrollTop || 0, following:followScroll.current});
   }
   function newDraft(targetProjectId) {
+    closeMobileNavigation();
     if (!embedded && activePaneRef.current !== 0 && sessions.current[activePaneRef.current].current) {
       setView("chat");
       return sessions.current[activePaneRef.current].current.newDraft(targetProjectId);
@@ -1412,6 +1431,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     if(result.summaryError)notify(result.summaryError);
   }
   async function openChat(id, restoredMetadata, targetTurnId) {
+    closeMobileNavigation();
     if (!embedded) {
       const existing = paneOrder.find(slot => sessions.current[slot].current?.id === id);
       if (existing != null && existing !== activePaneRef.current) { activatePane(existing); setView("chat"); if(targetTurnId)return sessions.current[existing].current.openChat(id, restoredMetadata, targetTurnId); return; }
@@ -1505,45 +1525,28 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       setBoot(old => ({...old, workers: state.workers}));
     } catch (error) { notify(error.message); }
   }
-  async function chooseProvider(workerId) {
-    if (busy) throw new Error("Bitte die laufende Übertragung abwarten.");
-    setBusy(true);
-    const sourceChat = chatRef.current, sourceProject = projectRef.current;
-    try {
-      if (sourceChat) {
-        const result = await api("/chat/provider", {id:sourceChat, workerId, expectedWorker:pickerWorker, expectedTurnId:active[sourceChat] || null, stop:running});
-        setChats(old => old.map(c => c.id === sourceChat ? result.meta : c));
-        setNextSelections(old => { const next = {...old}; delete next[sourceChat]; return next; });
-        if (chatRef.current === sourceChat) {
-          setThread(result.thread); setModel(result.meta.model); setEffort(result.meta.effort);
-          setMode(result.meta.mode); setDraftWorker(workerId);
-        }
-        return;
-      }
-      const state = await api("/workers/activate", {id: workerId});
-      setBoot(old => ({...old, workers: state.workers, modelsByWorker: {...old.modelsByWorker, [workerId]: state.models}}));
-      if (chatRef.current !== sourceChat || projectRef.current !== sourceProject) return;
-      const worker = state.workers.find(w => w.id === workerId);
-      const nextModel = preferredModel(state.models, workerId, workerId === pickerWorker ? model : "");
-      if (worker.adapter === "codex" && !nextModel) throw new Error("Codex meldet noch keine Modelle der 5.6- oder 6er-Serie. Bitte die CLI-Anmeldung prüfen.");
-      // ACP negotiates its exact model/effort options when the empty session is opened.
-      const result = worker.adapter === "acp" ? await api("/chats", {worker: workerId, mode: "default", projectId: sourceProject, title: !sourceChat ? draftTitle || undefined : undefined}) : null;
-      if (chatRef.current !== sourceChat || projectRef.current !== sourceProject) return;
-      saveDraft();
-      setDraftSpeed(null);
-      setDraftWorker(workerId); setMode(worker.capabilities.plan ? mode : "default");
-      if (result) {
-        chatRef.current = result.thread.id; setChatId(result.thread.id); setThread(result.thread);
-        const selection = sessionModelSelection(result.thread.workerSession);
-        setModel(selection.model); setEffort(selection.effort);
-        setChats(old => [result.meta, ...old.filter(c => c.id !== result.meta.id)]);
-      } else {
-        chatRef.current = null; setChatId(null); setThread(null);
-        setModel(nextModel.model); setEffort(supportedEffort(nextModel));
-      }
-      if (sourceChat) setDraftTitle("");
-      followScroll.current = true;
-    } finally { setBusy(false); }
+  function selectForNextMessage(workerId, nextModel, nextEffort) {
+    const id = chatRef.current, key = id || `new:${projectRef.current}`;
+    const selection = {selectionId:crypto.randomUUID(), workerId, model:nextModel || null, effort:nextEffort || ""};
+    // Feedback is local and immediate. Only lightweight preferences are saved here.
+    setNextSelections(old => ({...old, [key]:selection}));
+    if (!id || id.startsWith("outbox-")) return;
+    const pending = (selectionWrites.current.get(id) || Promise.resolve()).catch(() => {}).then(async () => {
+      const result = await api("/chat/provider", {id, defer:true, ...selection});
+      setChats(old => old.map(c => c.id === id ? {...c, composerSelection:result.selection} : c));
+      setNextSelections(old => {
+        if (old[key]?.selectionId !== selection.selectionId) return old;
+        const next = {...old}; delete next[key]; return next;
+      });
+    }).catch(error => notify("Auswahl noch nicht gespeichert: " + error.message));
+    selectionWrites.current.set(id, pending);
+  }
+  function chooseProvider(workerId) {
+    const native = workerId === actualWorker && thread?.workerSession ? sessionModelSelection(thread.workerSession) : null;
+    const models = native?.models || (workerId === actualWorker && current?.models?.length ? current.models : knownModels(workerId));
+    const selected = preferredModel(models, workerId, workerId === actualWorker ? native?.model || model : "");
+    selectForNextMessage(workerId, selected?.model, supportedEffort(selected));
+    if (boot.workers?.find(w => w.id === workerId)?.capabilities?.plan === false) setMode("default");
   }
   async function changeSpeed(serviceTier) {
     if (!chatId) { setDraftSpeed(serviceTier); return; }
@@ -1551,40 +1554,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     const result = await api("/chat/speed", {id, model:pickerModel, serviceTier});
     setChats(old => old.map(c => c.id === id ? {...c, serviceTier:result.serviceTier} : c));
   }
-  async function changePickerSelection(nextModel, nextEffort) {
-    if (busy) throw new Error("Bitte die Übertragung abwarten.");
-    if (running || nextSelection) {
-      setNextSelections(old => ({...old, [chatId]:{model:nextModel, effort:nextEffort}}));
-      return;
-    }
-    if (!thread?.workerSession) { setModel(nextModel); setEffort(nextEffort); return; }
-    const id = chatId, session = thread.workerSession;
-    const option = nextModel !== pickerModel ? modelConfig(session) : effortConfig(session);
-    const change = nextModel !== pickerModel
-      ? option ? {configId: option.id, value: nextModel} : {modelId: nextModel}
-      : option ? {configId: option.id, value: nextEffort} : null;
-    if (!change) return;
-    setBusy(true);
-    try {
-      let result = await api("/worker-session", {id, ...change});
-      let selection = sessionModelSelection(result.thread.workerSession);
-      // A model change may reset effort in the native adapter. Keep this chat's
-      // explicit choice when the newly acknowledged model supports it.
-      const nextOption = effortConfig(result.thread.workerSession);
-      if (nextModel !== pickerModel && pickerEffort && !["default", "auto"].includes(pickerEffort)
-          && selection.effort !== pickerEffort
-          && selection.models.find(m => m.model === selection.model)?.supportedReasoningEfforts.some(e => e.reasoningEffort === pickerEffort)) {
-        // Reflect the confirmed model even if the following effort request fails.
-        setChats(old => old.map(c => c.id === id ? {...c, model:selection.model, models:selection.models, effort:selection.effort} : c));
-        if (chatRef.current === id) setThread(old => old ? {...old, workerSession:result.thread.workerSession} : old);
-        result = await api("/worker-session", {id, configId:nextOption.id, value:pickerEffort});
-        selection = sessionModelSelection(result.thread.workerSession);
-      }
-      if (chatRef.current !== id) return;
-      setThread(old => old ? {...old, workerSession: result.thread.workerSession} : old);
-      setModel(selection.model); setEffort(selection.effort);
-      setChats(old => old.map(c => c.id === id ? {...c, model: selection.model, models: selection.models, effort: selection.effort} : c));
-    } finally { setBusy(false); }
+  function changePickerSelection(nextModel, nextEffort) {
+    selectForNextMessage(pickerWorker, nextModel, nextEffort);
   }
   async function submit(e, voiceText, includeDraft = false) {
     e?.preventDefault();
@@ -1602,10 +1573,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       notify(message);
     };
     if ((!msg.trim() && !attachments.length) || busy) { if (voiceText) rejectVoice("Chat ist beschäftigt."); return; }
-    if (running && nextSelection) {
-      const message = "Die Modellwahl gilt für die nächste Antwort. Bitte die laufende Antwort abwarten oder stoppen.";
-      rejectVoice(message); return;
-    }
     if (uploadCounts.current.get(draftKey())) { rejectVoice("Dateien werden noch angeheftet."); return; }
     if(boot?.features?.messageDelivery){
       const targetId=chatRef.current;
@@ -1617,13 +1584,14 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       const files=voiceText && !includeDraft?[]:attachments;
       const payload={clientMessageId,localId,id:targetId && !targetId.startsWith("outbox-")?targetId:null,
         text:msg,attachments:files,model:pickerModel || model,effort:pickerEffort || undefined,nextSelection,mode,projectId:projectRef.current,
-        ...(!targetId?{chat:{model,worker:draftWorker,serviceTier:draftSpeed,mode,projectId:projectRef.current,title:draftTitle || undefined}}:{})};
+        ...(!targetId?{chat:{model:pickerModel || undefined,worker:composerSelection?.workerId || draftWorker,serviceTier:draftSpeed,mode,projectId:projectRef.current,title:draftTitle || undefined}}:{})};
       try{messageOutbox.enqueue(payload);}catch(error){rejectVoice(error.message);return;}
       if(!voiceText || includeDraft){setText("");setAttachments([]);}
       draftCache.current.delete(targetId || "new:"+projectRef.current);
-      if(nextSelection)setNextSelections(old=>{const next={...old};delete next[targetId];return next;});
+
       followScroll.current=true;
       if(!targetId){
+        if (composerSelection) setNextSelections(old => ({...old, [localId]:composerSelection}));
         chatRef.current=localId;setChatId(localId);setThread({id:localId,turns:[]});
         setChats(old=>[{id:localId,projectId:projectRef.current,title:draftTitle || msg.slice(0,40)||"Neue Nachricht",updatedAt:Date.now()},...old]);
       }
@@ -1638,8 +1606,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       followScroll.current = true;
       if (!id) {
         const r = await api("/chats", {
-          model,
-          worker: draftWorker,
+          model: pickerModel || undefined,
+          worker: composerSelection?.workerId || draftWorker,
           serviceTier: draftSpeed,
           mode,
           projectId: projectRef.current,
@@ -1689,7 +1657,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       });
       if(delivery.message?.status==='waiting')notify("Nachricht gespeichert; folgt nach der laufenden Antwort.");
       if (nextSelection) {
-        setNextSelections(old => { const next = {...old}; delete next[id]; return next; });
         setModel(selectedModel); setEffort(pickerEffort);
         if (thread?.workerSession) {
           void api("/thread?view=chat&id=" + encodeURIComponent(id)).then(updated => {
@@ -1994,13 +1961,14 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     document.addEventListener('keydown', close);
     return () => { cancelAnimationFrame(frame); document.removeEventListener('keydown', close); };
   }, [view, modal?.type, modal?.job?.id, modal?.template?.id]);
+  useEffect(()=>{if(modal?.type!=='job')return;let active=true;api('/library').then(data=>{if(active)setResultCategories(data.categories||[]);}).catch(()=>{});return()=>{active=false;};},[modal?.type,modal?.job?.id]);
   const visibleJobs = filterJobs(jobs, jobFilter, search, jobCategory);
   const jobEditor = modal?.type === 'job' && !modal.job?.managed ? <JobForm
     key={modal.job?.id || modal.template?.id || 'new'}
     routines={!!boot.features?.routines} configurationReady={!!boot.features?.jobConfiguration} initialTemplate={modal.template}
     workers={boot.workers || []} projects={boot.projects || []}
     modelsByWorker={boot.modelsByWorker || {}} defaultProjectId={projectId}
-    job={modal.job} jobs={jobs} connections={integrations.connections}
+    job={modal.job} jobs={[...jobs,...resultCategories.map(category=>({category}))]} connections={integrations.connections}
     onSave={guard(async job => {
       await api('/jobs/save', job);
       setJobs(await api('/jobs'));
@@ -2010,7 +1978,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const nav = [
       ["inbox", Inbox, "Inbox"],
       ["jobs", Clock, "Aufträge"],
-      ...(boot?.features?.library?[["library", FileText, "Bibliothek"]]:[]),
+      ...(boot?.features?.library?[["library", FileText, "Ergebnisse"]]:[]),
       ...(boot?.features?.firma?[["firma", Briefcase, "Firma"]]:[]),
     ];
   const settingNav = [
@@ -2097,7 +2065,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         <PanelLight mode={boot.settings.panelLight || "animated"} active={sidebar} />
         <div className="sidebar-resizer"><PaneDivider label="Seitenleistenbreite ändern" value={sidebarWidth} min={220} max={400} onReset={()=>setSidebarWidth(268)} onResize={delta=>setSidebarWidth(width=>Math.max(220,Math.min(400,width+delta)))}/></div>
         <div className="sidebar-topbar">
-          <AgentMenu theme={boot.settings.theme} onThemeChange={theme=>saveSettings({theme})} name={boot.settings.name} avatar={boot.settings.avatar} avatarColor={boot.settings.avatarColor} connectionState={connectionState} restartBusy={serverRestartBusy} onNavigate={tab=>{if(tab==="updates")setUpdatesTab("version");setSettingsTab(tab);setView("settings");}} onRestart={()=>systemNoticeRef.current?.restart()} />
+          <AgentMenu theme={boot.settings.theme} onThemeChange={theme=>saveSettings({theme})} name={boot.settings.name} avatar={boot.settings.avatar} avatarColor={boot.settings.avatarColor} connectionState={connectionState} restartBusy={serverRestartBusy} onNavigate={tab=>{closeMobileNavigation();if(tab==="updates")setUpdatesTab("version");setSettingsTab(tab);setView("settings");}} onRestart={()=>systemNoticeRef.current?.restart()} />
           <IconButton label="System durchsuchen (⌘/Strg K)" aria-keyshortcuts="Meta+K Control+K" aria-haspopup="dialog" aria-expanded={modal === "search"} onClick={()=>{setSearch("");setModal("search");}}>{icon(Search,18)}</IconButton>
           {boot.features?.routines ? <IconButton label={`Benachrichtigungen${notificationState.data?.unread ? ` · ${notificationState.data.unread} ungelesen` : ''}${requests.length ? ` · ${requests.length} Rückfragen` : ''}`} aria-haspopup="dialog" aria-expanded={modal === "notifications" || modal?.type === "notifications"} onClick={()=>setModal("notifications")}><NotificationBell signal={bellSignal} />{(notificationState.data?.unread>0||requests.length>0)&&<i className="notification-dot"/>}</IconButton> : requests.length > 0 && <IconButton label="Offene Rückfragen" aria-haspopup="dialog" aria-expanded={modal === "activity"} onClick={()=>setModal("activity")}><NotificationBell signal={bellSignal} /><i className="notification-dot"/></IconButton>}
           <IconButton
@@ -2111,7 +2079,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
           <div className="inbox-sidebar-slot" ref={setInboxSidebarHost}/>
         ) : view === "settings" ? (
           <>
-            <button className="back-to-app" onClick={() => setView("chat")}>
+            <button className="back-to-app" onClick={() => { closeMobileNavigation(); setView("chat"); }}>
               {icon(ArrowLeft)}Zurück zur App
             </button>
             <div className="sidebar-section-label">Einstellungen</div>
@@ -2140,7 +2108,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                     "nav-item " +
                     ((view === id || (id === "today" && view === "calendar")) && id !== "chat" ? "selected" : "")
                   }
-                  onClick={() => (id === "chat" ? newDraft() : setView(id))}
+                  onClick={() => { closeMobileNavigation(); if(id === "library")setLibraryJob(null); id === "chat" ? newDraft() : setView(id); }}
                 >
                   {icon(I)}
                   {label}
@@ -2199,7 +2167,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                         >
                           <button title={`${c.title} · ${relativeTime(c.updatedAt, listClock)}`} onClick={guard(() => openChat(c.id))}>
                             <span className="chat-row-title">{c.title}</span>
-                            {c.pinned && <span className="chat-pin" title="Angepinnt">{icon(Pin, 12)}</span>}
+                            {c.pinned && <span className="chat-pin" title="Angepinnt">{icon(Pin, 16)}</span>}
                             <span className="chat-age">{relativeTime(c.updatedAt, listClock)}</span>
                             {c.private && <span className="chat-row-lock" role="img" aria-label={c.locked ? "Gesperrt" : "Privat, entsperrt"}>{icon(Lock,15)}</span>}
                             <span className="chat-state" role="img" aria-label={active[c.id] ? "In Arbeit" : hasUnreadReply(c) ? "Ungelesene Antwort" : c.lastTurnStatus === "failed" ? "Fehlgeschlagen" : c.lastTurnStatus === "interrupted" ? "Gestoppt" : undefined}>
@@ -2470,18 +2438,18 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                   </ComposerFocus>
                   <div className="composer-options" role="group" aria-label="Nachrichtenoptionen">
                       <ModelPicker
-                        workerSession={thread?.workerSession}
+                        workerSession={sameWorker ? thread?.workerSession : undefined}
                         onSessionChange={async change => {
                           const id = chatId;
                           const r = await api("/worker-session", {id, ...change});
                           if (chatRef.current === id) setThread(old => old ? {...old, workerSession:r.thread.workerSession} : old);
                         }}
                         mode={mode} onModeChange={setMode} modeDisabled={running || busy}
-                        planAvailable={current ? current.capabilities?.plan !== false : draftWorker !== "auto" ? boot.workers?.find(w => w.id === draftWorker)?.capabilities?.plan !== false : boot.planAvailable !== false}
+                        planAvailable={boot.workers?.find(w => w.id === pickerWorker)?.capabilities?.plan !== false}
                         models={pickerModels} model={pickerModel} effort={pickerEffort} reduceMotion={boot.settings.reduceMotion === "on"}
                         workerId={pickerWorker} workers={boot.workers || []}
                         hasConversation={!!chatId} disabled={busy} providerDisabled={!!current?.jobId || !!current?.channelOnly}
-                        running={running} serviceTier={chatId ? current?.serviceTier : draftSpeed} onSpeedChange={changeSpeed}
+                        running={running} serviceTier={sameWorker ? chatId ? current?.serviceTier : draftSpeed : null} onSpeedChange={sameWorker ? changeSpeed : undefined}
                         onProviderChange={chooseProvider} onRefresh={refreshPickerWorkers}
                         context={nextSelection ? "Nächste Nachricht" : running ? "Auswahl für die nächste Nachricht" : current?.fallbackFrom ? `${workerName(current.workerId)} übernimmt als Vertretung für ${workerName(current.fallbackFrom)}.` : undefined}
                         onChange={changePickerSelection}
@@ -2766,6 +2734,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               <button onClick={()=>{setSettingsTab(modal.job.id==='system-memory'?'memory':['system-backup','system-cleanup'].includes(modal.job.id)?'storage':'system');setModal(null);setView('settings');}}>Systemeinstellungen öffnen</button>
               {modal.job.lastRun?.coreRunId && <CoreRunDetails api={api} id={modal.job.lastRun.coreRunId}/>}
             </> : <>
+              {modal.job?.id && <div className="row job-detail-links"><button onClick={()=>{setLibraryJob({id:modal.job.id,name:modal.job.name});setModal(null);setView('library');}}>Ergebnisse ansehen</button></div>}
               {modal.job?.lastRun && <div className="row job-detail-links">
                 <button onClick={()=>setModal({type:'job-run',job:modal.job})}>Letzte Ausführung ansehen</button>
                 {modal.job.lastRun.threadId && <button onClick={guard(async()=>{const id=modal.job.lastRun.threadId;setModal(null);await openChat(id);})}>Ergebnis im Chat öffnen</button>}
@@ -2775,7 +2744,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
           </section>}
           </div>
         ) : view === "library" ? (
-          <LibraryPage revision={libraryRevision} api={api} notify={notify} projects={boot.projects} PageHeading={PageHeading} onShowSidebar={!sidebar?()=>setSidebar(true):undefined} onOpen={(entry,entries)=>setModal({type:'library-file',entry,entries})} onReuse={guard(async entry=>{const file=await api('/library/reuse',{id:entry.id,projectId});setAttachments(a=>[...a,file]);setView('chat');})} onSource={guard(async entry=>{if(chats.some(c=>c.id===entry.threadId))await openChat(entry.threadId);else notify('Das Quellgespräch ist nicht verfügbar.');})}/>
+          <LibraryPage jobFilter={libraryJob} onClearJob={()=>setLibraryJob(null)} onJob={guard(async entry=>{const currentJobs=await api('/jobs');setJobs(currentJobs);const job=currentJobs.find(j=>j.id===entry.jobId);if(!job){notify('Der Auftrag ist nicht mehr verfügbar.');return;}setView('jobs');setModal({type:'job',job});})} revision={libraryRevision} api={api} notify={notify} projects={boot.projects} PageHeading={PageHeading} onShowSidebar={!sidebar?()=>setSidebar(true):undefined} onOpen={(entry,entries)=>setModal({type:'library-file',entry,entries})} onReuse={guard(async entry=>{const file=await api('/library/reuse',{id:entry.id,projectId});setAttachments(a=>[...a,file]);setView('chat');})} onSource={guard(async entry=>{if(chats.some(c=>c.id===entry.threadId))await openChat(entry.threadId);else notify('Das Quellgespräch ist nicht verfügbar.');})}/>
         ) : connectionsActive ? (
           <div className="page connections-page">
             <PageHeading title="Verbindungen" onShowSidebar={!sidebar ? () => setSidebar(true) : undefined}/>

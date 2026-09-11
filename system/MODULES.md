@@ -71,11 +71,17 @@ Anwendung, UI-Referenz und Designquellen werden gemeinsam gebaut und geprüft.
 
 Schnappschüsse des Verlaufs werden im Browser mit dem gestreamten Stand abgeglichen (`wrapper/ui/thread-update.mjs`): zuerst über die Kennung, dann über den Inhalt, weil gestreamte Elemente Anbieterkennungen tragen und der gespeicherte Verlauf sie umnummeriert. Der sichtbare Verlauf wird beim Senden nie geleert; nur ein vorläufiger Postausgangs-Chat wird gegen seine echte Kennung getauscht.
 
-Aktionsleisten an Nachrichten erscheinen bei Zeigerkontakt oder sichtbarem Tastaturfokus (`:has(:focus-visible)`), nie durch einen bloßen Mausklick; der Kopierknopf gibt den Mausfokus nach dem Kopieren frei, damit die Leiste wieder verschwindet.
+Aktionsleisten an Nachrichten erscheinen bei Zeigerkontakt oder sichtbarem Tastaturfokus (`:has(:focus-visible)`), nie durch einen bloßen Mausklick; der Kopierknopf gibt den Mausfokus nach dem Kopieren frei, damit die Leiste wieder verschwindet. Zeigerkontakt wird nicht über `:hover` gelesen, sondern von `wrapper/ui/message-hover.mjs` als `data-pointer-hover` an genau der Nachricht unter dem Zeiger gesetzt: Beim Scrollen verschwindet die Leiste sofort, nach dem Ausrollen wird die Nachricht unter dem ruhenden Zeiger neu bestimmt, weil Browser den `:hover`-Zustand beim Scrollen veralten lassen.
 
 Eine Wartungspause (`data/control/updates/maintenance.json`) kann der zugehörige Operator über `POST /internal/maintenance/resume` (Kopfzeile `x-agent-update` mit der Nonce der Pause, Body mit derselben `id`) im laufenden Betrieb beenden: Wrapper-Pause aufheben, Auftragswarteschlange und Suchindex nachholen, Mail- und Kalenderschleifen starten. Damit braucht eine Live-Aktivierung nur einen Neustart. Ohne aktive Pause antwortet die Route mit `resumed: false`.
 
 Der Kern beobachtet die Bau-Kette (`core/stall_watch.py`): Steht ein Bauauftrag oder eine Veröffentlichung länger als 15 Minuten in derselben Phase (Warteschlange, Prüfung, GitHub-Prüfungen, Vorbereitung, Installation), erscheint einmal die Benachrichtigung „Bauauftrag hängt“. Das Warten auf eine Pause des Nutzers vor der Aktivierung gilt nicht als Hänger. Ein begonnener Bauauftrag, der nach 30 Minuten noch nicht mit „ready“ übergeben ist, wird einmal als „Bauauftrag nicht bereitgemeldet“ gemeldet.
+
+Die gemeinsame Bausteinreferenz zeigt Nachrichtenbestätigungen direkt hinter der
+Uhrzeit als nicht umbrechende, vertikal zentrierte Gruppe mit 4 px Abstand.
+DeliveryChecks verwendet 10 × 10 px für einzelne und 15 × 10 px für doppelte
+Haken mit feiner gerundeter Kontur. Keine Datenmigration; Statusbedeutung und
+Fehleraktionen bleiben erhalten. Führend: wrapper/surfaces/chat.md.
 
 ## Gemeinsamer Entwicklungsstand
 
@@ -134,3 +140,16 @@ Uhrzeit als nicht umbrechende, vertikal zentrierte Gruppe mit 4 px Abstand.
 DeliveryChecks verwendet 10 × 10 px für einzelne und 15 × 10 px für doppelte
 Haken mit feiner gerundeter Kontur. Keine Datenmigration; Statusbedeutung und
 Fehleraktionen bleiben erhalten. Führend: wrapper/surfaces/chat.md.
+
+Die gemeinsame Modellwahl zeigt Engine, Modell und Denkaufwand sofort als
+Vormerkung für die nächste Nachricht. Präferenzspeicherung sperrt den Composer
+nicht und startet keine Sitzung. Der vorhandene Postausgang übernimmt die
+Auswahl nach Abschluss der laufenden Antwort. Daten- und Rückkehrvertrag:
+wrapper/surfaces/chat.md, Auswahl für die nächste Nachricht.
+
+
+Das bestehende library-Modul heißt in der Oberfläche Ergebnisse. Navigation und
+Suche behalten ihre technischen IDs. Der Index übernimmt Auftragskategorien und
+speichert optional eigene Kategoriezuordnungen; Aufträge und Ergebnisse verwenden
+dieselbe Validierung und gegenseitige Detailverweise. Daten-/Rückkehrvertrag:
+wrapper/surfaces/library.md. Keine Migration von Dateien, Chats oder Jobmanifesten.

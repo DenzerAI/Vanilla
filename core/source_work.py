@@ -28,8 +28,34 @@ def command(root, args, log=None, timeout=1800):
             out.write(("\n$ " + args[0] + " " + args[1] + "\n").encode())
             out.write(result.stdout + result.stderr)
     if result.returncode:
-        raise ValueError("Schritt fehlgeschlagen: " + args[0] + " " + args[1])
+        raise ValueError("Schritt fehlgeschlagen: " + args[0] + " " + args[1] + failure_detail(result))
     return result.stdout.decode().strip()
+
+
+def failure_detail(result):
+    # Only the last line reaches the status: a JSON error or hook message, never a diff or dependency log.
+    lines = [x.strip() for x in (result.stderr or result.stdout).decode(errors="replace").splitlines() if x.strip()]
+    if not lines:
+        return ""
+    last = lines[-1]
+    try:
+        parsed = json.loads(last)
+        last = parsed.get("error") or last if isinstance(parsed, dict) else last
+    except ValueError:
+        pass
+    return ": " + last[:200]
+
+
+def contained(repository, commit, head):
+    return subprocess.run(["git", "merge-base", "--is-ancestor", commit, head], cwd=repository,
+                          env=environment(), capture_output=True).returncode == 0
+
+
+def forget(repository, path, branch):
+    # Best effort: a worktree that is already gone must not keep its journal entry alive.
+    for args in ([["worktree", "remove", "--force", str(path)]] if path and Path(path).exists() else []) + \
+                [["worktree", "prune"]] + ([["branch", "-D", branch]] if branch else []):
+        subprocess.run(["git", *args], cwd=repository, env=environment(), capture_output=True)
 
 
 def git(root, *args):
@@ -140,6 +166,66 @@ class SourceWork:
                        reason="", updatedAt=time.time())
             self.save(state)
             return row
+
+    def release_targets(self):
+        release = self.directory.parent / "source-release/state.json"
+        if not release.exists():
+            return None
+        return {r.get("target") for r in json.loads(release.read_text()).get("releases", [])}
+
+    def drop(self, repository, row):
+        forget(repository, row.get("path"), "work/" + row["name"] + "-" + row["id"][:8])
+        if row.get("candidatePath"):
+            forget(repository, row["candidatePath"], "candidate/" + Path(row["candidatePath"]).name)
+
+    def prune(self):
+        """Close entries whose content is already in the shared branch; unintegrated work stays and is named."""
+        with self.locked() as state:
+            repository = Path(state["repository"])
+            head = git(repository, "rev-parse", "HEAD")
+            published = self.release_targets()
+            kept, closed, open_ = [], [], []
+            for row in state["entries"]:
+                keep = None
+                if row["status"] in {"queued", "checking"}:
+                    keep = "wird gerade geprüft"
+                elif row["status"] == "integrated":
+                    if row.get("candidateCommit") == head or (published is not None and row.get("candidateCommit") not in published):
+                        keep = "noch nicht veröffentlicht"
+                else:
+                    path = Path(row["path"])
+                    if path.exists() and git(path, "status", "--porcelain"):
+                        keep = "enthält offene Änderungen"
+                    elif path.exists() and not contained(repository, git(path, "rev-parse", "HEAD"), head):
+                        keep = "enthält nicht übernommene Commits"
+                    elif row["status"] == "working" and path.exists():
+                        keep = "in Arbeit"
+                if keep:
+                    kept.append(row)
+                    if row["status"] != "integrated":
+                        open_.append({"id": row["id"], "name": row["name"], "status": row["status"], "reason": keep})
+                    continue
+                self.drop(repository, row)
+                closed.append(row["name"])
+            state["entries"] = kept
+            referenced = {row.get("path") for row in kept} | {row.get("candidatePath") for row in kept}
+            for folder in ["source-work", "source-candidates"]:
+                for orphan in sorted((repository / ".verify" / folder).glob("*")):
+                    if orphan.is_dir() and str(orphan) not in referenced:
+                        forget(repository, orphan, ("work/" if folder == "source-work" else "candidate/") + orphan.name)
+            self.save(state)
+        return {"closed": closed, "open": open_, **self.status()}
+
+    def discard(self, identifier):
+        """Explicitly drop one entry with its worktree and branches, whatever it contains."""
+        with self.locked() as state:
+            row = next(x for x in state["entries"] if x["id"] == identifier)
+            if row["status"] in {"queued", "checking"}:
+                raise ValueError("Ein bereitgemeldeter Arbeitsstand wird nicht verworfen, solange die Prüfung läuft.")
+            self.drop(Path(state["repository"]), row)
+            state["entries"] = [x for x in state["entries"] if x["id"] != identifier]
+            self.save(state)
+        return {"discarded": row["name"], **self.status()}
 
     def session_started(self, session):
         # A resumed writer withdraws its pending handoff instead of racing a commit.
