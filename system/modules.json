@@ -187,7 +187,7 @@
       },
       "limits": "Lokales Prüfergebnis über npm run source:check; HTTP bestätigt nur den Katalog.",
       "command": "node system/capabilities.mjs",
-      "version": 5,
+      "version": 6,
       "migration": "Additives lokales source-work/state.json mit Format 1. Ohne lokale Einrichtung inaktiv. Arbeitskopien und Commits bleiben bei Abschaltung erhalten; unterbrochene Prüfungen werden blockiert, nicht automatisch wiederholt. Additiver, ausdrücklich konfigurierter source-release-Status (Format 1). Push unabhängig von Sessions; Aktivierung über bestehenden lokalen Operator. Abschalten erhält Commits und Rückkehrjournale."
     },
     {

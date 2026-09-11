@@ -263,3 +263,5 @@ CLI-Status. Der Kern meldet Live-Erfolg und Fehler über die vorhandenen App-Mit
 Die Veröffentlichung benötigt keinen aktiven Chat und keine erneute Nutzerfreigabe
 für jede bereits beauftragte Änderung. Unfertige oder widersprüchliche Quellarbeit
 bleibt ausdrücklich außerhalb des Releases.
+
+`system/version.json` (Produktversion) gehört zum Quellumfang und wird vom Quellscanner wie `system/modules.json` behandelt.
