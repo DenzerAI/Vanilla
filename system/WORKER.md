@@ -35,8 +35,11 @@
    Für Arbeiten am Frontend erst dessen AGENTS.md und Bereichsvertrag lesen,
    dann ändern, bauen und mit `node scripts/ui-check.mjs` kopflos prüfen
    (Desktop und `--viewport mobile`, Screenshot ansehen, Konsolenfehler lesen).
-   Die Bildschirmsteuerung des Hosts ist kein Prüfweg. Scheitert das Werkzeug,
-   benenne das als Restunsicherheit und halte geprüfte Arbeit nicht zurück.
+   Die Bildschirmsteuerung des Hosts ist kein Prüfweg. Desktop und Handy
+   nacheinander prüfen. Scheitert das Werkzeug, genau einmal wiederholen; scheitert
+   es erneut, die Arbeit trotzdem übergeben und in der Antwort in einem Satz
+   sagen, dass die Sichtprüfung ausfiel und der Nutzer selbst schauen soll. Eine
+   fehlende Sichtprüfung hält nie eine geprüfte Übergabe zurück.
 5. Melde Arbeitsfortschritt, Rückfragen, Ergebnisse und Fehler über deinen
    Anschluss. Verlinke Ergebnisdateien. Behaupte Erfolg erst nach Prüfung.
    Fehlt ein Browser, ein Schlüssel oder eine andere Fähigkeit, benenne das.

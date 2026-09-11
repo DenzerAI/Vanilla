@@ -135,7 +135,11 @@ Installation, wartet auf Elemente (`text=`, `css=`, `label=`), klickt, tippt, dr
 wertet JavaScript aus, liest den Seitentext und schreibt Screenshots für Desktop (1440×900)
 oder Handy (390×844) in den Ausgabeordner des Arbeitsbereichs. Ergebnis ist eine JSON-Zeile
 mit Schritten, Screenshots, Konsolenfehlern und Auswertungen. Die Bildschirmsteuerung des
-Hosts wird für Prüfungen nicht verwendet. Scheitert das Werkzeug selbst, ist das eine
-benannte Restunsicherheit im Bericht, kein Grund, geprüfte Arbeit zurückzuhalten.
+Hosts wird für Prüfungen nicht verwendet. Chrome startet wie in Puppeteer ohne Schlüsselbund,
+Hintergrunddienste und Crash-Reporter (`LAUNCH_FLAGS`), bekommt bis zu 60 Sekunden für den Start
+(`--launch-timeout`, `UI_CHECK_LAUNCH_TIMEOUT`) und meldet bei einem Fehlstart Wartezeit und seine
+letzten eigenen Fehlerzeilen; die Startdauer steht als `launchMs` im Bericht, das temporäre Profil wird
+nach dem Lauf entfernt. Scheitert das Werkzeug trotzdem, ist das eine benannte Restunsicherheit im
+Bericht, kein Grund, geprüfte Arbeit zurückzuhalten.
 Prüfungen: `wrapper/test/ui-check.test.mjs`.
 
