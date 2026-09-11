@@ -100,7 +100,7 @@ export function DesignReference({ theme, tone, accent }) {
       <h3 className="section-heading">Nachrichtenübergabe · Beispiel</h3>
       {[false,true].map(double=><div className="user-message-row" key={String(double)}>
         <div className="user-message"><p>{double?'Verarbeitung begonnen':'Sicher angekommen'}</p></div>
-        <div className="message-delivery"><span role="img" aria-label={double?'Verarbeitung begonnen':'Sicher angekommen'}><DeliveryChecks double={double}/></span></div>
+        <div className="message-actions user-actions"><span className="message-meta"><time>12:34</time><span className="message-delivery"><span role="img" aria-label={double?'Verarbeitung begonnen':'Sicher angekommen'}><DeliveryChecks double={double}/></span></span></span></div>
       </div>)}
       <h3 className="section-heading">Chat-Menü · Beispiel</h3>
       <ChatMenuPreview/>

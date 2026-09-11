@@ -1024,7 +1024,7 @@ Inhalte bis zu einer relevanten Änderung; wenige zeitlich passende Anlässe bei
 neuen Einstieg, höchstens ein Vorschlag pro Thema und keine Wiederholung ohne
 neuen Nutzen. Dringende Rückfragen behalten Vorrang.
 
-## Nachrichtenübergabe · Version 1.0.0
+## Nachrichtenübergabe · Version 1.0.1
 
 Der gemeinsame MessageOutbox läuft unabhängig von geöffneten Chat-Panes.
 Absenden speichert Text, Anhängepfade, Ziel, Modellwahl und eine eindeutige
@@ -1039,8 +1039,11 @@ anklickbares Ausrufezeichen bei Fehler oder unklarem Ausgang. Zugänglicher Name
 und Tooltip erklären den Zustand. Bestehende Nachrichten ohne Beleg erhalten
 keinen erfundenen Haken. `DeliveryChecks` zeichnet den zweiten Haken nur mit seinem
 sichtbaren Arm, sodass er hinter dem ersten liegt statt ihn zu kreuzen.
-Einzelzeichen 12 × 12 px, Doppelzeichen 18 × 12 px, feine gerundete Konturen.
-Die Anzeige steht 2 px unter der Bubble und 12 px innerhalb ihrer rechten Kante.
+Einzelzeichen 10 × 10 px, Doppelzeichen 15 × 10 px, feine gerundete Konturen
+mit 1.5 SVG-Einheiten Strichstärke. Uhrzeit und Status bilden eine vertikal
+zentrierte, nicht umbrechende Gruppe mit 4 px Abstand, Status direkt hinter der Zeit.
+Diese Gruppe bleibt auch vor dem Workerstart sichtbar; nur die noch nicht
+verfügbaren Nachrichtenaktionen fehlen.
 Fehleraktionen behalten ihre zugängliche Bedienfläche. Unser Design zeigt beide
 Bestätigungen am produktiven Bubblelayout. Reine Darstellung, keine Datenmigration.
 Nachricht, Zeit und bestehende Aktionen bleiben erhalten.

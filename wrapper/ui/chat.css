@@ -376,8 +376,10 @@
 @supports not (backdrop-filter: blur(1px)) { .chapter-preview { background: var(--glass); } }
 @media (prefers-reduced-transparency: reduce) { .chapter-preview { background: var(--glass); backdrop-filter: none; } }
 
-/* Delivery receipts share the message edge and remain visible without hovering. */
-.message-delivery { display: flex; justify-content: flex-end; color: var(--muted); margin-top: var(--space-2); padding-inline-end: var(--space-12); }
+/* Time and receipt stay together, including when message actions wrap. */
+.message-meta { display: inline-flex; align-items: center; gap: var(--space-4); flex: 0 0 auto; white-space: nowrap; }
+.user-actions .message-meta time { margin: 0; }
+.message-delivery { display: inline-flex; align-items: center; color: var(--muted); flex-shrink: 0; }
 .message-delivery > span, .message-delivery > button { display: inline-flex; align-items: center; justify-content: center; }
 .message-delivery > button { min-width: var(--control-target); min-height: var(--control-target); padding: var(--space-4); }
 .delivery-checks { display: block; overflow: visible; }

@@ -1310,10 +1310,11 @@ gemeinsame Attention-Skeleton bleibt für das Laden des Oberflächenmoduls vorha
 Verbindungsdaten werden erst für die Verbindungsseite oder einen Ablauf geladen,
 der sie benötigt. Keine Migration gespeicherter Chats, Aufnahmen oder Einstellungen.
 Die Nachrichtenübergabe verwendet `DeliveryChecks`: ein feines neutrales
-Einzelzeichen (12 × 12 px) oder Doppelzeichen (18 × 12 px) mit nur teilweise
+Einzelzeichen (10 × 10 px) oder Doppelzeichen (15 × 10 px) mit nur teilweise
 sichtbarem hinterem Haken. Keine zwei sich kreuzenden vollständigen Icons.
-`message-delivery` steht mit `space-2` direkt unter der Nachrichtenblase und
-`space-12` Einzug an ihrer rechten Kante. Fehler behalten die bisherigen
+`message-delivery` steht direkt rechts hinter der Uhrzeit mit `space-4` Abstand.
+Beide bleiben in `message-meta` vertikal zentriert und ohne Zeilenumbruch zusammen,
+auch wenn die Aktionsleiste umbricht. Die gerundete Kontur verwendet 1.5 SVG-Einheiten. Fehler behalten die bisherigen
 zugänglichen Bedienflächen. Unser Design zeigt dieselben Bausteine.
 Statusbedeutung und Speicherung bleiben unverändert; keine Datenmigration.
 

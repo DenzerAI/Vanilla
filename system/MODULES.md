@@ -128,3 +128,9 @@ Veröffentlichungen und den zuletzt aktivierten Stand als Gruppe Bauaufträge
 Die gemeinsame Bausteinreferenz ergänzt VoiceProfilesPreview aus dem Sprachmodul. Plus, Eingabe, Auswahl und Bearbeiten verwenden denselben Produktionsbaustein mit ausschließlich lokalen Beispieldaten; echte Stimmenprofile und Schlüssel werden dadurch nicht verändert. Bedienvertrag: wrapper/surfaces/settings.md, Datenvertrag: wrapper/VOICE.md.
 
 Die gemeinsame Zugangsverwaltung speichert Werte in der lokalen .env und SQLite-Referenzen. Neue Installationen benötigen keinen OS-Schlüsselbund. .env bleibt außerhalb von Quellupdates; Betriebs- und Migrationsvertrag: docs/VAULT.md. Gemeinsame Einstellungsdialoge nennen die tatsächliche lokale Ablage.
+
+Die gemeinsame Bausteinreferenz zeigt Nachrichtenbestätigungen direkt hinter der
+Uhrzeit als nicht umbrechende, vertikal zentrierte Gruppe mit 4 px Abstand.
+DeliveryChecks verwendet 10 × 10 px für einzelne und 15 × 10 px für doppelte
+Haken mit feiner gerundeter Kontur. Keine Datenmigration; Statusbedeutung und
+Fehleraktionen bleiben erhalten. Führend: wrapper/surfaces/chat.md.

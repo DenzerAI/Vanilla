@@ -465,7 +465,7 @@ function DeliveryMark({receipt}) {
   const labels={sending:"Wird übertragen",offline:"Wartet auf Verbindung",accepted:"Sicher angekommen",started:"Verarbeitung begonnen",failed:"Übertragung fehlgeschlagen. Erneut versuchen",unknown:"Übergabestatus unklar. Status prüfen"};
   const failed=["failed","unknown"].includes(status);
   const glyph=status==="started"?<DeliveryChecks double/>:status==="accepted"?<DeliveryChecks/>:failed?icon(AlertCircle,12):icon(Clock,12);
-  return <div className="message-delivery">{failed?<button type="button" title={receipt.error || labels[status]} aria-label={labels[status]} onClick={()=>messageOutbox.retry(receipt.clientMessageId)}>{glyph}</button>:<span role="status" aria-label={labels[status]} title={labels[status]}>{glyph}</span>}</div>;
+  return <span className="message-delivery">{failed?<button type="button" title={receipt.error || labels[status]} aria-label={labels[status]} onClick={()=>messageOutbox.retry(receipt.clientMessageId)}>{glyph}</button>:<span role="status" aria-label={labels[status]} title={labels[status]}>{glyph}</span>}</span>;
 }
 function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, agentProfile, workerId, onFork, onEdit, onRetry, onDelete, onFile, running, sentAt, completedAt, workspace, directory, toolOpen, onToolToggle }) {
   const i = item;
@@ -489,8 +489,8 @@ function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, 
           ),
         )}
         </div>}
-        <DeliveryMark receipt={i.delivery}/>
-        {!i.delivery?.turnId && i.delivery ? null : <div className="message-actions user-actions">
+        <div className="message-actions user-actions">
+          {!i.delivery?.turnId && i.delivery ? null : <>
           <IconButton label="Nachricht erneut ausführen" disabled={running} onClick={onRetry}>{icon(RotateCcw, 14)}</IconButton>
 
           <IconButton
@@ -502,8 +502,9 @@ function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, 
           </IconButton>
           <CopyButton label="Nachricht kopieren" size={14} text={(i.content || []).filter(c => c.type === "text").map(c => c.text).join("\n")} />
           <IconButton label="Nachricht löschen" disabled={running} onClick={onDelete}>{icon(Trash2,14)}</IconButton>
-          <MessageTime value={sentAt} />
-        </div>}
+          </>}
+          <span className="message-meta"><MessageTime value={sentAt} /><DeliveryMark receipt={i.delivery}/></span>
+        </div>
       </div>
     );
   if (i.type === "agentMessage" || i.type === "plan")
