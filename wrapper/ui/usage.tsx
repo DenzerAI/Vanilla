@@ -1,5 +1,6 @@
 import {useEffect,useState} from 'react';
-import {ChevronLeft} from './icons.jsx';
+import {SettingRow} from './settings-row.jsx';
+import {Skeleton} from './skeleton';
 import {formatStat} from './statistics-data.mjs';
 import './usage.css';
 export function useAllowances(api:any,enabled=true){
@@ -35,17 +36,23 @@ export function AllowanceBars({data,compact=false}:{data:any;compact?:boolean}){
   {compact&&rows.length>shown.length&&<span className="usage-note">+ {rows.length-shown.length} weitere Kontingente</span>}
  </span>;
 }
-export function AllowanceDashboard({data,onBack}:{data:any;onBack:()=>void}){
- return <section className="statistics-report allowance-report" data-capability="chat.allowances" aria-label="Kontingente">
-  <div className="statistics-heading"><button className="statistics-back" onClick={onBack}><ChevronLeft size={16}/><span>Zurück zu den Kacheln</span></button><h2>Kontingente</h2></div>
-  <AllowanceBars data={data}/>
-  {data?.providers?.map((p:any)=><div className="usage-provider-details" key={p.id}>
-   {p.resetCredits!=null&&<p>{p.name}: {formatStat(p.resetCredits)} verfügbare Kontingent-Resets</p>}
-   {p.credits?.map((c:any)=><p key={c.label}>{c.label} · Credits: {c.unlimited?'Unbegrenzt':c.balance??'Nicht gemeldet'}</p>)}
-   {p.extra&&<p>{p.name} · Zusatzverbrauch: {p.extra.enabled?`${formatStat(p.extra.used)} von ${formatStat(p.extra.limit)} ${p.extra.currency||'Credits'}`:'Ausgeschaltet'}</p>}
-  </div>)}
-  <p className="usage-note">Kontoweite Anbieterwerte · Prozent = verbrauchtes Kontingent. Aktualisierung jede Minute, solange diese Ansicht sichtbar ist.</p>
-  {data?.updatedAt&&<p className="statistics-stamp">Abgerufen: {new Date(data.updatedAt).toLocaleString('de-DE')} · Zeiten in deiner Zeitzone</p>}
+export function UsageSettings({api}:{api:any}){
+ const data=useAllowances(api);
+ return <section className="usage-settings" data-capability="chat.allowances" aria-label="Anbieter-Kontingente">
+  <p className="usage-note">Kontoweite Nutzung von Codex und Claude, einschließlich anderer Geräte. Die Balken zeigen den verbrauchten Anteil. Aktualisierung jede Minute, solange diese Ansicht sichtbar ist.</p>
+  {!data?<Skeleton variant="settings" rows={2} label="Kontingente werden geladen …"/>:<>
+   {data.error&&<p className="usage-note" role="alert">Kontingente konnten nicht aktualisiert werden. Erneuter Versuch bei der nächsten Aktualisierung.</p>}
+   {!data.providers?.length&&!data.error&&<p className="usage-note">Noch kein Anbieter für Kontingente eingerichtet.</p>}
+   {data.providers?.map((p:any)=><div className="settings-group" key={p.id}>
+    <SettingRow title={p.name} description={p.updatedAt?`${p.stale||data.error?'Letzter bekannter Stand':'Abgerufen'}: ${new Date(p.updatedAt).toLocaleString('de-DE')}`:undefined}/>
+    <div className="usage-provider-content">
+     <AllowanceBars data={{providers:[p],error:data.error}}/>
+     {p.resetCredits!=null&&<p className="usage-note">{formatStat(p.resetCredits)} verfügbare Kontingent-Resets</p>}
+     {p.credits?.map((c:any)=><p className="usage-note" key={c.label}>{c.label} · Credits: {c.unlimited?'Unbegrenzt':c.balance??'Nicht gemeldet'}</p>)}
+     {p.extra&&<p className="usage-note">Zusatzverbrauch: {p.extra.enabled?`${formatStat(p.extra.used)} von ${formatStat(p.extra.limit)} ${p.extra.currency||'Credits'}`:'Ausgeschaltet'}</p>}
+    </div>
+   </div>)}
+  </>}
  </section>;
 }
 export function TokenBreakdown({data}:{data:any}){

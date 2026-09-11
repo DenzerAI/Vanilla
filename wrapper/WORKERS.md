@@ -468,3 +468,8 @@ Keine eigene Zielablage oder Datenmigration. Ziele vor Rückkehr auf ältere
 Composer beenden; aktive native Ziele können weiterhin Arbeit fortsetzen.
 Berechtigungen, Wiederholungsschutz, Sitzungsgrenzen und Bedienvertrag:
 surfaces/chat.md, Slash-Befehle im Composer.
+
+Nutzung in den Einstellungen und die Chatstart-Kachel verwenden denselben
+Kontingentabruf für Codex und Claude. Die Kachel navigiert zur vollständigen
+Anbieteransicht unter Einstellungen → Nutzung; keine Modellantwort oder neue
+Sitzung. Darstellung und Aktualisierung: surfaces/settings.md, Nutzung.

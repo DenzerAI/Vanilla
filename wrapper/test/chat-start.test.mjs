@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {chatStartFeed,startHeadline,headlineForItem,headlinesForItem,conversationStarters,reconcileFan,replyPreview} from '../ui/chat-start-feed.mjs';
+import {chatStartFeed,startHeadline,headlineForItem,headlinesForItem,conversationStarters,reconcileFan,replyPreview,entryTime,inboxAction} from '../ui/chat-start-feed.mjs';
 import {build} from 'esbuild';
 import {mkdtemp,writeFile,rm} from 'node:fs/promises';
 import {fileURLToPath,pathToFileURL} from 'node:url';
@@ -10,7 +10,10 @@ test('start prioritizes questions, deduplicates latest outputs and excludes read
  const chats=[{id:'a',projectId:'default',title:'Frage'},{id:'b',projectId:'other',title:'Andere Frage'},{id:'c',projectId:'default',title:'Antwort',lastTurnStatus:'completed',lastCompletedTurnId:'x'},{id:'d',projectId:'default',jobId:'j',lastTurnStatus:'completed',lastCompletedTurnId:'x'}];
  const notifications=[{id:'new',job_id:'job',status:'completed',title:'Bericht',created_at:3,read_at:4},{id:'old',job_id:'job',status:'completed',title:'Alt',created_at:2},{id:'attention-end',status:'waiting',title:'Wartet',created_at:1},{id:'end',job_id:'other',status:'completed',title:'Fertig',created_at:3}];
  const feed=chatStartFeed({requests:[{id:'q1',params:{threadId:'a'}},{id:'q2',params:{threadId:'b'}}],chats,notifications});
- assert.deepEqual(feed.map(i=>i.id),['request:q1','chat:c:x','notice:end']);
+ assert.deepEqual(feed.map(i=>i.id),['request:q1','inbox']);
+ assert.deepEqual(feed[1].entries.map(i=>i.id),['notice:end','chat:c:x']);
+ assert.equal(feed[1].count,2);
+ assert.equal(feed[1].lead.id,'notice:end');
  assert.equal(startHeadline(feed[0].kind,'Hallo'),'Hier braucht es kurz dich.');
  assert.deepEqual(chatStartFeed(),[conversationStarters[0]]);
  assert.ok(conversationStarters.every(i=>i.prompt&&!i.prompt.includes('input/beispiel.md')));
@@ -32,6 +35,12 @@ test('fan renders empty, single and multiple entries with accessible action name
   const single=render([conversationStarters[0]]);assert.match(single,/Gemeinsam planen öffnen/);assert.doesNotMatch(single,/Nächste Karte/);
   const many=render([...conversationStarters,{id:'4',kind:'notice',title:'Hinweis',description:'Neu'},{id:'5',kind:'report',title:'Ergebnis',description:'Neu'}]);
   assert.equal((many.match(/class="attention-fan-card/g)||[]).length,3);assert.match(many,/Nächste Karte/);assert.match(many,/aria-current="true"/);
+  const lead={id:'chat:a:t',kind:'chat',title:'Neueste Antwort',threadId:'a',turnId:'t',at:Date.now()};
+  const inbox=render([{id:'inbox',kind:'inbox',title:'Posteingang',description:'3 neue Einträge warten auf dich.',count:3,lead,entries:[lead,{id:'notice:n',kind:'notice',title:'Hinweis',at:Date.now()},{id:'notice:r',kind:'report',title:'Ergebnis',at:Date.now()}]}]);
+  assert.equal((inbox.match(/attention-fan-stack-row/g)||[]).length,3);
+  assert.match(inbox,/Posteingang/);assert.match(inbox,/attention-fan-count">3</);
+  assert.match(inbox,/Neueste Antwort/);assert.match(inbox,/Antwort ansehen/);
+  assert.doesNotMatch(inbox,/Hinweis ansehen/);
  }finally{await rm(dir,{recursive:true,force:true});}
 });
 
@@ -48,13 +57,15 @@ test('automatic phrases stay with the selected topic without inventing result co
  assert.deepEqual(headlinesForItem(null,'Hallo'),['Hallo']);
 });
 
-test('start mixes real outputs and scheduled jobs while reserving a weather slot',()=>{
+test('routine results reach the start through the single inbox card',()=>{
  const now=Date.parse('2026-09-09T12:00:00Z');
- const items=chatStartFeed({now,includeWeather:true,jobs:[{id:'later',name:'Später',status:'active',projectId:'default',nextRun:'2026-09-10T12:00:00Z'},{id:'next',name:'Nächster',status:'active',projectId:'default',nextRun:'2026-09-09T13:00:00Z'},{id:'paused',status:'paused',nextRun:'2026-09-09T12:30:00Z'}],entries:[{id:'f',name:'Entwurf.md',projectId:'default',modifiedAt:now,missing:false}],reports:[{id:'r',title:'Ergebnis',created_at:now/1000,body:'Die Auswertung liegt bereit.'}]});
- assert.deepEqual(items.map(i=>i.kind),['report','job','weather']);
- assert.equal(items[1].job.id,'next');
- assert.ok(headlinesForItem(items[0],'Hallo')[1].includes('Ergebnis'));
- assert.ok(items.length<=5);
+ const items=chatStartFeed({now,includeWeather:true,entries:[{id:'f',name:'Entwurf.md',projectId:'default',modifiedAt:now,missing:false}],reports:[{id:'r',title:'Ergebnis',created_at:now/1000,body:'Die Auswertung liegt bereit.'}]});
+ assert.deepEqual(items.map(i=>i.kind),['inbox','weather']);
+ assert.equal(items[0].lead.kind,'report');
+ assert.equal(items[0].lead.noticeId,'r');
+ assert.equal(inboxAction(items[0].lead.kind),'Ergebnis besprechen');
+ assert.equal(entryTime(items[0].lead.at,now),entryTime(now,now));
+ assert.ok(headlinesForItem(items[0],'Hallo')[1].includes('neuesten Eintrag'));
 });
 
 test('weather card opens deterministic settings and reflects only the saved location',()=>{
@@ -82,28 +93,31 @@ test('start offers real conversations instead of arbitrary file previews',()=>{
 });
 
 
-test('all unread replies survive the old limit and only unread turns get reply cards',()=>{
+test('unread replies collapse into one inbox card instead of one card each',()=>{
  const chats=Array.from({length:12},(_,n)=>({id:'c'+n,title:'Thema '+n,projectId:'default',updatedAt:n,lastTurnStatus:'completed',lastCompletedTurnId:'turn'+n}));
  const hidden=[{...chats[0],id:'private',private:true},{...chats[0],id:'archived',archived:true},{...chats[0],id:'read',readTurnId:'turn0'},{...chats[0],id:'foreign',projectId:'foreign'}];
  const feed=chatStartFeed({chats:[...chats,...hidden],includeWeather:true});
- assert.equal(feed.filter(item=>item.kind==='chat').length,12);
- assert.equal(feed.at(-1).kind,'weather');
- assert.ok(feed.filter(item=>item.kind==='chat').every(item=>item.turnId&&!item.continuation));
+ const inbox=feed.find(item=>item.kind==='inbox');
+ assert.equal(feed.filter(item=>item.kind==='inbox').length,1);
+ assert.equal(inbox.count,12);
+ assert.equal(inbox.entries.length,3);
+ assert.equal(inbox.lead.id,'chat:c11:turn11');
+ assert.ok(inbox.entries.every(item=>item.turnId&&!item.continuation));
  chats[0].readTurnId='turn0';
- assert.ok(!chatStartFeed({chats}).some(item=>item.id==='chat:c0:turn0'));
+ assert.ok(!chatStartFeed({chats}).find(item=>item.kind==='inbox').entries.some(item=>item.id==='chat:c0:turn0'));
 });
 
-test('arrivals retain order and selection and precede persistent cards',()=>{
- const previous={ids:['a','b','weather','calendar'],selected:'b'};
- const incoming=[{id:'new',kind:'chat'},{id:'b',kind:'chat'},{id:'a',kind:'chat'},{id:'weather',kind:'weather'},{id:'calendar',kind:'calendar'}];
+test('the fixed feed order survives updates and keeps the chosen card',()=>{
+ const previous={ids:['inbox','weather','calendar'],selected:'weather'};
+ const incoming=[{id:'request:q',kind:'request'},{id:'inbox',kind:'inbox'},{id:'calendar',kind:'calendar'},{id:'weather',kind:'weather'}];
  const next=reconcileFan(previous,incoming);
- assert.deepEqual(next,{ids:['a','b','new','weather','calendar'],selected:'b'});
+ assert.deepEqual(next,{ids:['request:q','inbox','calendar','weather'],selected:'weather'});
  assert.deepEqual(reconcileFan(next,incoming),next);
 });
 
 test('removing the selection picks its surviving neighbor even during a burst',()=>{
  const previous={ids:['a','b','c','d'],selected:'b'};
- assert.deepEqual(reconcileFan(previous,[{id:'new'},{id:'a'},{id:'d'}]),{ids:['a','d','new'],selected:'d'});
+ assert.deepEqual(reconcileFan(previous,[{id:'new'},{id:'a'},{id:'d'}]),{ids:['new','a','d'],selected:'d'});
  assert.equal(reconcileFan({...previous,selected:'d'},[{id:'a'},{id:'b'}]).selected,'b');
  assert.deepEqual(reconcileFan(previous,[]),{ids:[],selected:''});
  assert.equal(reconcileFan(previous,[{id:'replacement'}]).selected,'replacement');
@@ -117,14 +131,15 @@ test('preview extracts only the requested completed final answer',()=>{
  assert.equal(replyPreview(thread,'new'),'');
 });
 
-test('weather and honest calendar flank the first card without dropping unread replies',()=>{
+test('calendar, weather, statistics and allowances always stay in the fan',()=>{
  const chats=Array.from({length:12},(_,i)=>({id:'c'+i,title:'Thema',projectId:'default',updatedAt:i,lastTurnStatus:'completed',lastCompletedTurnId:'t'+i}));
  const feed=chatStartFeed({chats,includeWeather:true,includeCalendar:true,includeStatistics:true,includeAllowances:true,now:new Date(2026,8,11,12).getTime()});
- assert.equal(feed.filter(i=>i.kind==='chat').length,12);
- assert.deepEqual(feed.slice(-2).map(i=>i.kind),['weather','calendar']);
- assert.equal(feed.at(-1).title,'Dein Tag');
- assert.equal(feed.at(-1).calendar,null);
- assert.equal(chatStartFeed({includeCalendar:true,calendar:{error:true}}).at(-1).calendar.error,true);
- assert.equal(feed.at(-1).prompt,undefined);
+ assert.deepEqual(feed.map(i=>i.kind),['inbox','calendar','weather','statistics','allowances']);
+ assert.equal(feed[1].title,'Dein Tag');
+ assert.equal(feed[1].calendar,null);
+ assert.equal(chatStartFeed({includeCalendar:true,calendar:{error:true}})[1].calendar.error,true);
+ assert.equal(feed[1].prompt,undefined);
  assert.equal(new Set(feed.map(i=>i.id)).size,feed.length);
+ const quiet=chatStartFeed({includeWeather:true,includeCalendar:true,includeStatistics:true,includeAllowances:true});
+ assert.deepEqual(quiet.map(i=>i.kind),['prompt','calendar','weather','statistics','allowances']);
 });

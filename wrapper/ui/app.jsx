@@ -1,3 +1,4 @@
+import {UsageSettings} from './usage';
 import {WorkspaceInfo,WorkspaceDefinitionEditor} from './workspace-settings';
 import {PageHeading} from './page-heading';
 import {submitMessage} from "./message-submit.mjs";
@@ -724,8 +725,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     [terminalInput, setTerminalInput] = useState(""),
     [terminalOutput, setTerminalOutput] = useState(""),
     [terminalBusy, setTerminalBusy] = useState(false),
-    [usage, setUsage] = useState(null),
-    [usageError, setUsageError] = useState(""),
     [jobFilter, setJobFilter] = useState("all"),
     [serverRestartBusy, setServerRestartBusy] = useState(false),
     [chatMenu, setChatMenu] = useState(null),
@@ -938,10 +937,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     root.dataset.avatarStyle = settings.avatarMotion || "face";
     for (const [key, value] of Object.entries(designVariables(settings.theme, settings.designTone, settings.highlightColor))) root.style.setProperty(key, value);
   }, [boot?.settings]);
-  async function loadUsage() {
-    setUsageError("");
-    try { setUsage(await api("/usage")); } catch(error) { setUsageError(error.message); }
-  }
   async function loadJobs() {
     setJobsLoading(true); setJobsError("");
     try { setJobs(await api("/jobs")); }
@@ -1247,8 +1242,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     )
       guard(async () => setIntegrations(await api("/integrations?view=settings")))();
     if (skillsActive) void loadSkills();
-    if (view === "settings" && settingsTab === "usage")
-      void loadUsage();
   }, [view, settingsTab]);
 
   useEffect(() => {
@@ -2302,6 +2295,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                   <ChatStart visible={foreground && view === "chat" && readablePane} api={api} routines={!!boot.features?.routines} revision={libraryRevision} composing={!!text.trim() || attachments.length>0} greeting={greeting} profile={boot.settings} requests={requests} notifications={notificationState.data?.items || []} chats={chats.filter(c=>!c.private)} projectId={projectId} error={notificationState.error}
                     onOpen={async entry=>{
                       const item=entry.kind==='inbox'?(entry.lead||entry):entry;
+                      if(item.kind==='allowances'){openSettings('usage');return;}
                       if(item.kind==='calendar'){await openCalendarReport();return;}
                       if(item.kind==='statistics'){await openStatisticsReport();return;}
                       if(item.kind==='weather'){await openWeatherReport(item);return;}
@@ -3054,64 +3048,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 <LocalWorkers api={api} SettingRow={SettingRow} />
               </>
             ) : settingsTab === "usage" ? (
-              <>
-                <div className="settings-group">
-                  <SettingRow
-                    title="Konto"
-                    description={boot.account?.email || "Kein Konto verfügbar"}
-                    action={
-                      <span className="badge">
-                        {boot.account?.planType ||
-                          boot.account?.type ||
-                          "Nicht verbunden"}
-                      </span>
-                    }
-                  />
-                  {!usage&&!usageError&&<Skeleton variant="settings" rows={2} label="Nutzung wird geladen …"/>}
-                  {usageError&&<p role="alert">{usageError} <button onClick={loadUsage}>Erneut laden</button></p>}
-                  {Object.entries(
-                    usage?.rateLimitsByLimitId || { codex: usage?.rateLimits },
-                  )
-                    .filter(([, v]) => v)
-                    .map(([k, v]) => (
-                      <React.Fragment key={k}>
-                        {["primary", "secondary"].map(
-                          (window) =>
-                            v[window] && (
-                              <SettingRow
-                                key={window}
-                                title={
-                                  k +
-                                  " · " +
-                                  (v[window].windowDurationMins >= 10080
-                                    ? "Woche"
-                                    : "Zeitfenster")
-                                }
-                                description={
-                                  "Zurücksetzung: " +
-                                  new Date(
-                                    v[window].resetsAt * 1000,
-                                  ).toLocaleString("de-DE")
-                                }
-                                action={
-                                  <div className="usage-meter">
-                                    <span>
-                                      {Math.max(0, 100 - v[window].usedPercent)}{" "}
-                                      % übrig
-                                    </span>
-                                    <progress
-                                      value={100 - v[window].usedPercent}
-                                      max="100"
-                                    />
-                                  </div>
-                                }
-                              />
-                            ),
-                        )}
-                      </React.Fragment>
-                    ))}
-                </div>
-              </>
+              <UsageSettings api={api}/>
             ) : settingsTab === "shortcuts" ? (
               <><PaneShortcutSettings/><div className="settings-group">
                 {[

@@ -210,6 +210,10 @@ Bearbeiten und Verzweigen bleibt erhalten. Löschen steht als eigener
 Papierkorb-Iconbutton neben den übrigen Nutzeraktionen; das zusätzliche
 Drei-Punkte-Menü entfällt. Der bestehende Löschdialog bleibt erhalten.
 Nachrichtenaktionen erscheinen bei Hover oder Tastaturfokus; auf Touch bleiben sie sichtbar und umbrechbar. Der aktive Vorlesen-Stoppen-Button bleibt immer sichtbar.
+Beim Verlassen einer Desktop-Nachricht werden zusätzlich die SVG-Symbole verborgen,
+damit auch animierte Kopiersymbole vollständig verschwinden. Die Schaltflächen
+bleiben per Tab erreichbar und zeigen bei Tastaturfokus ihre Symbole wieder.
+Keine Datenmigration; die Korrektur betrifft ausschließlich die Darstellung.
 Je Antwortblock trägt genau die abgeschlossene letzte Agentenantwort die Aktionszeile.
 Zwischenmeldungen und die noch laufende Antwort erhalten keine; sie sind keine
 geschlossene Nachricht. Verzweigen und Erneut ausführen beziehen sich ohnehin auf
@@ -402,13 +406,26 @@ Der Standardstart und das Plus am Workspace öffnen den leeren Chat. Heute steht
 nicht mehr im Hauptmenü. Vorhandene Heute-/Kalender-Direktlinks sowie die Suche
 bleiben nutzbar; die bestehende Kalenderansicht wird nicht gelöscht.
 ChatStart ersetzt die starren Startvorschläge: Avatar, kontextabhängige erste Zeile,
-ein kleiner AttentionFan und die unveränderte Nachrichteneingabe. Rückfragen haben
-Vorrang vor ungelesenen Hinweisen, aktuellen Routine-Ergebnissen und fertigen Chats.
-Pro Routine erscheint höchstens das neueste Ergebnis, auch wenn ältere ungelesen
-sind. Routine-Chats werden nicht zusätzlich angeboten. Ohne Anlass stehen drei
-Gesprächsvorschläge bereit; sie füllen nur den Entwurf und senden nichts.
+ein kleiner AttentionFan und die unveränderte Nachrichteneingabe.
 
-Keine feste Eintragsgrenze, fünf aufgefächerte Karten auf breiten Flächen, drei auf schmalen. Seitliche Karten
+Der Fächer zeigt feste Flächen statt einer Karte pro Ereignis, immer in dieser
+Reihenfolge: offene Rückfrage (nur wenn vorhanden), Posteingang (nur wenn etwas
+Neues da ist), Weitermachen, Kalender, Wetter, Statistik, Kontingente. Kalender,
+Wetter, Statistik und Kontingente bleiben dauerhaft erreichbar und werden nie
+hinter Ereignisse sortiert. Mehrere offene Rückfragen bündelt eine Karte mit
+Anzahl; sie öffnet die älteste offene Rückfrage. Der Posteingang bündelt
+ungelesene Hinweise, Routine-Ergebnisse und ungelesene Antworten zu einer Karte
+mit Anzahl und den drei jüngsten Zeilen; Hinweise stehen vor dem Rest, danach
+gilt die Zeit. Ein Klick öffnet den obersten Eintrag mit dessen bisherigem Weg;
+die Glocke bleibt der vollständige Zugang. Weitermachen zeigt das letzte
+abgeschlossene Gespräch des Workspaces, sofern es nicht schon im Posteingang
+steht. Der nächste geplante Auftrag ist keine Startkarte mehr; Aufträge haben
+ihren eigenen Bereich. Pro Routine erscheint höchstens das neueste Ergebnis, auch
+wenn ältere ungelesen sind. Routine-Chats werden nicht zusätzlich angeboten. Ohne
+Anlass steht ein Gesprächsvorschlag bereit; er füllt nur den Entwurf und sendet
+nichts.
+
+Höchstens sieben Karten, fünf aufgefächert auf breiten Flächen, drei auf schmalen. Seitliche Karten
 wählen aus; Klick auf die vordere öffnet den bestehenden Chat oder Berichtschat.
 Rückfragen ohne zugeordneten Chat und technische Hinweise verwenden ihre bisherigen
 Dialoge und Freigaben. Kein Auftrag startet durch die Vorschau. Erst erfolgreiches
@@ -447,8 +464,13 @@ Speicherfehler angezeigt. Gemeinsame Werte: chatHeadingMotion und attentionFanMo
 
 
 Der Startfächer bietet konkrete Anschlussaktionen: offene Rückfragen und Probleme,
-ungelesene Antworten, Routine-Ergebnisse, das letzte abgeschlossene Gespräch im
-Workspace und den nächsten geplanten Auftrag. Jede Karte benennt ihre Aktion.
+den gebündelten Posteingang aus ungelesenen Antworten, Hinweisen und
+Routine-Ergebnissen sowie das letzte abgeschlossene Gespräch im Workspace. Jede
+Karte benennt ihre Aktion und trägt ein eigenes Gesicht: der Posteingang eine
+Stapelliste aus Titel, Art und Zeit mit hervorgehobenem obersten Eintrag,
+Kalender, Wetter, Statistik und Kontingente ihre bestehenden Inhalte. Die
+Kennzeichnung oben links unterscheidet die Arten zusätzlich farblich aus den
+gemeinsamen Tokens; im Kontrastmodus entfällt die Farbe.
 Beliebige zuletzt geänderte Dateien und nicht angebundenes Wetter werden nicht
 als Arbeitsanlass angeboten. Gespräche führen in ihren Chat, Ergebnisse in den
 Berichtschat, Aufträge in den bestehenden Dialog. Diese Aktionen starten keine Arbeit; die eingerichtete Wetterkarte startet auf ausdrücklichen Klick ihren Bericht mit kurzer Einordnung.
@@ -866,7 +888,7 @@ firma.md. Zusätzliche Chatfelder sind additiv und keine Nutzerrechte.
 ## Kontingente und Live-Verbrauch · Version 1.1.0
 
 ChatStart reserviert neben Statistik eine eigene Kontingent-Kachel. Die Auswahl
-öffnet eine lokale Detailansicht im Startbereich, ohne Nachricht oder Modellaufruf.
+öffnet Einstellungen → Nutzung, ohne neuen Chat, Nachricht oder Modellaufruf.
 AllowanceBars zeigt Anbieterwerte als verbrauchte Prozent, niemals als Tokenbudget.
 Alle benannten Kontingente und Reset-Zeitpunkte bleiben im Detail erhalten,
 einschließlich modellbezogener Claude-Wochenlimits, Credits und Reset-Gutschriften.

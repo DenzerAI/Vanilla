@@ -12,8 +12,7 @@
 .allowance-bars.is-compact .usage-note { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .attention-fan-card[data-kind="allowances"] { gap: var(--space-8); }
 .attention-fan-card[data-kind="allowances"] .allowance-bars { flex: 1; overflow: hidden; }
-.allowance-report { text-align: left; max-width: 720px; }
-.usage-provider-details { font-size: var(--text-caption); color: var(--muted); }
+.usage-provider-content { padding: var(--space-16); }
 .usage-live-heading { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: var(--space-8); margin-bottom: var(--space-16); }
 .usage-live-heading button { min-height: var(--control-touch); }
 @media (forced-colors: active) { .allowance-track { background: Canvas; outline: 1px solid CanvasText; } .allowance-track > span { background: Highlight; } }

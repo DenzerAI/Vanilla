@@ -101,11 +101,14 @@ export function headlinesForItem(item, fallback, name='') {
  const personal=String(name).trim().split(/\s+/)[0].slice(0,32);
  const first=personal?`Hey ${personal}, ${line[0].toLocaleLowerCase('de')}${line.slice(1)}`:line;
  if(!item)return [first];
- const detail=({calendar:'Deine Termine und wo noch Luft ist.',allowances:'Hier siehst du alle Kontingente und Reset-Zeiten.',statistics:'Ein Klick öffnet deine Statistik im Chat.',request:'Mit deiner Antwort können wir weitermachen.',notice:'Den Hinweis findest du auf der Karte.',report:'Dein Ergebnis liegt hier zum Ansehen bereit.',artifact:'Der letzte Stand liegt hier für dich bereit.',job:'Die Einzelheiten findest du auf der Karte.',inbox:'Ein Klick öffnet den neuesten Eintrag.',weather:item.weatherConfigured?'Ein Klick öffnet deinen Wetterbericht mit Sieben-Tage-Ausblick.':'Deinen Ort kannst du im Profil festlegen.',chat:'Wir können direkt daran anknüpfen.',prompt:'Wir können mit einer kleinen Idee anfangen.'})[item.kind];
+ const detail=({calendar:'Deine Termine und wo noch Luft ist.',allowances:'Ein Klick öffnet Nutzung in den Einstellungen mit allen Kontingenten und Reset-Zeiten.',statistics:'Ein Klick öffnet deine Statistik im Chat.',request:'Mit deiner Antwort können wir weitermachen.',notice:'Den Hinweis findest du auf der Karte.',report:'Dein Ergebnis liegt hier zum Ansehen bereit.',artifact:'Der letzte Stand liegt hier für dich bereit.',job:'Die Einzelheiten findest du auf der Karte.',inbox:'Ein Klick öffnet den neuesten Eintrag.',weather:item.weatherConfigured?'Ein Klick öffnet deinen Wetterbericht mit Sieben-Tage-Ausblick.':'Deinen Ort kannst du im Profil festlegen.',chat:'Wir können direkt daran anknüpfen.',prompt:'Wir können mit einer kleinen Idee anfangen.'})[item.kind];
  return detail&&detail!==first?[first,detail]:[first];
 }
 
-/** The feed order is fixed; only the chosen card survives an update. */
+/** The feed order is fixed; only the chosen card survives an update.
+ * @param {{ids:string[],selected:string}} previous
+ * @param {{id:string}[]} items
+ * @returns {{ids:string[],selected:string}} */
 export function reconcileFan(previous, items) {
  const ids=items.map(item=>item.id);
  const available=new Set(ids);

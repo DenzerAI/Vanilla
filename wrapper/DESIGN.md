@@ -667,7 +667,10 @@ bestätigtem Schreiben in die Zwischenablage einen kurz erscheinenden Haken und
 eine zugängliche Kopiert-Meldung. Fehler zeigen keinen Haken und erlauben einen
 erneuten Versuch. Wiederholtes Kopieren, Textwechsel und Entfernen des Bausteins
 räumen alte Zeitgeber auf. Nachrichtenaktionen behalten Hover-, Fokus- und
-Touch-Verhalten. Die globale Glocke reagiert einmal auf neue Benachrichtigungs-
+Touch-Verhalten. Ausgeblendete Desktop-Nachrichtenaktionen verbergen zusätzlich
+ihre SVG-Symbole, auch während einer Iconanimation; die Schaltflächen bleiben
+per Tastatur fokussierbar. Aktives Vorlesen bleibt sichtbar.
+Die globale Glocke reagiert einmal auf neue Benachrichtigungs-
 ereignisse oder neu hinzugekommene Rückfragen, nicht auf Lesen oder wiederholtes
 Rendern; bei mehreren sichtbaren Glocken bewegt sich nur die erste. Initialer
 Glockenaufbau spielt keine alten Hinweise ab. Unser Design zeigt dieselben
@@ -1146,8 +1149,10 @@ Kontingente sind eine eigene Dienstkarte im AttentionFan. AllowanceBars zeigt
 schlichte, volle horizontale Balken untereinander: Anbieter/Modell, verbrauchter
 Prozentwert und Reset-Zeit. Die Karte zeigt höchstens zwei Zeilen, der Klick alle
 gemeldeten Kontingente, Credits und verfügbare Reset-Gutschriften ohne Einlösung.
-Tokenmengen stehen getrennt im Reiter Verbrauch der Statistik. Beide verwenden
-die vorhandenen Statistikflächen, Typografie, Farbtokens und Rücknavigation.
+Der Klick öffnet Einstellungen → Nutzung. Dort gruppiert UsageSettings dieselben
+AllowanceBars pro Anbieter in settings-group mit SettingRow und allen Details.
+Tokenmengen stehen getrennt im Reiter Verbrauch der Statistik. Typografie und
+Farbtokens bleiben gemeinsam; die Kontingente nutzen die Einstellungsnavigation.
 StatisticsPreview zeigt dieselben Produktionsbausteine mit Beispieldaten.
 ActivityPixels füllt die gesamte Innenbreite als Raster. Gefüllte Tagesfelder
 schimmern langsam und leicht versetzt; die Datenhelligkeit bleibt maßgeblich.

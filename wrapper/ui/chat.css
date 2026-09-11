@@ -328,6 +328,11 @@
   .agent-message:is([data-pointer-hover], :has(:focus-visible)) .agent-actions > :is(button, .copy-feedback),
   .user-message-row:is([data-pointer-hover], :has(:focus-visible)) .user-actions > :is(button, .copy-feedback) { pointer-events: auto; }
   .agent-actions > :is(button, .copy-feedback)[aria-pressed="true"] { opacity: 1; }
+  /* Hide the painted glyph as well as fading the action container. Animated SVG
+     descendants must not leave a painted copy behind after pointer exit. Keep
+     the buttons themselves focusable so Tab can reveal the action row. */
+  .agent-message:not([data-pointer-hover]):not(:has(:focus-visible)) .agent-actions > :is(button, .copy-feedback):not([aria-pressed="true"]) svg,
+  .user-message-row:not([data-pointer-hover]):not(:has(:focus-visible)) .user-actions > :is(button, .copy-feedback) svg { visibility: hidden; }
 }
 @media (pointer: coarse) {
   .message-actions .icon-button { min-width: var(--control-touch); min-height: var(--control-touch); }
