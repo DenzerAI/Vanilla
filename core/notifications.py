@@ -21,6 +21,21 @@ def record_completion(cx, run, status, result, error):
 class Notifications:
     def __init__(self, db):
         self.db = db
+        with db.transaction() as cx:
+            columns = {row[1] for row in cx.execute('PRAGMA table_info(job_notifications)')}
+            if 'kind' not in columns:
+                cx.execute("ALTER TABLE job_notifications ADD COLUMN kind TEXT NOT NULL DEFAULT 'job'")
+            if 'subject_id' not in columns:
+                cx.execute("ALTER TABLE job_notifications ADD COLUMN subject_id TEXT")
+
+    def system(self, id, kind, subject, title, body, status='completed'):
+        if kind not in {'update', 'contribution', 'ai-update'}:
+            raise ValueError('Unbekannte Systembenachrichtigung.')
+        with self.db.transaction() as cx:
+            inserted = cx.execute("INSERT OR IGNORE INTO job_notifications(id,job_id,title,body,status,created_at,target,delivery,kind,subject_id) VALUES(?,'',?,?,?,?, 'app','app',?,?)",
+                                  (id, title, body, status, time(), kind, subject)).rowcount
+            if inserted:
+                cx.execute("INSERT INTO events(kind,entity_id,payload,created_at) VALUES('notification.created',?,?,?)", (id, dump({'title': title}), time()))
 
     def attention(self, run):
         if run['status'] not in {'dispatching', 'running'}:
@@ -36,7 +51,7 @@ class Notifications:
         return {'items': rows, 'unread': self.db.rows('SELECT count(*) n FROM job_notifications WHERE read_at IS NULL')[0]['n'], 'next': rows[-1]['created_at'] if len(rows) == 50 else None}
 
     def results(self):
-        return {'items': self.db.rows("SELECT * FROM job_notifications WHERE status='completed' ORDER BY created_at DESC,id DESC LIMIT 5")}
+        return {'items': self.db.rows("SELECT * FROM job_notifications WHERE status='completed' AND kind='job' ORDER BY created_at DESC,id DESC LIMIT 5")}
 
     def read(self, id):
         with self.db.transaction() as cx:

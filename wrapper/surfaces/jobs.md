@@ -155,3 +155,11 @@ Die Benachrichtigungsansicht teilt gleichzeitige Leseanfragen. Kategorien,
 Routinen und die ursprünglichen Ausführungskennungen bleiben erhalten.
 Die Entwicklungswartung führt eigene Quellprüfungen bei ruhender Arbeit aus;
 sie ist kein beliebiger Jobskript- oder externer Versandanschluss.
+
+## Produktupdates
+
+Der bestehende Scheduler führt genau einen verwalteten lesenden Systemauftrag system-update-check aus; dessen Termine steuert der Kern. Update- und Beitragshinweise nutzen denselben dauerhaften NotificationRow-/Glockenweg mit eigenem Betreff, ohne fiktive Ausführung. Klick öffnet Einstellungen → Updates. Vor Aktivierung werden vorhandene Jobdateien, Einstellungen und reservierte Slots erhalten; keine erneute Ausführung unbestätigter externer Aktionen.
+
+Systemmeldungen vom Typ ai-update stammen aus der Hintergrundpflege von KI-Programmen,
+nicht aus einer fiktiven Auftragsausführung. NotificationRow und die Einzelmeldung
+öffnen KI & Modelle. Lesestatus und Deduplizierung bleiben im bestehenden Speicher.

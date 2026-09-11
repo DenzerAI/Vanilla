@@ -1099,3 +1099,9 @@ ergänzen sich unabhängig; eine langsame Quelle sperrt die anderen nicht. Der
 gemeinsame Attention-Skeleton bleibt für das Laden des Oberflächenmoduls vorhanden.
 Verbindungsdaten werden erst für die Verbindungsseite oder einen Ablauf geladen,
 der sie benötigt. Keine Migration gespeicherter Chats, Aufnahmen oder Einstellungen.
+
+Updates erscheinen ausschließlich im vorhandenen Einstellungsbereich. Ein interner Agentenreview nutzt einen eigenen begrenzten Thread ohne Änderung normaler Chats oder ihrer Modellwahl. Die Betriebspause sperrt neue Turns und lässt bestehende Arbeit vor dem Stoppen abschließen.
+
+KI-Aktualisierungen verwenden die bestehenden Hinweis-/Ergebniskarten des Startfächers.
+Pro Anbieter erscheint dessen neuester ungelesener Hinweis. Die Karte öffnet
+KI & Modelle; sie startet keine Installation und keinen Modellauftrag.

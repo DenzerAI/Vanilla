@@ -1,297 +1,244 @@
 # Updates und Beiträge
 
-Status: beschlossenes Produkt- und Umsetzungskonzept. Stand: 10.09.2026.
-Updateoberfläche, GitHub-Anmeldung, Release-Manifest und automatischer
-Beitragsabgleich sind noch nicht implementiert. Bereits vorhanden sind der
-[Update-Arbeitsablauf](../UPDATE.md), Quellprüfungen, Modulverträge, UI-Buildprüfung,
-Worker, Sicherung und Benachrichtigungen. Deren tatsächliche Grenzen gelten weiter.
+Stand: 10.09.2026. Die Module `github`, `updates` und `contributions` sind im
+Quellcode umgesetzt und unter Einstellungen angeschlossen. Eine Quelländerung
+ist noch keine veröffentlichte Produktversion und kein aktivierter Betriebsweg.
+GitHub-App, echtes Kundenrepository, Review-Worker und unabhängiger Operator
+müssen je Installation eingerichtet und abgenommen werden. Ohne diese
+Voraussetzungen meldet der Ablauf Prüfbedarf und installiert nichts.
 
-Dieses Dokument führt Architektur, Zustände und Abnahme. Die Oberfläche führt
-[updates.md](../wrapper/surfaces/updates.md), GitHub folgt dem bestehenden
-[Verbindungsvertrag](../wrapper/surfaces/connections.md). Keine zweite
-Updater-, Zugangsschlüssel- oder Benachrichtigungsverwaltung daneben aufbauen.
+Dieses Dokument führt Architektur und Betriebsgrenzen; den Oberflächenvertrag
+führt [updates.md](../wrapper/surfaces/updates.md). Dauerhafter Agenteneinstieg
+bleibt [UPDATE.md](../UPDATE.md), die Anmeldung führt [GITHUB.md](GITHUB.md).
 
-## Produktentscheidung
+## Bedienung
 
-- Ein Einstieg **Einstellungen → Updates**, direkt nach System. Reiter **Version**
-  und **Beiträge**. Keine neue Hauptseite in der App-Navigation.
-- **GitHub** ist ein dauerhaft mitgelieferter Anbieter unter **Verbindungen**,
-  Kategorie Automatisierung & Agenten. Dauerhaft verfügbar bedeutet nicht
-  automatisch angemeldet. Jede Installation verbindet ihr eigenes Konto.
-- Neue Versionen und relevante Auftragsergebnisse erscheinen in der vorhandenen
-  Glocke. Ein Hinweis öffnet Updates und startet keine Installation.
-- Version 1 prüft automatisch nach neuen Versionen. Vorbereitung startet auf
-  Klick; die Aktivierung hat genau eine ausdrückliche Freigabe **Jetzt installieren**.
-- In der betreuten Kundeninstallation gehört die Bereitstellung ihres geprüften
-  aktuellen Anwendungscodes zum vereinbarten Updateprozess. Der Vorgang ist
-  sichtbar und einmalig eingerichtet. Firmendaten und Zugänge bleiben lokal.
-- Eingehender Code wird auf der Ursprungsseite verglichen und bewertet. Empfang,
-  Übernahme in Vanilla, öffentliche Freigabe und lokale Installation sind getrennt.
+**Einstellungen → Updates** enthält **Version / Beiträge**. Die vorhandene Glocke
+öffnet den passenden Reiter. GitHub bleibt im gemeinsamen Verbindungsbereich.
 
-## Repositorys und Rollen
+1. **Jetzt prüfen** oder täglicher Systemauftrag: öffentliche Freigabe lesen.
+2. **Vorbereiten**: eigenen neutralen Code bereitstellen, getrennte Arbeitskopie
+   zusammenführen, technische Prüfungen und Agentenbewertung ausführen.
+3. **Jetzt installieren**: genau diesen geprüften Stand freigeben. Solange noch
+   Arbeit läuft, erfolgt keine Betriebspause; danach erneut starten. Veränderte
+   Voraussetzungen erfordern eine neue Vorbereitung.
 
-| Ablage oder Rolle | Verantwortung |
+Der Ursprung kann unter Version **Freigeben**. Nur ein sauberer, nach `main`
+gepushter Stand mit erfolgreichen Pflichtprüfungen wird veröffentlicht. Ein
+normaler Push ist keine Updatefreigabe. Kunden sehen diesen Herausgeberweg nicht.
+
+## Quellen, Rollen und privater Austausch
+
+| Bereich | Inhalt und Verantwortung |
 | --- | --- |
-| `DenzerAI/Vanilla`, öffentlich | Gemeinsamer Kern, neutrale Module, Anleitungen und geprüfte Veröffentlichungen. |
-| Eigenständiges privates Kundenrepository | Gemeinsame Git-Historie plus geprüfte eigene Codeänderungen. Kunde schreibt; der vereinbarte Betreuer erhält lesenden Zugriff. Kein öffentlicher GitHub-Fork mit vertraulichen Inhalten. |
-| Lokale Installation | Firmendaten, Identität, Workspaces, Geheimnisse, Arbeitszustände, Sicherungen und Updatejournal. |
-| Ursprung | Veröffentlichungen vorbereiten, Beiträge aus ausdrücklich verbundenen Kundenrepositorys prüfen und zur Übernahme auswählen. |
-| Kundeninstallation | Releases empfangen, eigenen Code bereitstellen, Kombination prüfen und lokal aktivieren. |
+| Öffentliches `DenzerAI/Vanilla` | Gemeinsamer Kern, neutrale Module, Baupläne und geprüfte Releases. |
+| Eigenständiges privates Kundenrepository | Geprüfter Anwendungscode und gemeinsamer öffentlicher Basiscommit. Kunde schreibt; Betreuer liest mit eigenem Konto. |
+| Lokale Datenablage | Firma, Identität, Arbeitsanweisungen, Chats, Aufträge, Zugänge, Betriebszustand und Updatejournal. |
+| Ursprung | Beiträge vergleichen und einen eigenen Entwicklungszweig vorbereiten; Veröffentlichung separat. |
+| Kunde | Eigene Einrichtung, private Codebereitstellung und lokale Updatefreigabe. |
 
-Eine Codebasis unterstützt beide Rollen. Die Rolle wird bei der Einrichtung lokal
-festgelegt und gegen reale GitHub-Rechte geprüft. Ein Repositoryname, Clone oder
-mitgeliefertes `origin` erteilt keine Herausgeberrechte. Neue Kundeninstallationen
-erben weder die Ursprungsrolle noch dessen Konten, Kundenliste oder Freigaben.
-Der Betreuer greift mit seinem eigenen GitHub-Konto zu, nie mit Kundentokens.
+Rolle, Konto-ID, Repository-ID, Sichtbarkeit und Rechte werden beim Einrichten und
+vor externen Schreibaktionen geprüft. Das Ursprungsrepository bleibt öffentlich.
+Kunden bekommen durch diese Funktion kein Schreibrecht auf Vanilla. Neue Clones
+erben weder Ursprungsrolle noch Konten oder Kundenliste.
 
-Das Kundenrepository bleibt `origin`, Vanilla wird zusätzlich als `upstream`
-angebunden. Bestehende Remotes werden geprüft und erhalten. Bei fehlender gemeinsamer
-Historie oder vertraulicher Historie gilt die kontrollierte Erstübernahme aus
-[CODE-SYNC](CODE-SYNC.md). Kein Force-Push und keine stillschweigende Veröffentlichung.
+**Teilen** und die Updatevorbereitung prüfen zuerst den kompletten neutralen
+Quellbaum mit den vorhandenen Datenschutz- und Modulregeln. Geschützte Pfade,
+Symlinks, ungeprüfte Assets und unregistrierte Module stoppen den Export. Nur
+neutrale Dateien werden übertragen; keine lokale Git-Historie. Namen, Tests und
+Kommentare gehören ebenfalls zum geprüften Code. Inhaltsscanner ersetzen keine
+saubere Trennung von Firmendaten und Anwendungscode.
 
-## GitHub-Verbindung
+Der Austauschstand ist ein elternloser Commit mit neutraler Nachricht und
+öffentlichem Basiscommit, unter `refs/heads/vanilla-share/<Quellbaumhash>`. Kennung
+und bestätigter Remote-Commit bleiben im lokalen Journal. Eine Wiederholung
+prüft zuerst dieselbe Referenz; unbestätigte Schreibaktionen werden nicht blind
+wiederholt. Der private Hauptzweig bleibt unverändert. Ohne eingerichtete
+Austauschvereinbarung gibt es keinen betreuten Installationsablauf. Öffentliche
+Downloads und die lesende Updateprüfung bleiben erreichbar.
 
-Geplanter Standard ist eine GitHub App mit Device Flow: **Verbinden** öffnet den
-vorhandenen Verbindungsdialog, zeigt GitHubs einmaligen Anmeldecode und führt zur
-GitHub-Anmeldung. Nach Freigabe werden Konto und zugängliches privates Repository
-ausgewählt und tatsächlich geprüft. Keine Passworteingabe im Chat, kein Import
-einer vorhandenen persönlichen CLI-Anmeldung und kein Kontowechsel anderer Worker.
+Der Ursprung liest nur ausdrücklich über seine GitHub App erreichbare private
+Repositorys. Empfang und Vorschau führen keinen fremden Code aus. Die Vorschau
+zeigt Änderungen gegenüber dem aktuellen Vanilla-Stand. **Übernehmen** verwendet
+die gemeinsame öffentliche Basis für eine echte Zusammenführung und erhält
+zwischenzeitliche Vanilla-Änderungen. Konflikte ergeben Prüfbedarf. Der Kandidat
+liegt ausschließlich in einer privaten Entwicklungsablage. **Zurückstellen**
+und **Ablehnen** verändern keine Kundendaten.
 
-Die App wird einmal vom Herausgeber registriert; ihre öffentliche Client-ID darf
-mitgeliefert werden. Device Flow muss aktiviert sein. Access- und Refresh-Token
-liegen ausschließlich im bestehenden installationsgebundenen Tresor. Refresh
-erfolgt serialisiert und atomar; nach Widerruf oder Ablauf ist erneut anzumelden.
-Kein zentrales App-Geheimnis oder privater App-Schlüssel wird an Kunden ausgeliefert.
-Dieser lokale Ablauf benötigt keinen neuen zentralen Tokenserver. GitHub beschreibt
-[Device Flow und Repositoryzugriff](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/generating-a-user-access-token-for-a-github-app)
-sowie [Token-Erneuerung ohne Client-Secret bei Device Flow](https://docs.github.com/en/apps/creating-github-apps/authenticating-with-a-github-app/refreshing-user-access-tokens).
+## Veröffentlichungen
 
-Anmeldung, App-Installation für ausgewählte Repositorys, Lesezugriff,
-Schreibzugriff und bestätigter Betreuerzugriff sind getrennte Voraussetzungen.
-Das Setup prüft jede davon. Es erweitert keine Berechtigung automatisch.
-Geplant sind Lesen von Metadaten, Inhalten und Prüfstatus sowie Schreiben der
-freigegebenen Codezweige und Beiträge im ausgewählten Repository. Zusätzliche
-Rechte, etwa für Workflow-Dateien oder eine Veröffentlichung, werden nur für die
-konkret eingerichtete Funktion angefordert. Kein Löschen von Repositorys, keine
-Organisationsverwaltung und kein universeller Zugriff auf sämtliche Kundenrepos.
-Der Herausgeber richtet den Betreuerzugriff separat ein und bestätigt ihn mit
-dem eigenen Anschluss; die Kunden-App benötigt dafür keine Verwaltungsrechte.
+Stabiler Kanal ist GitHubs öffentliche neueste reguläre Release mit genau einem
+Asset `vanilla-release.json`, höchstens 128 KiB. Autoritatives Schema und
+Validierung stehen in `core/releases.py`; veröffentlichte Felder:
 
-Der Dialog zeigt Konto, Repository, Freigabeumfang und letzten Prüfstand. Entfernen
-stoppt weitere Abfragen und Schreibaktionen, erhält lokale Daten und folgt der
-bestehenden Trenn-/Secret-Logik. Bereits übertragener Code wird dadurch nicht
-zurückgerufen. Fehlende Rechte zeigen die konkrete fehlende Fähigkeit, kein
-pauschales „Verbunden“. Ein einfacher gespeicherter GitHub-Link genügt nicht.
-
-## Releasequelle
-
-Version 1 verwendet einen öffentlichen Kanal **Stabil**. Ein veröffentlichtes
-GitHub Release enthält das maschinenlesbare `vanilla-release.json`. Die kleine
-Datei wird erst nach erfolgreichen Prüfungen erzeugt und enthält:
-
-| Feld | Bedeutung |
+| Feld | Bindung |
 | --- | --- |
-| `schemaVersion`, `releaseId`, `version` | Format, unveränderliche Veröffentlichung und lesbare Produktversion. |
-| `repository`, `tag`, `commit` | Erwartetes Ursprungsrepository und exakt geprüfter Quellcommit. |
-| `publishedAt`, `summary`, `changes` | Datum, kurze Neuerungen und betroffene Modulkennungen. |
-| `requirements` | Unterstützte Plattformen, Laufzeiten und Mindestversion des Updaters. |
-| `modules` | Modulversionen, Abhängigkeiten und unterstützte Schnittstellenversionen. |
-| `migrations`, `rollback` | Unterstützte Ausgangsstände, Migrationsreferenzen, erforderliche Zwischenschritte und Rückkehrgrenzen. |
-| `checks` | Nachweise der erforderlichen Prüfungen für genau diesen Quellcommit. |
+| `schemaVersion`, `releaseId`, `version` | Format 1, konkrete Release-ID, numerische Produktversion. |
+| `repository`, `tag`, `commit` | Festes Ursprungsrepository, `v<Version>`, exakter Commit. |
+| `publishedAt`, `summary`, `changes` | Datierter, begrenzter Änderungstext. |
+| `requirements` | Updater 1, Plattformen und minimale Python-/Node-Version. |
+| `modules` | IDs, Versionen, Abhängigkeiten aus dem Modulregister. |
+| `migrations`, `rollback` | Ausgangsversionen, Datenkompatibilität und Migrationsbedarf. |
+| `checks` | GitHub-Run-IDs für Datenschutz, Funktionen und Design am selben Commit. |
 
-Das Manifest ist Daten, kein Shellskript und keine neue Agentenanweisung. Der
-Client prüft Schema, erlaubte Quelle, Tag/Commit-Bindung und den tatsächlichen
-GitHub-Prüfstatus. Hashangaben allein sind kein Nachweis des Herausgebers.
-Entwürfe, Vorabversionen, zurückgezogene Releases und fremde Downloadquellen werden
-nicht installiert. Unbekanntes Schema, zu alter Updater oder nicht unterstützter
-Versionssprung führt zu einer konkreten Meldung statt zu einem geratenen Fallback.
-Ein älteres Release löst kein automatisches Downgrade aus.
+Keine ausführbaren Befehle oder zusätzlichen Agentenanweisungen im Manifest.
+Unbekannte Felder und Schemata werden abgewiesen. Tag und tatsächlicher GitHub-
+Prüfstatus werden geprüft, einschließlich Linux, macOS und der tatsächlichen
+Containerprüfung im Funktionstest.
+Entwürfe, Vorabversionen, manipulierte bekannte Manifeste und falsche Quellen
+werden nicht übernommen. Bei veränderter Freigabe wird eine vorhandene
+Vorbereitung ungültig. Vor Installation wird die Quelle erneut geprüft.
 
-Voreinstellung: Prüfung beim Start, wenn die letzte Prüfung mehr als 24 Stunden
-zurückliegt, danach täglich mit kleinem Zufallsversatz. Der bestehende Scheduler
-führt genau einen lesenden Systemauftrag aus. HTTP-Cache, bedingte Anfragen und
-Rate-Limit-Pausen verwenden; keine Dauerabfrage pro Browserpanel. **Jetzt prüfen**
-nutzt denselben Weg. Offline bleibt der letzte Stand mit Prüfdatum sichtbar.
-An GitHub gehen nur die notwendigen öffentlichen Releaseanfragen, keine lokale
-Inventarliste. GitHub sieht dabei wie bei jedem Abruf Netzwerkmetadaten.
+Die bestehende Queue führt `system-update-check` aus: täglich plus Zufallsversatz,
+beim Start nur wenn fällig; manuelle Prüfung nutzt dieselbe Queue. Öffentliche
+Abfragen senden weder Konto-Token noch lokales Inventar. Bedingte Releaseabfrage,
+Rate-Limit-Pause und letzter erfolgreicher Prüfstand bleiben erhalten. Offline
+wird kein frischer Prüfzeitpunkt erfunden. Es gibt kein automatisches Downgrade.
 
-Bis dieser Releaseweg implementiert und das erste gültige Manifest veröffentlicht
-ist, bleibt `UPDATE.md` mit manueller Commit-Auswahl führend. Eine neue Oberfläche
-darf fehlende Releases nicht durch angeblich freigegebene `main`-Pushes ersetzen.
+**Freigeben** prüft origin/main, Rechte und CI, erstellt einen Entwurf, lädt das
+validierte Manifest hoch und veröffentlicht erst anschließend. Ein unbestätigter
+Schreibschritt bleibt als ungeklärt gespeichert. Keine automatische Doppel-
+veröffentlichung. Ausgangsversionen und Datenkompatibilität muss der Herausgeber
+explizit angeben; Version 1 veröffentlicht keine automatischen Datenmigrationen.
 
-## Vorbereitung und Zustände
+## Vorbereitung und Agent
 
-Der Kern besitzt einen langlebigen Updateauftrag. UI und Agent lösen Aktionen
-aus; sie speichern keinen konkurrierenden Zustand. Vorgesehene Operationen sind
-Prüfen, Vorbereiten, Abbrechen, Installieren und Status lesen. Das sind geplante
-Operationen, noch keine vorhandenen HTTP-Endpunkte.
+Die SQLite-Datensätze `updates/*` und `contributions/*` führen Zustand und Revision.
+Ein Auftrag bindet Release, Originalcommit, Quellbaum, eigenen Bestand, Kandidat,
+Build, Tests, Wiederherstellungsprobe, Betriebsweg und Freigabe an Hashes.
+Doppelklicks verwenden denselben Auftragsschlüssel. Neustarts unterbrechen eine
+Vorbereitung sichtbar; sie wird nicht still neu ausgeführt.
 
-| Zustand | Bedeutung / nächste Aktion |
-| --- | --- |
-| Ungeprüft / Aktuell | Letzte Prüfung fehlt oder keine neuere freigegebene Version. |
-| Verfügbar | Beschreibung lesen, Vorbereitung starten. |
-| In Vorbereitung | Bestand sichern, Code bereitstellen, zusammenführen, bewerten und testen. |
-| Klärung nötig | Konkreter Konflikt, fehlende Voraussetzung oder fehlgeschlagener Test; Produktionsstand bleibt aktiv. |
-| Bereit | Prüfergebnisse und Rückkehrweg gültig; Jetzt installieren. |
-| Wird installiert | Geordnete Betriebspause, aktuelle Sicherung, Migration und Aktivierung. |
-| Aktualisiert | Neuer Dienst und eigener Funktionsumfang geprüft. |
-| Wiederhergestellt / Wiederherstellung nötig | Rückkehr bestätigt oder manueller Eingriff erforderlich; kein erfundener Erfolg. |
+Der technische Zusammenführungsweg erstellt eine getrennte Git-Arbeitskopie.
+Prüfcode wird aus der installierten vertrauenswürdigen Version geladen, niemals
+durch Import von Python aus einem eingehenden Kandidaten. Eigene Änderung und
+neue Version werden zusammengeführt; ungeklärte Konflikte stoppen den Ablauf.
 
-Ein lokales Journal hält Auftrags-ID, Revision, Ausgangs-/Ziel-/Integrationscommit,
-Quellbaumhash, Inventarrevision, Worker/Modell/Denkstufe, Phasen, Prüfnachweise,
-Sicherungsreferenz, Codeübermittlung und Freigabe fest. Eine exklusive Sperre
-verhindert parallele Vorbereitung/Aktivierung. Doppelklicks und HTTP-Wiederholungen
-verwenden denselben Auftragsschlüssel. Wiederaufnahme prüft den tatsächlichen
-Zustand; sie wiederholt keine Migration, Übermittlung oder Aktivierung blind.
+Der Agent bewertet den vollständigen neutralen Diff als Text. Aktuell unterstützt
+ist der vorhandene native Codex-Anschluss. Modell wird unter Updates ausdrücklich
+gewählt, Denkstufe ist dessen höchste bekannte angebotene Stufe. Kein Anbieter-
+oder Kontofallback und keine Änderung der normalen Chateinstellung. Tools,
+Konnektoren, Skills, Netzwerk und Projektanweisungen werden für diesen flüchtigen
+Prüfthread deaktiviert; unerwartete Werkzeugereignisse brechen ihn ab. Der Review
+ändert selbst keine Quelldatei. Konfliktanpassungen erfolgen zunächst über den
+Arbeitsauftrag aus UPDATE.md und werden danach neu vorbereitet.
 
-Während der Vorbereitung darf die Firma weiterarbeiten. Ändern sich Code,
-Modulkonfiguration oder Zeitpläne nach der Prüfung, ist der Kandidat erneut zu
-prüfen. Normale neue Geschäftsdaten erfordern spätestens zur Aktivierung eine
-aktuelle konsistente Sicherung. Die Freigabe gilt nur für den geprüften Kandidaten
-und wird bei dessen Änderung ungültig. Vor Aktivierung Releasefreigabe, Rechte,
-freien Speicher und betroffenen Bestand erneut prüfen.
+Der Diff hat ein festes Größenlimit, die Prüfung ein Zeitbudget. Unvollständige
+Vergleiche, ungültiges Ergebnis, Abbruch, erschöpftes Budget oder gemeldete
+Probleme ergeben **Klärung nötig**. Auch ein lokal angebundener Worker kann Code
+an einen Cloudanbieter senden; das steht sichtbar bei der Modellauswahl.
 
-## Agent und feste Prüftore
+Technische Nachweise sind unabhängig vom LLM: Datenschutz, Modulverträge,
+Funktionstests, Typen/UI-Build, unveränderter eigener Bestand, lesbare Sicherung
+und passender Operator. Kandidatentests laufen in einer Betriebssystem-Sandbox
+ohne Produktionsdateien, Zugänge oder externe Netzwerkverbindungen. Innerhalb
+des Containers ist nur sein eigener Loopback für Schnittstellentests erreichbar.
+Nur neutraler Code wird schreibgeschützt eingebunden, keine Git-Historie.
+Prüfdaten liegen in einem begrenzten temporären Dateisystem; weder Hostdateien
+noch Docker-Socket sind schreibbar eingebunden. Zurück kommt ausschließlich
+ein größenbegrenztes, pfadgeprüftes UI-Buildarchiv.
+Temporäre Testdateien liegen außerhalb des synthetischen Git-Repositories;
+ausführbare Testprogramme bleiben auf die isolierten Dateisysteme beschränkt.
+Der UI-Build entsteht vor den Schnittstellentests, die diesen Build verwenden;
+sein Quellabgleich wird nach den Tests erneut geprüft.
+Eine bloße
+Arbeitskopie zählt nicht als Isolation. Schlägt ein Test wegen fehlender
+Sandboxfähigkeiten fehl, gibt es kein Ausweichen auf ungeschützte Ausführung.
 
-Der Auftrag verwendet den ausdrücklich konfigurierten vorhandenen Worker mit
-der höchsten von seinem gewählten Modell tatsächlich unterstützten Denkstufe.
-Keine erfundene anbieterübergreifende Stufe, kein stiller Wechsel von Anbieter
-oder Konto. Gewählte Stufe und begrenztes Auftragsbudget sind nachvollziehbar;
-fehlende Fähigkeiten oder erschöpftes Budget führen zu Klärung. Die Einstellung
-ändert weder normale Chats noch den globalen Workerstandard.
+## Bestandserhalt und Installation
 
-Der Agent arbeitet in einer separaten Arbeitskopie, erklärt Unterschiede und
-Konflikte und erzeugt einen konkreten Integrationskandidaten. Er kann Tests und
-Anpassungen vorbereiten. Technische Tore entscheiden anhand tatsächlicher
-Ergebnisse über „Bereit“, nicht anhand eines LLM-Textes. Fremder Code, Kommentare
-und Releasebeschreibungen bleiben untrusted input und erweitern keine Befugnisse.
-Ein lokal laufender Agent kann einen Cloudanbieter verwenden; dafür gelten die
-vor Ort erteilten Datenfreigaben. Geheimnisse sind kein Modellkontext.
+Erfasst werden die führenden Jobdateien, ihre Anweisungen und Python-Erweiterungen,
+Projektdefinitionen und Anschluss-/Worker-Konfiguration als lokale Hashes. Sie
+werden nicht in den Modellkontext oder nach GitHub exportiert. Der Operator
+sichert zusätzlich **alle** Standard-Daten, sämtliche Arbeitsbereiche, Firmenbasis,
+Quellstand, Git-Metadaten und UI-Build. Auftragsreservierungen und Zustellzustände
+liegen in der konsistent gesicherten Datenbank und werden bei Rückkehr erhalten.
+Eigene Module benötigen ihren Daten- und Migrationsvertrag im Modulregister.
 
-Erforderlich sind die vorhandenen Datenschutz-, Modul-, Funktions-, Migrations-
-und UI-Prüfungen sowie der Erhalt des eigenen Inventars. Tests fremden Codes
-laufen ohne Produktionszugänge, aktive Bots, Zeitpläne oder Deploymentrechte.
-GitHub-Workflows aus eingehenden Beiträgen erhalten ebenfalls keine Secrets oder
-automatischen Veröffentlichungsrechte. Ein Worktree allein ist keine Sandbox.
+V1 aktiviert auf einem eingerichteten macOS-Hostdienst in einem festen Clone.
+Der separate Operator wird einmalig **außerhalb der Web-App** eingerichtet:
 
-## Workflows, Cronjobs und Module erhalten
+```sh
+.venv/bin/python scripts/setup-update-sandbox.py
+.venv/bin/python scripts/verify-update-sandbox.py
+.venv/bin/python scripts/setup-updates.py --standard-data-only
+```
 
-Vorher/Nachher-Inventar pro Arbeitsbereich und Modul: stabile IDs, Quelldateien,
-Versionen, Abhängigkeiten, Datenablagen, Konfigurationsrevisionen und Anschlüsse.
-Für Aufträge zusätzlich Zeitplan, Zeitzone, Aktivierungszustand, Worker,
-Benachrichtigungsziel, letzte Ausführung und schon reservierte Termine festhalten.
-Fachliche Arbeitsanweisungen bleiben privat. Unbekannte eigene Erweiterungen
-werden nicht gelöscht; fehlende Zuordnung ist ein Prüfbefund.
+Voraussetzung ist eine laufende lokale Docker-kompatible Linux-Engine. Der erste
+Befehl baut eine Prüfumgebung nur aus neutralen Abhängigkeitsdateien und dem
+geprüften Backup-Installer. Er übernimmt keine Firmen- oder Zugangsdaten. Die
+spätere Prüfung verwendet ausschließlich deren festgehaltene lokale Image-ID,
+ohne automatisches Nachladen. Remote-Docker-Kontexte sind gesperrt. Der zweite
+Befehl prüft echte Netzwerk-/Dateigrenzen sowie alle Kandidatentests. Die
+[Container-Netzwerkisolation](https://docs.docker.com/engine/network/drivers/none/)
+lässt interne Loopback-Tests zu, ohne den Loopback des Hosts freizugeben.
 
-Lokale Anweisungen und Zeitpläne werden nicht durch neutrale Vorlagen ersetzt.
-Bei Migrationen führende Jobdateien und abgeleiteten Datenbankindex zusammen
-prüfen. Externe Cron-/Dienstdefinitionen erfassen, falls sie zur Installation
-gehören; niemals die gesamte crontab oder fremde Dienstkonfiguration ersetzen.
-Ein unveränderter Dateihash beweist noch keine funktionierende Schnittstelle.
-Eigene Regressionstests und ein Wiederherstellungstest ergänzen den Inventarvergleich.
 
-Aktivierung benötigt eine technische Wartungssperre für neue Arbeit, geordnetes
-Beenden aktiver Arbeit und einen vom App-Prozess unabhängigen lokalen Operator.
-Der Agent darf nicht seinen eigenen Neustart beaufsichtigen müssen. Der Operator
-arbeitet nur mit dem freigegebenen Kandidaten, erhält das Journal und prüft den
-neuen Dienst. Dies ist noch zu implementieren; der vorhandene Neustartknopf
-liefert diese vollständige Transaktion nicht. Code, Build und Abhängigkeiten
-brauchen ebenso einen Rückweg wie migrierte Daten. Bei ungeklärtem Rückkehrzustand
-Schreibbetrieb gesperrt halten und konkret melden.
+Vorher GitHub, Prüfarbeitsumgebung und regulären Hostdienst nach OPERATIONS.md
+vorbereiten. Der Schalter bestätigt die Prüfung, dass keine unbekannten externen
+Datenablagen, Symlinks oder zusätzlich betreuten System-Cronjobs fehlen. Solche
+Installationen benötigen einen eigenen geprüften Betriebsvertrag. Weder App
+noch Agent installieren im Hintergrund einen neuen Systemdienst.
 
-Nach Wiederanlauf verpasste Auslösungen gemäß bestehender Schedulerregel
-behandeln. Bereits versendete oder unklar bestätigte externe Aktionen nicht
-erneut ausführen. „Backup vorhanden“ reicht nicht als Abnahme.
+Die App schreibt nur einen freigabegebundenen Auftrag. Der vorinstallierte,
+installationsgebundene Operator pausiert genau diesen Dienst, wartet auf das
+Ende des Datenbankschreibers, sichert, tauscht Code und UI aus und startet zunächst
+mit gesperrter neuer Arbeit. Erst nach Quell-, Datenbank-, Inventar- und
+Anschlussprüfung wird der Betrieb freigegeben. Andere Dienste bleiben unberührt.
 
-## Codebereitstellung und Beiträge
+Jeder Schritt ist in `data/control/updates/<ID>/operator-state.json` nachvollziehbar.
+Der Operator liegt außerhalb des ausgetauschten Codes. Ein unterbrochener Austausch
+wird zurückgenommen. Nach der dauerhaften Entscheidung zur Betriebsfreigabe gibt
+es keine automatische Rücknahme mehr, die bereits neu entstandene Geschäftsdaten
+löschen könnte. Eine unbestätigte Wiederaufnahme bleibt als Wiederherstellungsbedarf
+stehen. Externe Sendungen werden niemals pauschal wiederholt. Sicherungen werden
+nicht automatisch gelöscht; Platzbedarf ist vor der nächsten Übernahme zu prüfen.
 
-Einmalige Einrichtung dokumentiert zugelassenes Repository, Codeumfang,
-Betreuerzugriff sowie die vereinbarte Einsicht, Wiederverwendung und mögliche
-Veröffentlichung. „GitHub verbunden“ ist keine solche Vereinbarung. Beim
-betreuten Update prüft das System diesen Umfang und die Zugangsvoraussetzungen.
-Unvollständige Einrichtung blockiert den betreuten Ablauf, nicht den öffentlichen
-Download oder die lesende Updateprüfung. Widerruf stoppt neue Übermittlungen.
+Bei bestätigtem Abschluss werden Dienst-/Buildnachweis und installierte Version
+aktualisiert. Auch der unabhängige Operator bekommt die geprüfte neue Version.
+Neue Abhängigkeiten oder inkompatible Datenmigrationen werden in Version 1
+bewusst nicht durch Kopieren über die vorhandene Umgebung installiert.
 
-Vor dem Zusammenführen eigener Änderungen wird der aktuelle neutrale
-Anwendungs-/Modulcode geprüft und unter einer eindeutigen Snapshot-Referenz in
-das private Kundenrepository gepusht. Keine Datenordner, Chats, Zugangswerte,
-privaten Workflowtexte oder unkontrollierte Historie. Bei vertraulicher Historie
-zuerst einen bereinigten neutralen Austauschstand herstellen; den Originalbestand
-lokal erhalten. Ein unvollständiger oder ungeprüfter Export zählt nicht als
-erfolgreiche Bereitstellung. Auch Beschreibung, Commitnachricht und Tests prüfen.
+## Grenzen und Ausbauvertrag
 
-Die Übermittlung hat einen eigenen Status und eine persistente Kennung aus
-Repository-ID und Quellbaumhash. Eine Wiederholung erzeugt keinen zweiten Beitrag.
-Vor Erfolg die Remote-Referenz erneut lesen und mit dem geprüften Stand abgleichen.
-Bei unklarer Netzwerkantwort zuerst nachsehen, nicht blind erneut pushen.
-Neue Codeänderungen verlangen einen neuen Stand. Für betreute Installation ist
-bestätigte Bereitstellung erforderlich; ein sachlich abgelehnter Beitrag verhindert
-kein Update. Das ist keine Zusage, dass jeder Code in Vanilla übernommen wird.
+- Automatischer Betrieb ist zunächst **manuell freigegeben**, kein unbeaufsichtigtes
+  Auto-Install. Bei aktiver Arbeit warten und später installieren.
+- Geänderte Lockfiles oder Python-Abhängigkeiten brauchen eine separat vorbereitete
+  Umgebung. Datenmigrationen und Linux-Aktivierung brauchen einen eigenen,
+  getesteten Operatorvertrag. Der Agent darf diese Grenze nicht umgehen.
+- Ohne lokale Container-Engine und erfolgreich abgenommenes Prüfabbild bleibt
+  die Installation gesperrt. Der Client installiert keine Engine still nach und
+  weicht nicht auf ungeschützte Tests aus. Im Funktionalitäts-Workflow prüft
+  `update-sandbox` dieselbe echte Containergrenze und die vollständige Testsuite.
+- Registrierung der GitHub App, reale Anmeldung, tatsächlicher privater Austausch
+  und Dienstwechsel müssen auf einer neutralen Abnahmeinstallation geprüft werden,
+  bevor eine konkrete Installation als betriebsbereit bezeichnet wird.
+- Keine Verlustfreiheit für unbekannte Erweiterungen behaupten. Modulverträge,
+  Bestandserfassung, Regressionstests und Wiederherstellungsprobe sind verbindlich.
 
-Auf der Ursprungsseite werden nur ausdrücklich angeschlossene Kundenrepositorys
-gelesen. Der tägliche lesende Abgleich und **Jetzt prüfen** erkennen neue Snapshot-
-Referenzen; V1 benötigt keine neue Webhook-Infrastruktur. Pro Beitrag speichert
-der Ursprung Herkunft, gemeinsamen Vanilla-Basiscommit, Snapshot-ID, Diffhash,
-Modulzuordnung und neutralen Kurztext. Kundenspezifische Repositoryliste bleibt lokal.
+Jede Erweiterung pflegt `system/modules.json`, Fähigkeiten, API-/Datenvertrag,
+Migrationsregel, Oberflächenvertrag und Tests im selben Auftrag. Neue Module
+werden dadurch auffindbar und können später bewusst übernommen werden. Der
+feste Link auf UPDATE.md bleibt der Einstieg auch für ältere Installationen.
 
-Der Reiter **Beiträge** zeigt beim Kunden eigene übermittelte Stände und die Aktion
-**Teilen** für einen ausdrücklich beauftragten Beitrag außerhalb eines Updates.
-Beim Ursprung zeigt er **Eingang**. **Prüfen** lässt den Agenten beschreiben:
-Was ist neu, was existiert bereits, welche Abhängigkeiten/Konflikte bestehen und
-wie könnte es in Vanilla passen? **Übernehmen** erzeugt einen geprüften separaten
-Integrationszweig. **Zurückstellen** und **Ablehnen** verändern keine Kundendaten.
+## Prüfszenarien
 
-Private Beiträge bleiben zunächst im privaten Kundenrepository und in der
-isolierten Prüfablage. Ein öffentlicher Pull Request würde den Code bereits
-veröffentlichen; er entsteht erst nach entsprechender Freigabe und Bereinigung.
-GitHub-Diffs und Pull Requests können die technische Umsetzung tragen, ohne
-diese Begriffe in der normalen Bedienung zu verlangen. Kein Kunde erhält allein
-durch die Teilnahme Schreibrechte auf Vanilla. Auch angenommener Code wird
-nicht automatisch in der laufenden Ursprungsinstallation ausgeführt.
+Eigene Workflows, aktive/inaktive Zeitpläne, Erweiterung, Zugang und reservierte
+Ausführungen mit synthetischen Daten auf zwei getrennten Installationen prüfen.
+Erfolgsupdate und Konflikt, manipuliertes Manifest/Build, veraltete Freigabe,
+Codeänderung während Vorbereitung, verweigerte Rechte, privater Testmarker,
+verlorene Push-Antwort, Doppelaktion, Neustart während Vorbereitung und Stromausfall
+während Aktivierung gehören zur Abnahme. Nach fehlgeschlagener Gesundheitsprüfung
+müssen alter Code, eigene Daten und Ausführungsreservierungen wieder vorhanden sein.
+Testdoubles belegen Zustands- und Fehlerlogik; sie ersetzen weder echten GitHub-
+Zugriff noch den tatsächlichen Hostwechsel. Desktop/Handy, beide Themes und
+Tastaturbedienung ergänzen die gemeinsame Designprüfung.
 
-## Benachrichtigungen
+## KI-Programme und Modellkatalog
 
-Vorhandene `core/notifications.py`, Ereignisse/SSE, Glocke und NotificationRow
-erweitern. Release, Auftrag und Beitrag benötigen stabile eigene Ereigniskennungen;
-die bisher auf Jobabschlüsse ausgerichtete Quelle ist dafür gezielt zu ergänzen.
-Keine fiktiven Jobausführungen nur zum Anzeigen einer Meldung erzeugen.
-
-Einmal melden: neue Version, Vorbereitung bereit, Klärung nötig, Updateergebnis
-oder neuer Beitrag. Keine Meldung bei jeder erfolgreichen Tagesprüfung. Lesestatus
-und Deduplizierung über Neustarts erhalten. Klick führt zum passenden Reiter und
-Auftrag. Gerät-/Kanalhinweise nutzen ausschließlich eingerichtete Freigaben und
-vorhandene Zustellwege; geschlossener Browser ist kein garantierter Web-Push.
-Der vorhandene SystemNotice für UI-Neuladen/Serverneustart behält seine Bedeutung.
-
-## Nachhaltige Umsetzung und Abnahme
-
-Geplante Zuständigkeiten sind `updates` für Release/Updateauftrag, `github` für
-Anmeldung und Repositoryoperationen, `contributions` für Übermittlung/Vergleich.
-Die IDs sind hier reserviert, noch keine registrierten verfügbaren Module.
-Vor dem ersten ausführbaren Schritt Quellen, konkrete Endpunkte, Status und
-Tests in `system/modules.json` und `system/capabilities.mjs` registrieren.
-Die vorhandenen Module für Jobs, Betrieb, Verbindungen und Benachrichtigungen
-erweitern; keine zweite Queue oder allgemeine Remote-Shell bauen.
-
-Jede Erweiterung pflegt nach [MODULES](../system/MODULES.md) Version, Schnittstelle,
-Datenhaltung und Migrationsregel mit dem Code. Der künftige Releasecheck muss
-Manifest, unterstützte Versionssprünge, Modulverträge und bestandene Prüfungen an
-denselben Commit binden. Beschreibender Text und ein grüner Build reichen nicht.
-Automatische Installation ohne Einzelklick bleibt späterer ausdrücklich
-konfigurierter Ausbau; sie umgeht keines dieser Prüftore.
-
-| Schritt | Lieferumfang und Voraussetzung für Abschluss |
-| --- | --- |
-| 1. GitHub und Einrichtung | App registriert; eigener Login, privates Repo, Rechte, Tresor/Refresh, Trennen und Betreuerzugriff real geprüft. |
-| 2. Veröffentlichungen und Anzeige | Validiertes Release-Manifest, Tagesprüfung, Updates → Version und deduplizierte Benachrichtigung; zunächst nur Lesen. |
-| 3. Vorbereitung und Beiträge | Dauerhafter Auftrag, getesteter Bestandserhalt, kontrollierter Code-Push, Eingang, Agentenbewertung und feste technische Prüftore. |
-| 4. Aktivierung | Freigabegebundener Operator, Wartungssperre, Sicherung, Migration, Startprüfung und getestete Rückkehr. |
-
-Abnahme an zwei getrennten Installationen mit neutralen Testdaten: eigener
-Workflow, aktiver/deaktivierter Cronjob, eigenes Modul und simulierte Verbindung.
-Erfolgsupdate und Konflikt prüfen; ebenso gleichzeitige Code-/Planänderung,
-abgelaufenen Zugang, geheimen Testmarker im Export, verweigerten Push, doppelte
-Klicks, manipuliertes/veraltetes Manifest, unbekanntes Modul und unterbrochene
-Vorbereitung/Aktivierung. Nach Rückkehr müssen Daten und Ausführungsreservierungen
-stimmen. Eingangscode darf vor einer ausdrücklichen Test-/Übernahmeaktion keine
-Ausführung auslösen. Pro Schritt echte Funktion und geplanten Ausbau unterscheiden.
+Die Hintergrundpflege unter KI & Modelle erweitert den vorhandenen Wartungstakt
+und die Systembenachrichtigungen. Sie prüft Programmversionen und den öffentlichen
+Modellkatalog und kann unterstützte installierte CLIs automatisch in einer
+Arbeitspause ersetzen. Vertrag, Quellen, Datenformat und Grenzen stehen unter
+[KI & Modelle](../wrapper/WORKERS.md#ki--modelle-und-hintergrundaktualisierung--version-2).
+Vanilla-Releases verwenden weiterhin die Freigabe und den Operator dieses Dokuments.

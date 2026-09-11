@@ -142,5 +142,9 @@
   "public/vanilla-wordmark.svg": {
     "sha256": "f455938b3ef2355a441b37af2c1cdeb413e8bf3d205757a16769fe5c0a1ea6b9",
     "reason": "Original hand-drawn Vanilla vector lettering approved as the product wordmark; round strokes and antenna dot, no font dependency or external artwork. Uses currentColor."
+  },
+  "ui/assets/github.svg": {
+    "sha256": "7421820090b50ac79d7c2bf7c951a433d7098a8a9c474809207bdd45f62d9d46",
+    "reason": "Original GitHub mark from primer/octicons; unchanged geometry. See ui/assets/sources.json."
   }
 }

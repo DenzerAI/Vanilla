@@ -119,3 +119,20 @@ def test_disabled_and_environment_isolation(tmp_path, monkeypatch):
     assert not set(environment()) & {"AGENT_INTERNAL_TOKEN", "GIT_INDEX_FILE", "UWE_WORKSPACE"}
     assert SourceWork(tmp_path).tick() == {"enabled": False, "entries": []}
     assert not (tmp_path / "source-work").exists()
+
+
+def test_independent_runtime_holds_cannot_release_each_other():
+    from core.runtime import Runtime
+    runtime = Runtime.__new__(Runtime)
+    runtime._frozen = False
+    runtime.restore_hold = True
+    runtime.update_hold = True
+    runtime.update_hold = False
+    runtime.frozen = False
+    assert runtime.frozen
+    runtime.update_hold = True
+    runtime.restore_hold = False
+    runtime.frozen = False
+    assert runtime.frozen
+    runtime.update_hold = False
+    assert not runtime.frozen

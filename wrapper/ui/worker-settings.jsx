@@ -1,3 +1,4 @@
+import {AIMaintenanceSettings} from "./ai-maintenance.tsx";
 import {Skeleton} from './skeleton.tsx';
 import React, { useEffect, useState } from "react";
 import { SettingRow } from "./settings-row.jsx";
@@ -39,7 +40,7 @@ export function WorkerSettings({ api, onChange, onConnections }) {
       } />
     </div>
     {data.settings.defaultWorker === "auto" && <p className="worker-routing" role="status">{(data.routingOrder || choices.map(w => w.id)).map(workerName).join(" → ") || "Noch kein Worker eingerichtet"}{choices.length === 1 ? " · Weitere Worker zuerst verbinden" : " · Wechsel nur vor Aufgabenbeginn"}</p>}
-    <h3>KI-Worker</h3>
+    <h3>Deine KI-Programme</h3>
     <div className="settings-group">
       {data.workers.map(w => <React.Fragment key={w.id}>
         <SettingRow icon={<BrandIcon name={w.id} />} title={w.name} description={w.status} action={<div className="worker-actions">
@@ -58,6 +59,7 @@ export function WorkerSettings({ api, onChange, onConnections }) {
         </div>}
       </React.Fragment>)}
     </div>
+    <AIMaintenanceSettings api={api}/>
     <h3>Feste Abläufe</h3>
     <div className="settings-group"><SettingRow icon={<BrandIcon name="n8n" />} title="n8n" action={<button onClick={onConnections}>Verbindungen öffnen</button>} /></div>
   </div>;

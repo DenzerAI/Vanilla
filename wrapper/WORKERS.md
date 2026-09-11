@@ -271,3 +271,77 @@ Der Workerstart bleibt an den bestehenden Turn-Lock gebunden. Die neue
 Browser-Outbox und ältere gespeicherte Nachrichten verwenden denselben
 Workeranschluss; unklare Annahmen werden nicht blind wiederholt.
 Thread-Zusammenfassungen für den Browser kürzen keinen nativen Kontext.
+
+## KI & Modelle und Hintergrundaktualisierung · Version 2
+
+Der Einstellungsname lautet KI & Modelle. Gemini CLI (`gemini --acp`) und
+Kimi Code CLI (`kimi acp`) verwenden den bestehenden ACP-Anschluss. Neue IDs
+werden hinten angefügt, damit die automatische Reihenfolge bestehender Anschlüsse
+unverändert bleibt. Installation und Anmeldung folgen den verlinkten offiziellen
+Anbieterseiten im Katalog. Es werden keine neuen Konten automatisch verbunden.
+
+`system/ai-catalog.mjs` führt die öffentlichen Anbieter und Programmquellen.
+`wrapper/ai-maintenance.mjs` ist der langlebige, serialisierte Prüfer. Der vorhandene
+Core-Wartungstakt stößt `/api/ai-maintenance/tick` an; kein Benutzerjob, kein
+zusätzlicher Scheduler und keine Browserabhängigkeit. Prüfung beim ersten Takt,
+danach alle sechs Stunden; bei Fehlern nach einer Stunde, bei wartender Aktivierung
+nach einer Minute. Jetzt prüfen benutzt denselben Prüfer und bündelt Doppelklicks.
+
+Programmversionen kommen aus dem offiziellen npm-Paket, PyPI oder GitHub Release.
+Nur stabile numerische Versionen und passende Paketidentitäten werden akzeptiert.
+ETag und Fristen begrenzen Abfragen. Ein Ausfall erhält Version und Datum der
+letzten erfolgreichen Quellenprüfung. Models.dev liefert einen ausdrücklich
+als öffentlichen, gemeinschaftlich gepflegten Katalog beschrifteten Modellüberblick
+für OpenAI, Anthropic, Google, Moonshot, DeepSeek und Alibaba. Er ist kein Nachweis
+für Kontozugang, Verfügbarkeit im Worker oder eine lokale Installation. Aus dem
+Katalog werden ausschließlich begrenzte Namen, IDs, Datumswerte und der Hinweis
+auf offene Gewichte übernommen, niemals Befehle, Preisversprechen oder Modellwahl.
+Die tatsächlich gemeldete Modellauswahl stammt weiterhin vom verbundenen Worker.
+
+Automatische Programmupdates sind abschaltbar und für bereits installierte Codex-
+und Gemini-CLIs implementiert. Ein ausdrücklich gesetzter Programmpfad wird nicht
+übernommen. Neue Anbieter werden nicht automatisch installiert. Native Apps,
+Python-Programme und andere Adapter zeigen ihre Grenze und den Anbieterlink.
+Downloads verwenden festgelegte Pakete und Registry, exakte Versionen, eigene
+Ordner und ein bereinigtes Prozessumfeld ohne Kontoschlüssel. npm-Lifecycle-Skripte
+sind deaktiviert. Paketmanifest, ausführbare Version und Protokollinitialisierung
+werden vor dem Umschalten geprüft; Vorschauversionen und Downgrades entfallen.
+
+Aktivierung wartet auf freie Chats, Übergaben, Sprachsessions, Kanalaufträge,
+Updateprüfungen, Verbindungen und Worker-RPCs. Während der kurzen Umschaltung
+warten neue Worker-Aufrufe. Der alte Prozess bleibt bis zur bestätigten neuen
+Initialisierung und Speicherung erhalten. Fehler vor dem Umschalten erhalten
+den aktiven Programmpfad. Sitzungen werden beim nächsten Aufruf erneut geladen;
+Modellwahl, Routing, Konten und Gesprächszuordnung bleiben bestehen. Ein erfolgreicher
+Handshake beweist noch keinen erfolgreichen Modellauftrag. Eine inkompatible
+native Datenmigration ist nicht durch eine Binärkopie rückgängig zu machen;
+dieser Ausbau bietet keine pauschale Rückkehrgarantie für Drittanbieterprofile.
+
+### Daten und Rückkehr
+
+`data/control/ai-maintenance.json`, Schema 1, enthält Auswahl, Prüfstände,
+aktiven/vorherigen Programmkandidaten und deduplizierte Ereignisse. Schreiben ist
+atomar, serialisiert und dauerhaft. Unbekanntes Schema stoppt; eine unterbrochene
+Installation wird als Fehler wiederaufgenommen, niemals als Erfolg. Downloads
+liegen ausschließlich unter `data/control/ai-programs`. Die aktive ausführbare
+Datei wird aus validierten IDs rekonstruiert und gegen die echte Ordnergrenze
+geprüft. Neue Daten werden additiv angelegt; workers.json, Konten und lokale
+Modelldateien werden nicht migriert. Alter Vanilla-Code ignoriert die neuen
+Dateien und verwendet wieder den bisherigen Programmsuchweg. Für eine komplette
+Wiederherstellung müssen diese Ordner sowie die nativen Profile gesichert werden.
+Verwaiste Kandidaten werden nicht während laufender Arbeit gelöscht.
+
+Ereignisse für neue Programme, neu entdeckte Modelle, Erfolg oder Fehler laufen
+über die bestehende Notifications-Tabelle mit `kind=ai-update`. Stabile IDs erhalten
+Lesestatus über Neustarts. Der Startfächer zeigt den neuesten Hinweis pro Anbieter;
+Klick öffnet KI & Modelle. Erfolgreiche Routineprüfungen erzeugen keine Meldung.
+
+Prüfung: `wrapper/test/ai-maintenance.test.mjs`, `wrapper/test/workers.test.mjs`,
+`core/tests/test_ai_notifications.py`, gemeinsame Typ-, Modul- und Designprüfungen.
+Authentifizierte echte Modellaufträge und eine native Profilmigration benötigen
+zusätzlich eine eigene Abnahme je unterstützter Programmversion.
+
+Anmeldung für Gemini oder Kimi: `npm run worker:login -- gemini` beziehungsweise
+`npm run worker:login -- kimi` öffnet die jeweilige interaktive CLI mit dem eigenen
+Vanilla-Profil. Dort den nativen Anmeldedialog verwenden. Der Anmeldeeinstieg
+beachtet auch verwaltete Codex/Gemini-Versionen; keine Hostprofile werden importiert.

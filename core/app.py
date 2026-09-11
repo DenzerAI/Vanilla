@@ -43,6 +43,10 @@ from .routines import Routines, validate_schedule, instant
 from .mail import Mail, routes as mail_routes
 from .mail_workflow import MailWorkflow, routes as mail_workflow_routes
 from .calendar import Calendar, routes as calendar_routes
+from .github import GitHub
+from .contributions import Contributions
+from .product_updates import Updates
+from .update_api import routes as update_routes
 
 
 class NoteInput(BaseModel):
@@ -81,19 +85,26 @@ def create_app(config=None):
     mail = Mail(db, config)
     mail.workflow = MailWorkflow(mail, crm, routines)
     calendar = Calendar(db, config, runtime, mail.project)
+    github = GitHub(db, config)
+    contributions = Contributions(db, config, github)
+    updates = Updates(db, config, runtime, github, contributions)
+    runtime.product_updates = updates
     local_csrf = secrets.token_urlsafe(32)
     login_attempts = {}
 
     @asynccontextmanager
     async def lifespan(app):
-        if not runtime.restore_hold:
+        updates.recover()
+        if not runtime.restore_hold and not runtime.update_hold:
             queue.recover()
-        await asyncio.to_thread(knowledge.scan)
+            await asyncio.to_thread(knowledge.scan)
         await runtime.start()
-        if not runtime.restore_hold:
+        if not runtime.restore_hold and not runtime.update_hold:
             mail.task = asyncio.create_task(mail.loop())
             calendar.task = asyncio.create_task(calendar.loop())
         yield
+        await updates.close()
+        await github.close()
         await calendar.close()
         await mail.close()
         await runtime.close()
@@ -117,6 +128,8 @@ def create_app(config=None):
     app.state.crm = crm
     app.state.mail = mail
     app.state.chat_privacy = privacy
+
+    app.state.github, app.state.product_updates = github, updates
 
     @app.exception_handler(RequestValidationError)
     async def validation_error(request, error):
@@ -158,6 +171,12 @@ def create_app(config=None):
         }
         if origin and origin not in origins:
             return JSONResponse({"error": "Fremder Ursprung."}, status_code=403)
+        if request.url.path == "/internal/update-operator":
+            from .files import read_json
+            hold = read_json(config.data / "updates/maintenance.json", {})
+            if not hold.get("nonce") or not hmac.compare_digest(request.headers.get("x-agent-update", ""), hold["nonce"]):
+                return JSONResponse({"error": "Operatoranschluss geschützt."}, status_code=403)
+            return await call_next(request)
         # Protect adapter callbacks before any public route or static fallback.
         if request.url.path.startswith("/internal/"):
             if not hmac.compare_digest(
@@ -300,6 +319,76 @@ def create_app(config=None):
     app.include_router(mail_routes(mail))
     app.include_router(mail_workflow_routes(mail.workflow))
     app.include_router(calendar_routes(calendar))
+    app.include_router(update_routes(github, updates, contributions))
+
+    @app.post("/internal/update-operator")
+    async def update_operator(request: Request):
+        from .files import read_json
+        from .update_operator import write, matches_source, tree_files, seal_installed
+        from .update_source import Source
+        body = await request.json()
+        hold = read_json(config.data / "updates/maintenance.json", {})
+        if body.get("id") != hold.get("id"):
+            raise ValueError("Operatorauftrag passt nicht zur Betriebspause.")
+        directory = config.data / "updates" / hold["id"]
+        instruction = read_json(directory / "install.json", {})
+        run = db.get("updates/run/" + hold["id"])["value"]
+        if not run or instruction.get("approvalHash") != run.get("approvalHash"):
+            raise ValueError("Updatefreigabe fehlt oder wurde verändert.")
+        action = body.get("action")
+        if action == "quiesce":
+            runtime.update_hold = runtime.frozen = True
+            if await runtime.has_active_work():
+                raise ValueError("Aktive Arbeit verhindert die Umstellung.")
+            for task in [mail.task, calendar.task]:
+                if task:
+                    task.cancel()
+            await asyncio.gather(*[t for t in [mail.task, calendar.task] if t], return_exceptions=True)
+            if Source(config).inventory(db)["hash"] != run["inventory"]["hash"]:
+                raise ValueError("Aufträge oder Konfiguration wurden verändert. Erneute Vorbereitung erforderlich.")
+            if (await asyncio.to_thread(Source(config).read))["hash"] != run["sourceHash"] or await updates.releases.latest() != run["release"]:
+                raise ValueError("Quellstand oder Releasefreigabe wurde verändert. Erneute Vorbereitung erforderlich.")
+            return {"paused": True}
+        async def update_health():
+            adapter = await runtime.request("GET", "/api/updates") if config.start_adapter else {"updateHold": True}
+            files = instruction["before"] if read_json(directory / "operator-state.json", {}).get("phase") in {"restoring", "not-installed", "stopped", "backing-up", "backed-up"} else instruction["after"]
+            valid = matches_source(config.root, files)
+            if files is instruction["after"]:
+                valid = valid and tree_files(config.root / "wrapper/dist") == instruction["build"]
+            with db.lock:
+                valid = valid and db.connection.execute("PRAGMA integrity_check").fetchone()[0] == "ok"
+            if read_json(directory / "decision.json", {}).get("phase") == "decided":
+                return {"ready": bool(valid), "held": runtime.update_hold}
+            valid = valid and Source(config).inventory(db)["hash"] == run["inventory"]["hash"]
+            return {"ready": bool(runtime.update_hold and valid and adapter.get("updateHold")), "held": runtime.update_hold}
+        if action == "health":
+            return await update_health()
+        if action in {"commit", "restore"}:
+            state = "installed" if action == "commit" else "restored"
+            decision = read_json(directory / "decision.json", {})
+            if decision and decision.get("action") != action:
+                raise ValueError("Eine bereits begonnene Betriebsentscheidung darf nicht gewechselt werden.")
+            if not (await update_health())["ready"]:
+                raise ValueError("Betriebsprüfung noch nicht bestanden. Schreibpause bleibt erhalten.")
+            # A durable commit decision forbids rollback once new work can resume.
+            write(directory / "decision.json", {"id": run["id"], "action": action, "phase": "decided"})
+            if action == "commit":
+                await asyncio.to_thread(seal_installed, config.root, config.data, instruction)
+            if config.start_adapter:
+                await runtime.request("POST", "/api/system/update-hold", json={"hold": False, "channels": instruction.get("channels", [])})
+            runtime.update_hold = runtime.frozen = False
+            if mail.task is None or mail.task.done():
+                mail.task = asyncio.create_task(mail.loop())
+            if calendar.task is None or calendar.task.done():
+                calendar.task = asyncio.create_task(calendar.loop())
+            updates.journal(run, state=state, phase="Aktualisiert" if action == "commit" else "Wiederhergestellt", error="")
+            if action == "commit":
+                updates.save(installed={"version": instruction["version"], "commit": instruction["candidate"]["commit"], "at": time()})
+            write(directory / "decision.json", {"id": run["id"], "action": action, "phase": "completed"})
+            (config.data / "updates/maintenance.json").unlink(missing_ok=True)
+            updates.notice(state + "-" + run["id"], "Aktualisiert" if action == "commit" else "Wiederhergestellt", "Die Installation ist wieder verfügbar.", subject=run["id"])
+            return {"ok": True, "state": state}
+        raise ValueError("Unbekannte Operatoraktion.")
     app.include_router(module_routes(Modules(config), runtime, mail))
 
     @app.get("/api/auth/session")
@@ -625,6 +714,9 @@ def create_app(config=None):
                 "operations": True,
                 "routines": True,
                 "jobConfiguration": True,
+
+                "github": True,
+                "productUpdates": True,
             }
             return JSONResponse(payload)
         forwarded = {

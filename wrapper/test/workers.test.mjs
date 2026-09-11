@@ -27,7 +27,7 @@ class Adapter extends EventEmitter {
 }
 test("catalog separates all requested workers and discovers configured executables without shell", async t => {
   const {dir} = await fixture(t);
-  assert.deepEqual(workerCatalog.map(w => w.id), ["codex", "hermes", "openclaw", "claw-code"]);
+  assert.deepEqual(workerCatalog.map(w => w.id), ["codex", "hermes", "openclaw", "claw-code", "gemini", "kimi"]);
   const executable = path.join(dir, "worker with spaces"); await writeFile(executable, "#!/bin/sh\nexit 0", { mode: 0o700 });
   assert.equal(await findWorkerCommand(workerCatalog[1], { UWE_HERMES_BINARY: executable }), executable);
   assert.equal(await findWorkerCommand(workerCatalog[1], { UWE_HERMES_BINARY: "/missing; echo bad" }), null);
@@ -222,6 +222,9 @@ test("actual HTTP server routes ACP chats and jobs, protects mutations and survi
     const result=await r.json();assert.equal(r.status,200,result.error);return result;
   }
   await start();
+  assert.equal((await call('/ai-maintenance')).automatic,true);
+  assert.equal((await fetch(base+'/ai-maintenance/settings',{method:'POST',body:'{}'})).status,403);
+  assert.equal((await call('/ai-maintenance/settings',{automatic:false})).automatic,false);
   assert.equal((await fetch(base+'/workers/preferences',{method:'POST',body:'{}'})).status,403);
   assert.equal((await fetch(base+'/worker-session',{method:'POST',body:'{}'})).status,403);
   await call('/workers/connect',{id:'codex'});
@@ -258,6 +261,7 @@ test("actual HTTP server routes ACP chats and jobs, protects mutations and survi
   for(let i=0;i<100;i++){const jobs=await call('/jobs');if(jobs[0].lastRun?.status==='completed')break;await new Promise(r=>setTimeout(r,20));}
   const jobs=await call('/jobs'); assert.equal(jobs[0].lastRun.workerId,'hermes');
   child.kill();await exited;await start();
+  assert.equal((await call('/ai-maintenance')).automatic,false);
   assert.equal((await call('/workers')).settings.defaultWorker,'hermes');
   await call('/turn',{id:created.thread.id,text:'Nach Neustart fortsetzen',mode:'default'});
   const after=await finished(created.thread.id);assert.equal(after.thread.turns.length,3);
@@ -341,4 +345,23 @@ test("picker activation reuses a connected worker without restart or preference 
   const result=await routes.get("/api/workers/activate")({id:"codex"});
   assert.equal(stops,0); assert.equal(result.models[0].model,"gpt-6-astra");
   assert.deepEqual(workers.settings,settings);
+});
+
+test('program replacement waits for active work, rejects failed handshake and preserves routing',async t=>{
+ const {store}=await fixture(t),primary=new Adapter(),candidate=new Adapter();
+ const workers=new Workers({store,root:store.root,codex:primary,resolveCommand:async()=>process.execPath,makeACP:()=>candidate});await workers.init();
+ const old=new Adapter();workers.attach('gemini',old);old.connected=true;
+ let commits=0;const commit=async()=>{commits++;};
+ assert.equal(await workers.replaceProgram('gemini','/candidate',commit,()=>false),false);assert.equal(commits,0);
+ workers.inFlight=1;assert.equal(await workers.replaceProgram('gemini','/candidate',commit,()=>true),false);workers.inFlight=0;
+ candidate.fail=true;await assert.rejects(workers.replaceProgram('gemini','/candidate',commit,()=>true));assert.equal(workers.adapters.get('gemini'),old);assert.equal(old.connected,true);assert.equal(commits,0);
+ candidate.fail=false;const settings=structuredClone(workers.settings);assert.equal(await workers.replaceProgram('gemini','/candidate',commit,()=>true),true);assert.equal(old.connected,false);assert.equal(workers.adapters.get('gemini'),candidate);assert.deepEqual(workers.settings,settings);assert.equal(commits,1);
+});
+
+test('work arriving during candidate handshake prevents switching and failed persistence preserves old program',async t=>{
+ const {store}=await fixture(t),candidate=new Adapter(),old=new Adapter();old.connected=true;
+ const workers=new Workers({store,root:store.root,codex:new Adapter(),makeACP:()=>candidate});await workers.init();workers.attach('gemini',old);
+ let idle=true,committed=false;candidate.start=async()=>{candidate.connected=true;idle=false;};
+ assert.equal(await workers.replaceProgram('gemini','/candidate',async()=>{committed=true;},()=>idle),false);assert.equal(committed,false);assert.equal(workers.adapters.get('gemini'),old);
+ idle=true;candidate.start=async()=>{candidate.connected=true;};await assert.rejects(workers.replaceProgram('gemini','/candidate',async()=>{throw Error('disk');},()=>idle));assert.equal(workers.adapters.get('gemini'),old);assert.equal(old.connected,true);assert.equal(candidate.connected,false);
 });

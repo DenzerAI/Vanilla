@@ -1290,3 +1290,15 @@ sichtbarem hinterem Haken. Keine zwei sich kreuzenden vollständigen Icons.
 `space-12` Einzug an ihrer rechten Kante. Fehler behalten die bisherigen
 zugänglichen Bedienflächen. Unser Design zeigt dieselben Bausteine.
 Statusbedeutung und Speicherung bleiben unverändert; keine Datenmigration.
+
+## Produktupdates und GitHub
+
+Einstellungen → Updates verwendet PageHeading, vorhandene tabs, SettingRow, SettingsNavigationRow, Settings-Skeleton und Modal. Version und Beiträge zeigen tatsächliche Kernzustände; kein Fortschrittsprozent ohne Messung. GitHub steht mit Originalzeichen unter Verbindungen. NotificationRow öffnet je nach Betreff den Updatebereich oder die vorhandene Auftragsansicht. Technische Details bleiben aufgeklappt; bestehende Themes, Touchziele und Fokusregeln gelten.
+
+## KI-Programme aktuell halten
+
+KI & Modelle erweitert bestehende SettingRow-Gruppen, apple-switch, Suchfeld,
+Settings-Skeleton und native Details. Neue Versionen und Wartezustände verwenden
+Text statt eigener Statusgrafiken. Der öffentliche Modellkatalog bleibt sichtbar
+als fremde Informationsquelle gekennzeichnet. Der vorhandene Startfächer und
+NotificationRow öffnen die KI-Einstellungen. Keine neue Palette oder Kartenform.

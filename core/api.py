@@ -160,7 +160,7 @@ def routes(operations, queue):
     async def restart(record=None, resume=False):
         runtime = o.runtime
         async with runtime.maintenance_lock:
-            previous = runtime.frozen
+            previous = getattr(runtime, "_frozen", runtime.frozen)
             runtime.frozen = True
             pending = o.config.data / 'restore-pending.json'
             marker = o.config.data / 'restart.json'

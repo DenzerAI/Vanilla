@@ -478,8 +478,8 @@
     },
     {
       "id": "workers",
-      "title": "Codex CLI, Claude Code, Hermes und OpenClaw",
-      "purpose": "Codex CLI, Claude Code, Hermes und OpenClaw über die bestehenden Anschlüsse bedienen und erweitern.",
+      "title": "KI & Modelle",
+      "purpose": "KI-Programme verbinden, Modelle entdecken und installierte Programme im Hintergrund aktuell halten.",
       "stage": "implemented",
       "contract": "wrapper/WORKERS.md",
       "setup": "docs/CUSTOMER-SETUP.md#workers",
@@ -503,7 +503,10 @@
         "wrapper/worker-questions.mjs",
         "wrapper/usage.mjs",
         "wrapper/claude-usage.mjs",
-        "wrapper/ui/usage.tsx"
+        "wrapper/ui/usage.tsx",
+        "system/ai-catalog.mjs",
+        "wrapper/ai-maintenance.mjs",
+        "wrapper/ui/ai-maintenance.tsx"
       ],
       "entrypoints": [
         "GET /api/local-workers",
@@ -520,7 +523,11 @@
         "POST /api/workers/connect",
         "POST /api/workers/disconnect",
         "POST /api/workers/preferences",
-        "GET /api/usage/allowances"
+        "GET /api/usage/allowances",
+        "GET /api/ai-maintenance",
+        "POST /api/ai-maintenance/settings",
+        "POST /api/ai-maintenance/check",
+        "POST /api/ai-maintenance/tick"
       ],
       "dependencies": [
         "platform"
@@ -529,13 +536,15 @@
         "wrapper/test/workers.test.mjs",
         "wrapper/test/worker-questions.test.mjs",
         "wrapper/test/worker-questions-http.test.mjs",
-        "wrapper/test/usage.test.mjs"
+        "wrapper/test/usage.test.mjs",
+        "wrapper/test/ai-maintenance.test.mjs",
+        "core/tests/test_ai_notifications.py"
       ],
       "status": {
         "endpoint": "GET /api/workers",
         "meaning": "Programmfund ist kein Login. Nur eigene Profile und bestätigte Sitzung verwenden."
       },
-      "limits": "Programmfund ist kein Login. Nur eigene Profile und bestätigte Sitzung verwenden.",
+      "limits": "Programmfund ist kein Login. Nur eigene Profile und bestätigte Sitzung verwenden. Automatische Installation nur für installierte Codex/Gemini ohne festen Programmpfad. Modellkatalog ist kein Zugangsnachweis.",
       "version": 2,
       "migration": "Bestehende eigene Anbieterprofile und natives Memory unverändert erhalten. Ergänzende nicht vertrauliche Fragequittungen verwenden tools.json, Verbrauchswerte additive Turn-/Chatfelder. Vor Rückkehr offene native Requests beenden. Kontingentabfrage nutzt denselben eigenen Profilweg, übernimmt keine Host-Anmeldungen und startet keine Modellantwort."
     },
@@ -592,7 +601,7 @@
         "meaning": "Ausführung über Scheduler; Abschluss und Zustellbeleg prüfen."
       },
       "limits": "Ausführung über Scheduler; Abschluss und Zustellbeleg prüfen.",
-      "version": 4,
+      "version": 5,
       "migration": "Bestehende zentrale Jobordner, Kennungen und Laufbelege erhalten. Optionale Modell-/Effortfelder ergänzen das Manifest; vorhandene Zeitwerte werden weiterhin eindeutig eingelesen. Backup-Zeitplan erst nach erfolgreicher Prüfung des vorhandenen Archivs aktivieren. Keine Verschiebung in Bereichsordner. category ist optional und rein organisatorisch; fehlend oder leer heißt Allgemein. Alte Leser ignorieren die Zusatzangabe. Workspace, Zeitplan und Ablage bleiben unverändert. Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Nach Restore gilt recovery/not-before als Zeitplangrenze. Normale Neustarts erhalten bestehende Wiederholungsregeln. Keine Tabellen entfernt."
     },
     {
@@ -1010,7 +1019,7 @@
         "meaning": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen."
       },
       "limits": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen.",
-      "version": 4,
+      "version": 5,
       "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der bestehende Projektindex erhält abgeleitete Workspace-Metadaten. Jobkategorien werden aus dem optionalen Manifestfeld gelesen; keine Verschiebung von Dateien. Tresorformat 2: OS-geschützter installationsbezogener Schlüssel. Vor Quellaktivierung alten Bestand offline mit core.vault_migrate prüfen und übernehmen. Rückweg benötigt vollständige Datenwiederherstellung; Details docs/VAULT.md. Bestehende Ciphertexte und übrige Daten bleiben erhalten. Lokales MiniLM wird anhand der festgelegten Dateiprüfsummen geprüft und repariert; source.json allein bestätigt keine Bereitschaft. Bestehende Modellordner bleiben erhalten. Nach Restore gilt recovery/not-before als Zeitplangrenze. Normale Neustarts erhalten bestehende Wiederholungsregeln. Keine Tabellen entfernt."
     },
     {
@@ -1233,6 +1242,141 @@
       },
       "limits": "Freiwillige Spezialisierungen im gemeinsamen Arbeitsbereich, keine Benutzer-/Mandantensandbox. Keine Hierarchie oder Hintergrundaufträge. Native Anbieterfähigkeiten und Memory bleiben erhalten.",
       "migration": "Opt-in YAML-Kopf, unveränderte IDs/Pfade und bestehender Markdown-Text. Neue Ordner nur unter projects/. Unbekannte oder beschädigte Steckbriefe werden nicht überschrieben. Alte Leser behalten Dateien, erzwingen aber keine neuen Revisions-/Einrichtungsregeln. Rückkehr erfordert beendete aktive Einrichtung und Sicherung von Beschreibungen, State und Chats."
+    },
+    {
+      "id": "github",
+      "title": "GitHub-Verbindung",
+      "purpose": "GitHub-Verbindung über bestehende Einstellungen, Aufträge und Verbindungen bedienen.",
+      "stage": "implemented",
+      "contract": "docs/GITHUB.md",
+      "setup": "docs/GITHUB.md",
+      "data": "Lokale Zustände im vorhandenen SQLite-records-Speicher; Kandidaten und Operatorjournal unter data/control/updates. Keine Installationsdaten im Git.",
+      "sources": [
+        "core/github.py",
+        "wrapper/ui/github-connection.tsx"
+      ],
+      "entrypoints": [
+        "GET /api/github/repositories",
+        "GET /api/github/status",
+        "POST /api/github/check",
+        "POST /api/github/configure",
+        "POST /api/github/connect",
+        "POST /api/github/disconnect",
+        "POST /api/github/poll",
+        "POST /api/github/repository"
+      ],
+      "dependencies": [
+        "platform",
+        "connections"
+      ],
+      "verification": [
+        "core/tests/test_product_updates.py"
+      ],
+      "status": {
+        "endpoint": "GET /api/github/status",
+        "meaning": "Eigene GitHub App mit Device Flow und installationsgebundenem Konto nötig. App-Installation, Repositoryrechte und Betreuerzugriff separat prüfen."
+      },
+      "limits": "Eigene GitHub App mit Device Flow und installationsgebundenem Konto nötig. App-Installation, Repositoryrechte und Betreuerzugriff separat prüfen.",
+      "version": 1,
+      "migration": "Additive lokale records; Benachrichtigungen erhalten optionale kind/subject_id-Felder. Bestehende Jobs, Firmenbasis, Verbindungen und Lesestatus erhalten. Keine automatische Migration unbekannter Datenformate."
+    },
+    {
+      "id": "updates",
+      "title": "Vanilla-Updates",
+      "purpose": "Vanilla-Updates über bestehende Einstellungen, Aufträge und Verbindungen bedienen.",
+      "stage": "implemented",
+      "contract": "docs/UPDATES.md",
+      "setup": "docs/UPDATES.md",
+      "data": "Lokale Zustände im vorhandenen SQLite-records-Speicher; Kandidaten und Operatorjournal unter data/control/updates. Keine Installationsdaten im Git.",
+      "sources": [
+        "core/releases.py",
+        "core/product_updates.py",
+        "core/update_api.py",
+        "core/update_source.py",
+        "core/update_checks.py",
+        "core/update_operator.py",
+        "core/update_publish.py",
+        "scripts/setup-updates.py",
+        "wrapper/update-review.mjs",
+        "wrapper/ui/product-updates.tsx",
+        "core/update_sandbox.py",
+        "scripts/setup-update-sandbox.py",
+        "scripts/verify-update-sandbox.py"
+      ],
+      "entrypoints": [
+        "GET /api/system/update-review/models",
+        "GET /api/system/updates",
+        "POST /api/system/update-hold",
+        "POST /api/system/update-review/cancel",
+        "POST /api/system/update-review/run",
+        "POST /api/system/updates/cancel",
+        "POST /api/system/updates/check",
+        "POST /api/system/updates/install",
+        "POST /api/system/updates/prepare",
+        "POST /api/system/updates/publish",
+        "POST /api/system/updates/settings",
+        "POST /internal/update-operator"
+      ],
+      "dependencies": [
+        "platform",
+        "operations",
+        "jobs",
+        "workers",
+        "github",
+        "contributions"
+      ],
+      "verification": [
+        "core/tests/test_product_updates.py",
+        "core/tests/test_update_operator.py",
+        "core/tests/test_update_source.py",
+        "wrapper/test/update-review.test.mjs",
+        "core/tests/test_update_sandbox.py"
+      ],
+      "status": {
+        "endpoint": "GET /api/system/updates",
+        "meaning": "Installation v1: separat eingerichteter macOS-Operator, Standarddatenablagen, unveränderte Laufzeitabhängigkeiten, kompatible Datenformate und vollständige Prüfungen. Neue Versionen erfordern ein freigegebenes Manifest; keine Aktivierung durch main-Push."
+      },
+      "limits": "Installation v1: separat eingerichteter macOS-Operator, Standarddatenablagen, unveränderte Laufzeitabhängigkeiten, kompatible Datenformate und vollständige Prüfungen. Neue Versionen erfordern ein freigegebenes Manifest; keine Aktivierung durch main-Push.",
+      "version": 1,
+      "migration": "Additive lokale records; Benachrichtigungen erhalten optionale kind/subject_id-Felder. Bestehende Jobs, Firmenbasis, Verbindungen und Lesestatus erhalten. Keine automatische Migration unbekannter Datenformate."
+    },
+    {
+      "id": "contributions",
+      "title": "Privater Codeaustausch",
+      "purpose": "Privater Codeaustausch über bestehende Einstellungen, Aufträge und Verbindungen bedienen.",
+      "stage": "implemented",
+      "contract": "docs/UPDATES.md",
+      "setup": "docs/UPDATES.md",
+      "data": "Lokale Zustände im vorhandenen SQLite-records-Speicher; Kandidaten und Operatorjournal unter data/control/updates. Keine Installationsdaten im Git.",
+      "sources": [
+        "core/contributions.py"
+      ],
+      "entrypoints": [
+        "GET /api/system/contributions",
+        "GET /api/system/contributions/preview",
+        "POST /api/system/contributions/adopt",
+        "POST /api/system/contributions/check",
+        "POST /api/system/contributions/decide",
+        "POST /api/system/contributions/review",
+        "POST /api/system/contributions/settings",
+        "POST /api/system/contributions/share"
+      ],
+      "dependencies": [
+        "platform",
+        "github"
+      ],
+      "verification": [
+        "core/tests/test_product_updates.py",
+        "core/tests/test_update_source.py",
+        "core/tests/test_contributions.py"
+      ],
+      "status": {
+        "endpoint": "GET /api/system/contributions",
+        "meaning": "Nur vereinbarter neutraler Quellcode mit bestätigtem Betreuerzugriff. Übernehmen erzeugt eine getrennte Entwicklungskopie; keine Live-Installation oder automatische Veröffentlichung."
+      },
+      "limits": "Nur vereinbarter neutraler Quellcode mit bestätigtem Betreuerzugriff. Übernehmen erzeugt eine getrennte Entwicklungskopie; keine Live-Installation oder automatische Veröffentlichung.",
+      "version": 1,
+      "migration": "Additive lokale records; Benachrichtigungen erhalten optionale kind/subject_id-Felder. Bestehende Jobs, Firmenbasis, Verbindungen und Lesestatus erhalten. Keine automatische Migration unbekannter Datenformate."
     }
   ]
 }

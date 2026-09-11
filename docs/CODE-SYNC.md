@@ -203,3 +203,7 @@ sonstige Inhaltsmuster und abweichende Vorlagen bleiben prüfpflichtig.
 
 Das neutrale GitHub-Markenasset für den bestehenden Update-Entwicklungsstand ist
 als lokales SVG mit Einzelhash geprüft; es enthält keine externen Ressourcen.
+
+## Privater Produktaustausch
+
+Der App-Anschluss exportiert ausschließlich einen mit diesem Schutzmodul geprüften neutralen Quellbaum. Sein GitHub-Snapshot besitzt keine Eltern und verweist als Metadatum auf die gemeinsame öffentliche Basis. Der laufende Index, origin und private Historie bleiben lokal erhalten. Eine Übernahme in die Ursprungsentwicklung verwendet diese Basis für einen Dreiwegvergleich. Neue fremde Assets benötigen weiterhin eine eigenständige Quellenprüfung; Datenschutzmuster sind keine semantische Garantie für beliebige oder kodierte vertrauliche Inhalte.

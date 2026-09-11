@@ -11,10 +11,10 @@ Verbindungen und Skills stehen als eigene Einträge nach Dein Agent in derselben
 
 ## Elemente
 
-Beschlossener Ausbau: **Updates** erhält einen eigenen Einstellungsbereich direkt
+**Updates** hat einen eigenen Einstellungsbereich direkt
 nach System, mit den Reitern **Version** und **Beiträge**. Der Aufbau führt
 [updates.md](updates.md), der technische Ablauf ../../docs/UPDATES.md. Der Bereich
-ist noch nicht implementiert; neue GitHub-Zugänge bleiben unter Verbindungen.
+ist an den Kern angeschlossen; GitHub-Zugänge bleiben unter Verbindungen.
 
 Auswahl über vorhandene Selects, Ein/Aus über `apple-switch`, Aktion über den gemeinsamen kompakten, leicht gerundeten Aktionsbutton, auch in verschachtelten Aktionsgruppen. Native Selects verwenden dieselbe Form und den gemeinsamen Chevron. Iconaktionen sind kreisrund. Auf schmalen Ansichten dürfen Aktionsgruppen umbrechen. Gruppentrennung, Schriften und Flächen aus dem Designsystem. Primäre Funktion und Zustand auf einen Blick. Technische Installationsbefehle gehören in Dokumentation, nicht in den normalen Einstellungsfluss. Nicht verfügbare Funktionen zeigen einen ehrlichen Status.
 
@@ -362,3 +362,25 @@ prüfen mit einer ausdrücklich beschrifteten Fortsetzen-Aktion. Der vorhandene
 Übernahmedialog erklärt die anschließende Betriebspause. System nennt Adapter-Wiederanlauf und Kerndienst getrennt;
 ein veralteter Heartbeat wird niemals als In Ordnung angezeigt. Bestehende
 Tokens, Formulare, Busy- und Fehlerrückmeldungen gelten unverändert.
+
+## KI & Modelle · Erweiterung
+
+Der bisherige Navigationseintrag Worker heißt KI & Modelle; seine interne ID
+`engines` bleibt erhalten. Standard und Vertretung stehen zuerst, danach die
+vorhandenen Zeilen der KI-Programme. Aktuell bleiben ergänzt gemeinsame SettingRow-
+Zeilen für Prüfdatum/Jetzt prüfen und automatische Updates mit apple-switch.
+KI entdecken zeigt einen suchbaren Anbieterüberblick samt benanntem öffentlichem
+Modellkatalog. Neueste Katalognamen sind sichtbar; Programmversionen, Quellenstand,
+Verbindungsgrenzen und Modellauswahl stehen unter Versionen & Details. Anbieterlinks
+öffnen Dokumentation, keine Kontoanlage. Zugänge bleiben bei den vorhandenen
+Verbindungs-/Worker-Anmeldewegen. Feste Abläufe und lokale Modelle bleiben erhalten.
+
+Laden verwendet Settings-Skeleton, Fehler erhalten vorhandene Daten. Updates zeigen
+Prüfung, Download, Warten auf eine Arbeitspause und Ergebnis als Text. Unbekannte
+Version ist nicht Aktuell. Keine fiktiven Prozentwerte. Die Produktion wird in
+Unser Design mit einem neutralen Beispielzustand gezeigt. Technischer Vertrag:
+../WORKERS.md#ki--modelle-und-hintergrundaktualisierung--version-2.
+
+Gemini und Kimi verwenden bis zur Aufnahme eines geprüften Original-Markenassets
+bewusst den bestehenden neutralen Anschluss-Fallback von BrandIcon. Es werden
+keine nachgezeichneten oder fremden Markenbilder eingesetzt.

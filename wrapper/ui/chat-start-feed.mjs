@@ -21,7 +21,7 @@ export function chatStartFeed({requests=[],notifications=[],chats=[],projectId='
   const jobs=new Set();
   const receipts=sorted.filter(n=>{
     if(n.id.startsWith('attention-') && finished.has(n.id.slice(10)))return false;
-    const key=n.status==='completed'?(n.job_id || n.id):n.id;
+    const key=n.kind==='ai-update'?'ai:'+n.subject_id:n.status==='completed'?(n.job_id || n.id):n.id;
     if(jobs.has(key))return false;jobs.add(key);
     return !n.read_at;
   }).sort((a,b)=>Number(a.status==='completed')-Number(b.status==='completed'));

@@ -10,7 +10,7 @@ from time import time
 
 import httpx
 
-from .files import atomic_write
+from .files import atomic_write, read_json
 from .storage import safe_path
 from .streaming import StreamHub
 from .notifications import Notifications
@@ -35,14 +35,26 @@ class Runtime:
         self.stopping = False
         self.shutdown = None
         self.restore_hold = (config.data / "restore-hold.json").exists()
-        self.frozen = self.restore_hold
         self.active_writes = 0
+        self.update_hold = bool(read_json(config.data / "updates/maintenance.json", {}))
+        self.frozen = False
+        self.product_updates = None
+        self.ai_receipts = set()
+        self.ai_error = False
         self.maintenance_lock = asyncio.Lock()
         self.client = httpx.AsyncClient(timeout=httpx.Timeout(60, connect=3), trust_env=False)
         self.stream = StreamHub(self, queue.db)
         self.notifications = Notifications(queue.db)
         if operations:
             operations.runtime = self
+
+    @property
+    def frozen(self):
+        return bool(getattr(self, '_frozen', False) or getattr(self, 'restore_hold', False) or getattr(self, 'update_hold', False))
+
+    @frozen.setter
+    def frozen(self, value):
+        self._frozen = bool(value)
 
     @property
     def headers(self):
@@ -67,7 +79,7 @@ class Runtime:
         return bool(self.adapter_active or self.queue.db.rows("SELECT id FROM executions WHERE status IN ('dispatching','running')"))
 
     async def spawn_adapter(self):
-        env = {**os.environ, "UWE_PORT": str(self.config.adapter_port), "UWE_WORKSPACE": str(self.config.workspace), "UWE_DATA_ROOT": str(self.config.data), "AGENT_CORE_URL": f"http://127.0.0.1:{self.config.port}", "AGENT_INTERNAL_TOKEN": self.config.adapter_token, "AGENT_PYTHON": sys.executable, "VANILLA_RECOVERY_HOLD": "1" if self.restore_hold else "0"}
+        env = {**os.environ, "VANILLA_UPDATE_HOLD": "1" if self.update_hold else "0", "UWE_PORT": str(self.config.adapter_port), "UWE_WORKSPACE": str(self.config.workspace), "UWE_DATA_ROOT": str(self.config.data), "AGENT_CORE_URL": f"http://127.0.0.1:{self.config.port}", "AGENT_INTERNAL_TOKEN": self.config.adapter_token, "AGENT_PYTHON": sys.executable, "VANILLA_RECOVERY_HOLD": "1" if self.restore_hold else "0"}
         self.process = await asyncio.create_subprocess_exec("node", str(self.config.root / "wrapper/server.mjs"), cwd=self.config.root, env=env)
         self.last_adapter_check = 0
 
@@ -148,6 +160,9 @@ class Runtime:
                 handler = job.get("python", {}).get("handler", "script")
                 if handler == "script":
                     result = await self.execute_script(job, run)
+                elif handler == "update-check" and self.product_updates:
+                    await self.product_updates.check()
+                    result = {"text": "Prüfstand unter Einstellungen → Updates verfügbar."}
                 else:
                     result = await self.run_maintenance(handler, run)
                     if result is None: return
@@ -170,7 +185,7 @@ class Runtime:
                 pass
     async def run_maintenance(self, handler, run):
         async with self.maintenance_lock:
-            previous = self.frozen
+            previous = self._frozen
             held = False
             try:
                 if handler == 'backup':
@@ -199,7 +214,7 @@ class Runtime:
             finally:
                 if held:
                     await self.request('POST','/api/system/backup-hold',json={'hold':False})
-                self.frozen = previous or self.restore_hold
+                self.frozen = previous
 
     async def stop_process(self, process):
         if process.returncode is not None:
@@ -276,6 +291,9 @@ class Runtime:
     async def index_files(self):
         while True:
             try:
+                if self.frozen:
+                    await asyncio.sleep(3)
+                    continue
                 await asyncio.to_thread(self.knowledge.scan)
                 if self.knowledge.embeddings.path:
                     await asyncio.to_thread(self.knowledge.embed)
@@ -308,9 +326,30 @@ class Runtime:
                     self.operations.record('source-work', 'error', {'message': str(error)[:200]})
             await asyncio.sleep(15)
 
+    async def maintain_ai(self):
+        try:
+            ai = await self.request("POST", "/api/ai-maintenance/tick", json={}, timeout=5)
+            for event in ai.get("events", []):
+                if event["id"] not in self.ai_receipts:
+                    self.notifications.system(event["id"], "ai-update", event["subject"], event["title"], event["body"], event["status"])
+                    self.ai_receipts.add(event["id"])
+            self.ai_receipts.intersection_update(event["id"] for event in ai.get("events", []))
+            self.ai_error = False
+        except Exception:
+            if not self.ai_error:
+                self.queue.db.event("ai-maintenance.error", None, {"error": "KI-Hintergrundprüfung momentan nicht erreichbar."})
+            self.ai_error = True
+
     async def maintain(self):
         while True:
             try:
+                if self.frozen:
+                    await asyncio.sleep(3)
+                    continue
+                if self.product_updates and not self.frozen and not self.stopping:
+                    self.product_updates.schedule()
+                if self.config.start_adapter and not self.frozen and not self.stopping:
+                    await self.maintain_ai()
                 if self.operations and not self.frozen:
                     await asyncio.to_thread(self.operations.memory.flush)
                     if self.config.public_origin:

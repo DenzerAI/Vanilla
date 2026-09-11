@@ -91,3 +91,7 @@ Spezialisierungen. AGENTS.md führt den Steckbrief und die Arbeitsweise; die
 Assistentenidentität und die Firmenbasis bleiben gemeinsam. Der bestehende
 Jobpfad erhält unabhängig davon optionale Kategorien. Einrichtung und
 Rückkehrregeln stehen im [Workspace-Vertrag](../wrapper/surfaces/workspaces.md).
+
+## Updates, GitHub und Beiträge
+
+Die Module github, updates und contributions erweitern die vorhandenen Anschlüsse. Der Kern hält Zustände und Freigaben dauerhaft; technische Prüfungen und ein separat eingerichteter Operator sichern die Übernahme. Modulstatus nennt konkrete Einrichtungsgrenzen. Führend: ../docs/UPDATES.md und ../docs/GITHUB.md.

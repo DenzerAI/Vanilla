@@ -412,3 +412,11 @@ den bestehenden restart.json-/execv-Weg in core.__main__ und startet sich selbst
 Benutzeranmeldung voraus. Minutenprüfung und Kerndienst werden getrennt gemeldet;
 ein hängender, noch lebender Prozess wird nicht blind beendet. Ein tatsächlicher
 Host-Neustarttest ist eine separate Betriebsabnahme am Kundengerät.
+
+## Kontrollierte Produktupdates
+
+Ein regulär berechtigter Hostprozess richtet den unabhängigen Updateoperator einmalig mit scripts/setup-updates.py ein. Die Web-App installiert keinen Dienst und startet keine beliebigen Befehle; sie schreibt den geprüften, freigegebenen Auftrag in das lokale Journal. Vor Wechsel pausieren neue Arbeit, Mail, Kalender und aktive Kanäle; der Operator beendet nur den zugeordneten App-Dienst. Wiederanlauf bleibt bis zur Prüfung gesperrt. Erfasste Kanalanschlüsse werden anschließend wieder gestartet. Eigene Aufträge und reservierte Ausführungsslots werden weder neu angelegt noch gelöscht. Laufzeitabhängigkeiten und Datenformate dürfen im automatischen Weg v1 nicht wechseln. Vollständiger Ablauf und Grenzen: UPDATES.md.
+
+Bei gemeinsamer Installation bleiben Updatepause und Wiederherstellungspause
+unabhängig wirksam. Das Ende einer temporären Wartung hebt keinen dieser Gründe
+auf. Während einer Pause bleiben auch Indexierung und Quellübergaben angehalten.

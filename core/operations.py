@@ -33,6 +33,7 @@ class Operations:
             ("backup", "System sichern", values["backup"]["enabled"], {"type": "daily", "time": values["backup"]["time"]}),
             ("cleanup", "Speicher pflegen", True, {"type": "daily", "time": "04:00"}),
             ("index", "Suchindex aktualisieren", False, {"type": "manual"}),
+            ("update-check", "Vanilla-Updates prüfen", True, {"type": "manual"}),
         ]
         descriptions = {
             'memory': 'Verdichtet gespeicherte Gesprächsauszüge lokal, verlinkt die Quellen und schreibt einen Pflegebericht. Originalgespräche bleiben erhalten.',

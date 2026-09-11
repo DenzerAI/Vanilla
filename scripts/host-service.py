@@ -36,6 +36,20 @@ def revision():
     if command('git', '-C', str(ROOT), 'status', '--porcelain'):
         raise ValueError('Commit or discard local source changes before deployment.')
     local = command('git', '-C', str(ROOT), 'rev-parse', 'HEAD')
+    config = Config(root=ROOT)
+    from core.update_operator import read, matches_source, tree_files
+    activation = read(config.data / 'services/host-activation.json', {})
+    update_id = activation.get('updateId', '')
+    if len(update_id) == 32 and all(c in 'abcdef0123456789' for c in update_id):
+        directory = config.data / 'updates' / update_id
+        decision = read(directory / 'decision.json', {})
+        request = read(directory / 'install.json', {})
+        if (decision.get('action') == 'commit' and decision.get('phase') == 'completed'
+                and request.get('candidate', {}).get('commit') == local
+                and activation.get('revision') == local
+                and matches_source(ROOT, request.get('after', {}))
+                and tree_files(ROOT / 'wrapper/dist') == request.get('build')):
+            return local
     remote = command('git', '-C', str(ROOT), 'ls-remote', 'origin', 'refs/heads/main').split()[0]
     if local != remote:
         raise ValueError('Runtime source differs from origin/main.')

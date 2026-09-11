@@ -2,6 +2,8 @@ import {WorkspaceInfo,WorkspaceDefinitionEditor,JobCategoryField,JobCategoryFilt
 import {jobCategoryLabel} from './job-categories.mjs';
 import {PageHeading} from './page-heading';
 import {submitMessage} from "./message-submit.mjs";
+import {ProductUpdates} from "./product-updates";
+import {GitHubConnectionForm} from "./github-connection";
 import {MailConnectionForm} from "./mail-connection";
 
 import {DeferredItem} from './deferred-item.jsx';
@@ -728,6 +730,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     [serverRestartBusy, setServerRestartBusy] = useState(false),
     [chatMenu, setChatMenu] = useState(null),
     [connectionState, setConnectionState] = useState("connecting");
+  const [updatesTab, setUpdatesTab] = useState("version");
   const connectionsActive = view === "settings" && settingsTab === "connections";
   const skillsActive = view === "settings" && settingsTab === "skills";
   function openSettings(section) {
@@ -1971,7 +1974,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     ];
   const settingNav = [
     ["general", SlidersHorizontal, "Allgemein"],
-    ...(boot?.features?.operations ? [["system", Activity, "System"], ["memory", BrainCircuit, "Memory"], ["storage", HardDrive, "Speicher & Sicherung"], ["access", Lock, "Zugang"]] : []),
+    ...(boot?.features?.operations ? [["system", Activity, "System"], ...(boot?.features?.productUpdates ? [["updates", RotateCcw, "Updates"]] : []), ["memory", BrainCircuit, "Memory"], ["storage", HardDrive, "Speicher & Sicherung"], ["access", Lock, "Zugang"]] : []),
     ["appearance", Sun, "Aussehen"],
     ["voice", Mic, "Stimme"],
     ["identity", User, "Dein Agent"],
@@ -1981,7 +1984,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     ["skills", Sparkles, "Skills"],
     ["secrets", KeyRound, "Secrets"],
     ["privacy", ShieldCheck, "Datenschutz"],
-    ["engines", BrainCircuit, "Worker"],
+    ["engines", BrainCircuit, "KI & Modelle"],
     ["usage", Activity, "Nutzung"],
     ["shortcuts", Keyboard, "Tastaturkürzel"],
     ["archive", Archive, "Archivierte Chats"],
@@ -2886,7 +2889,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         ) : (
           <div className={"page settings-page" + (settingsTab === "identity" ? " agent-settings-page" : "")}>
             <PageHeading title={settingsTab === "design" ? "Unser Design" : settingNav.find((s) => s[0] === settingsTab)?.[2]} onShowSidebar={!sidebar ? () => setSidebar(true) : undefined}/>
-            {settingsTab === 'service' ? <ServiceSettings/> : ['system','memory','storage','access'].includes(settingsTab) && boot.features.operations ? <SystemSettings key={settingsTab} api={api} section={settingsTab} chats={chats} onJobs={()=>setView('jobs')} onLibrary={()=>setView('library')} onConnections={()=>openSettings('connections')}/> : settingsTab === "general" ? (
+            {settingsTab === 'updates' && boot.features.productUpdates ? <ProductUpdates api={api} initialTab={updatesTab} onGitHub={()=>setModal({type:'github-connection'})}/> : settingsTab === 'service' ? <ServiceSettings/> : ['system','memory','storage','access'].includes(settingsTab) && boot.features.operations ? <SystemSettings key={settingsTab} api={api} section={settingsTab} chats={chats} onJobs={()=>setView('jobs')} onLibrary={()=>setView('library')} onConnections={()=>openSettings('connections')}/> : settingsTab === "general" ? (
               <>
                 <h3 className="section-heading">Schaltzentrale</h3>
                 <div className="settings-group">
@@ -3488,6 +3491,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       {modal?.type==='crm-connection'&&<Modal title={modal.connection.id?'Verbindung bearbeiten':'Verbindung hinzufügen'} onClose={()=>setModal(null)}>
         <CrmConnectionForm key={modal.connection.id || modal.connection.provider} connection={modal.connection} api={api} notify={notify} Field={Field} onChanged={async()=>setIntegrations(await api('/integrations?view=settings'))} onSaved={async message=>{setIntegrations(await api('/integrations?view=settings'));setModal(null);notify(message);}}/>
       </Modal>}
+      {modal?.type==='github-connection' && <Modal title="GitHub verbinden" onClose={()=>setModal(null)}><GitHubConnectionForm api={api} onSaved={async()=>{await refreshConnections(true);}}/></Modal>}
       {modal?.type==='mail-connection' && <Modal title={modal.connection.id?'Verbindung bearbeiten':'Verbindung hinzufügen'} onClose={()=>setModal(null)}>
         <MailConnectionForm connection={modal.connection} api={api} projectId={projectId} onSaved={async()=>{await refreshConnections(true);setModal(null);}} onHelp={message=>{setText(previous=>(previous?previous+'\n\n':'')+message);setModal(null);setView('chat');inputRef.current?.focus();}}/>
       </Modal>}
@@ -3502,7 +3506,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       {modal?.type==='skill-hub'&&<Modal title="Skill hinzufügen" onClose={()=>setModal(null)}><SkillHub api={api} Field={Field} onSelect={skill=>setModal({type:'skill',skill})} onCreated={()=>setModal({type:'skill-create'})}/></Modal>}
       {modal?.type==='skill-create'&&<Modal title="Eigenen Skill erstellen" onClose={()=>setModal(null)}><CreateSkillForm api={api} Field={Field} onCreated={async()=>{await loadSkills();setModal(null);}}/></Modal>}
       {modal?.type==='tailscale'&&<Modal title="Tailscale" onClose={()=>setModal(null)}><TailscaleConnection api={api}/></Modal>}
-      {(modal === 'notifications'||modal?.type==='notifications') && <Modal title="Benachrichtigungen" onClose={()=>setModal(null)}><JobNotifications initialId={modal?.id} api={api} state={notificationState} Field={Field} requests={requests.length} onRequests={()=>setModal('activity')} onChat={async id=>{setModal(null);await openChat(id);}} onRun={item=>setModal({type:'job-run',job:{name:item.title,lastRun:{coreRunId:item.id.replace(/^attention-/,'')}}})}/></Modal>}
+      {(modal === 'notifications'||modal?.type==='notifications') && <Modal title="Benachrichtigungen" onClose={()=>setModal(null)}><JobNotifications onUpdates={kind=>{setModal(null);setUpdatesTab(kind==='contribution'?'contributions':'version');openSettings(kind==='ai-update'?'engines':'updates');}} initialId={modal?.id} api={api} state={notificationState} Field={Field} requests={requests.length} onRequests={()=>setModal('activity')} onChat={async id=>{setModal(null);await openChat(id);}} onRun={item=>setModal({type:'job-run',job:{name:item.title,lastRun:{coreRunId:item.id.replace(/^attention-/,'')}}})}/></Modal>}
       {modal?.type === "job-run" && (
         <Modal title={modal.job.name} onClose={() => setModal(null)}>
           {modal.job.lastRun.coreRunId ? <CoreRunDetails api={api} id={modal.job.lastRun.coreRunId}/> : <>

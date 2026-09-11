@@ -1,4 +1,6 @@
 import {WorkspaceSettingsPreview} from './workspace-settings';
+
+import {AIMaintenancePreview} from "./ai-maintenance.tsx";
 import {ChatStartPreview} from './chat-start-preview';
 
 import {DeliveryChecks} from './delivery-checks';
@@ -80,6 +82,9 @@ export function DesignReference({ theme, tone, accent }) {
       <h3 className="section-heading">Aufträge · Reiter</h3>
       <div className="tabs" aria-label="Auftragsfilter als Beispiel">{jobFilters.map(([id,label])=><button key={id} type="button" className={id===jobPreviewFilter?'selected':''} aria-pressed={id===jobPreviewFilter} onClick={()=>setJobPreviewFilter(id)}>{label}</button>)}</div>
       <p className="page-note">Nutzeraufträge nach Status; Systemwartung im eigenen Reiter. Die Auswahl öffnet die gemeinsamen Auftragsdetails.</p>
+
+      <h3 className="section-heading">KI & Modelle · Beispiel</h3>
+      <AIMaintenancePreview/>
       <h3 className="section-heading">Glasbutton · Beispiel</h3>
       <GlassButtonDemo/>
       <h3 className="section-heading">Erscheinungsbild · Beispiel</h3>

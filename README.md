@@ -18,10 +18,13 @@ Ein Push allein aktualisiert keine andere Installation; der Zielagent führt den
 Ablauf mit seinen dortigen Werkzeugen aus. Ohne Versionsangabe wird der aktuelle
 `main`-Commit geprüft, vor erfolgreicher Prüfung wird er nicht aktiviert.
 
-Das beschlossene [Produktkonzept für Updates und Beiträge](docs/UPDATES.md)
-führt den weiteren Ausbau: Einstellungen → Updates, GitHub unter Verbindungen,
-Benachrichtigungen und ein privater Beitragseingang beim Ursprung. Diese
-Automatisierung ist noch nicht implementiert; der obige Agentenauftrag bleibt nutzbar.
+Der [Ablauf für Updates und Beiträge](docs/UPDATES.md) verbindet Einstellungen → Updates,
+GitHub unter Verbindungen, Benachrichtigungen und einen privaten Beitragseingang
+beim Ursprung. GitHub App und Betriebsweg werden je Installation eingerichtet.
+Die automatische Installation bleibt bis zur vollständigen lokalen Abnahme
+gesperrt; die vollständigen Kandidatentests verwenden eine einmalig eingerichtete
+lokale Container-Prüfumgebung.
+Der Agentenauftrag oben bleibt für ältere oder abweichende Installationen nutzbar.
 
 ## Kundenbasis
 
@@ -204,3 +207,12 @@ separate synthetische Zielinstallation, einschließlich beschädigter Bestände 
 abgebrochener Dateitausche. Der OS-Schlüsselspeicher ist dabei simuliert; die
 native Schlüsselablage und ein tatsächlicher Rechnerneustart benötigen weiterhin
 eine eigene Geräteabnahme. Quellcode und Testnachweis aktivieren keinen Hostdienst.
+
+## KI & Modelle
+
+Der Quellausbau bündelt Programme, Verbindungen, öffentliche Modellinformationen
+und automatische Versionsprüfungen unter KI & Modelle. Bereits installierte
+Codex- und Gemini-CLIs können in Arbeitspausen aus eigenen geprüften Programmkopien
+aktualisiert werden. Andere Programme zeigen ihren verfügbaren Prüf-/Anbieterweg.
+Ein öffentlicher Modelleintrag ist kein eingerichteter Zugang. Einrichtung,
+Datenhaltung und Abnahmegrenzen führt [WORKERS.md](wrapper/WORKERS.md).
