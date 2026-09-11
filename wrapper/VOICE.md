@@ -51,3 +51,7 @@ Der gemeinsame Systeminstaller richtet die unabhängige lokale Suche vor den
 Sprachlaufzeiten ein. Ein Sprachfehler bleibt ein fehlgeschlagenes Gesamtsetup;
 die bereits geprüfte lokale Suche bleibt installiert. Suchmodellvertrag:
 [OPERATIONS.md](../docs/OPERATIONS.md#lokale-suche).
+
+## Gespeicherte ElevenLabs-Stimmen
+
+`voiceProfiles` ergänzt speech-settings.json additiv um bis zu 50 Profile mit `id` und `name`. Bestehende `voiceId` bleibt unverändert; ohne Profile gilt eine leere Liste. POST /api/speech/voices/save prüft die ID über GET /v1/voices/{voice_id}, übernimmt ohne eigenen Namen den Anbieternamen und aktualisiert identische IDs statt Duplikaten. `select:true` wählt die Stimme, wechselt aber keinen Anbieter. POST /api/speech/voices/remove entfernt nur das lokale Profil und leert eine dazugehörige aktive Auswahl; beim Anbieter wird nichts gelöscht. Schreibvorgänge sind serialisiert und atomar. Schlüssel bleiben im geschützten Tresor. Trennen erhält Profile. Ältere Versionen bewahren das Zusatzfeld beim Speichern, bieten keine Profilverwaltung.

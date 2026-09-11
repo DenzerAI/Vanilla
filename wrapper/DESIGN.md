@@ -1380,3 +1380,7 @@ vorhandene Darstellung weiter. Keine neuen Komponenten, Tokens oder Animationen.
 Keine Datenmigration; native Sitzungen und gespeicherte Verläufe bleiben unverändert.
 
 Die Modellliste zeigt Claude-Familie und native Version einschließlich .0; Kontextvarianten bleiben beschriftet. Ein intern gewähltes Default-Modell markiert die konkrete Zeile nur bei übereinstimmender resolvedModel-ID. Der Regler übernimmt dabei die bestätigten Denkstufen des Default-Modells. Unser Design enthält denselben Aliasfall als lokales Beispiel.
+
+### Stimmenprofile
+
+`VoiceProfiles` verwendet gemeinsame SettingRows, kreisrunde Iconaktionen und den vorhandenen Modal: Plus öffnet Voice-ID und optionalen Namen. Gespeicherte Namen bleiben vorn, IDs stehen als sekundäre Beschreibung. Die Auswahl verwendet Check mit aria-pressed; Bearbeiten und Entfernen haben eindeutige Beschriftungen. Fehler bleiben am Formular, während Speicherung sind Aktionen gesperrt. `VoiceProfilesPreview` zeigt denselben Baustein in Unser Design ohne Anbieteraufrufe.

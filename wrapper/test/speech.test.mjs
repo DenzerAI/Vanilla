@@ -43,3 +43,45 @@ test('cloud speech requires a connected provider, validates settings and exposes
  await post('disconnect',{});assert.equal((await routes.get('GET/api/speech/status')()).provider,'local');
  await assert.rejects(post('synthesize',{text:'x'.repeat(5001)}),/5.000/);
 });
+test('saved profiles validate remote voices, preserve selection, serialize edits and survive restart',async t=>{
+ const root=await mkdtemp(path.join(os.tmpdir(),'speech-profiles-'));t.after(()=>rm(root,{recursive:true,force:true}));
+ const routes=new Map(),calls=[];
+ let fail=false;
+ const options={route:(m,u,fn)=>routes.set(m+u,fn),dataRoot:root,recordBoundary:async()=>{},secrets:{save:async()=>{},read:async()=>'private-key'},fetcher:async(url,opts)=>{
+  calls.push({url,opts});
+  if(fail)return new Response('private upstream error',{status:403});
+  return Response.json(url.includes('/v1/voices/')?{voice_id:url.split('/').at(-1),name:'Anbietername',private:'hidden'}:{voices:[]});
+ }};
+ await installSpeechRoutes(options);
+ const post=(p,b)=>routes.get('POST/api/speech/'+p)(b),status=()=>routes.get('GET/api/speech/status')();
+ await assert.rejects(post('voices/save',{id:'voice_a'}),/einrichten/);
+ await post('connect',{key:'private-key'});
+ await post('settings',{voiceId:'existing'});
+ assert.deepEqual((await status()).voiceProfiles,[]);
+ for(const id of ['',null,{},'../bad','a/b','a'.repeat(101)])await assert.rejects(post('voices/save',{id}),/Voice-ID/);
+ await assert.rejects(post('voices/save',{id:'valid',name:42}),/Name/);
+ await assert.rejects(post('voices/save',{id:'valid',select:'yes'}),/Auswahl|auswahl/);
+ await post('voices/save',{id:'voice_a'});
+ assert.equal((await status()).voiceId,'existing');
+ assert.deepEqual((await status()).voiceProfiles,[{id:'voice_a',name:'Anbietername'}]);
+ await Promise.all([post('voices/save',{id:'voice_a',name:' Eigener Name ',select:true}),post('voices/save',{id:'voice_b'})]);
+ assert.deepEqual((await status()).voiceProfiles,[{id:'voice_a',name:'Eigener Name'},{id:'voice_b',name:'Anbietername'}]);
+ assert.equal((await status()).voiceId,'voice_a');
+ assert.equal((await status()).provider,'local');
+ fail=true;
+ await assert.rejects(post('voices/save',{id:'missing',select:true}),e=>e.message.includes('403') && !e.message.includes('private'));
+ assert.equal((await status()).voiceId,'voice_a');
+ await installSpeechRoutes(options);
+ assert.equal((await status()).voiceProfiles.length,2);
+ await post('voices/remove',{id:'voice_b'});assert.equal((await status()).voiceId,'voice_a');
+ await post('voices/remove',{id:'voice_a'});assert.equal((await status()).voiceId,'');
+ assert.deepEqual((await status()).voiceProfiles,[]);
+ assert.ok(!calls.some(c=>c.opts.method==='DELETE'));
+ const raw=await readFile(path.join(root,'speech-settings.json'),'utf8');assert.ok(!raw.includes('private'));
+});
+
+test('voice selection keeps saved names first, deduplicates account pages and retains an unloaded active voice',async()=>{
+ const {voiceOptions}=await import('../ui/voice-profiles.mjs');
+ assert.deepEqual(voiceOptions([{id:'a',name:'Eigener Name'}],[{id:'a',name:'Konto'},{id:'b',name:'Andere'}],'c'),[{id:'a',name:'Eigener Name'},{id:'b',name:'Andere'},{id:'c',name:'c'}]);
+ assert.deepEqual(voiceOptions(),[]);
+});

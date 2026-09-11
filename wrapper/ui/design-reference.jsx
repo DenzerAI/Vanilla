@@ -1,3 +1,4 @@
+import {VoiceProfilesPreview} from './voice-profiles.jsx';
 import {WorkspaceSettingsPreview} from './workspace-settings';
 
 import {AIMaintenancePreview} from "./ai-maintenance.tsx";
@@ -75,6 +76,7 @@ export function DesignReference({ theme, tone, accent }) {
       <h3 className="section-heading">Bedienelemente & Seitenaufbau</h3>
       <section><h2>Firma</h2><FirmaPreview/><h3>Workspace und Auftragskategorien</h3><WorkspaceSettingsPreview/></section>
       <SettingsPatterns/>
+      <h3 className="section-heading">Gespeicherte Stimmen · Beispiel</h3><VoiceProfilesPreview/>
       <h3 className="section-heading">Chat-Sperre · Beispiel</h3>
       <ChatPrivacyPreview/>
       <h3 className="section-heading">Rückfrage am Composer · Beispiel</h3>

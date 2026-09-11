@@ -116,3 +116,5 @@ Veröffentlichungsstatus; Fehler und bestätigte Live-Stände erscheinen über
 die vorhandenen Systemmitteilungen. Einstellungen → System zeigt Arbeitsstände,
 Veröffentlichungen und den zuletzt aktivierten Stand als Gruppe Bauaufträge
 (wrapper/surfaces/settings.md). Vertrag: docs/CODE-SYNC.md.
+
+Die gemeinsame Bausteinreferenz ergänzt VoiceProfilesPreview aus dem Sprachmodul. Plus, Eingabe, Auswahl und Bearbeiten verwenden denselben Produktionsbaustein mit ausschließlich lokalen Beispieldaten; echte Stimmenprofile und Schlüssel werden dadurch nicht verändert. Bedienvertrag: wrapper/surfaces/settings.md, Datenvertrag: wrapper/VOICE.md.

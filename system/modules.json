@@ -382,7 +382,9 @@
         "wrapper/scripts/speech.py",
         "wrapper/speech.mjs",
         "wrapper/ui/message-speech.tsx",
-        "wrapper/ui/speech-playback.mjs"
+        "wrapper/ui/speech-playback.mjs",
+        "wrapper/ui/voice-profiles.jsx",
+        "wrapper/ui/voice-profiles.mjs"
       ],
       "entrypoints": [
         "GET /api/speech/status",
@@ -390,7 +392,9 @@
         "POST /api/speech/connect",
         "POST /api/speech/disconnect",
         "POST /api/speech/settings",
-        "POST /api/speech/synthesize"
+        "POST /api/speech/synthesize",
+        "POST /api/speech/voices/save",
+        "POST /api/speech/voices/remove"
       ],
       "dependencies": [
         "platform"
@@ -403,8 +407,8 @@
         "meaning": "localReady oder eingerichteter Cloudanbieter plus gewählte Stimme."
       },
       "limits": "localReady oder eingerichteter Cloudanbieter plus gewählte Stimme.",
-      "version": 2,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der gemeinsame Installer richtet die unabhängige lokale Suche vor Sprache und Sicherung ein. Sprachdaten werden dabei nicht migriert."
+      "version": 3,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der gemeinsame Installer richtet die unabhängige lokale Suche vor Sprache und Sicherung ein. Sprachdaten werden dabei nicht migriert. voiceProfiles ergänzt bestehende Einstellungen additiv als Liste von id/name; bisherige voiceId bleibt erhalten. Profile enthalten keine Schlüssel. Ältere Versionen erhalten die zusätzliche Liste beim Schreiben, können sie aber nicht verwalten."
     },
     {
       "id": "dictation",
@@ -816,7 +820,7 @@
         "meaning": "Persistierte Konfiguration dieser Installation."
       },
       "limits": "Persistierte Konfiguration dieser Installation.",
-      "version": 5,
+      "version": 6,
       "migration": "Vorhandene Einstellungen und Markdown-Abschnitte erhalten. Optionale Wetterkoordinaten ergänzen USER.md; alte Ortsnamen bleiben lesbar und werden bei Mehrdeutigkeit erst nach Auswahl verwendet. Pane-Tastenkürzel liegen ausschließlich browserlokal; ungültige Werte verwenden den Standard, ohne Chatentwürfe zu ändern. Pane-Kürzel starten nun Diktat und senden bei erneutem Drücken, Escape bricht ohne Senden ab. Bestehende Belegungen bleiben erhalten; keine Audio-/Serverdatenmigration. Rückkehr stellt reine Fokusaktionen wieder her. Diktatkürzel und Chatbeschriftungen folgen der geöffneten Ansichtsreihenfolge, unabhängig von internen Pane-IDs. Einzelfeld ist immer Chat 1. Keine Datenmigration; Rückkehr verwendet interne Nummern."
     },
     {
@@ -1047,7 +1051,7 @@
         "meaning": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen."
       },
       "limits": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen.",
-      "version": 17,
+      "version": 18,
       "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der bestehende Projektindex erhält abgeleitete Workspace-Metadaten. Jobkategorien werden aus dem optionalen Manifestfeld gelesen; keine Verschiebung von Dateien. Tresorformat 2: OS-geschützter installationsbezogener Schlüssel. Vor Quellaktivierung alten Bestand offline mit core.vault_migrate prüfen und übernehmen. Rückweg benötigt vollständige Datenwiederherstellung; Details docs/VAULT.md. Bestehende Ciphertexte und übrige Daten bleiben erhalten. Lokales MiniLM wird anhand der festgelegten Dateiprüfsummen geprüft und repariert; source.json allein bestätigt keine Bereitschaft. Bestehende Modellordner bleiben erhalten. Nach Restore gilt recovery/not-before als Zeitplangrenze. Normale Neustarts erhalten bestehende Wiederholungsregeln. Keine Tabellen entfernt. Gemeinsame Modellwahl und anbieterbezogene Profilprüfung ohne Datenmigration; vorhandene native Einstellungen und Übergabeverläufe bleiben erhalten. Streaming-Abgleiche erhalten sichtbare Inhalte und projizieren große Abschlussereignisse. Keine Datenmigration; ursprüngliche Worker-Verläufe bleiben erhalten. Modellwahl ohne Default-Rücksetzaktion; expliziter Denkaufwand bleibt pro Chat soweit unterstützt. Keine Datenmigration. Bestätigte konkrete Claude-Anfangsstufe pro nativer Sitzung, bestehende explizite Werte erhalten. Default-Modellalias wird nur bei exakter resolvedModel-Übereinstimmung visuell zugeordnet. Keine Datenmigration; ältere Stände lesen die native Einstellung."
     },
     {

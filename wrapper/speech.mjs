@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { saveSecret, readSecret } from './integrations.mjs';
 import { durable } from './dictation.mjs';
 const here = path.dirname(fileURLToPath(import.meta.url));
-const defaults = { provider:'local', voiceId:'', autoMode:false, elevenlabs:false };
+const defaults = { provider:'local', voiceId:'', voiceProfiles:[], autoMode:false, elevenlabs:false };
 export function validateSpeechSettings(b, previous) {
   const next = {...defaults,...previous};
   if (b.provider !== undefined) {
@@ -62,6 +62,28 @@ export async function installSpeechRoutes({route,dataRoot,recordBoundary, fetche
     const j=await r.json();
     return {voices:(j.voices || []).map(v=>({id:v.voice_id,name:v.name})),next:j.next_page_token || null,hasMore:!!j.has_more};
   });
+  route('POST','/api/speech/voices/save',b=>serial(async()=> {
+    const s=await settings();
+    if (!s.elevenlabs) throw new Error('ElevenLabs zuerst unter Verbindungen einrichten.');
+    if (typeof b.id!=='string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(b.id)) throw new Error('Gültige Voice-ID erforderlich.');
+    if (b.name!==undefined && (typeof b.name!=='string' || b.name.trim().length>80)) throw new Error('Name darf höchstens 80 Zeichen haben.');
+    if (b.select!==undefined && typeof b.select!=='boolean') throw new Error('Ungültige Stimmenauswahl.');
+    const profiles=s.voiceProfiles || [];
+    if (profiles.length>=50 && !profiles.some(v=>v.id===b.id)) throw new Error('Bis zu 50 Stimmen können gespeichert werden.');
+    const metadata=await (await request('https://api.elevenlabs.io/v1/voices/'+encodeURIComponent(b.id),await secrets.read('speech-elevenlabs'))).json();
+    if (metadata.voice_id!==b.id) throw new Error('Stimme konnte nicht bestätigt werden.');
+    const profile={id:b.id,name:b.name?.trim() || (typeof metadata.name==='string' && metadata.name.trim().slice(0,80)) || b.id};
+    s.voiceProfiles=profiles.some(v=>v.id===b.id)?profiles.map(v=>v.id===b.id?profile:v):[...profiles,profile];
+    if(b.select) s.voiceId=b.id;
+    await durable(settingsFile,JSON.stringify(s)); return s;
+  }));
+  route('POST','/api/speech/voices/remove',b=>serial(async()=> {
+    if(typeof b.id!=='string' || !/^[a-zA-Z0-9_-]{1,100}$/.test(b.id)) throw new Error('Gültige Voice-ID erforderlich.');
+    const s=await settings();
+    s.voiceProfiles=(s.voiceProfiles || []).filter(v=>v.id!==b.id);
+    if(s.voiceId===b.id) s.voiceId='';
+    await durable(settingsFile,JSON.stringify(s)); return s;
+  }));
   route('POST','/api/speech/synthesize',async b=> {
     if (typeof b.text!=='string' || !b.text.trim() || b.text.length>5000) throw new Error('Bitte 1 bis 5.000 Zeichen vorlesen lassen.');
     if (busy>=2) throw new Error('Sprachausgabe ist beschäftigt. Bitte kurz warten.');
