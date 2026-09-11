@@ -38,3 +38,17 @@ test('pending client items are dropped once the transcript knows the turn', () =
   const merged = reconcileThreadSnapshot(live, snapshot('completed', 'Antwort'));
   assert.equal(merged.turns[0].items.some(item => item.clientPending), false);
 });
+
+test('a partial snapshot with one finished turn updates that turn and keeps the rest', () => {
+  const live = {id:'c1', model:'alt', turns:[
+    {id:'t1', status:'completed', items:[{id:'item-2', type:'agentMessage', text:'Erste'}]},
+    {id:'t2', status:'inProgress', items:[{id:'msg_x', type:'agentMessage', text:'Zweite'}]}]};
+  const partial = {id:'c1', model:'neu', partial:true, turns:[{id:'t2', status:'completed', items:[
+    {id:'item-3', type:'userMessage', content:[{type:'text', text:'Frage'}]},
+    {id:'item-4', type:'agentMessage', text:'Zweite'}]}]};
+  const merged = reconcileThreadSnapshot(live, partial);
+  assert.deepEqual(merged.turns.map(t => t.id), ['t1', 't2']);
+  assert.equal(merged.turns[1].status, 'completed');
+  assert.equal(merged.turns[1].items.filter(i => i.type === 'agentMessage').length, 1);
+  assert.equal(merged.model, 'neu');
+});

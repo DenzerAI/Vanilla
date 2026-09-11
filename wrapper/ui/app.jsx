@@ -1032,7 +1032,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         return;
       }
       if (e.method === "wrapper/thread") {
-        if (p.thread?.id === chatRef.current && !locallyLocked(p.thread.id)) setThread(old=>reconcileThreadSnapshot(old,p.thread));
+        // A partial snapshot carries one finished turn; it only ever updates an already loaded chat.
+        if (p.thread?.id === chatRef.current && !locallyLocked(p.thread.id)) setThread(old=>old || !p.thread.partial ? reconcileThreadSnapshot(old,p.thread) : old);
         return;
       }
       if (e.method === "wrapper/jobs") {

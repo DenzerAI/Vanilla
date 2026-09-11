@@ -407,7 +407,9 @@ async function finishThread(id, turn) {
   await refreshWorkspaceDirectory();
   await channels.complete(id,turn,(completedTurn?.items||[]).filter(i=>i.type==='agentMessage'&&i.phase!=='commentary').map(i=>i.text||'').join('\n\n'),artifacts.filter(a=>a.turnId===turn.id&&a.scope==='workspace'));
   emit({method:'wrapper/library'});
-  emit({ method: "wrapper/thread", params: { thread: r.thread } });
+  // Send only the finished turn. A full history can exceed the event-frame limit and would
+  // force the browser to reload the whole chat, which is where long chats used to jump.
+  emit({ method: "wrapper/thread", params: { thread: completedTurn ? { ...r.thread, turns: [completedTurn], partial: true } : r.thread } });
   if (c.jobId) {
     const job = (await store.jobs()).find((j) => j.id === c.jobId);
     if (job) {

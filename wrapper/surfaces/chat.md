@@ -1253,3 +1253,13 @@ unvollständig ist, etwa direkt nach einem Neustart. Ob der Chat noch existiert,
 die Verlaufsanfrage; erst danach wird der Pane-Zustand neu geschrieben. Eine Pane fällt nie
 still auf einen leeren Entwurf zurück. Keine Datenmigration.
 
+
+## Abschluss einer Antwort ohne Vollverlauf · Version 1.0.0
+
+Nach einer fertigen Antwort sendet der Wrapper nur den abgeschlossenen Turn als Teil-
+Schnappschuss (`wrapper/thread` mit `partial`), nicht den gesamten Verlauf. Der Browser
+gleicht diesen Turn in den geladenen Verlauf ein und behält alle anderen Turns; ein Teil-
+Schnappschuss für einen noch nicht geladenen Chat wird ignoriert. Lange Verläufe lösen so
+keinen `wrapper/resync` und kein Neuladen mehr aus. Vollständige Schnappschüsse bleiben
+für Übergaben und Verlaufsänderungen. Keine Datenmigration. Prüfungen: `thread-update.test.mjs`.
+
