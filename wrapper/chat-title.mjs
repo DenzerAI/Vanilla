@@ -1,3 +1,5 @@
+import { modelConfig, sessionModelSelection } from './worker-models.mjs';
+
 // Central rules for every worker; independent of conversational answer style.
 export const TITLE_MAX_CHARS = 28;
 export const TITLE_MAX_WORDS = 4;
@@ -18,14 +20,23 @@ export function validTitle(value) {
   return title;
 }
 
+async function pinSessionModel(rpc, session, model) {
+  const selection = sessionModelSelection(session);
+  if (selection.model === model) return;
+  if (selection.models.length && !selection.models.some(m => m.model === model)) return;
+  const config = modelConfig(session);
+  if (config) await rpc.call('session/set_config_option', { sessionId: session.sessionId, configId: config.id, value: model });
+  else await rpc.call('session/set_model', { sessionId: session.sessionId, modelId: model });
+}
+
 export async function generateTitle(adapter, { model, cwd, text }, timeout = 45000) {
   const input = `Erste Nutzernachricht (JSON-Zeichenfolge):\n${JSON.stringify(text.slice(0, 12000))}`;
   // ACP sessions do not enter the user-facing thread map and cannot access client tools.
   if (adapter.rpc) {
     const session = await adapter.rpc.call('session/new', { cwd, mcpServers: [] });
-    if (model && session.models?.currentModelId !== model) {
-      await adapter.rpc.call('session/set_model', { sessionId: session.sessionId, modelId: model });
-    }
+    // Pin the chat's model with whichever native mechanism this worker offers.
+    // An unavailable or unconfirmed model costs the pinning, never the title.
+    if (model) await pinSessionModel(adapter.rpc, session, model).catch(() => {});
     let answer = '';
     const listen = msg => {
       if (msg.params?.sessionId === session.sessionId && msg.method === 'session/update' && msg.params.update?.sessionUpdate === 'agent_message_chunk') answer += msg.params.update.content?.text || '';
@@ -33,8 +44,9 @@ export async function generateTitle(adapter, { model, cwd, text }, timeout = 450
     adapter.rpc.on('message', listen);
     try {
       const result = await adapter.rpc.call('session/prompt', { sessionId: session.sessionId, prompt: [{ type: 'text', text: TITLE_RULES + '\n\n' + input }] }, timeout);
-      if (result.stopReason !== 'end_turn') throw new Error('Titelanfrage nicht abgeschlossen.');
-      return validTitle(answer);
+      const title = validTitle(answer);
+      if (!title && result.stopReason !== 'end_turn') throw new Error('Titelanfrage nicht abgeschlossen.');
+      return title;
     } finally {
       adapter.rpc.off('message', listen);
       adapter.rpc.write({ method: 'session/cancel', params: { sessionId: session.sessionId } });
