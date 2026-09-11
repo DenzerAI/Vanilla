@@ -1922,7 +1922,10 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     const saved = readPaneSession(paneNumber);
     const linkedId = !embedded && new URL(window.location.href).searchParams.get("chat");
     const metadata = boot.chats.find(chat => chat.id === saved.chatId);
-    const id = linkedId || metadata?.id;
+    // Right after a restart the sidebar list can still be incomplete. The saved chat is opened
+    // anyway; the history request decides whether it still exists, so a pane never falls back
+    // to an empty draft and overwrites its saved session by accident.
+    const id = linkedId || saved.chatId;
     if (linkedId) { setPaneOrder(order => order.includes(0) ? order : [0, ...order.slice(1)]); activatePane(0); }
     if (id) {
       guard(() => openChatHere(id, linkedId ? undefined : metadata))();

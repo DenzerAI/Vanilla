@@ -1244,3 +1244,12 @@ zuerst die Kennung, dann der Inhalt (gleicher Typ, ein Text ist Präfix des ande
 damit eine Antwort nie doppelt erscheint; der längere gestreamte Text gewinnt.
 Fehlende Elemente eines veralteten Schnappschusses bleiben sichtbar. Keine
 Datenmigration. Prüfungen: `thread-update.test.mjs`.
+
+
+## Panes nach Neustart · Version 1.0.1
+
+Jede Pane öffnet ihren gespeicherten Chat auch dann, wenn die Chatliste beim Laden noch
+unvollständig ist, etwa direkt nach einem Neustart. Ob der Chat noch existiert, entscheidet
+die Verlaufsanfrage; erst danach wird der Pane-Zustand neu geschrieben. Eine Pane fällt nie
+still auf einen leeren Entwurf zurück. Keine Datenmigration.
+
