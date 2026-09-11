@@ -179,6 +179,8 @@ export function DesignReference({ theme, tone, accent }) {
       <Skeleton layout="jobs" rows={2} announce={false}/>
       <Skeleton variant="settings" rows={2} announce={false}/>
       <Skeleton variant="chat" announce={false}/>
+      <p className="page-note">Zusätzliches Chatpanel: Gespräch und Eingabe ohne weitere Seitenleiste</p>
+      <Skeleton variant="chat-panel" announce={false}/>
       <Skeleton variant="document" rows={2} announce={false}/>
       <Skeleton variant="media" announce={false}/>
       <Skeleton variant="attention" announce={false}/>

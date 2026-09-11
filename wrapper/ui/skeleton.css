@@ -21,7 +21,7 @@
 .skeleton > .skeleton-shapes.settings-group { display:block; }
 .skeleton-document .skeleton-paragraph { width:100%; font-size:var(--text-control); line-height:var(--leading-normal); }
 .skeleton-chat > .skeleton-shapes { display:block; }
-.skeleton-shell .skeleton-chat > .skeleton-shapes { animation:none; }
+:is(.skeleton-shell,.skeleton-chat-panel) .skeleton-chat > .skeleton-shapes { animation:none; }
 .skeleton-chat .skeleton-user { width:min(70%, 48ch); }
 .skeleton-chat .user-actions > .skeleton-bar { width:64px; font-size:var(--text-caption); }
 .skeleton-author-name { width: 88px; }
@@ -47,6 +47,8 @@
 .skeleton-media { width:100%; aspect-ratio:16/9; max-height:50vh; }
 .skeleton-shell { height:100dvh; background:var(--bg); }
 .skeleton-shell > .skeleton-shapes { height:100%; grid-template-columns:268px minmax(0,1fr); gap:0; }
+.skeleton-chat-panel { height:100%; min-height:0; }
+.skeleton-chat-panel > .skeleton-shapes { height:100%; display:flex; gap:0; }
 .skeleton-sidebar { background:var(--surface); padding:var(--space-24); display:flex; flex-direction:column; gap:var(--space-32); }
 .skeleton-sidebar .skeleton-lines { flex:none; }
 /* The shell uses the same panel container, reading column and floating input. */

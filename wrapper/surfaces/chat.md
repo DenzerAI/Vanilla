@@ -1428,3 +1428,13 @@ Die äußere App-Hülle verwendet overflow: clip. Auch programmatischer Fokus
 oder ScrollIntoView darf sie nicht verschieben; ausschließlich die inneren
 Bereiche scrollen. Insbesondere bleiben mobiler Kopf und Composer beim
 Öffnen eines Chats an ihren Bildschirmkanten. Keine Datenmigration.
+
+
+### Ladegrenzen für zusätzliche Chatpanels
+
+Der App-Start zeigt `shell` mit genau einer Seitenleiste. Eingebettete Chatpanels
+verwenden `chat-panel`: dieselbe Nachrichtenspalte und Eingabegeometrie, ohne
+Seitenleistenplatzhalter und ohne volle Fensterhöhe. Beim späteren Verlaufsabruf
+bleibt `chat` innerhalb der vorhandenen Nachrichtenspalte. Datei- und
+Änderungsansichten behalten ihre lokalen Listen-/Dokumentplatzhalter.
+Die Bausteinreferenz zeigt auch den Panelstart. Keine Datenmigration.

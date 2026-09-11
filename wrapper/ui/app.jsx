@@ -2054,8 +2054,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const MainSurface = embedded ? "div" : "main";
   if (!boot)
     return (
-      <div>
-        {bootError || toast ? <div className="boot-screen"><p role="alert">{bootError || toast}</p><button onClick={guard(refresh)}>Erneut versuchen</button></div> : <Skeleton variant="shell" label="Schaltzentrale wird geöffnet …"/>}
+      <div className={embedded ? "app embedded-chat" : undefined}>
+        {bootError || toast ? <div className="boot-screen"><p role="alert">{bootError || toast}</p><button onClick={guard(refresh)}>Erneut versuchen</button></div> : <Skeleton variant={embedded ? "chat-panel" : "shell"} label={embedded ? "Gespräch wird geladen …" : "Schaltzentrale wird geöffnet …"}/>}
         {!embedded && <SystemNotice ref={systemNoticeRef} onBusyChange={setServerRestartBusy} api={api} message={toast} onDismiss={()=>setToast("")} />}
       </div>
     );
