@@ -390,3 +390,22 @@ keine nachgezeichneten oder fremden Markenbilder eingesetzt.
 `system-frontend` prüft täglich um 04:15 Uhr in der konfigurierten Zeitzone die lokale Auslieferung ohne LLM. Aktive Arbeit verschiebt die Prüfung um eine Minute. Startpaket (320 KiB Brotli), Komprimierung, Cache-Regeln, API-Datenmengen, drei Antwortzeitproben und aktiver Versionsstand werden begrenzt geprüft. Ergebnisse enthalten nur Messwerte, keine Gesprächsinhalte oder Zugangsdaten. Fehler verwenden die vorhandenen Auftragsmeldungen. Keine automatischen Codeänderungen, Neustarts oder Löschungen. WLAN und Darstellung auf dem Endgerät sind damit nicht gemessen.
 
 Der bestehende Systemschalter `system.frontend_check` und die Pause im Systemauftrag steuern dieselbe Einstellung. Fehlende Werte erhalten additiv `true`; ausdrücklich gespeichertes `false` bleibt erhalten. Bestehende Aufträge, Chats und Worker-Kontext bleiben bestehen.
+
+
+## Bauaufträge · Version 1.0.0
+
+System zeigt bei eingerichteter Quellübergabe nach Hintergrundbetrieb die Gruppe
+**Bauaufträge** aus `/api/system/status.sourceWork` in vorhandenen SettingRow-Zeilen.
+Die erste Zeile nennt den zuletzt aktivierten Quellstand und eine kurze Summe: in
+Arbeit, in Prüfung, integriert, blockiert, auf dem Weg zur Aktivierung. Danach stehen
+offene Veröffentlichungen mit ihrer Phase (veröffentlicht, GitHub prüft, geprüft, wird
+aktiviert samt Aktivierungsschritt, Prüfung fehlgeschlagen, Aktivierung blockiert) und
+die letzten acht Arbeitsstände mit Name, Zeitpunkt, Kandidatencommit und Status.
+Blockierte Stände nennen den gemeldeten Grund; ein Veröffentlichungsfehler erscheint
+als eigene Zeile. Ersetzte Stände werden nicht einzeln aufgeführt. `integrated` heißt
+ausdrücklich noch nicht live. Reine Anzeige ohne Aktionen: Bereitmelden, Push und
+Aktivierung bleiben beim Worker und dem Prozessmanager. Ohne eingerichtete
+Quellübergabe fehlt die Gruppe. Die vorhandene Aktualisierung der Systemseite alle
+15 Sekunden gilt mit. `ui/source-work-status.mjs` übersetzt die Kernzustände; unbekannte
+Zustände bleiben mit ihrem technischen Namen sichtbar. Keine neue Speicherung, keine
+Datenmigration.

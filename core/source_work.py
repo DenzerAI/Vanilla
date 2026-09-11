@@ -82,7 +82,7 @@ class SourceWork:
         if release.exists():
             data = json.loads(release.read_text())
             result["release"] = {"error": data.get("error"), "releases": [
-                {k: row[k] for k in ("target", "phase", "activationPhase", "reason") if k in row}
+                {k: row[k] for k in ("target", "phase", "activationPhase", "reason", "publishedAt") if k in row}
                 for row in data.get("releases", [])]}
         return result
 

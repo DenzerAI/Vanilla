@@ -191,6 +191,9 @@ Prüflauf wird als blockiert erkannt. Vor erneuter Bereitmeldung eigene vorgemer
 Änderungen prüfen und abschließen. Spätere Dateiänderungen entwerten die Anmeldung.
 GET /api/system/source-work und `npm run source:work -- status` liefern denselben
 Status. Die bestehenden Betriebsanzeigen führen das Wartungsergebnis mit.
+Einstellungen → System zeigt dieselben Arbeitsstände, Veröffentlichungen und den
+zuletzt aktivierten Stand als Gruppe **Bauaufträge** (wrapper/surfaces/settings.md);
+der Veröffentlichungsstatus nennt dafür den Zeitpunkt der Veröffentlichung.
 
 `integrated` bedeutet zusammengeführt und automatisch geprüft, ausdrücklich noch
 nicht live. Veröffentlichung, Geräte-/Browserabnahmen und Aktivierung verwenden

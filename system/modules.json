@@ -923,6 +923,7 @@
         "wrapper/connection-summary.mjs",
         "wrapper/core-client.mjs",
         "wrapper/git-review.mjs",
+        "wrapper/html-presentation.mjs",
         "wrapper/html-preview.mjs",
         "wrapper/identity-preferences.mjs",
         "wrapper/identity-profile.mjs",
@@ -1000,6 +1001,7 @@
         "wrapper/ui/settings-row.jsx",
         "wrapper/ui/shared-reads.mjs",
         "wrapper/ui/skeleton.tsx",
+        "wrapper/ui/source-work-status.mjs",
         "wrapper/ui/start-data-loader.mjs",
         "wrapper/ui/system-notice.jsx",
         "wrapper/ui/system-search-data.mjs",
@@ -1014,8 +1016,7 @@
         "wrapper/ui/welcome-suggestions.tsx",
         "wrapper/ui/workspace-review.jsx",
         "wrapper/updates.mjs",
-        "wrapper/vite.config.ts",
-        "wrapper/html-presentation.mjs"
+        "wrapper/vite.config.ts"
       ],
       "entrypoints": [
         "GET /internal/storage",
@@ -1031,14 +1032,15 @@
       "verification": [
         "core/tests/test_modules.py",
         "core/tests/test_models.py",
-        "wrapper/test/html-presentation.test.mjs"
+        "wrapper/test/html-presentation.test.mjs",
+        "wrapper/test/source-work-status.test.mjs"
       ],
       "status": {
         "endpoint": "GET /api/system/modules",
         "meaning": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen."
       },
       "limits": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen.",
-      "version": 10,
+      "version": 11,
       "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der bestehende Projektindex erhält abgeleitete Workspace-Metadaten. Jobkategorien werden aus dem optionalen Manifestfeld gelesen; keine Verschiebung von Dateien. Tresorformat 2: OS-geschützter installationsbezogener Schlüssel. Vor Quellaktivierung alten Bestand offline mit core.vault_migrate prüfen und übernehmen. Rückweg benötigt vollständige Datenwiederherstellung; Details docs/VAULT.md. Bestehende Ciphertexte und übrige Daten bleiben erhalten. Lokales MiniLM wird anhand der festgelegten Dateiprüfsummen geprüft und repariert; source.json allein bestätigt keine Bereitschaft. Bestehende Modellordner bleiben erhalten. Nach Restore gilt recovery/not-before als Zeitplangrenze. Normale Neustarts erhalten bestehende Wiederholungsregeln. Keine Tabellen entfernt. Gemeinsame Modellwahl und anbieterbezogene Profilprüfung ohne Datenmigration; vorhandene native Einstellungen und Übergabeverläufe bleiben erhalten. Streaming-Abgleiche erhalten sichtbare Inhalte und projizieren große Abschlussereignisse. Keine Datenmigration; ursprüngliche Worker-Verläufe bleiben erhalten."
     },
     {

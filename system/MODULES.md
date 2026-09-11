@@ -109,4 +109,6 @@ Die Plattform wartet für ausdrücklich fertige Quellübergaben nicht auf fremde
 laufende Chats. Nur Betriebspausen sperren diese Wartung. Live-Aktivierungen
 behalten ihr eigenes Neustarttor. Der Quellstatus enthält optional den
 Veröffentlichungsstatus; Fehler und bestätigte Live-Stände erscheinen über
-die vorhandenen Systemmitteilungen. Vertrag: docs/CODE-SYNC.md.
+die vorhandenen Systemmitteilungen. Einstellungen → System zeigt Arbeitsstände,
+Veröffentlichungen und den zuletzt aktivierten Stand als Gruppe Bauaufträge
+(wrapper/surfaces/settings.md). Vertrag: docs/CODE-SYNC.md.

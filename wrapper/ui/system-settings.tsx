@@ -2,6 +2,7 @@ import {Skeleton} from './skeleton.tsx';
 import React, {useEffect, useRef, useState} from 'react';
 import {SettingRow} from './settings-row.jsx';
 import {Modal} from './modal.jsx';
+import {describeSourceWork} from './source-work-status.mjs';
 import './system-settings.css';
 
 type Api = (path: string, data?: any) => Promise<any>;
@@ -38,6 +39,7 @@ export function SystemSettings({api, section, chats, onJobs, onLibrary, onConnec
   if((!status || !draft) && !error && !loadError) return <Skeleton variant="settings" label="System wird geladen …"/>;
   if(!status || !draft) return <p role="status">{error || loadError || 'System wird geladen …'} {(error||loadError)&&<button onClick={()=>act(()=>load())}>Erneut laden</button>}</p>;
   const v=draft.values;
+  const build=describeSourceWork(status.sourceWork);
   return <div className="system-settings" aria-busy={busy}>
     {loadError&&<p className="form-error" role="alert">{loadError} <button onClick={()=>act(()=>load())}>Erneut laden</button></p>}
     {error&&<p className="form-error" role="alert">{error} <button onClick={()=>act(()=>load(true),'Aktuelle Einstellungen geladen.')}>Neu laden</button></p>}
@@ -62,6 +64,13 @@ export function SystemSettings({api, section, chats, onJobs, onLibrary, onConnec
         <SettingRow title="Aufträge und Protokolle" description="Dreaming, Sicherung und Speicherpflege sind hier gemeinsam nachvollziehbar."><button onClick={onJobs}>Aufträge öffnen</button></SettingRow>
         <SettingRow title="System neu starten" description="Der Neustart wartet auf abgeschlossene Arbeit."><button onClick={()=>act(()=>api('/system/restart',{}),'Neustart angefordert. Die Verbindung wird wiederhergestellt.')}>Neu starten</button></SettingRow>
       </Group>
+      {build&&<Group title="Bauaufträge">
+        <SettingRow title="Zuletzt aktivierter Stand" description={build.summary}><span>{build.live?'Live '+build.live.short:'Noch keiner'}</span></SettingRow>
+        {build.error&&<SettingRow title="Veröffentlichung" description={build.error}><span className="form-error">Fehler</span></SettingRow>}
+        {build.releases.map((release:any)=><SettingRow key={release.target} title={'Stand '+release.short} description={release.detail}><span className={release.tone==='error'?'form-error':''}>{release.label}</span></SettingRow>)}
+        {build.entries.slice(0,8).map((entry:any)=><SettingRow key={entry.id} title={entry.name} description={[date(entry.updatedAt),entry.commit,entry.detail].filter(Boolean).join(' · ')}><span className={entry.tone==='error'?'form-error':''}>{entry.label}</span></SettingRow>)}
+        {!build.entries.length&&<SettingRow title="Noch keine Bauaufträge" description="Fertige Quellarbeit aus Chats erscheint hier mit Prüf- und Live-Stand."/>}
+      </Group>}
     </>}
     {section==='memory'&&<>
       <Group title="Gemeinsames Gedächtnis">

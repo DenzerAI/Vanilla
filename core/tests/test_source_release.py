@@ -38,6 +38,7 @@ def test_push_does_not_wait_for_other_sessions_or_blocked_activation(queue, tmp_
     first = git(repo, 'rev-parse', 'HEAD')
     assert git(repo, 'ls-remote', 'origin', 'refs/heads/main').split()[0] == first
     assert work.status()['entries'][0]['status'] == 'working'
+    assert work.status()['release']['releases'][-1]['publishedAt'] > 0
     (Path(pending['path']) / 'later.txt').write_text('finished later')
     work.ready(pending['id'])
     assert work.tick()['entries'][0]['status'] == 'integrated'
