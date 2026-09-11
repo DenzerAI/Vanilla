@@ -7,7 +7,7 @@ import {LibraryThumbnail} from '../../library-thumbnail.jsx';
 "use client";
 import {useState,useEffect,useLayoutEffect,useRef} from 'react';
 import {AnimatePresence,motion,useReducedMotion,useIsPresent} from 'motion/react';
-import {ArrowUpRight,Calendar,Bell,FileText,MessageCircle,BrainCircuit,ChevronLeft,ChevronRight,Clock,Inbox} from '../../icons.jsx';
+import {ArrowUpRight,Calendar,Bell,FileText,MessageCircle,BrainCircuit,ChevronLeft,ChevronRight,Clock,Inbox,Activity,Zap} from '../../icons.jsx';
 import {attentionFanMotion} from '../../design-system.mjs';
 import './attention-fan.css';
 import {reconcileFan,entryTime,inboxAction,inboxKindLabel} from '../../chat-start-feed.mjs';
@@ -60,7 +60,7 @@ export function AttentionFan({items,onOpen,onActiveChange,reduceMotion=false,dis
       {visible.map(({i,side})=>{
         const item=items[i],isActive=i===index,isHovered=hovered===item.id,outer=Math.abs(side)===2;
         const weatherReady=item.kind==='weather'&&item.weather?.status==='ready';
-        const Icon=item.kind==='inbox'?Inbox:item.kind==='calendar'?Calendar:item.kind==='weather'?MapPin:item.kind==='job'?Clock:item.kind==='artifact'?FileText:item.kind==='request'||item.kind==='notice'?Bell:item.kind==='report'?FileText:item.kind==='chat'?MessageCircle:BrainCircuit;
+        const Icon=item.kind==='inbox'?Inbox:item.kind==='statistics'?Activity:item.kind==='allowances'?Zap:item.kind==='calendar'?Calendar:item.kind==='weather'?MapPin:item.kind==='job'?Clock:item.kind==='artifact'?FileText:item.kind==='request'||item.kind==='notice'?Bell:item.kind==='report'?FileText:item.kind==='chat'?MessageCircle:BrainCircuit;
         return <FanCard type="button" key={item.id} className={'attention-fan-card'+(weatherReady?' weather-card':'')+(isActive?' is-active':'')+(isHovered?' is-hovered':'')} data-side={side} data-kind={item.kind} style={{zIndex:isHovered?6:3-Math.abs(side)}}
           initial={reduced?false:{opacity:0,y:attentionFanMotion.arrivalY,scale:attentionFanMotion.arrivalScale,x:side*width*spread}} exit={reduced?{opacity:0,transition:{duration:0}}:{opacity:0,y:attentionFanMotion.departureY,scale:attentionFanMotion.departureScale,transition:{duration:attentionFanMotion.exitDuration,ease:attentionFanMotion.ease}}} animate={{opacity:1,x:side*width*spread,rotate:isHovered?0:outer?Math.sign(side)*attentionFanMotion.outerRotation:side*(compact?attentionFanMotion.compactRotation:attentionFanMotion.rotation),y:isHovered?attentionFanMotion.hoverLift:isActive?0:outer?attentionFanMotion.outerDepth:attentionFanMotion.depth,scale:isHovered?attentionFanMotion.hoverScale:isActive?1:outer?attentionFanMotion.outerScale:attentionFanMotion.scale}}
           transition={reduced||!measured.current?{duration:0}:{type:'spring',...attentionFanMotion.spring,opacity:{duration:attentionFanMotion.enterDuration,ease:attentionFanMotion.ease}}}

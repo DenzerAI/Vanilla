@@ -38,6 +38,9 @@ export function AllowanceBars({data,compact=false}:{data:any;compact?:boolean}){
 }
 export function UsageSettings({api}:{api:any}){
  const data=useAllowances(api);
+ return <UsageDetails data={data}/>;
+}
+export function UsageDetails({data}:{data:any}){
  return <section className="usage-settings" data-capability="chat.allowances" aria-label="Anbieter-Kontingente">
   <p className="usage-note">Kontoweite Nutzung von Codex und Claude, einschließlich anderer Geräte. Die Balken zeigen den verbrauchten Anteil. Aktualisierung jede Minute, solange diese Ansicht sichtbar ist.</p>
   {!data?<Skeleton variant="settings" rows={2} label="Kontingente werden geladen …"/>:<>
