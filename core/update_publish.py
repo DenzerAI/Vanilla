@@ -20,6 +20,9 @@ async def publish(updates, version, summary, changes, from_versions):
         if git(updates.config.root, "status", "--porcelain"):
             raise ValueError("Zuerst den vollständigen Code sichern, pushen und prüfen lassen.")
         source = await asyncio.to_thread(Source(updates.config).read)
+        declared = json.loads(source["files"]["system/version.json"])["version"]
+        if version != declared:
+            raise ValueError("Die Freigabe muss zur Produktversion in system/version.json passen. Versionsänderung zuerst sichern, pushen und prüfen lassen.")
         head = await github.request("GET", f"/repos/{ORIGIN}/commits/main", authenticated=False)
         if head.get("sha") != source["head"]:
             raise ValueError("Nur der aktuelle vollständig geprüfte Ursprungsstand kann freigegeben werden.")

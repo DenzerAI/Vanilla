@@ -154,6 +154,12 @@ class Releases:
                 raise ValueError()
         except (ValueError, KeyError, TypeError):
             raise ValueError("Versionsdatei und Modulregister am freigegebenen Commit stimmen nicht überein.") from None
+        product = await self.github.request("GET", f"/repos/{ORIGIN}/contents/system/version.json?ref={m['commit']}", authenticated=False)
+        try:
+            if product.get("encoding") != "base64" or json.loads(base64.b64decode(product["content"]))["version"] != m["version"]:
+                raise ValueError()
+        except (ValueError, KeyError, TypeError):
+            raise ValueError("Freigabe und Produktversion im Quellcode stimmen nicht überein.") from None
         for check in m["checks"]:
             run = await self.github.request("GET", f"/repos/{ORIGIN}/actions/runs/{check['runId']}", authenticated=False)
             if (run.get("head_sha") != m["commit"] or run.get("conclusion") != "success" or run.get("status") != "completed"

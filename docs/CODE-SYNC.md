@@ -5,6 +5,9 @@ einschließlich Sicherung, Versionsauswahl, eigener Erweiterungen und Aktivierun
 Dieses Dokument beschreibt die technische Quellübernahme als Teil davon.
 `UPDATE.md` ist ausdrücklich zugelassene neutrale Dokumentation im Projektstamm;
 die Inhalts- und Historienprüfungen gelten auch für diese Datei unverändert.
+`system/version.json` ist die ausdrücklich zugelassene neutrale Produktversion.
+Sie enthält keine Installationsdaten; andere lokale JSON-Dateien werden dadurch
+nicht zur Veröffentlichung freigegeben.
 
 Jede Installation behält ihre Firma, Identität, Chats, Arbeitsdateien,
 Verbindungen und Anbieteranmeldung. Git transportiert Anwendungsquellen,
