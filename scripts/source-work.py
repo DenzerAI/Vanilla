@@ -25,6 +25,9 @@ def main():
     ready = commands.add_parser("ready")
     ready.add_argument("id")
     commands.add_parser("status")
+    commands.add_parser("prune", help="Close entries already contained in the shared branch and remove their worktrees")
+    discard = commands.add_parser("discard", help="Drop one entry with its worktree and branches")
+    discard.add_argument("id")
     commands.add_parser("watch", help="Process explicit handoffs under an existing local process manager")
     args = parser.parse_args()
     service = SourceWork(args.data)
@@ -40,6 +43,10 @@ def main():
         result = service.begin(args.name, args.session)
     elif args.action == "ready":
         result = service.ready(args.id)
+    elif args.action == "prune":
+        result = service.prune()
+    elif args.action == "discard":
+        result = service.discard(args.id)
     else:
         result = service.status()
     print(json.dumps(result, ensure_ascii=False, indent=2))

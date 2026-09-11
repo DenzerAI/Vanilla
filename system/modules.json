@@ -187,7 +187,7 @@
       },
       "limits": "Lokales Prüfergebnis über npm run source:check; HTTP bestätigt nur den Katalog.",
       "command": "node system/capabilities.mjs",
-      "version": 6,
+      "version": 7,
       "migration": "Additives lokales source-work/state.json mit Format 1. Ohne lokale Einrichtung inaktiv. Arbeitskopien und Commits bleiben bei Abschaltung erhalten; unterbrochene Prüfungen werden blockiert, nicht automatisch wiederholt. Additiver, ausdrücklich konfigurierter source-release-Status (Format 1). Push unabhängig von Sessions; Aktivierung über bestehenden lokalen Operator. Abschalten erhält Commits und Rückkehrjournale."
     },
     {
@@ -902,7 +902,7 @@
         "meaning": "Prozess, vollständige lokale Basis und tatsächliche Worker-Ausführbarkeit getrennt prüfen; Kundenanschlüsse werden nicht pauschal als bereit erklärt."
       },
       "limits": "Betriebszustand, Login, Backup und Restore-Nachweis separat prüfen.",
-      "version": 7,
+      "version": 8,
       "migration": "Alte Tresorformate 1/2 werden ausdrücklich nach .env migriert; vollständigen vorherigen Datenstand für den Rückweg erhalten. Details docs/VAULT.md. Fehlende oder fehlerhafte Suchberechnung bleibt als Einschränkung sichtbar; der Volltextindex bleibt nutzbar. Sicherungsschema 4; Schema 2/3 weiter lesbar. Restore setzt eine dauerhafte Betriebspause, quarantänisiert offene Übergaben und verhindert alte Zeitpläne. Details docs/OPERATIONS.md. Zugangsformat ENV: vorhandene verschlüsselte Zugänge vor neuen Schreibvorgängen offline mit core.vault_migrate übernehmen. .env bleibt privat und wird mit Daten kopiert. Rückweg benötigt vorherigen vollständigen Datenstand. Sicherungsschema 5 mit .env; Schema 2–4 werden bei Restore lokal konvertiert. Details docs/VAULT.md."
     },
     {

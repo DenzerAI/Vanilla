@@ -88,7 +88,9 @@ def verify(files, previous=None):
             docs = [m.get('contract','').split('#')[0],m.get('setup','').split('#')[0]]
             if m == old[ident] and all(files.get(p)==previous.get(p) for p in docs):
                 changed = [p for p in m.get('sources',[]) if files.get(p) != previous.get(p)]
-                errors.append(f'{ident}: Quelländerung ohne aktualisierten Vertrag oder Bauplan. Geändert: {", ".join(changed[:5])}. '
+                # Pure interface files answer to wrapper/DESIGN.md and the design gate; only behaviour needs a new module version.
+                changed = [p for p in changed if not p.startswith('wrapper/ui/')]
+                if changed: errors.append(f'{ident}: Quelländerung ohne aktualisierten Vertrag oder Bauplan. Geändert: {", ".join(changed[:5])}. '
                               f'Entweder "version" des Moduls {ident} in system/modules.json erhöhen oder den Vertrag {docs[0] or "(kein Vertrag)"} ergänzen.')
     # Fail on a new route even when it lives in an already registered module file.
     errors += [f'Unregistrierter Anschluss: {route}. In system/modules.json unter "entrypoints" des zuständigen Moduls eintragen.' for route in sorted(routes-registered)]

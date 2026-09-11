@@ -192,6 +192,14 @@ und lokales Protokoll; Änderungen und Kandidaten bleiben erhalten. Konflikte
 werden niemals mit einer pauschalen Seitenwahl übergangen. Ein unterbrochener
 Prüflauf wird als blockiert erkannt. Vor erneuter Bereitmeldung eigene vorgemerkte
 Änderungen prüfen und abschließen. Spätere Dateiänderungen entwerten die Anmeldung.
+Der Grund eines blockierten Eintrags nennt die letzte Meldung des gescheiterten
+Schritts. Ein Konflikt mit einem inzwischen übernommenen Stand wird mit den
+betroffenen Dateien gemeldet; dann einen neuen Arbeitsstand vom aktuellen Stand
+beginnen. `npm run source:work -- prune` schließt integrierte und bereits im
+gemeinsamen Zweig enthaltene Einträge und entfernt ihre Arbeitskopien, Kandidaten
+und Zweige; Einträge mit nicht übernommenen Commits oder offenen Änderungen bleiben
+und werden mit Grund genannt. `discard ID` verwirft einen solchen Eintrag
+ausdrücklich. Laufende Prüfungen werden nie entfernt.
 GET /api/system/source-work und `npm run source:work -- status` liefern denselben
 Status. Die bestehenden Betriebsanzeigen führen das Wartungsergebnis mit.
 Einstellungen → System zeigt dieselben Arbeitsstände, Veröffentlichungen und den
@@ -254,8 +262,11 @@ Neustarttor, sichert den aktuellen Bestand konsistent und aktiviert nach UPDATE.
 Nur sein `status.json` mit `phase: live`, passendem `target` und tatsächlichem
 Versionsnachweis bestätigt den Abschluss. Es darf nur einen Live-Operator geben.
 
-Neuere geprüfte Nachfolger können noch nicht gestartete ältere Releases ersetzen.
-Eine laufende Aktivierung bleibt auf ihren Commit festgelegt; weitere folgen danach.
+Neuere geprüfte Nachfolger ersetzen ältere Releases, solange diese noch nicht
+gestartet sind oder noch auf das Neustarttor warten; der wartende Operator wird
+beendet, bevor er die App anhält, und der neueste Stand übernimmt das Fenster.
+Ab dem Anhalten der App bleibt eine Aktivierung auf ihren Commit festgelegt;
+weitere folgen danach.
 Unbestätigte oder fehlgeschlagene Aktivierung blockiert weitere Wechsel, niemals
 weitere Pushes. Ein nach Prozessabbruch unbekannter Wechsel wird nicht blind wiederholt.
 Nach Prüfung des Rückkehrjournals kann der lokale Betreiber den blockierten Eintrag

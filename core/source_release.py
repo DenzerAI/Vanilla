@@ -93,7 +93,21 @@ class SourceRelease:
             receipt = Path(running['attempt']) / 'status.json'
             observed = json.loads(receipt.read_text()) if receipt.exists() else {}
             running['activationPhase'] = observed.get('phase', 'preparing')
-            if self.process is None or self.process.poll() is not None:
+            newer = [r for r in state['releases'] if r['phase'] == 'checked' and r.get('publishedAt', 0) > running.get('publishedAt', 0)]
+            if newer and observed.get('phase') == 'waiting-for-sessions' and self.process is not None and self.process.poll() is None:
+                # Nothing is stopped or replaced while the operator waits: the newest checked commit takes this window.
+                self.process.terminate()
+                try:
+                    self.process.wait(30)
+                except subprocess.TimeoutExpired:
+                    self.process.kill()
+                    self.process.wait()
+                observed = json.loads(receipt.read_text()) if receipt.exists() else {}
+                if observed.get('phase') == 'waiting-for-sessions':
+                    running.update(phase='superseded', supersededBy=newer[-1]['target'],
+                                   reason='Vor dem Neustart durch den neueren geprüften Stand ersetzt.')
+                    self.process = None
+            if running['phase'] == 'activating' and (self.process is None or self.process.poll() is not None):
                 if observed.get('phase') == 'live' and observed.get('target') == running['target']:
                     running.update(phase='live', verification=observed.get('verification', {}))
                 else:
