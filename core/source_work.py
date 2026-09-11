@@ -163,9 +163,9 @@ class SourceWork:
         if not python.exists():
             command(root, ["python3", "-m", "venv", ".venv"], log)
         stamp = root / ".venv/source-dependencies"
-        locked = hashlib.sha256((root / "requirements.lock").read_bytes()).hexdigest()
+        locked = hashlib.sha256((root / "requirements.lock").read_bytes() + b"pytest>=8,<10;pytest-asyncio>=1,<2").hexdigest()
         if not stamp.exists() or stamp.read_text() != locked:
-            command(root, [str(python), "-m", "pip", "install", "-r", "requirements.lock", "pytest"], log)
+            command(root, [str(python), "-m", "pip", "install", "-r", "requirements.lock", "pytest>=8,<10", "pytest-asyncio>=1,<2"], log)
             atomic_write(stamp, locked)
         return python
 

@@ -180,6 +180,8 @@ erreichen weder Installation noch Tests. Private Arbeitsdateien bleiben außerha
 der Git-Quellpfade.
 Nach dem Kandidatenmerge werden geänderte Lockdateien erneut abgeglichen. Der
 UI-Build entsteht vor Tests, die dessen tatsächliche Auslieferungsdateien prüfen.
+Die Prüfumgebung enthält auch den in der CI verwendeten Async-Testanschluss;
+fehlende Testabhängigkeiten gelten als Fehler und verhindern die Übernahme.
 
 Status: working, queued, checking, integrated, blocked. Ein Fehler erhält Grund
 und lokales Protokoll; Änderungen und Kandidaten bleiben erhalten. Konflikte
