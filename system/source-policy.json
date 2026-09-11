@@ -92,7 +92,8 @@
     "wrapper/public/app-icon-192.png": "fd489b706fcab141255c134c5f118965709abc5d03b0d5ec6f8cb78cd0e4425c",
     "wrapper/public/favicon-32.png": "bab4e29002d95cbc3a9c1dc9672137ac4f703fd332b1886a4f4b0228a08daf07",
     "wrapper/public/vanilla-wordmark.svg": "f455938b3ef2355a441b37af2c1cdeb413e8bf3d205757a16769fe5c0a1ea6b9",
-    "wrapper/ui/assets/fonts/QuicksandVariable.ttf": "39c9b64223561f56aaff6062a6f04063c4fc86809ad6768722c06614d977e1cc"
+    "wrapper/ui/assets/fonts/QuicksandVariable.ttf": "39c9b64223561f56aaff6062a6f04063c4fc86809ad6768722c06614d977e1cc",
+    "wrapper/ui/assets/github.svg": "7421820090b50ac79d7c2bf7c951a433d7098a8a9c474809207bdd45f62d9d46"
   },
   "syntheticLiterals": {
     "test/hero-client.test.mjs": {

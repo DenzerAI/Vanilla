@@ -200,3 +200,6 @@ alter Commitbäume, niemals als Erlaubnis für einen neuen Index. Geänderte Ass
 benötigen weiterhin die aktuelle Einzelprüfung. Exakt hashgeprüfte neutrale
 Einrichtungsvorlagen dürfen Formulierungen mit lokalen Arbeitsregeln teilen;
 sonstige Inhaltsmuster und abweichende Vorlagen bleiben prüfpflichtig.
+
+Das neutrale GitHub-Markenasset für den bestehenden Update-Entwicklungsstand ist
+als lokales SVG mit Einzelhash geprüft; es enthält keine externen Ressourcen.
