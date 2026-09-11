@@ -194,6 +194,14 @@ keine ungeprüften Änderungen in die laufende App und führt keine Pushes aus.
 Abschalten: bei ruhender Wartung die lokale Konfiguration sichern und entfernen.
 Die Git-Arbeitskopien und die bereits gespeicherten Commits bleiben erhalten.
 
+Für ältere laufende Installationen kann der vorhandene Prozessmanager stattdessen
+`python3 scripts/source-work.py --data DATENORDNER watch` aus dem geprüften
+Entwicklungsordner betreiben. Dieser Anschluss verarbeitet ausschließlich explizit
+bereitgemeldete Quellarbeiten außerhalb des Live-Ordners. Der Dateilock verhindert
+gleichzeitige Verarbeitung durch Watcher und neueren App-Kern. Er benötigt keinen
+App-Neustart, keinen Port und keine Zugangsdaten. Den Watcher vor Entfernen der
+Konfiguration geordnet stoppen. Nach Aktivierung des neuen Kerns ist er entbehrlich.
+
 Historisch geprüfte Assetversionen können mit pfadgebundenen SHA-256-Werten in
 legacyReviewedAssets erhalten bleiben. Sie gelten ausschließlich beim Prüfen
 alter Commitbäume, niemals als Erlaubnis für einen neuen Index. Geänderte Assets

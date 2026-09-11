@@ -203,6 +203,8 @@ class SourceWork:
                 parent = git(repository, "rev-parse", "HEAD")
                 candidate = repository / ".verify/source-candidates" / uuid.uuid4().hex
                 git(repository, "worktree", "add", "-b", "candidate/" + candidate.name, str(candidate), parent)
+                row["candidatePath"] = str(candidate)
+                self.save(state)
                 command(candidate, ["npm", "run", "source:setup"], log)
                 self.dependencies(candidate, repository, log)
                 command(candidate, ["python3", "scripts/source-sync.py", row["commit"]], log)

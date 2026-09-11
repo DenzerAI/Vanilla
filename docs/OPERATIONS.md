@@ -267,6 +267,9 @@ Bestand erhalten und die fehlgeschlagene Anfrage wird nicht bei jedem Start wied
 
 ## Quellübergaben
 
+Ältere Installationen können den CLI-Watcher aus docs/CODE-SYNC.md über ihren
+bereits vorhandenen Prozessmanager verwenden. Er aktiviert keine App-Version.
+
 Der vorhandene Runtime-Wartungszyklus verarbeitet bei ruhender Arbeit die lokal
 aktivierte Quellübergabe aus docs/CODE-SYNC.md. Status steht unter
 /api/system/source-work und in der bestehenden maintenance-Zeile source-work.
