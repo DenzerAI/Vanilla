@@ -262,9 +262,11 @@
         "wrapper/chat-read-state.mjs",
         "wrapper/chat-style.mjs",
         "wrapper/chat-title.mjs",
+        "wrapper/event-backlog.mjs",
         "wrapper/message-delivery.mjs",
         "wrapper/message-outbox-server.mjs",
         "wrapper/server.mjs",
+        "wrapper/test/latest-read.test.mjs",
         "wrapper/ui/activity-detail.mjs",
         "wrapper/ui/app.jsx",
         "wrapper/ui/chat-activity.jsx",
@@ -286,15 +288,15 @@
         "wrapper/ui/composer-focus.tsx",
         "wrapper/ui/composer-question.tsx",
         "wrapper/ui/delivery-checks.tsx",
+        "wrapper/ui/event-batcher.mjs",
+        "wrapper/ui/latest-read.mjs",
         "wrapper/ui/live-answer-cards-preview.tsx",
         "wrapper/ui/message-outbox.mjs",
         "wrapper/ui/message-submit.mjs",
         "wrapper/ui/pane-attention.mjs",
         "wrapper/ui/pane-persistence.mjs",
         "wrapper/ui/reply-card-preview.tsx",
-        "wrapper/ui/step-count.tsx",
-        "wrapper/ui/latest-read.mjs",
-        "wrapper/test/latest-read.test.mjs"
+        "wrapper/ui/step-count.tsx"
       ],
       "entrypoints": [
         "GET /api/agent/files",
@@ -351,14 +353,16 @@
         "wrapper/test/artifact-content.test.mjs",
         "wrapper/test/message-outbox-http.test.mjs",
         "wrapper/test/message-outbox.test.mjs",
-        "wrapper/test/thread-view.test.mjs"
+        "wrapper/test/thread-view.test.mjs",
+        "wrapper/test/event-backlog.test.mjs",
+        "wrapper/test/event-batcher.test.mjs"
       ],
       "status": {
         "endpoint": "GET /api/workers",
         "meaning": "Eingerichtet, verbunden und authentifiziert getrennt auswerten."
       },
       "limits": "Eingerichtet, verbunden und authentifiziert getrennt auswerten.",
-      "version": 11,
+      "version": 12,
       "migration": "Bestehende Chat-IDs, Entwürfe und native Sitzungen erhalten. Forkfamilie und Statistikfelder sind additiv; Fork-Zähler bei Rückkehr nicht aus alten Kopien erraten. Nachrichtenkennungen und persistente Übergabebelege bleiben führend. Native Rückfragen vor Adapterwechsel beantworten oder stoppen; UI-Präferenzen sind browserlokal. workspaceOnboarding ist ein optionaler Verweis auf den einzigen Einrichtungschat je Workspace; Forks übernehmen ihn nicht. Einrichtung verwendet die bestehende Nachrichtenübergabe. Der separate Adapter liefert gebaute Assets direkt aus dist aus und meldet fehlende Dateien mit 404 statt HTML. Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Restore markiert offene Nachrichtenübergaben als unknown. Die gemeinsame Betriebspause blockiert neue Übergaben bis zur ausdrücklichen Fortsetzung; unbestätigte alte Nachrichten bleiben einzeln prüfpflichtig. Vertrag docs/OPERATIONS.md. Hintergrundabgleiche erhalten bereits gestreamte Inhalte; Zustellstatus kopiert nur betroffene Nutzerbeiträge. Keine Datenmigration oder neue Speicherung. Pane-Kürzel bedienen vorhandenes Diktat mit explizitem Direktsenden und Escape-Abbruch; keine Datenmigration. Ältere UI verwendet wieder reine Fokusaktionen."
     },
     {
@@ -1042,7 +1046,7 @@
         "meaning": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen."
       },
       "limits": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen.",
-      "version": 13,
+      "version": 14,
       "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der bestehende Projektindex erhält abgeleitete Workspace-Metadaten. Jobkategorien werden aus dem optionalen Manifestfeld gelesen; keine Verschiebung von Dateien. Tresorformat 2: OS-geschützter installationsbezogener Schlüssel. Vor Quellaktivierung alten Bestand offline mit core.vault_migrate prüfen und übernehmen. Rückweg benötigt vollständige Datenwiederherstellung; Details docs/VAULT.md. Bestehende Ciphertexte und übrige Daten bleiben erhalten. Lokales MiniLM wird anhand der festgelegten Dateiprüfsummen geprüft und repariert; source.json allein bestätigt keine Bereitschaft. Bestehende Modellordner bleiben erhalten. Nach Restore gilt recovery/not-before als Zeitplangrenze. Normale Neustarts erhalten bestehende Wiederholungsregeln. Keine Tabellen entfernt. Gemeinsame Modellwahl und anbieterbezogene Profilprüfung ohne Datenmigration; vorhandene native Einstellungen und Übergabeverläufe bleiben erhalten. Streaming-Abgleiche erhalten sichtbare Inhalte und projizieren große Abschlussereignisse. Keine Datenmigration; ursprüngliche Worker-Verläufe bleiben erhalten. Modellwahl ohne Default-Rücksetzaktion; expliziter Denkaufwand bleibt pro Chat soweit unterstützt. Keine Datenmigration."
     },
     {

@@ -27,10 +27,12 @@ export function threadItem(thread, turnId, itemId) {
 
 // Full histories can exceed the core event-frame limit. Keep the stream usable;
 // oversized visual histories are fetched through the existing HTTP resync path.
-export function threadEventFrame(event) {
+// An optional id numbers the frame so a reconnecting browser can ask for what it missed.
+export function threadEventFrame(event, id) {
   const projected=event.method === 'wrapper/thread' && event.params?.thread
     ? {...event,params:{...event.params,thread:browserThread(event.params.thread)}} : event;
   const payload=JSON.stringify(projected);
-  return `data: ${event.method === 'wrapper/thread' && payload.length > 1900000
-    ? JSON.stringify({method:'wrapper/resync'}) : payload}\n\n`;
+  const data=event.method === 'wrapper/thread' && payload.length > 1900000
+    ? JSON.stringify({method:'wrapper/resync'}) : payload;
+  return `${id ? `id: ${id}\n` : ''}data: ${data}\n\n`;
 }

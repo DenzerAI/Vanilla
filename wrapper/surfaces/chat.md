@@ -1197,3 +1197,27 @@ wird ein zuvor ausdrücklich gewählter Denkaufwand wieder übernommen, sofern d
 neu bestätigten Optionen ihn anbieten. Andere Panels und globale Vorgaben werden
 nicht geändert. Ablehnungen bleiben sichtbar; nur bestätigte Werte gelten.
 Keine Datenmigration; ältere Versionen ignorieren die additiven Metadaten.
+
+
+## Ereignisstrom mit Nachlieferung · Version 1.0.0
+
+Jeder Rahmen des Ereignisstroms trägt eine laufende Kennung aus Serverleben und
+Nummer. Der Wrapper behält die letzten 2.000 Rahmen (höchstens 4 MB). Verbindet
+sich ein Browser neu, sendet er die letzte Kennung; der Wrapper liefert genau die
+verpassten Rahmen nach und bestätigt jede Verbindung mit `wrapper/connected` und
+`replayed`. Nur ohne Nachlieferung (erste Verbindung, anderes Serverleben, Fenster
+überschritten) lädt der Browser Startdaten, Verlauf und Chats neu; nach einer
+Nachlieferung prüft er nur den Verbindungsstatus und pumpt den Postausgang.
+`wrapper/resync` bleibt der Weg für zu große Verläufe und den Kernanschluss.
+
+Schreiben in eine bereits geschlossene Browserverbindung wird verworfen und die
+Verbindung entfernt; ein geschlossener Tab beendet nie den Adapter. Herzschlag,
+Ereignisse und Nachlieferung verwenden dieselbe geschützte Schreibfunktion.
+
+Im Browser werden Textstücke (`agentMessage`, `plan`, Befehlsausgabe,
+Denkzusammenfassung) je Animationsbild zu einem Ereignis je Element gebündelt;
+jedes andere Ereignis leert die Bündelung zuerst, damit Abschluss und Text nie
+die Reihenfolge tauschen. Ursprüngliche Ereignisse werden nicht verändert.
+Keine Datenmigration; native Sitzungen und gespeicherte Verläufe bleiben unverändert.
+Prüfungen: Kennungen und Fenster (`event-backlog.test.mjs`), Bündelung und
+Reihenfolge (`event-batcher.test.mjs`), Rahmen ohne Kennung unverändert.

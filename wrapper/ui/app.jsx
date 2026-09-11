@@ -13,6 +13,7 @@ import {useLiveAction} from './live-action';
 import {lazySurface} from './lazy-surface';
 import {createSharedApi} from './shared-reads.mjs';
 import {copyThreadForEvent,reconcileThreadSnapshot} from './thread-update.mjs';
+import {createEventBatcher} from './event-batcher.mjs';
 import { createMessageOutbox, deliveryView } from './message-outbox.mjs';
 import {PaneShortcutSettings,usePaneShortcuts} from './pane-shortcut-settings.jsx';
 import {bindPaneShortcuts} from './pane-shortcuts.mjs';
@@ -966,8 +967,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     guard(refresh)();
     const es = createEventSubscription();
     let opened = false;
-    es.onopen = () => {
-      if (!opened) { opened = true; return; }
+    // Full reload after a reconnect without replay; the server confirms every connection with wrapper/connected.
+    const reload = () => {
       api("/bootstrap?view=sidebar")
         .then((b) => {
           csrf = b.token;
@@ -986,12 +987,17 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       refreshChats().catch(() => {});
     };
     es.onerror = () => setConnectionState("reconnecting");
-    es.onmessage = ({ data }) => {
-      const e = JSON.parse(data),
-        p = e.params || {};
+    const handleEvent = (e) => {
+      const p = e.params || {};
+      if (e.method === 'wrapper/connected') {
+        if (!opened) { opened = true; return; }
+        if (p.replayed) { api('/status').then(s => setConnectionState(s.engine.connected ? 'online' : 'offline')).catch(() => {}); void messageOutbox.pump(); return; }
+        reload();
+        return;
+      }
       if (e.method === 'chat/privacy') { api('/chat/privacy/status?id='+encodeURIComponent(p.id)).then(r=>privacyChanged(p.id,r.locked)).catch(()=>privacyChanged(p.id)); return; }
       if (e.method === 'wrapper/delivery') { void messageOutbox.pump(); return; }
-      if (e.method === 'wrapper/resync') { es.onopen?.(); api('/jobs').then(setJobs).catch(()=>{}); return; }
+      if (e.method === 'wrapper/resync') { reload(); api('/jobs').then(setJobs).catch(()=>{}); return; }
       if (e.method === 'core/event') {
         if (!embedded) window.dispatchEvent(new CustomEvent('core/event', {detail:p}));
         if(p.kind==='system.health' && p.payload?.status==='error' && p.payload?.notify) notify('Systemprüfung: '+(p.payload.details?.message||p.entity_id||'Bitte Einstellungen prüfen.'));
@@ -1147,6 +1153,9 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         return prev;
       });
     };
+    // Text deltas are merged per animation frame; other events flush them first and keep their order.
+    const batcher = createEventBatcher(handleEvent);
+    es.onmessage = ({ data }) => batcher.push(JSON.parse(data));
     return () => es.close();
   }, []);
   useEffect(() => {

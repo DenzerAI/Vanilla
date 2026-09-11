@@ -4,6 +4,7 @@ import {calendarChatOpener} from './calendar-chat.mjs';
 import {installWeatherRoutes} from './weather.mjs';
 import {installationEnvironment} from './worker-environment.mjs';
 import {browserThread, threadItem, threadEventFrame} from './thread-view.mjs';
+import {createEventBacklog} from './event-backlog.mjs';
 import {settingsIntegrations} from './connection-summary.mjs';
 import {browserChat} from './chat-summary.mjs';
 import { MessageDelivery as BrowserMessageDelivery } from './message-outbox-server.mjs';
@@ -113,9 +114,17 @@ const toolsByThread = new Map(),
   completedMessages = new Set();
 let modelCache = [],
   engineError = null;
+const eventBacklog = createEventBacklog();
+// A closed browser connection must never take the whole adapter down (write after end).
+const writeFrame = (client, line) => {
+  if (client.writableEnded || client.destroyed) { clients.delete(client); return; }
+  try { client.write(line); } catch { clients.delete(client); }
+};
 const emit = (event) => {
-  const line = threadEventFrame(event);
-  for (const client of clients) client.write(line);
+  const id = eventBacklog.next();
+  const line = threadEventFrame(event, id);
+  eventBacklog.remember(id, line);
+  for (const client of [...clients]) writeFrame(client, line);
 };
 const own = (id) => store.state.chats.some((c) => c.id === id);
 const touch = (id) => {
@@ -1460,13 +1469,18 @@ const server = http.createServer(async (req, res) => {
         "cache-control": "no-cache",
         connection: "keep-alive",
       });
-      res.write(": connected\n\n");
+      res.write("retry: 2000\n\n: connected\n\n");
+      // Replay what a reconnecting browser missed; outside the window it reloads through wrapper/connected.
+      const lastEventId = req.headers["last-event-id"];
+      const missed = lastEventId ? eventBacklog.since(lastEventId) : null;
+      if (missed) for (const line of missed) res.write(line);
+      res.write(threadEventFrame({method: "wrapper/connected", params: {replayed: Boolean(missed), missed: missed ? missed.length : 0}}));
       clients.add(res);
-      const interval = setInterval(() => res.write(": heartbeat\n\n"), 20000);
-      req.on("close", () => {
-        clients.delete(res);
-        clearInterval(interval);
-      });
+      const interval = setInterval(() => writeFrame(res, ": heartbeat\n\n"), 20000);
+      const release = () => { clients.delete(res); clearInterval(interval); };
+      req.on("close", release);
+      res.on("close", release);
+      res.on("error", release);
       return;
     }
     if (req.method === "GET" && u.pathname === "/api/dictation/audio") {
