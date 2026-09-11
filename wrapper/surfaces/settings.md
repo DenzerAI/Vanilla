@@ -287,24 +287,37 @@ plattformabhängige Voreinstellung wieder her. Systemtasten können vom Betriebs
 abgefangen werden; rechte Strg bleibt als Alternative auswählbar.
 
 
-## Direkte Pane-Tastenkürzel · Version 1.0.0
+## Direkte Pane-Tastenkürzel · Version 2.0.0
 
-Ctrl + Shift + 1–4 aktiviert Chat-Pane 1–4 gemäß ihrer festen Chatnummer.
-Die Zielpane muss geöffnet sein; verborgene oder maximierte Ansichten zeigen
-sie über die vorhandene aktive Panelauswahl. Ein eigener Mikrofonstart findet
-nicht statt. Nach Auswahl erhält ihr Composer Schreibfokus ohne Scrollsprung
-und die vorhandene Auswahlkontur. Gesperrte Chats erhalten keinen Schreibfokus.
+Ctrl + Shift + 1–4 wählt die geöffnete Chat-Pane mit dieser festen Nummer,
+setzt ihren Composerfokus und startet das Diktat über den bestehenden Mikrofonweg.
+Erneutes Drücken derselben Kombination beendet die Aufnahme und sendet den
+Erkennungstext einmal zusammen mit vorhandenem Entwurf und Anhängen. Während
+Mikrofonfreigabe bricht erneutes Drücken den ausstehenden Start ab; während
+Sichern/Erkennen/Senden werden weitere Start-/Sendeimpulse ignoriert.
+Escape bricht Aufnahme oder ausstehende Erkennung ohne Textübernahme und Senden
+ab. Bereits übergebene Nachrichten werden damit nicht zurückgerufen. Audio bleibt
+unter Stimme wiederherstellbar, Entwürfe und Anhänge bleiben erhalten.
+Pane-/Fensterwechsel beendet eine per Pane-Kürzel gestartete Aufnahme ohne
+Senden. Ein Chatwechsel verwirft ausstehende Textübernahme; auch verspätete
+Statusantworten dürfen niemals in einen anderen Chat senden.
+Verborgene oder maximierte Zielpanels werden über die aktive Panelauswahl sichtbar.
+Nicht geöffnete Panels melden einen Hinweis; gesperrte Chats starten kein Mikrofon.
 Nur ein Listener der äußeren App verarbeitet die Kürzel im aktiven Chatfenster;
 Dialoge, Menüs, Einstellungen, IME und Tastenwiederholung sind ausgeschlossen.
-Einstellungen → Tastenkürzel verwendet PaneShortcutSettings mit SettingRows:
-Belegung aufnehmen, je Pane deaktivieren und Standard wiederherstellen.
-Doppelte Belegungen und bestehende App-Kürzel werden abgewiesen; einzelne
-Schreibzeichen ohne Ctrl/Alt/Meta sind nicht erlaubt, F-Tasten sind möglich.
-Escape/Tab/Verlassen bricht das Aufnehmen ab. Auswahl wird erst nach erfolgreichem
-Speichern übernommen, Fehler bleiben sichtbar. Browserlokaler Schlüssel
-agent-pane-shortcuts-v1, validiert und zwischen Tabs synchronisiert. Keine
-Migration von Serverdaten oder Chatentwürfen; fehlende/ungültige Werte verwenden
-den Standard. System- und Browserbelegungen haben gegebenenfalls Vorrang.
+Einstellungen → Tastenkürzel erklärt Start, Senden und Escape in der vorhandenen
+PaneShortcutSettings mit SettingRows. Belegung aufnehmen, je Pane deaktivieren
+und Standard wiederherstellen bleiben erhalten. Doppelte Belegungen und bestehende
+App-Kürzel werden abgewiesen; Schreibzeichen ohne Ctrl/Alt/Meta sind nicht erlaubt,
+F-Tasten sind möglich. Escape/Tab/Verlassen bricht die Belegungsaufnahme ab.
+Speicherfehler bleiben sichtbar. Browserlokaler Schlüssel agent-pane-shortcuts-v1
+bleibt validiert und zwischen Tabs synchronisiert. Gespeicherte Belegungen gelten
+nun für Diktatstart/Direktsenden; fehlende/ungültige Werte verwenden den Standard.
+Keine Audio-/Serverdatenmigration. Rückkehr zu Version 1 macht die Belegungen
+wieder zu reinen Fokusaktionen. Separate rechte Command-/Strg-Diktattaste und
+PTT behalten die Entwurfsübernahme. Betriebssystem-/Browserbelegungen können
+Vorrang haben; keine globalen Betriebssystem-Hotkeys.
+
 
 ## Workspace-Beschreibungen
 

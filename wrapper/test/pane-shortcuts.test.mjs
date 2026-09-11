@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {defaultPaneShortcuts,parsePaneShortcuts,matchPaneShortcut,validPaneShortcut,shortcutFromEvent} from '../ui/pane-shortcuts.mjs';
+import {bindPaneShortcuts,defaultPaneShortcuts,parsePaneShortcuts,matchPaneShortcut,validPaneShortcut,shortcutFromEvent} from '../ui/pane-shortcuts.mjs';
 import {visiblePanes} from '../ui/chat-layout.mjs';
 import {bindDictationShortcut} from '../ui/dictation-shortcut.mjs';
 test('default digit codes select all four fixed pane identities even with shifted characters',()=>{
@@ -34,4 +34,40 @@ test('right-Control pane chord does not toggle dictation on release',()=>{
  const dispose=bindDictationShortcut({addEventListener:(n,f)=>events[n]=f,removeEventListener:n=>delete events[n]}, {key:'ControlRight',mode:'toggle',available:()=>true,phase:()=> 'idle',start:()=>calls.push('start'),finish:()=>calls.push('finish'),cancelPending:()=>{}});
  events.keydown({code:'ControlRight',ctrlKey:true});events.keydown({code:'ShiftLeft',ctrlKey:true,shiftKey:true});events.keydown({code:'Digit2',ctrlKey:true,shiftKey:true});events.keyup({code:'Digit2',ctrlKey:true,shiftKey:true});events.keyup({code:'ShiftLeft',ctrlKey:true});events.keyup({code:'ControlRight'});
  assert.deepEqual(calls,[]);dispose();
+});
+
+function router(){
+ const events={},frames=new Map(),calls=[];let active=0,next=0,allowed=true;
+ const state={view:'chat',modal:null,order:[0,1,2,3],bindings:defaultPaneShortcuts(),activate:id=>{active=id;calls.push(['activate',id]);}};
+ const sessions=state.order.map(id=>({id:`chat-${id}`,projectId:'example',focusComposer:()=>calls.push(['focus',id]),toggleDictation:()=>calls.push(['dictation',id]),cancelDictation:()=>{calls.push(['cancel',id]);return true;}}));
+ const target={addEventListener:(name,fn)=>events[name]=fn,removeEventListener:name=>delete events[name]};
+ const dispose=bindPaneShortcuts(target,{state:()=>state,available:()=>allowed,active:()=>active,session:id=>sessions[id],notify:message=>calls.push(['notice',message]),schedule:fn=>{frames.set(++next,fn);return next;},cancel:id=>frames.delete(id)});
+ const press=(n,extra={})=>{const e={code:`Digit${n}`,ctrlKey:true,shiftKey:true,preventDefault(){this.defaultPrevented=true;},...extra};events.keydown(e);return e;};
+ return {state,sessions,calls,events,press,dispose,allow:value=>allowed=value,flush:()=>{for(const [id,fn] of frames){frames.delete(id);fn();}}};
+}
+test('every pane gesture selects then invokes its own dictation, including a second press',()=>{
+ const r=router();
+ for(let n=1;n<=4;n++)for(let press=0;press<2;press++){
+  r.calls.length=0;r.press(n);assert.deepEqual(r.calls,[['activate',n-1]]);
+  r.flush();assert.deepEqual(r.calls,[['activate',n-1],['focus',n-1],['dictation',n-1]]);
+ }
+ r.dispose();assert.deepEqual(Object.keys(r.events),[]);
+});
+test('rapid switching starts only the last selected pane; repeats do not send again',()=>{
+ const r=router();r.press(1);r.press(3);r.press(3,{repeat:true});r.flush();
+ assert.deepEqual(r.calls.filter(c=>c[0]==='dictation'),[['dictation',2]]);
+});
+test('Escape cancels a scheduled microphone start and targets the selected recording',()=>{
+ const r=router();r.press(2);assert.equal(r.press(0,{key:'Escape'}).defaultPrevented,true);r.flush();
+ assert.deepEqual(r.calls,[['activate',1],['cancel',1]]);
+});
+test('closed panes, dialogs, composition and background windows cannot start dictation',()=>{
+ const r=router();r.state.order=[0];r.press(4);r.flush();assert.equal(r.calls[0][0],'notice');
+ r.calls.length=0;r.state.modal='settings';r.press(1);r.state.modal=null;
+ r.press(1,{isComposing:true});r.press(1,{defaultPrevented:true});r.allow(false);r.press(1);r.flush();assert.deepEqual(r.calls,[]);
+});
+test('chat replacement, lost focus or a newly opened dialog cancel deferred start',()=>{
+ for(const change of [r=>r.sessions[0].id='other',r=>r.sessions[0].projectId='other',r=>r.events.blur(),r=>r.events.visibilitychange(),r=>r.state.modal='search',r=>r.allow(false),r=>r.state.view='settings']){
+  const r=router();r.press(1);change(r);r.flush();assert.deepEqual(r.calls,[['activate',0]]);
+ }
 });

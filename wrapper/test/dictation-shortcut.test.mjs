@@ -49,3 +49,44 @@ test('completed shortcut does not retain ownership of a later mouse recording',(
  const f=fixture();f.emit('keydown');f.emit('keyup');f.setState('idle');f.dispose.releaseOwnership();
  f.setState('recording');f.emit('blur');assert.deepEqual(f.calls,['start']);
 });
+
+// Exercise the actual component boundaries with controlled async replies, as in
+// composer-dictation.test.mjs. No microphone, worker or live message is involved.
+const {readFile}=await import('node:fs/promises');
+const component=await readFile(new URL('../ui/dictation.jsx',import.meta.url),'utf8');
+const controlSource=component.slice(component.indexOf('  useImperativeHandle(controlRef,'),component.indexOf('  useEffect(()=>{\n    const interrupt='));
+function paneControl(initial='idle',available=true){
+ const calls=[],phaseRef={current:initial},paneOwned={current:false};let control;
+ const env={controlRef:{},phaseRef,paneOwned,session:{current:null},shortcutState:{current:{available:()=>available,cancelPending:()=>{calls.push('cancelPending');phaseRef.current='idle';}}},
+  startRef:{current:()=>{calls.push('start');phaseRef.current='starting';}},stopRef:{current:(...args)=>{calls.push(args);phaseRef.current='saving';}},shortcutBinding:{current:{releaseOwnership:()=>calls.push('release')}},end:()=>{calls.push('end');phaseRef.current='idle';},useImperativeHandle:(_ref,factory)=>control=factory()};
+ new Function(...Object.keys(env),controlSource)(...Object.values(env));return {control,calls,phaseRef,paneOwned};
+}
+test('pane control starts and explicitly finishes for direct send once',()=>{
+ const s=paneControl();s.control.toggle();assert.deepEqual(s.calls,['start']);assert.equal(s.paneOwned.current,true);
+ s.phaseRef.current='recording';s.control.toggle();s.control.toggle();assert.deepEqual(s.calls,['start','release',[false,true,true]]);
+});
+test('pending permission, paused capture, processing and unavailable pane have distinct actions',()=>{
+ const starting=paneControl('starting');starting.control.toggle();assert.deepEqual(starting.calls,['cancelPending']);
+ const paused=paneControl('paused');paused.control.toggle();assert.deepEqual(paused.calls,['release',[false,true,true]]);
+ for(const phase of ['saving','recognizing','waiting']){const s=paneControl(phase);s.control.toggle();assert.deepEqual(s.calls,[]);}
+ const disabled=paneControl('idle',false);disabled.control.toggle();assert.deepEqual(disabled.calls,[]);
+});
+test('Escape cancels recording and recognition but never recalls an already submitted message',()=>{
+ for(const phase of ['starting','recording','paused','saving','recognizing']){const s=paneControl(phase);assert.equal(s.control.cancel(),true);assert.deepEqual(s.calls,['release','end']);}
+ for(const phase of ['idle','waiting']){const s=paneControl(phase);assert.equal(s.control.cancel(),false);assert.deepEqual(s.calls,[]);}
+});
+const transcribeSource=component.slice(component.indexOf('  async function transcribe('),component.indexOf('  async function stop('));
+async function recognitionScenario(change){
+ let release,requested;const pending=new Promise(resolve=>release=resolve),started=new Promise(resolve=>requested=resolve),calls=[];
+ const generation={current:1},mounted={current:true},latest={current:{chatId:'original',running:false,onSendText:async text=>calls.push(['send',text]),onText:text=>calls.push(['draft',text])}};
+ const env={generation,mounted,latest,setPhase:()=>{},setIssue:message=>calls.push(['issue',message]),delay:async()=>{},api:async path=>{if(path==='/dictation/transcribe')return {};requested();await pending;return {recordings:[{id:'recording',text:'Beispiel'}]};}};
+ const transcribe=new Function(...Object.keys(env),`${transcribeSource};return transcribe;`)(...Object.values(env));
+ const result=transcribe('recording',1,null,true);await started;change?.({generation,mounted,latest});release();await result;return calls;
+}
+test('late recognition is ignored after Escape, chat change or unmount',async()=>{
+ for(const change of [s=>s.generation.current++,s=>s.latest.current.chatId='other',s=>s.mounted.current=false])assert.deepEqual(await recognitionScenario(change),[]);
+});
+test('recognition sends once to the original chat and busy chats keep a draft',async()=>{
+ assert.deepEqual(await recognitionScenario(),[['send','Beispiel']]);
+ const calls=await recognitionScenario(s=>s.latest.current.running=true);assert.equal(calls[0][0],'draft');assert.ok(calls.every(c=>c[0]!=='send'));
+});

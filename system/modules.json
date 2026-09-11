@@ -358,8 +358,8 @@
         "meaning": "Eingerichtet, verbunden und authentifiziert getrennt auswerten."
       },
       "limits": "Eingerichtet, verbunden und authentifiziert getrennt auswerten.",
-      "version": 10,
-      "migration": "Bestehende Chat-IDs, Entwürfe und native Sitzungen erhalten. Forkfamilie und Statistikfelder sind additiv; Fork-Zähler bei Rückkehr nicht aus alten Kopien erraten. Nachrichtenkennungen und persistente Übergabebelege bleiben führend. Native Rückfragen vor Adapterwechsel beantworten oder stoppen; UI-Präferenzen sind browserlokal. workspaceOnboarding ist ein optionaler Verweis auf den einzigen Einrichtungschat je Workspace; Forks übernehmen ihn nicht. Einrichtung verwendet die bestehende Nachrichtenübergabe. Der separate Adapter liefert gebaute Assets direkt aus dist aus und meldet fehlende Dateien mit 404 statt HTML. Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Restore markiert offene Nachrichtenübergaben als unknown. Die gemeinsame Betriebspause blockiert neue Übergaben bis zur ausdrücklichen Fortsetzung; unbestätigte alte Nachrichten bleiben einzeln prüfpflichtig. Vertrag docs/OPERATIONS.md. Hintergrundabgleiche erhalten bereits gestreamte Inhalte; Zustellstatus kopiert nur betroffene Nutzerbeiträge. Keine Datenmigration oder neue Speicherung."
+      "version": 11,
+      "migration": "Bestehende Chat-IDs, Entwürfe und native Sitzungen erhalten. Forkfamilie und Statistikfelder sind additiv; Fork-Zähler bei Rückkehr nicht aus alten Kopien erraten. Nachrichtenkennungen und persistente Übergabebelege bleiben führend. Native Rückfragen vor Adapterwechsel beantworten oder stoppen; UI-Präferenzen sind browserlokal. workspaceOnboarding ist ein optionaler Verweis auf den einzigen Einrichtungschat je Workspace; Forks übernehmen ihn nicht. Einrichtung verwendet die bestehende Nachrichtenübergabe. Der separate Adapter liefert gebaute Assets direkt aus dist aus und meldet fehlende Dateien mit 404 statt HTML. Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Restore markiert offene Nachrichtenübergaben als unknown. Die gemeinsame Betriebspause blockiert neue Übergaben bis zur ausdrücklichen Fortsetzung; unbestätigte alte Nachrichten bleiben einzeln prüfpflichtig. Vertrag docs/OPERATIONS.md. Hintergrundabgleiche erhalten bereits gestreamte Inhalte; Zustellstatus kopiert nur betroffene Nutzerbeiträge. Keine Datenmigration oder neue Speicherung. Pane-Kürzel bedienen vorhandenes Diktat mit explizitem Direktsenden und Escape-Abbruch; keine Datenmigration. Ältere UI verwendet wieder reine Fokusaktionen."
     },
     {
       "id": "speech",
@@ -441,8 +441,8 @@
         "meaning": "Lokales Modell oder explizit eingerichteter Anbieter."
       },
       "limits": "Lokales Modell oder explizit eingerichteter Anbieter.",
-      "version": 2,
-      "migration": "Keine Audio- oder Serverdatenmigration. Browserlokale validierte Tastenkürzel ergänzen den bestehenden Diktatweg; Entfernen der Präferenz stellt die Voreinstellung wieder her. Aufnahmen und Wiederherstellung bleiben erhalten."
+      "version": 3,
+      "migration": "Keine Audio- oder Serverdatenmigration. Browserlokale validierte Tastenkürzel ergänzen den bestehenden Diktatweg; Entfernen der Präferenz stellt die Voreinstellung wieder her. Aufnahmen und Wiederherstellung bleiben erhalten. Pane-Kürzel starten nun Diktat und senden bei erneutem Drücken, Escape bricht ohne Senden ab. Bestehende Belegungen bleiben erhalten; keine Audio-/Serverdatenmigration. Rückkehr stellt reine Fokusaktionen wieder her."
     },
     {
       "id": "connections",
@@ -809,8 +809,8 @@
         "meaning": "Persistierte Konfiguration dieser Installation."
       },
       "limits": "Persistierte Konfiguration dieser Installation.",
-      "version": 3,
-      "migration": "Vorhandene Einstellungen und Markdown-Abschnitte erhalten. Optionale Wetterkoordinaten ergänzen USER.md; alte Ortsnamen bleiben lesbar und werden bei Mehrdeutigkeit erst nach Auswahl verwendet. Pane-Tastenkürzel liegen ausschließlich browserlokal; ungültige Werte verwenden den Standard, ohne Chatentwürfe zu ändern."
+      "version": 4,
+      "migration": "Vorhandene Einstellungen und Markdown-Abschnitte erhalten. Optionale Wetterkoordinaten ergänzen USER.md; alte Ortsnamen bleiben lesbar und werden bei Mehrdeutigkeit erst nach Auswahl verwendet. Pane-Tastenkürzel liegen ausschließlich browserlokal; ungültige Werte verwenden den Standard, ohne Chatentwürfe zu ändern. Pane-Kürzel starten nun Diktat und senden bei erneutem Drücken, Escape bricht ohne Senden ab. Bestehende Belegungen bleiben erhalten; keine Audio-/Serverdatenmigration. Rückkehr stellt reine Fokusaktionen wieder her."
     },
     {
       "id": "operations",
