@@ -223,6 +223,12 @@ feste Link auf UPDATE.md bleibt der Einstieg auch für ältere Installationen.
 
 ## Prüfszenarien
 
+Der geprüfte UI-Build wird als begrenzter Archivstream innerhalb des laufenden
+Prüfcontainers gelesen. Dadurch bleibt dessen tmpfs-Sicht erhalten, auch wenn
+die Archivkopie der Container-Engine diese Ablage nicht erreicht. Der Export
+erhält keine zusätzlichen Mounts, Rechte oder Netzwerkzugänge; Größen-, Pfad-
+und Verknüpfungsprüfungen beim Entpacken gelten unverändert.
+
 Eigene Workflows, aktive/inaktive Zeitpläne, Erweiterung, Zugang und reservierte
 Ausführungen mit synthetischen Daten auf zwei getrennten Installationen prüfen.
 Erfolgsupdate und Konflikt, manipuliertes Manifest/Build, veraltete Freigabe,

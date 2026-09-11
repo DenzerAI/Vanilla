@@ -1,4 +1,6 @@
 import io
+import asyncio
+import sys
 import json
 import tarfile
 from pathlib import Path
@@ -55,3 +57,19 @@ def test_build_copy_rejects_path_escape_links_and_duplicate_files(tmp_path):
     sandbox.extract_build(archive('dist/app.js'),tmp_path/'dist')
     assert (tmp_path/'dist/app.js').read_bytes()==b'fixture'
     with pytest.raises(FileExistsError):sandbox.extract_build(archive('dist/app.js'),tmp_path/'dist')
+
+
+def test_build_export_streams_from_the_running_container(tmp_path, monkeypatch):
+    source = tmp_path / 'container-dist'
+    source.mkdir()
+    (source / 'app.js').write_text('rendered application')
+    spawn = asyncio.create_subprocess_exec
+
+    async def local_container(*args, **kwargs):
+        assert args[:6] == ('docker', '--context', 'fixture', 'exec', 'owned', '/usr/local/bin/python')
+        script = args[-1].replace('/candidate/wrapper/dist', str(source))
+        return await spawn(sys.executable, '-c', script, **kwargs)
+
+    monkeypatch.setattr(sandbox.asyncio, 'create_subprocess_exec', local_container)
+    asyncio.run(sandbox.copy_build({'binary':'docker','context':'fixture','name':'owned'}, tmp_path/'dist'))
+    assert (tmp_path/'dist/app.js').read_text() == 'rendered application'

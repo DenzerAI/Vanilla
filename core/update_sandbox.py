@@ -138,8 +138,12 @@ def extract_build(raw, destination):
 
 
 async def copy_build(container, destination):
-    process = await asyncio.create_subprocess_exec(container['binary'], '--context', container['context'], 'cp',
-        container['name'] + ':/candidate/wrapper/dist', '-', env=host_env(), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL)
+    # Read the tmpfs through the running container's mount namespace. The daemon's
+    # archive-copy API is not the same filesystem view on every local engine.
+    export = "import sys,tarfile\nwith tarfile.open(fileobj=sys.stdout.buffer,mode='w|') as archive:\n archive.add('/candidate/wrapper/dist',arcname='dist')\n"
+    process = await asyncio.create_subprocess_exec(container['binary'], '--context', container['context'],
+        'exec', container['name'], '/usr/local/bin/python', '-c', export,
+        env=host_env(), stdout=asyncio.subprocess.PIPE, stderr=asyncio.subprocess.DEVNULL)
     raw = bytearray()
     async def consume():
         while chunk := await process.stdout.read(65536):
