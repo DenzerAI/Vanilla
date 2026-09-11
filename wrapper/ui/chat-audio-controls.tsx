@@ -15,7 +15,7 @@ export function ChatAudioButton({Button,chatId}:{Button:React.ElementType;chatId
 export function ChatAudioControls({Button}:{Button:React.ElementType}) {
   const state=useChatAudio();
   useEffect(()=>{
-    const events=createEventSubscription();
+    const events=createEventSubscription() as ReturnType<typeof createEventSubscription> & {onmessage?: (event:MessageEvent)=>void};
     events.onmessage=({data})=>{try{chatAudio.event(JSON.parse(data));}catch{/* malformed event */}};
     return()=>{events.close();chatAudio.stop();};
   },[]);

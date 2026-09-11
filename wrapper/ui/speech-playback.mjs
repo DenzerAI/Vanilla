@@ -8,6 +8,8 @@ export function speechChunks(text, max = 2000) {
   return parts;
 }
 let activePlayback = null;
+const playbackListeners = new Set();
+export function onPlaybackStart(listener) { playbackListeners.add(listener); return () => playbackListeners.delete(listener); }
 const microphoneOwners = new Set();
 const microphoneListeners = new Set();
 export const microphoneBusy = () => microphoneOwners.size > 0;
@@ -31,6 +33,11 @@ export class SpeechPlayback {
     }
     if (this.context.state!=='running') await this.context.resume();
   }
+  claim() {
+    if(activePlayback && activePlayback!==this) { const previous=activePlayback; previous.cancel(); previous.onReplaced?.(); }
+    activePlayback=this;
+    for(const listener of playbackListeners) listener(this);
+  }
   pause() {
     if(this.paused) return;
     this.paused=true;
@@ -40,7 +47,11 @@ export class SpeechPlayback {
   }
   async resume() {
     if(microphoneBusy()) throw new Error('Bitte zuerst das Diktat beenden.');
-    await this.unlock(); this.paused=false; this.releasePause?.(); this.releasePause=null;
+    const generation=this.generation;
+    await this.unlock();
+    if(generation!==this.generation) return;
+    if(microphoneBusy()) { await this.context?.suspend(); throw new Error('Bitte zuerst das Diktat beenden.'); }
+    this.paused=false; this.releasePause?.(); this.releasePause=null;
     this.onState(this.source?'playing':'loading');
   }
   cancel() { this.paused=false; this.releasePause?.(); this.releasePause=null; if(activePlayback===this) activePlayback=null; this.generation++; this.source?.stop(); this.source=null; this.onState('idle'); }
@@ -48,7 +59,7 @@ export class SpeechPlayback {
   async speak(text) {
     if(microphoneBusy()) throw new Error('Bitte zuerst das Diktat beenden.');
     if(activePlayback && activePlayback!==this) { const previous=activePlayback; previous.cancel(); previous.onReplaced?.(); }
-    this.cancel(); activePlayback=this; const generation=this.generation;
+    this.cancel(); this.claim(); const generation=this.generation;
     this.onState('loading');
     try {
       try { await this.unlock(); } catch { if(generation!==this.generation) return false; throw new Error('Wiedergabe freigeben: Bitte auf Vorlesen klicken.'); }
