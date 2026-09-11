@@ -36,7 +36,7 @@ import { PanelLight } from "./panel-light";
 import {Skeleton} from './skeleton.tsx';
 import { MessageSpeech } from "./message-speech";
 import {chatAudio} from "./chat-audio.mjs";
-import {ChatAudioControls, ChatAudioButton, useChatAudio} from "./chat-audio";
+import {ChatAudioControls, ChatAudioButton, useChatAudio} from "./chat-audio-controls";
 import { ScrollEdgeFade } from "./scroll-edge-fade.tsx";
 import { designVariables, identity as designIdentity } from "./design-system.mjs";
 import { SettingsNavigationRow } from "./settings-patterns.jsx";

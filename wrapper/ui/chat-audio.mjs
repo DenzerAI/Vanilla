@@ -28,7 +28,8 @@ export class ChatAudio {
     catch(error) { if(revision===this.revision) this.fail(error); return; }
     if(revision!==this.revision) return;
     if(text) this.queue.push(text);
-    if(mode==='follow'&&!text) this.emit({status:'waiting'});
+    if(microphoneBusy() || this.state.status==='paused') this.pause();
+    else if(mode==='follow'&&!text) this.emit({status:'waiting'});
     void this.drain();
   }
   fail(error) { this.stop(); this.emit({error:error.message||'Vorlesen fehlgeschlagen.'}); }

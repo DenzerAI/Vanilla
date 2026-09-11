@@ -1,6 +1,7 @@
 // One order for the single-chat header and every chat in the split view.
 const groups = [
   ['new', 'pin', 'rename'],
+  ['audio'],
   ['fork', 'compact', 'share'],
   ['open', 'privacy', 'privacy-remove'],
   ['maximize-panel', 'close-panel'],

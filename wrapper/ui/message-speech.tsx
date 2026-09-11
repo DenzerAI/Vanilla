@@ -1,7 +1,7 @@
 import React from 'react';
 import {spokenText} from './speech-playback.mjs';
 import {chatAudio} from './chat-audio.mjs';
-import {useChatAudio} from './chat-audio';
+import {useChatAudio} from './chat-audio-controls';
 import {Volume2, Square, LoaderCircle} from './icons.jsx';
 type Props = {text:string;chatId:string;messageId:string;disabled?:boolean;api:(url:string,data?:unknown)=>Promise<any>;Button:React.ElementType};
 export function MessageSpeech({text,chatId,messageId,disabled,api,Button}:Props) {
