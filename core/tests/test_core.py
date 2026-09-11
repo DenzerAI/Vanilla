@@ -185,6 +185,41 @@ def test_context_is_bounded_scoped_and_does_not_return_deleted_files(config, db)
     assert "keine Arbeitsanweisungen" in route["instructions"]
     file.unlink()
     assert knowledge.context("Alpha", "default")["sources"] == []
+
+
+def test_context_reads_current_sources_without_building_the_backlink_graph(config, db, monkeypatch):
+    file = write_note(config, "notes/Alpha.md", "# Alpha\nAlter Stand [[Ziel]]")
+    write_note(config, "notes/Ziel.md", "# Ziel\n[[Alpha]]")
+    knowledge = Knowledge(db, config)
+    knowledge.scan()
+    # The document viewer keeps its complete navigation contract.
+    assert knowledge.read("notes/Alpha.md")["links"][0]["path"] == "notes/Ziel.md"
+    file.write_text("# Alpha\nFrischer Stand [[Ziel]]")
+    monkeypatch.setattr(knowledge, "resolve_link", lambda *args: pytest.fail("Chat context built the backlink graph"))
+    route = knowledge.context("Alpha", "default", "chat", 600)
+    source = next(s for s in route["sources"] if s["path"] == "notes/Alpha.md")
+    assert "Frischer Stand" in source["text"]
+    assert source["version"] == digest(file.read_text())
+    assert db.rows("SELECT digest FROM documents WHERE path=?", ("notes/Alpha.md",))[0]["digest"] == source["version"]
+    assert route["characters"] <= 600
+
+
+def test_lightweight_source_read_preserves_privacy_and_path_checks(config, db, tmp_path):
+    from types import SimpleNamespace
+
+    file = write_note(config, "notes/Alpha.md", "# Alpha\nGeschützte Quelle")
+    knowledge = Knowledge(db, config)
+    knowledge.scan()
+    knowledge.chat_privacy = SimpleNamespace(path_private=lambda path: path == "notes/Alpha.md")
+    with pytest.raises(ValueError, match="privat"):
+        knowledge.read("notes/Alpha.md", include_links=False)
+    del knowledge.chat_privacy
+    outside = tmp_path / "outside.md"
+    outside.write_text("Nicht freigegeben")
+    file.unlink()
+    file.symlink_to(outside)
+    with pytest.raises(ValueError, match="Verknüpfungen"):
+        knowledge.read("notes/Alpha.md", include_links=False)
     knowledge.scan()
     assert knowledge.search("Alpha") == []
 

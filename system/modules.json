@@ -745,15 +745,16 @@
       ],
       "verification": [
         "core/tests/test_operations.py",
-        "core/tests/test_models.py"
+        "core/tests/test_models.py",
+        "core/tests/test_core.py"
       ],
       "status": {
         "endpoint": "GET /api/system/status",
         "meaning": "FTS ist unabhängig von optionalen Embeddings; noch nicht indexierte Formate kennzeichnen."
       },
       "limits": "FTS ist unabhängig von optionalen Embeddings; noch nicht indexierte Formate kennzeichnen.",
-      "version": 5,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der gemeinsam genutzte MCP-Katalog ergänzt optionale Routine-Kategorien; bestehende CRM-/Memory-Werkzeugfelder bleiben kompatibel. Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Suchvektoren erhalten die Identität tokens-v2 und werden aus vorhandenen Originaldateien neu berechnet; keine Änderung an Quelldokumenten oder am Datenbankschema."
+      "version": 6,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der gemeinsam genutzte MCP-Katalog ergänzt optionale Routine-Kategorien; bestehende CRM-/Memory-Werkzeugfelder bleiben kompatibel. Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Suchvektoren erhalten die Identität tokens-v2 und werden aus vorhandenen Originaldateien neu berechnet; keine Änderung an Quelldokumenten oder am Datenbankschema. Kontextabrufe lesen aktuelle Quellen ohne den Navigationsgraphen der Wissensansicht; Schutzprüfungen, Quellenversionen und Indexaktualisierung bleiben erhalten. Keine Datenmigration, Rückkehr ohne Datenänderung möglich."
     },
     {
       "id": "channels",

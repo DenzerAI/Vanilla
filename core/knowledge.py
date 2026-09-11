@@ -426,7 +426,7 @@ class Knowledge:
             "ambiguous": len(matches) > 1,
         }
 
-    def read(self, path):
+    def read(self, path, *, include_links=True):
         if getattr(self, 'chat_privacy', None) and self.chat_privacy.path_private(path):
             raise ValueError('Diese Chatquelle ist privat.')
         file = safe_path(self.config.workspace, path)
@@ -435,12 +435,18 @@ class Knowledge:
             or file.stat().st_size > 2_000_000
         ):
             raise ValueError("Keine unterstützte Textdatei.")
-        docs = self.db.rows("SELECT path,title,project_id FROM documents")
-        if path not in {d["path"] for d in docs}:
+        matches = self.db.rows("SELECT project_id FROM documents WHERE path=?", (path,))
+        if not matches:
             raise ValueError("Datei liegt außerhalb der Wissensordner.")
         text = file.read_text()
-        project = next(d["project_id"] for d in docs if d["path"] == path)
+        project = matches[0]["project_id"]
         self.index(path, project, text, file.stat().st_mtime)
+        document = {"path": path, "projectId": project, "text": text, "version": digest(text)}
+        # Context needs fresh source text, not the document viewer's backlink graph.
+        # Resolving every link against every document for each hit blocks chat work.
+        if not include_links:
+            return document
+        docs = self.db.rows("SELECT path,title,project_id FROM documents")
         outgoing, backlinks = [], []
         for link in self.db.rows("SELECT * FROM links ORDER BY source,target"):
             resolved = self.resolve_link(link["source"], link["target"], docs)
@@ -458,10 +464,7 @@ class Knowledge:
                     }
                 )
         return {
-            "path": path,
-            "projectId": project,
-            "text": text,
-            "version": digest(text),
+            **document,
             "links": outgoing,
             "backlinks": backlinks,
         }
@@ -507,7 +510,7 @@ class Knowledge:
         for hit in hits:
             # Re-read the authoritative file; never serve deleted/stale indexed content.
             try:
-                doc = self.read(hit["path"])
+                doc = self.read(hit["path"], include_links=False)
             except (OSError, ValueError):
                 continue
             selected, offset = (hit["passage"], hit["offset"]) if hit["version"] == doc["version"] else passage(doc["text"], query)
