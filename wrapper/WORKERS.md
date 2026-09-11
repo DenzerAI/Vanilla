@@ -209,6 +209,18 @@ nicht. Bestehende Installationen richten die Bindung ausdrücklich ein; neue
 Clones bleiben unverbunden. Entfernen der Bindung stellt das Profilverhalten
 wieder her, ohne Zugangsdaten oder Chats zu verändern.
 
+Bestehende, ausdrücklich eingerichtete native Profilverknüpfungen können in
+derselben lokalen Datei unter `profileLinks.WORKER` einzeln gebunden werden:
+Schlüssel ist der relative Pfad im nativen Profil (zum Beispiel `auth.json`),
+Wert das genaue absolute, aufgelöste Ziel der vorhandenen Verknüpfung. Diese
+Bindung gilt nur für den benannten Worker, nicht für das gemeinsame Home oder
+andere Anbieter. Veränderte Ziele und ungebundene externe Links werden weiter
+zurückgewiesen. So bleiben native Token-Erneuerungen am bisherigen Speicherort,
+ohne Anmeldedaten zu duplizieren. Die Datei enthält ausschließlich Pfade und
+Selektoren; sie bleibt im lokalen Datenordner. Neue Clones erhalten keine solche
+Bindung. Keine automatische Erkennung, Übernahme oder Änderung von Profilen.
+
+
 ACP 0.75 kann tokenbasierte OAuth-Anmeldungen ohne Abonnementfelder als `none`
 melden. Nur bei ausdrücklich gebundenem OAuth prüft der Wrapper dann dieselbe
 CLI über den Adapter (`--cli auth status --json`). Erst `loggedIn: true` mit

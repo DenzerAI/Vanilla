@@ -15,6 +15,25 @@ export async function installationEnvironment(dataRoot, workerId, environment = 
     XDG_CONFIG_HOME:'worker-home/.config',XDG_DATA_HOME:'worker-home/.local/share',
     XDG_CACHE_HOME:'worker-home/.cache',TMPDIR:'worker-home/tmp',TEMP:'worker-home/tmp',TMP:'worker-home/tmp'};
   const inside = file => file === root || file.startsWith(root + path.sep);
+  const profileKeys = {codex:'CODEX_HOME', 'claw-code':'CLAUDE_CONFIG_DIR', hermes:'HERMES_HOME', openclaw:'OPENCLAW_STATE_DIR', gemini:null, kimi:null};
+  if (workerId !== undefined && !Object.hasOwn(profileKeys, workerId)) throw Error('Unbekanntes Worker-Profil.');
+  let auth;
+  const object = value => value && typeof value === 'object' && !Array.isArray(value);
+  if (workerId !== undefined) {
+    const authFile = path.join(root, 'worker-auth.json');
+    try {
+      if (!inside(await realpath(authFile))) throw Error('Worker-Anmeldung liegt außerhalb dieser Installation.');
+      auth = JSON.parse(await readFile(authFile, 'utf8'));
+    } catch (error) { if (error.code !== 'ENOENT') throw error; }
+    if (auth !== undefined && (!object(auth) || auth.version !== 1
+      || (auth.environment !== undefined && !object(auth.environment))
+      || (auth.profileLinks !== undefined && !object(auth.profileLinks)))) throw Error('Unbekanntes Format der Worker-Anmeldung.');
+  }
+  const links = auth?.profileLinks?.[workerId] ?? {};
+  if (!object(links) || Object.entries(links).some(([name,target]) => !name || name.split('/').some(part => !part || part === '.' || part === '..')
+    || name.includes('\\') || typeof target !== 'string' || !path.isAbsolute(target))) throw Error('Ungültige Worker-Profilbindung.');
+  const profileFolder = folders[profileKeys[workerId]];
+  const boundLink = (file, target) => profileFolder && links[path.relative(path.join(root,profileFolder),file).split(path.sep).join('/')] === target;
   async function nativeShim(file, target) {
     // Codex creates executable aliases itself on every startup. These are
     // temporary tool entrypoints, never account, plugin or configuration links.
@@ -30,13 +49,11 @@ export async function installationEnvironment(dataRoot, workerId, environment = 
       const file = path.join(dir,e.name);
       if (e.isSymbolicLink()) {
         const target = await realpath(file);
-        if (!inside(target) && !await nativeShim(file, target)) throw Error('Worker-Profil enthält einen fremden Anschluss. Bitte ein eigenes Profil einrichten.');
+        if (!inside(target) && !boundLink(file, target) && !await nativeShim(file, target)) throw Error('Worker-Profil enthält einen fremden Anschluss. Bitte ein eigenes Profil einrichten.');
       }
       if (e.isDirectory()) await verify(file);
     }
   }
-  const profileKeys = {codex:'CODEX_HOME', 'claw-code':'CLAUDE_CONFIG_DIR', hermes:'HERMES_HOME', openclaw:'OPENCLAW_STATE_DIR', gemini:null, kimi:null};
-  if (workerId !== undefined && !Object.hasOwn(profileKeys, workerId)) throw Error('Unbekanntes Worker-Profil.');
   const nativeKeys = ['CODEX_HOME','CLAUDE_CONFIG_DIR','HERMES_HOME','OPENCLAW_STATE_DIR'];
   const selected = Object.entries(folders).filter(([key]) => workerId === undefined || !nativeKeys.includes(key) || key === profileKeys[workerId]);
   const result = {};
@@ -50,14 +67,7 @@ export async function installationEnvironment(dataRoot, workerId, environment = 
   // A deployed installation can explicitly bind its own service credential.
   // New installations never adopt ambient provider credentials by default.
   if (workerId === 'claw-code') {
-    const authFile = path.join(root, 'worker-auth.json');
-    let auth;
-    try {
-      if (!inside(await realpath(authFile))) throw Error('Worker-Anmeldung liegt außerhalb dieser Installation.');
-      auth = JSON.parse(await readFile(authFile, 'utf8'));
-    } catch (error) { if (error.code !== 'ENOENT') throw error; }
     if (auth !== undefined) {
-      if (!auth || Array.isArray(auth) || auth.version !== 1 || !auth.environment || typeof auth.environment !== 'object' || Array.isArray(auth.environment)) throw Error('Unbekanntes Format der Worker-Anmeldung.');
       const source = auth.environment?.['claw-code'];
       if (source !== undefined) {
         const key = new Map([['oauth','CLAUDE_CODE_OAUTH_TOKEN'], ['api-key','ANTHROPIC_API_KEY']]).get(source);

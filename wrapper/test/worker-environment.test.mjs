@@ -87,3 +87,22 @@ test('native Codex executable aliases survive a subsequent startup without admit
  await writeFile(path.join(foreign,'auth.json'),'synthetic');await symlink(path.join(foreign,'auth.json'),path.join(dir,'apply_patch'));
  await assert.rejects(installationEnvironment(root,'codex'),/fremden Anschluss/);
 });
+
+test('explicit existing profile bindings retain native links and reject retargeting or cross-provider reuse', async t => {
+ const root=await mkdtemp(path.join(os.tmpdir(),'bound-profile-')), foreign=await mkdtemp(path.join(os.tmpdir(),'own-native-'));
+ t.after(()=>Promise.all([rm(root,{recursive:true,force:true}),rm(foreign,{recursive:true,force:true})]));
+ await installationEnvironment(root,'codex');
+ const {realpath,readlink}=await import('node:fs/promises');
+ const auth=path.join(foreign,'auth.json'),other=path.join(foreign,'other.json');
+ await writeFile(auth,'synthetic');await writeFile(other,'different');
+ const native=await realpath(auth),link=path.join(root,'codex/auth.json');
+ await symlink(native,link);await assert.rejects(installationEnvironment(root,'codex'),/fremden Anschluss/);
+ await writeFile(path.join(root,'worker-auth.json'),JSON.stringify({version:1,profileLinks:{codex:{'auth.json':native}}}));
+ await installationEnvironment(root,'codex');assert.equal(await readlink(link),native);
+ await writeFile(auth,'refreshed');await installationEnvironment(root,'codex');
+ await installationEnvironment(root,'claw-code');await symlink(native,path.join(root,'claude/auth.json'));
+ await assert.rejects(installationEnvironment(root,'claw-code'),/fremden Anschluss/);
+ await rm(link);await symlink(other,link);await assert.rejects(installationEnvironment(root,'codex'),/fremden Anschluss/);
+ await writeFile(path.join(root,'worker-auth.json'),JSON.stringify({version:1,profileLinks:{codex:{'../worker-home/auth.json':native}}}));
+ await assert.rejects(installationEnvironment(root,'codex'),/Profilbindung/);
+});
