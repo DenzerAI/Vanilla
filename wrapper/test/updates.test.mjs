@@ -54,11 +54,17 @@ test('HTTP restart is token protected and replaces the server at the same addres
   }
   try {
     const first=await ready();assert.equal(first.restartRequired,false);assert.equal(first.activeCount,0);
+    const status=await (await fetch(url+'/status')).json();
+    assert.ok(Date.parse(status.startedAt));assert.ok(status.uptimeSeconds>=0);
+    assert.match(status.installation.version,/^\d+\.\d+\.\d+$/);
+    assert.ok(status.installation.commit);assert.ok(Date.parse(status.installation.committedAt));
     const denied=await fetch(url+'/updates/restart',{method:'POST',body:'{}'});assert.equal(denied.status,403);
     const boot=await (await fetch(url+'/bootstrap')).json();
     const response=await fetch(url+'/updates/restart',{method:'POST',headers:{'content-type':'application/json','x-uwe-token':boot.token},body:'{}'});
     assert.deepEqual(await response.json(),{restarting:true});
     const second=await ready(first.instanceId);assert.notEqual(second.instanceId,first.instanceId);assert.equal(second.restartRequired,false);
+    const restarted=await (await fetch(url+'/status')).json();
+    assert.ok(Date.parse(restarted.startedAt)>Date.parse(status.startedAt));
   }finally{child.kill();await exited;await rm(dir,{recursive:true,force:true});}
 });
 
