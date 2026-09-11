@@ -2198,7 +2198,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                         >
                           <button title={`${c.title} · ${relativeTime(c.updatedAt, listClock)}`} onClick={guard(() => openChat(c.id))}>
                             <span className="chat-row-title">{c.title}</span>
-                            {c.pinned && <span className="chat-pin" title="Angepinnt">{icon(Pin, 12)}</span>}
+                            {c.pinned && <span className="chat-pin" title="Angepinnt">{icon(Pin, 16)}</span>}
                             <span className="chat-age">{relativeTime(c.updatedAt, listClock)}</span>
                             {c.private && <span className="chat-row-lock" role="img" aria-label={c.locked ? "Gesperrt" : "Privat, entsperrt"}>{icon(Lock,15)}</span>}
                             <span className="chat-state" role="img" aria-label={active[c.id] ? "In Arbeit" : hasUnreadReply(c) ? "Ungelesene Antwort" : c.lastTurnStatus === "failed" ? "Fehlgeschlagen" : c.lastTurnStatus === "interrupted" ? "Gestoppt" : undefined}>

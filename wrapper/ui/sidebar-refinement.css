@@ -139,9 +139,32 @@
 .sidebar .workspace-chats .chat-row > .icon-button,
 .sidebar .workspace-chats .chat-row .chat-state { left: 0; right: auto; }
 .sidebar .workspace-chats .chat-row > button:first-child { padding-right: var(--space-4); }
+.sidebar .workspace-chats .chat-row:has(.chat-pin) > button:first-child {
+  padding-right: calc(var(--control-height) + var(--space-4));
+}
+.sidebar .workspace-chats .chat-pin {
+  position: absolute;
+  right: 0;
+  top: 50%;
+  width: var(--control-height);
+  height: var(--control-height);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transform: translateY(-50%);
+  color: var(--muted);
+  flex-shrink: 0;
+}
 
 @media (pointer: coarse) {
   .sidebar .workspace-chats .chat-row > button:first-child { padding-left: var(--space-48); }
+  .sidebar .workspace-chats .chat-row:has(.chat-pin) > button:first-child {
+    padding-right: calc(var(--control-touch) + var(--space-4));
+  }
+  .sidebar .workspace-chats .chat-pin {
+    width: var(--control-touch);
+    height: var(--control-touch);
+  }
 }
 
 /* Project names use the available width and truncate only on overflow. */
