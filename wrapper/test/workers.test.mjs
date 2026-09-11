@@ -367,3 +367,17 @@ test('work arriving during candidate handshake prevents switching and failed per
  assert.equal(await workers.replaceProgram('gemini','/candidate',async()=>{committed=true;},()=>idle),false);assert.equal(committed,false);assert.equal(workers.adapters.get('gemini'),old);
  idle=true;candidate.start=async()=>{candidate.connected=true;};await assert.rejects(workers.replaceProgram('gemini','/candidate',async()=>{throw Error('disk');},()=>idle));assert.equal(workers.adapters.get('gemini'),old);assert.equal(old.connected,true);assert.equal(candidate.connected,false);
 });
+
+test('only the bundled Claude adapter receives the session model metadata entrypoint', async t => {
+  const {store}=await fixture(t); const starts=[];
+  const bundled=fileURLToPath(new URL('../node_modules/.bin/claude-agent-acp',import.meta.url));
+  const workers=new Workers({store,root:store.root,codex:new Adapter(),resolveCommand:async()=>bundled,
+    makeACP:options=>{starts.push(options);return new Adapter();}});
+  await workers.init();
+  await workers.adapter('claw-code');
+  assert.equal(starts[0].command,process.execPath);
+  assert.equal(starts[0].args[0],fileURLToPath(new URL('../claude-acp.mjs',import.meta.url)));
+  await workers.adapter('claw-code',process.execPath);
+  assert.equal(starts[1].command,process.execPath);
+  assert.deepEqual(starts[1].args,[]);
+});

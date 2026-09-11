@@ -273,7 +273,7 @@ Gesprächs-Skeletons verwenden user-message-row/user-message und agent-message/m
 
 ## Kompakte Modellwahl
 
-`ModelPicker` nutzt die gemeinsame `popover-glass`-Fläche mit 28 px Blur, stärkerer Transparenz, feinen Lichtkanten und flachen 32-px-Zeilen. Die Standardansicht zeigt `ReasoningSlider` direkt unter dem kompakten Kopf: Stufe mittig, Modell klein darunter, nativer Fast-Blitz links und gegebenenfalls native Rücksetzaktion rechts. Sichtbare Überschriften entfallen. Die Namen beginnen groß, `xhigh` erscheint als `X-High`; native Werte und Anzahl bleiben unverändert. Klick auf die Mitte öffnet im selben Glas mit 24-px-Außenrundung die Anbieter- und Modellwahl mit Original-Icons. Erfolg kehrt zum Regler zurück, Fehler bleiben sichtbar. Zurück und Escape gehen vom Modellmenü zum Regler, ein weiteres Escape schließt. Ohne geladene Modelle steht direkt der bestehende Einrichtungszustand. Die Höhe passt sich sanft an, ohne Inhalte zu skalieren oder unsichtbare Bedienelemente zu duplizieren. Low bis Max unterscheiden sich zusätzlich durch Dichte und Ausdehnung des Quadratfelds; Ultra behält seinen verstärkten Abschluss. Auf Touch sind Ziele mindestens 44 px hoch. Kein Fertig-Button und keine dauerhaften Effort-Kacheln. Escape, Außenklick und Verlassen schließen; Tastaturfokus bleibt sichtbar. Fenster, Bildschirmtastatur und vergrößerte Schrift begrenzen Position und Scrollhöhe. Ohne Transparenz oder Blur wird die Fläche deckend. Animationen folgen der App-/Systemvorgabe für reduzierte Bewegung und pausieren außerhalb der sichtbaren Fläche.
+`ModelPicker` nutzt die gemeinsame `popover-glass`-Fläche mit 28 px Blur, stärkerer Transparenz, feinen Lichtkanten und flachen 32-px-Zeilen. Die Standardansicht zeigt `ReasoningSlider` direkt unter dem kompakten Kopf: Stufe mittig, Modell klein darunter, nativer Fast-Blitz links und Arbeitsmodus rechts. Sichtbare Überschriften entfallen. Die Namen beginnen groß, `xhigh` erscheint als `X-High`; native Werte und Anzahl bleiben unverändert. Klick auf die Mitte öffnet im selben Glas mit 24-px-Außenrundung die Anbieter- und Modellwahl mit Original-Icons. Erfolg kehrt zum Regler zurück, Fehler bleiben sichtbar. Zurück und Escape gehen vom Modellmenü zum Regler, ein weiteres Escape schließt. Ohne geladene Modelle steht direkt der bestehende Einrichtungszustand. Die Höhe passt sich sanft an, ohne Inhalte zu skalieren oder unsichtbare Bedienelemente zu duplizieren. Low bis Max unterscheiden sich zusätzlich durch Dichte und Ausdehnung des Quadratfelds; Ultra behält seinen verstärkten Abschluss. Auf Touch sind Ziele mindestens 44 px hoch. Kein Fertig-Button und keine dauerhaften Effort-Kacheln. Escape, Außenklick und Verlassen schließen; Tastaturfokus bleibt sichtbar. Fenster, Bildschirmtastatur und vergrößerte Schrift begrenzen Position und Scrollhöhe. Ohne Transparenz oder Blur wird die Fläche deckend. Animationen folgen der App-/Systemvorgabe für reduzierte Bewegung und pausieren außerhalb der sichtbaren Fläche.
 
 Während einer laufenden Antwort bleiben Modell und Denkaufwand auswählbar. Die Wahl wird pro Chat für die nächste Nachricht vorgemerkt; der Hinweis im geöffneten Menü benennt dies. Die laufende Antwort bleibt unverändert, ein Anbieterwechsel verwendet die ausdrücklich beschriftete Stoppen-und-Wechseln-Aktion. Die Vormerkung bleibt beim Wechsel zwischen Chats in der geöffneten App erhalten. Erst das nächste Senden übergibt sie unter derselben serverseitigen Turnsperre wie den Prompt. Eine noch laufende Antwort nimmt die Vormerkung nicht als Steuerungsnachricht entgegen. ACP bestätigt Modell und anschließend die zugehörigen Denkstufen nativ; unbekannte Werte stoppen das Senden und erhalten den Entwurf. Bei einem vorgemerkten anderen ACP-Modell erscheinen dessen noch nicht gemeldete Denkstufen nicht vorab.
 
@@ -297,7 +297,7 @@ Benachrichtigung und Ergebnis öffnen den tatsächlichen Lauf beziehungsweise
 seinen Chat; der Ursprungschat wird nicht mit künstlichen Turns beschrieben.
 Der verbindliche Ablauf steht unter [Aufträge](jobs.md#routinen-aus-dem-chat-und-benachrichtigungen).
 
-Der ReasoningSlider bewegt sich zwischen den Punkten frei, zieht nahe Punkte magnetisch an und übernimmt beim Loslassen genau eine native Stufe. Keine unteren Low-/Ultra-Labels und kein diagonaler Popover-Verlauf. Native Default-/Auto-Werte erscheinen separat als Rücksetzen, nicht als zusätzliche Denkstufe. Anzahl und Namen bleiben modellspezifisch.
+Der ReasoningSlider bewegt sich zwischen den Punkten frei, zieht nahe Punkte magnetisch an und übernimmt beim Loslassen genau eine native Stufe. Keine unteren Low-/Ultra-Labels und kein diagonaler Popover-Verlauf. Native Default-/Auto-Werte sind keine auswählbare Denkstufe und erhalten keine Rücksetzaktion. Solange ein solcher Wert aktiv ist, zeigt der Regler „Stufe wählen“, ohne eine konkrete Stufe vorzutäuschen. Anzahl und Namen bleiben modellspezifisch.
 
 Codex bietet einen flachen Blitz-Button „Fast“, sofern `model/list.serviceTiers` eine passende Option meldet. Native IDs werden unverändert verwendet. Die Wahl gilt erst für die nächste Nachricht, bleibt pro bestehendem Chat gespeichert und wird über `serviceTierForTurn` übertragen; Standard wird ausdrücklich mit `default` gesendet. Ein nicht mehr unterstützter Tier wird nicht an das neue Modell übertragen. Der Tooltip nennt den höheren Verbrauch. Claude verwendet denselben Fast-Blitz für seine bestätigte native on/off-Option.
 
@@ -1181,3 +1181,19 @@ Originalverlauf, native Worker-Daten und Export werden nicht verändert.
 
 Zustellabfragen warten auf den laufenden Speichervorgang, bevor sie den
 bestätigten Workerstart anzeigen; ein vorzeitig sichtbarer Haken ist kein Beleg.
+
+
+### Eindeutige Claude-Auswahl · Version 1.1.0
+
+Der mitgelieferte Adapter reicht die von derselben Sitzung gemeldete resolvedModel-ID
+als additive Modellmetadaten weiter. Der Picker zeigt daraus Familie und Version,
+einschließlich einer gemeldeten 1M-Variante. Es gibt keine fest codierte Versionsliste.
+Der native Default-Eintrag entfällt in der Auswahlliste, sobald konkrete Modelle
+vorliegen. Doppelte IDs erscheinen nur einmal; gleich benannte unterschiedliche
+Optionen erhalten ihre ID zur Unterscheidung. Vorhandene Default-Sitzungen bleiben
+lesbar und werden nicht beim Öffnen geändert. Eigene externe Adapter bleiben erhalten.
+Modell und Denkaufwand gelten für den jeweiligen Chat/Composer. Nach Modellwechsel
+wird ein zuvor ausdrücklich gewählter Denkaufwand wieder übernommen, sofern die
+neu bestätigten Optionen ihn anbieten. Andere Panels und globale Vorgaben werden
+nicht geändert. Ablehnungen bleiben sichtbar; nur bestätigte Werte gelten.
+Keine Datenmigration; ältere Versionen ignorieren die additiven Metadaten.

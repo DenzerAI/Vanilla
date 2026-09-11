@@ -111,7 +111,4 @@
 .model-popover .model-header-side button.model-fast[aria-pressed="true"] svg path, .model-picker .model-fast-indicator path { stroke: currentColor; stroke-width: 1; }
 .model-header-side .model-mode { display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); }
 .model-header-side .model-mode > svg { flex-shrink: 0; }
-.model-heading-status { grid-column: 1 / -1; display: flex; justify-content: center; }
-.model-heading-status .model-reset { display: inline-flex; align-items: center; gap: var(--space-4); min-height: var(--control-height); padding: var(--space-4) var(--space-8); background: transparent; color: var(--muted); font-size: var(--text-caption); }
-@media (pointer: coarse) { .model-heading-status .model-reset { min-height: var(--control-touch); } }
 @media (forced-colors: active) { .model-popover .model-header-side button.model-fast[aria-pressed="true"], .model-picker .model-fast-indicator { color: Highlight; } }

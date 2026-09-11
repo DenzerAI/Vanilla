@@ -405,3 +405,23 @@ der Claude-Prozess genau die benannte Dienstvariable; andere Anbieter erhalten
 sie nicht. Die Datei enthält ausschließlich die Auswahl, keine Zugangswerte.
 Fehlende Dienstvariable, unbekanntes Format oder Auswahl stoppen die Anmeldung.
 Ohne lokale Auswahl werden keine geerbten Anbieterzugänge übernommen.
+
+
+## Modellidentität im mitgelieferten Claude-Adapter
+
+Version 7. Der bestehende ACP-Adapter 0.75.1 läuft über claude-acp.mjs, wenn
+sein mitgelieferter Programmpfad verwendet wird. Protokoll, Anmeldung, native CLI,
+Sitzungen und Werkzeuge bleiben im Anbieterpaket. Der Einstieg ergänzt ausschließlich
+configOptions mit der resolvedModel-ID aus den Modellinformationen derselben Sitzung,
+auch bei Laden, Konfigurationswechsel und Ereignissen. Keine zusätzliche Modellanfrage
+und keine fest codierten Versionen. Explizite externe Adapter werden unverändert gestartet.
+
+Die UI entfernt den redundanten Default-Eintrag, sobald echte Modelle verfügbar sind,
+und erhält explizite Denkstufen beim Modellwechsel soweit unterstützt. Jede Änderung
+bleibt auf die betreffende Sitzung begrenzt. Bestehende Default-Werte bleiben lesbar,
+werden jedoch nicht als Wiederherstellungsaktion angeboten. Der Zustand ohne konkrete
+Denkstufe fordert zur Auswahl auf. Fehlen Versionsmetadaten, bleibt der gemeldete Name
+maßgeblich; Versionsnummern werden nicht geraten. Gleiche Namen verschiedener IDs
+werden unterscheidbar angezeigt. Fehler behalten die zuletzt bestätigte Auswahl.
+Additive _meta-Felder benötigen keine Migration und werden bei Rückkehr ignoriert.
+Prüfung: worker-models.test.mjs und workers.test.mjs sowie die gemeinsame UI-Abnahme.

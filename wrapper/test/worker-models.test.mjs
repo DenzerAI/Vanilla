@@ -59,3 +59,55 @@ test('Claude uses the resolved default label and only advertised native Fast val
   assert.equal(sessionFast(session),null);
   assert.equal(sessionFast(undefined),null);
 });
+
+test('Claude model versions come from exact session metadata, preserving IDs and context variants', async () => {
+  const {attachClaudeModelMetadata} = await import('../worker-models.mjs');
+  const options=[{id:'model',type:'select',currentValue:'sonnet',options:[
+    {value:'default',name:'Default',description:'Sonnet'},
+    {value:'sonnet',name:'Sonnet'}, {value:'sonnet[1m]',name:'Sonnet'},
+    {value:'fable',name:'Fable'}, {value:'opus',name:'Opus'},
+  ]}];
+  const infos=[{value:'sonnet',resolvedModel:'claude-sonnet-5'},
+    {value:'sonnet[1m]',resolvedModel:'claude-sonnet-5[1m]'},
+    {value:'fable',resolvedModel:'claude-fable-5-1'}, {value:'opus',resolvedModel:'claude-opus-5'}];
+  const snapshot=structuredClone(options);
+  const models=sessionModelSelection({configOptions:attachClaudeModelMetadata(options,infos)}).models;
+  assert.deepEqual(visibleModels(models,'claw-code').map(m=>[m.model,m.displayName]),[
+    ['sonnet','Claude Sonnet 5'],['sonnet[1m]','Claude Sonnet 5 · 1M'],['fable','Claude Fable 5.1'],['opus','Claude Opus 5'],
+  ]);
+  assert.deepEqual(options,snapshot);
+  const other=sessionModelSelection({configOptions:attachClaudeModelMetadata(options,[{value:'sonnet',resolvedModel:'claude-sonnet-4-5-20250929'}])});
+  assert.equal(other.models[1].displayName,'Claude Sonnet 4.5');
+  assert.equal(models[1].displayName,'Claude Sonnet 5');
+  assert.equal(visibleModels([...models,models[1]],'claw-code').length,4);
+  assert.deepEqual(visibleModels([models[0]],'claw-code'),[models[0]]);
+});
+
+test('model metadata never guesses a version or crosses a provider option', async () => {
+  const {nativeModelName,attachClaudeModelMetadata}=await import('../worker-models.mjs');
+  assert.equal(nativeModelName({value:'custom',name:'My deployment'}),'My deployment');
+  const options=[{id:'effort',type:'select',options:[{value:'sonnet'}]}];
+  assert.deepEqual(attachClaudeModelMetadata(options,[{value:'sonnet',resolvedModel:'claude-sonnet-5'}]),options);
+  assert.equal(nativeModelName({value:'claude-haiku-4-5-20251001',name:'Haiku'}),'Claude Haiku 4.5');
+});
+
+test('Claude metadata follows new, loaded, changed and notified sessions independently', async () => {
+  const {decorateClaudeModelMetadata}=await import('../worker-models.mjs');
+  const options=[{id:'model',type:'select',currentValue:'sonnet',options:[{value:'sonnet',name:'Sonnet'}]}];
+  const events=[];
+  const agent={sessions:{a:{modelInfos:[{value:'sonnet',resolvedModel:'claude-sonnet-5'}]},
+    b:{modelInfos:[{value:'sonnet',resolvedModel:'claude-sonnet-4-5'}]}},
+    client:{sessionUpdate:async event=>events.push(event)}};
+  for(const method of ['newSession','loadSession','resumeSession','unstable_forkSession','setSessionConfigOption'])
+    agent[method]=async params=>({sessionId:params.sessionId,configOptions:options});
+  decorateClaudeModelMetadata(agent);
+  for(const method of ['newSession','loadSession','resumeSession','unstable_forkSession','setSessionConfigOption']) {
+    assert.equal(sessionModelSelection(await agent[method]({sessionId:'a'})).models[0].displayName,'Claude Sonnet 5');
+    assert.equal(sessionModelSelection(await agent[method]({sessionId:'b'})).models[0].displayName,'Claude Sonnet 4.5');
+  }
+  await agent.client.sessionUpdate({sessionId:'b',update:{sessionUpdate:'config_option_update',configOptions:options}});
+  assert.equal(sessionModelSelection(events[0].update).models[0].displayName,'Claude Sonnet 4.5');
+  assert.equal(options[0].options[0]._meta,undefined);
+  await agent.client.sessionUpdate({sessionId:'a',update:{sessionUpdate:'agent_message_chunk',content:{type:'text',text:'Example'}}});
+  assert.equal(events[1].update.content.text,'Example');
+});
