@@ -32,6 +32,9 @@ export function CopyButton({ text, label = 'Kopieren', size = 15, disabled = fal
       if (current !== revision.current) return;
       setState('copied');
       setSuccess(value => value + 1);
+      // Release mouse focus so the action row hides again once the pointer leaves.
+      const focused = document.activeElement;
+      if (focused instanceof HTMLElement && root.current?.contains(focused) && !focused.matches(':focus-visible')) focused.blur();
       timer.current = setTimeout(() => setState('idle'), iconMotion.successHold);
     } catch {
       if (current === revision.current) setState('error');

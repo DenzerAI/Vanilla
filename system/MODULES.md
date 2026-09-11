@@ -71,6 +71,8 @@ Anwendung, UI-Referenz und Designquellen werden gemeinsam gebaut und geprüft.
 
 Schnappschüsse des Verlaufs werden im Browser mit dem gestreamten Stand abgeglichen (`wrapper/ui/thread-update.mjs`): zuerst über die Kennung, dann über den Inhalt, weil gestreamte Elemente Anbieterkennungen tragen und der gespeicherte Verlauf sie umnummeriert. Der sichtbare Verlauf wird beim Senden nie geleert; nur ein vorläufiger Postausgangs-Chat wird gegen seine echte Kennung getauscht.
 
+Aktionsleisten an Nachrichten erscheinen bei Zeigerkontakt oder sichtbarem Tastaturfokus (`:has(:focus-visible)`), nie durch einen bloßen Mausklick; der Kopierknopf gibt den Mausfokus nach dem Kopieren frei, damit die Leiste wieder verschwindet.
+
 ## Gemeinsamer Entwicklungsstand
 
 Die Chat-Erweiterungen verwenden weiterhin dieselben Kernspeicher, nativen
