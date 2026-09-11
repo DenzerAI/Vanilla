@@ -1310,7 +1310,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       deliveryChatList.current=mapping;
       void refreshChats().catch(()=>{});
     }
-    const receipt=outboxEntries.find(e=>e.localId===chatRef.current && e.chatId);
+    // Only a provisional outbox chat is swapped for its real id; an existing chat keeps its history.
+    const receipt=outboxEntries.find(e=>e.localId===chatRef.current && e.chatId && e.localId!==e.chatId);
     if(receipt){
       chatRef.current=receipt.chatId;setChatId(receipt.chatId);
       setThread({id:receipt.chatId,turns:[]});

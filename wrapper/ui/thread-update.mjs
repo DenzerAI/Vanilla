@@ -12,6 +12,18 @@ export function copyThreadForEvent(previous, params) {
   return {...previous,turns};
 }
 
+function messageText(item) {
+  if (typeof item?.text === 'string') return item.text;
+  return (item?.content || []).filter(part => part?.type === 'text').map(part => part.text || '').join('\n');
+}
+
+function sameMessage(a, b) {
+  if (!a || !b || a.type !== b.type || !['userMessage', 'agentMessage', 'plan', 'reasoning'].includes(a.type)) return false;
+  const left = messageText(a), right = messageText(b);
+  if (!left && !right) return false;
+  return left.startsWith(right) || right.startsWith(left);
+}
+
 // Background snapshots may predate streamed items or fall back to a saved transcript.
 // Explicit history edits still replace the thread directly at their action handler.
 export function reconcileThreadSnapshot(current, incoming) {
@@ -22,9 +34,13 @@ export function reconcileThreadSnapshot(current, incoming) {
     previous.delete(turn.id);
     if (!old) return turn;
     const items = new Map((old.items || []).map(item => [item.id, item]));
+    // Streamed items carry provider ids (msg_…); the saved transcript renumbers them (item-N).
+    // Match by id first, then by content, so one answer is never shown twice.
+    const counterpart = item => items.get(item.id)
+      || [...items.values()].find(live => live.id !== item.id && sameMessage(live, item));
     const merged = (turn.items || []).map(item => {
-      const live = items.get(item.id);
-      items.delete(item.id);
+      const live = counterpart(item);
+      if (live) items.delete(live.id);
       // A late read must not truncate an answer already shown by the event stream.
       return live && typeof live.text === 'string' && typeof item.text === 'string'
         && live.text.length > item.text.length && live.text.startsWith(item.text) ? live : item;

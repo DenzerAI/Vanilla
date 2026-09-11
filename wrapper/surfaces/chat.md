@@ -1232,3 +1232,15 @@ Reihenfolge (`event-batcher.test.mjs`), Rahmen ohne Kennung unverändert.
 ### Bestätigte Anfangsstufe · Version 1.2.0
 
 Der mitgelieferte Claude-Adapter bestätigt eine konkrete Anfangsstufe (Medium, sofern angeboten, sonst erste native Stufe) beim Öffnen und Wiederherstellen sowie nach Modellwechsel ohne explizite Stufe. Bestehende explizite Einstellungen bleiben erhalten. Der gemeinsame Regler zeigt damit sofort Griff und Stufenname. Native Default-Modellaliase markieren bei exakt gleicher resolvedModel-ID die konkrete Modellzeile und verwenden deren bestätigten Denkaufwand. Versionen zeigen auch die Minor-Version .0. Keine globale Profiländerung oder Datenmigration; ältere Stände lesen die native Einstellung weiter. Modellwechsel während einer Antwort bleiben für die nächste Nachricht vorgemerkt, Anbieterwechsel verwenden weiterhin den bestätigten Stop-und-Übergabeweg im selben Chat.
+
+
+## Verlauf bleibt beim Senden stehen · Version 1.0.0
+
+Beim Senden in einen bestehenden Chat bleibt der sichtbare Verlauf unverändert; nur
+ein vorläufiger Postausgangs-Chat (`outbox-…`) wird gegen seine echte Kennung
+getauscht. Gestreamte Elemente tragen Anbieterkennungen (`msg_…`), der gespeicherte
+Verlauf nummeriert sie um (`item-N`). Beim Abgleich eines Schnappschusses gilt
+zuerst die Kennung, dann der Inhalt (gleicher Typ, ein Text ist Präfix des anderen),
+damit eine Antwort nie doppelt erscheint; der längere gestreamte Text gewinnt.
+Fehlende Elemente eines veralteten Schnappschusses bleiben sichtbar. Keine
+Datenmigration. Prüfungen: `thread-update.test.mjs`.
