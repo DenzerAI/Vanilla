@@ -6,7 +6,7 @@ import { BrandIcon } from "./brand-icon.jsx";
 import { AppLoader } from "./app-loader";
 import { ReasoningSlider, reasoningLabel } from "./components/ui/amount-slider";
 import { workerName } from "../../system/worker-catalog.mjs";
-import { supportedEffort, visibleModels, fastTier, sessionFast } from "../worker-models.mjs";
+import { supportedEffort, visibleModels, selectedVisibleModel, fastTier, sessionFast } from "../worker-models.mjs";
 import "./model-picker.css";
 
 const modelName = model => (model?.displayName || model?.model || "Modell auswählen")
@@ -20,7 +20,8 @@ export function ModelPicker({ workerSession, onSessionChange, models = [], model
   const trigger = useRef(null), popup = useRef(null), modeMenu = useRef(null), operation = useRef(false);
   const id = useId();
   const choices = visibleModels(models, workerId);
-  const selected = models.find(m => m.model === model);
+  const selected = selectedVisibleModel(models, workerId, model);
+  const selectedId = selected?.model;
   const optionName = item => {
     const name = modelName(item);
     return choices.some(other => other.model !== item.model && modelName(other) === name) ? `${name} · ${item.model}` : name;
@@ -156,9 +157,9 @@ export function ModelPicker({ workerSession, onSessionChange, models = [], model
       {error && <p className="model-status" role="alert">{error}</p>}
       {expanded && sameProvider && <>
         {!!choices.length && <fieldset className="model-options" aria-label="Modell" disabled={disabled || pending}>
-          {choices.map(m => <label className="model-option" key={m.model} data-selected={model === m.model}>
-            <input type="radio" name={id + "-model"} value={m.model} checked={model === m.model}
-              onClick={() => { if (model === m.model) setDetails(false); }}
+          {choices.map(m => <label className="model-option" key={m.model} data-selected={selectedId === m.model}>
+            <input type="radio" name={id + "-model"} value={m.model} checked={selectedId === m.model}
+              onClick={() => { if (selectedId === m.model) setDetails(false); }}
               onChange={() => void act(async () => { await onChange(m.model, supportedEffort(m, effort)); setDetails(false); })}/>
             <span>{optionName(m)}</span><Check size={14}/>
           </label>)}

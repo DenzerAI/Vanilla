@@ -73,12 +73,12 @@ test('Claude model versions come from exact session metadata, preserving IDs and
   const snapshot=structuredClone(options);
   const models=sessionModelSelection({configOptions:attachClaudeModelMetadata(options,infos)}).models;
   assert.deepEqual(visibleModels(models,'claw-code').map(m=>[m.model,m.displayName]),[
-    ['sonnet','Claude Sonnet 5'],['sonnet[1m]','Claude Sonnet 5 · 1M'],['fable','Claude Fable 5.1'],['opus','Claude Opus 5'],
+    ['sonnet','Claude Sonnet 5.0'],['sonnet[1m]','Claude Sonnet 5.0 · 1M'],['fable','Claude Fable 5.1'],['opus','Claude Opus 5.0'],
   ]);
   assert.deepEqual(options,snapshot);
   const other=sessionModelSelection({configOptions:attachClaudeModelMetadata(options,[{value:'sonnet',resolvedModel:'claude-sonnet-4-5-20250929'}])});
   assert.equal(other.models[1].displayName,'Claude Sonnet 4.5');
-  assert.equal(models[1].displayName,'Claude Sonnet 5');
+  assert.equal(models[1].displayName,'Claude Sonnet 5.0');
   assert.equal(visibleModels([...models,models[1]],'claw-code').length,4);
   assert.deepEqual(visibleModels([models[0]],'claw-code'),[models[0]]);
 });
@@ -102,7 +102,7 @@ test('Claude metadata follows new, loaded, changed and notified sessions indepen
     agent[method]=async params=>({sessionId:params.sessionId,configOptions:options});
   decorateClaudeModelMetadata(agent);
   for(const method of ['newSession','loadSession','resumeSession','unstable_forkSession','setSessionConfigOption']) {
-    assert.equal(sessionModelSelection(await agent[method]({sessionId:'a'})).models[0].displayName,'Claude Sonnet 5');
+    assert.equal(sessionModelSelection(await agent[method]({sessionId:'a'})).models[0].displayName,'Claude Sonnet 5.0');
     assert.equal(sessionModelSelection(await agent[method]({sessionId:'b'})).models[0].displayName,'Claude Sonnet 4.5');
   }
   await agent.client.sessionUpdate({sessionId:'b',update:{sessionUpdate:'config_option_update',configOptions:options}});
@@ -110,4 +110,75 @@ test('Claude metadata follows new, loaded, changed and notified sessions indepen
   assert.equal(options[0].options[0]._meta,undefined);
   await agent.client.sessionUpdate({sessionId:'a',update:{sessionUpdate:'agent_message_chunk',content:{type:'text',text:'Example'}}});
   assert.equal(events[1].update.content.text,'Example');
+});
+
+test('a default alias selects exactly its resolved model and carries the real effort', async () => {
+  const {selectedVisibleModel}=await import('../worker-models.mjs');
+  const models=[{model:'default',resolvedModel:'claude-sonnet-5',isDefault:true,
+    supportedReasoningEfforts:[{reasoningEffort:'medium'}],defaultReasoningEffort:'medium'},
+    {model:'sonnet',resolvedModel:'claude-sonnet-5'},
+    {model:'sonnet[1m]',resolvedModel:'claude-sonnet-5[1m]'}];
+  const selected=selectedVisibleModel(models,'claw-code','default');
+  assert.equal(selected.model,'sonnet');
+  assert.equal(selected.defaultReasoningEffort,'medium');
+  assert.equal(visibleModels(models,'claw-code').filter(m=>m.isDefault).length,1);
+  assert.equal(selectedVisibleModel(models,'claw-code','sonnet[1m]').model,'sonnet[1m]');
+  assert.equal(selectedVisibleModel([{model:'default'}, {model:'sonnet'}],'claw-code','default').model,'default');
+});
+
+test('Claude initializes a real native effort on opening and model changes, preserving explicit levels', async () => {
+  const {decorateClaudeModelMetadata}=await import('../worker-models.mjs');
+  const make=(value,levels=['low','medium','high'])=>({configOptions:[{id:'effort',type:'select',category:'thought_level',
+    currentValue:value, options:['default',...levels].map(value=>({value}))}]});
+  let current=make('default'); const calls=[];
+  const agent={sessions:{a:{}},client:{sessionUpdate:async()=>{}},
+    setSessionConfigOption:async params=>{calls.push(params);current=make(params.value);return current;}};
+  for(const method of ['newSession','loadSession','resumeSession','unstable_forkSession'])
+    agent[method]=async()=>({...current,sessionId:'a'});
+  decorateClaudeModelMetadata(agent);
+  for(const method of ['newSession','loadSession','resumeSession','unstable_forkSession']) {
+    current=make('default');
+    const result=await agent[method]({sessionId:'a'});
+    assert.equal(result.sessionId,'a');
+    assert.equal(sessionModelSelection(result).effort,'medium');
+    assert.deepEqual(calls.at(-1),{sessionId:'a',configId:'effort',value:'medium'});
+  }
+  current=make('high');const count=calls.length;
+  assert.equal(sessionModelSelection(await agent.loadSession({sessionId:'a'})).effort,'high');
+  assert.equal(calls.length,count);
+  current=make('default',['low']);
+  assert.equal(sessionModelSelection(await agent.loadSession({sessionId:'a'})).effort,'low');
+  current={configOptions:[]};
+  await agent.loadSession({sessionId:'a'});
+  assert.equal(calls.length,count+1);
+});
+
+test('Claude never reports an unacknowledged initial effort as selected', async () => {
+  const {decorateClaudeModelMetadata}=await import('../worker-models.mjs');
+  const result={sessionId:'a',configOptions:[{id:'effort',type:'select',currentValue:'default',options:[{value:'medium'}]}]};
+  const agent={sessions:{a:{}},client:{sessionUpdate:async()=>{}},setSessionConfigOption:async()=>result};
+  for(const method of ['newSession','loadSession','resumeSession','unstable_forkSession']) agent[method]=async()=>result;
+  decorateClaudeModelMetadata(agent);
+  await assert.rejects(agent.newSession({}),/nicht bestätigt/);
+});
+
+test('model switch waits for the newly offered concrete effort before acknowledging', async () => {
+  const {decorateClaudeModelMetadata}=await import('../worker-models.mjs');
+  const state={configOptions:[{id:'model',type:'select',currentValue:'a',options:[{value:'a'},{value:'b'}]},
+    {id:'effort',type:'select',currentValue:'high',options:[{value:'default'},{value:'high'}]}]};
+  const calls=[];
+  const agent={sessions:{a:{}},client:{sessionUpdate:async()=>{}},setSessionConfigOption:async params=>{
+    calls.push(params);
+    if(params.configId==='model') {
+      state.configOptions[0].currentValue=params.value;
+      state.configOptions[1]={id:'effort',type:'select',currentValue:'default',options:[{value:'default'},{value:'low'},{value:'medium'}]};
+    } else state.configOptions[1].currentValue=params.value;
+    return structuredClone(state);
+  }};
+  for(const method of ['newSession','loadSession','resumeSession','unstable_forkSession']) agent[method]=async()=>state;
+  decorateClaudeModelMetadata(agent);
+  const result=await agent.setSessionConfigOption({sessionId:'a',configId:'model',value:'b'});
+  assert.deepEqual(calls,[{sessionId:'a',configId:'model',value:'b'},{sessionId:'a',configId:'effort',value:'medium'}]);
+  assert.equal(sessionModelSelection(result).model,'b');
+  assert.equal(sessionModelSelection(result).effort,'medium');
 });

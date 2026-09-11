@@ -1221,3 +1221,7 @@ die Reihenfolge tauschen. Ursprüngliche Ereignisse werden nicht verändert.
 Keine Datenmigration; native Sitzungen und gespeicherte Verläufe bleiben unverändert.
 Prüfungen: Kennungen und Fenster (`event-backlog.test.mjs`), Bündelung und
 Reihenfolge (`event-batcher.test.mjs`), Rahmen ohne Kennung unverändert.
+
+### Bestätigte Anfangsstufe · Version 1.2.0
+
+Der mitgelieferte Claude-Adapter bestätigt eine konkrete Anfangsstufe (Medium, sofern angeboten, sonst erste native Stufe) beim Öffnen und Wiederherstellen sowie nach Modellwechsel ohne explizite Stufe. Bestehende explizite Einstellungen bleiben erhalten. Der gemeinsame Regler zeigt damit sofort Griff und Stufenname. Native Default-Modellaliase markieren bei exakt gleicher resolvedModel-ID die konkrete Modellzeile und verwenden deren bestätigten Denkaufwand. Versionen zeigen auch die Minor-Version .0. Keine globale Profiländerung oder Datenmigration; ältere Stände lesen die native Einstellung weiter. Modellwechsel während einer Antwort bleiben für die nächste Nachricht vorgemerkt, Anbieterwechsel verwenden weiterhin den bestätigten Stop-und-Übergabeweg im selben Chat.

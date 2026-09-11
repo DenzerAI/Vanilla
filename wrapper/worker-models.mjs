@@ -14,11 +14,25 @@ export function attachClaudeModelMetadata(configOptions, infos = []) {
 export function decorateClaudeModelMetadata(agent) {
   const enrich = (payload, sessionId) => payload?.configOptions
     ? {...payload, configOptions:attachClaudeModelMetadata(payload.configOptions, agent.sessions[sessionId]?.modelInfos)} : payload;
+  const setConfig = agent.setSessionConfigOption.bind(agent);
   for (const method of ['newSession', 'loadSession', 'resumeSession', 'unstable_forkSession', 'setSessionConfigOption']) {
     const original = agent[method].bind(agent);
     agent[method] = async params => {
-      const result = await original(params);
-      return enrich(result, result.sessionId || params.sessionId);
+      let result = await original(params);
+      const sessionId = result.sessionId || params.sessionId;
+      const thinking = effortConfig(result);
+      // A concrete session setting, acknowledged by the SDK, not a UI guess
+      // about what the provider's automatic default might mean.
+      if (thinking && ['default', 'auto', ''].includes(thinking.currentValue || '')) {
+        const levels = optionValues(thinking).filter(o => !['default', 'auto'].includes(o.value));
+        const initial = levels.find(o => o.value === 'medium') || levels[0];
+        if (initial) {
+          const confirmed = await setConfig({sessionId, configId:thinking.id, value:initial.value});
+          if (effortConfig(confirmed)?.currentValue !== initial.value) throw new Error('Der Anbieter hat den Denkaufwand nicht bestätigt.');
+          result = {...result, configOptions:confirmed.configOptions};
+        }
+      }
+      return enrich(result, sessionId);
     };
   }
   const update = agent.client.sessionUpdate.bind(agent.client);
@@ -30,7 +44,7 @@ export function nativeModelName(option) {
   const name = option.value === 'default' && option.description ? option.description : option.name || option.value;
   if (!match) return name;
   const family = match[1][0].toUpperCase() + match[1].slice(1);
-  const version = match[2] + (match[3] ? '.' + match[3] : '');
+  const version = match[2] + '.' + (match[3] || '0');
   const context = /\[1m\]|\(1m(?: context)?\)/i.test(id + ' ' + option.value + ' ' + name) ? ' · 1M' : '';
   return `Claude ${family} ${version}${context}`;
 }
@@ -52,7 +66,19 @@ export function visibleModels(models = [], workerId = 'codex') {
   // Default clears an override; it is not another concrete Claude model.
   const explicit = workerId === 'claw-code' && choices.some(m => m.model !== 'default')
     ? choices.filter(m => m.model !== 'default') : choices;
-  return explicit.filter((m, index) => explicit.findIndex(other => other.model === m.model) === index);
+  const defaultModel = choices.find(m => m.model === 'default' && m.isDefault && m.resolvedModel);
+  return explicit.filter((m, index) => explicit.findIndex(other => other.model === m.model) === index)
+    .map(m => defaultModel && m.resolvedModel === defaultModel.resolvedModel
+      ? {...m, isDefault:true, supportedReasoningEfforts:defaultModel.supportedReasoningEfforts,
+          defaultReasoningEffort:defaultModel.defaultReasoningEffort} : m);
+}
+export function selectedVisibleModel(models, workerId, model) {
+  const choices = visibleModels(models, workerId);
+  const selected = models.find(m => m.model === model);
+  return choices.find(m => m.model === model)
+    || (workerId === 'claw-code' && model === 'default' && selected?.resolvedModel
+      ? choices.find(m => m.resolvedModel === selected.resolvedModel) : undefined)
+    || selected;
 }
 export function preferredModel(models, workerId, previous = '') {
   const choices = visibleModels(models, workerId);

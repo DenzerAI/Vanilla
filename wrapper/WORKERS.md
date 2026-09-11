@@ -409,9 +409,9 @@ Ohne lokale Auswahl werden keine geerbten Anbieterzugänge übernommen.
 
 ## Modellidentität im mitgelieferten Claude-Adapter
 
-Version 7. Der bestehende ACP-Adapter 0.75.1 läuft über claude-acp.mjs, wenn
+Version 8. Der bestehende ACP-Adapter 0.75.1 läuft über claude-acp.mjs, wenn
 sein mitgelieferter Programmpfad verwendet wird. Protokoll, Anmeldung, native CLI,
-Sitzungen und Werkzeuge bleiben im Anbieterpaket. Der Einstieg ergänzt ausschließlich
+Sitzungen und Werkzeuge bleiben im Anbieterpaket. Der Einstieg ergänzt
 configOptions mit der resolvedModel-ID aus den Modellinformationen derselben Sitzung,
 auch bei Laden, Konfigurationswechsel und Ereignissen. Keine zusätzliche Modellanfrage
 und keine fest codierten Versionen. Explizite externe Adapter werden unverändert gestartet.
@@ -419,9 +419,10 @@ und keine fest codierten Versionen. Explizite externe Adapter werden unveränder
 Die UI entfernt den redundanten Default-Eintrag, sobald echte Modelle verfügbar sind,
 und erhält explizite Denkstufen beim Modellwechsel soweit unterstützt. Jede Änderung
 bleibt auf die betreffende Sitzung begrenzt. Bestehende Default-Werte bleiben lesbar,
-werden jedoch nicht als Wiederherstellungsaktion angeboten. Der Zustand ohne konkrete
-Denkstufe fordert zur Auswahl auf. Fehlen Versionsmetadaten, bleibt der gemeldete Name
+werden jedoch nicht als Wiederherstellungsaktion angeboten. Beim Öffnen, Laden und Konfigurationswechsel setzt der mitgelieferte Adapter eine noch automatische Denkstufe über den nativen Konfigurationsanschluss auf Medium, sofern angeboten, sonst die erste konkrete Stufe. Erst dessen Bestätigung wird zurückgegeben. Explizite Werte bleiben erhalten; ohne native Denkstufen erfolgt kein Schreibaufruf. Fehler brechen den Aufbau beziehungsweise Wechsel sichtbar ab. Externe Adapter behalten ihre gemeldeten Werte. Fehlen Versionsmetadaten, bleibt der gemeldete Name
 maßgeblich; Versionsnummern werden nicht geraten. Gleiche Namen verschiedener IDs
 werden unterscheidbar angezeigt. Fehler behalten die zuletzt bestätigte Auswahl.
 Additive _meta-Felder benötigen keine Migration und werden bei Rückkehr ignoriert.
 Prüfung: worker-models.test.mjs und workers.test.mjs sowie die gemeinsame UI-Abnahme.
+
+Version 8 benötigt keine Datenmigration. Die Anfangsstufe ist eine native Sitzungseinstellung, keine globale Profiländerung. Ältere Versionen können sie weiter lesen. Default-Modellaliase erhalten bei exakter resolvedModel-Übereinstimmung den Auswahlhaken der konkreten Zeile; native IDs werden nicht geändert.

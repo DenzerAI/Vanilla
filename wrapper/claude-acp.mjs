@@ -1,4 +1,4 @@
-// Keep the pinned native adapter's protocol and CLI, adding only model identity metadata.
+// Keep the pinned native adapter's protocol and CLI, adding model identity metadata and an acknowledged initial effort.
 import { runAcp } from '@agentclientprotocol/claude-agent-acp/dist/acp-agent.js';
 import { decorateClaudeModelMetadata } from './worker-models.mjs';
 

@@ -133,8 +133,16 @@ export function DesignReference({ theme, tone, accent }) {
       <ModelPicker workerId={pickerWorkerPreview} planAvailable={pickerWorkerPreview === "codex"}
         workerSession={pickerWorkerPreview === "claw-code" ? {configOptions:[{id:"fast",type:"select",currentValue:nativeFastPreview,options:[{value:"on"},{value:"off"}]}]} : undefined}
         onSessionChange={async change => setNativeFastPreview(change.value)} mode={modePreview} onModeChange={setModePreview} serviceTier={modelPreview[2]} onSpeedChange={tier => setModelPreview(old => [old[0], old[1], tier])} model={modelPreview[0]} effort={modelPreview[1]} onChange={(model, effort) => setModelPreview(old => [model, effort, old[2]])}
-        models={[{model:pickerWorkerPreview === "codex" ? "gpt-6-astra" : "claude-example",displayName:pickerWorkerPreview === "codex" ? "GPT-6 Astra" : "Claude · Beispiel",serviceTiers:[{id:"priority",name:"Fast"}],defaultReasoningEffort:"medium",supportedReasoningEfforts:["low","medium","high","xhigh","max","ultra"].map(reasoningEffort => ({reasoningEffort}))}]}
-        hasConversation onProviderChange={async worker => { setPickerWorkerPreview(worker); setModelPreview([worker === "codex" ? "gpt-6-astra" : "claude-example", "medium"]); }}/>
+        models={(pickerWorkerPreview === "codex"
+          ? [{model:"gpt-6-astra",displayName:"GPT-6 Astra",serviceTiers:[{id:"priority",name:"Fast"}]}]
+          : [{model:"default",displayName:"Claude Sonnet 5.0",resolvedModel:"claude-sonnet-5",isDefault:modelPreview[0] === "default"},
+             {model:"sonnet",displayName:"Claude Sonnet 5.0",resolvedModel:"claude-sonnet-5"},
+             {model:"sonnet[1m]",displayName:"Claude Sonnet 5.0 · 1M",resolvedModel:"claude-sonnet-5[1m]"},
+             {model:"fable",displayName:"Claude Fable 5.1"}, {model:"opus",displayName:"Claude Opus 5.0"}])
+          .map(item => ({...item,defaultReasoningEffort:"medium",supportedReasoningEfforts:
+            (pickerWorkerPreview === "codex" ? ["low","medium","high","xhigh","max","ultra"] : ["low","medium","high","max"])
+              .map(reasoningEffort => ({reasoningEffort}))}))}
+        hasConversation onProviderChange={async worker => { setPickerWorkerPreview(worker); setModelPreview([worker === "codex" ? "gpt-6-astra" : "default", "medium"]); }}/>
       <p className="page-note">Kompakter Glasregler mit mittiger Stufe und Fast-Blitz. Klick auf die Mitte öffnet Modell- und Anbieterwahl mit Original-Icons. Das Terrakotta-Quadratfeld wird je nativer Stufe dichter, breiter und lebhafter und bleibt bei reduzierter Bewegung statisch. Keine Rücksetzung auf eine native Voreinstellung. Die Beispieldaten bleiben lokal; im Chat liefert der Anbieter seine verfügbaren Werte und Modellversionen.</p>
       <h3 className="section-heading">Inbox · Gesprächszeile</h3>
       <InboxPatternPreview/>
