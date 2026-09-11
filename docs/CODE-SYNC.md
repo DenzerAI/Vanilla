@@ -169,7 +169,8 @@ allein beweist keine fertige Umsetzung und reiht keinen beliebigen Ordner ein.
 `--data` vor dem Unterbefehl legt bei Verwendung aus einem anderen Checkout die
 bereits eingerichtete lokale Warteschlange fest.
 
-Die laufende Kernwartung wartet auf ruhende Chats und Aufträge. Sie verarbeitet
+Die laufende Kernwartung verarbeitet fertige Übergaben unabhängig von anderen
+laufenden Chats und Aufträgen. Nur eine aktive Betriebspause hält sie an. Sie verarbeitet
 genau einen angemeldeten Stand gleichzeitig: unveränderten Inhalt prüfen, mit
 regulären Datenschutz-/Modul-/Design-Hooks committen, in einer neuen Kandidatenkopie
 mit dem aktuellen Entwicklungsstand zusammenführen, vollständige Node-/Python-
@@ -193,8 +194,9 @@ Status. Die bestehenden Betriebsanzeigen führen das Wartungsergebnis mit.
 
 `integrated` bedeutet zusammengeführt und automatisch geprüft, ausdrücklich noch
 nicht live. Veröffentlichung, Geräte-/Browserabnahmen und Aktivierung verwenden
-weiter UPDATE.md und den vorhandenen Update-/Hostweg. Dieser Dienst installiert
-keine ungeprüften Änderungen in die laufende App und führt keine Pushes aus.
+weiter UPDATE.md und den vorhandenen Update-/Hostweg. Die Quellwarteschlange installiert
+keine ungeprüften Änderungen in die laufende App. Der optionale Anschluss für
+Veröffentlichung und Aktivierung steht im folgenden Abschnitt.
 Abschalten: bei ruhender Wartung die lokale Konfiguration sichern und entfernen.
 Die Git-Arbeitskopien und die bereits gespeicherten Commits bleiben erhalten.
 
@@ -219,3 +221,42 @@ als lokales SVG mit Einzelhash geprüft; es enthält keine externen Ressourcen.
 ## Privater Produktaustausch
 
 Der App-Anschluss exportiert ausschließlich einen mit diesem Schutzmodul geprüften neutralen Quellbaum. Sein GitHub-Snapshot besitzt keine Eltern und verweist als Metadatum auf die gemeinsame öffentliche Basis. Der laufende Index, origin und private Historie bleiben lokal erhalten. Eine Übernahme in die Ursprungsentwicklung verwendet diese Basis für einen Dreiwegvergleich. Neue fremde Assets benötigen weiterhin eine eigenständige Quellenprüfung; Datenschutzmuster sind keine semantische Garantie für beliebige oder kodierte vertrauliche Inhalte.
+
+
+## Automatische Veröffentlichung abgeschlossener Quellarbeit
+
+Der bestehende Prozessmanager kann `scripts/source-release.py --data DATENORDNER
+watch` unabhängig vom App-Prozess betreiben. Einmalig `configure --remote REMOTE
+--branch ZWEIG --github EIGENTUEMER/REPOSITORY --operator-json BEFEHLSLISTE`
+verwenden. Die JSON-Befehlsliste benennt einen ausdrücklich eingerichteten lokalen
+Aktivierungsanschluss; private Pfade und Zugänge bleiben in der lokalen Konfiguration.
+Der Watcher besitzt einen eigenen Dateilock und installiert keinen Prozessmanager.
+
+Ein sauberer Integrationsstand mit erfolgreichem Quellübergabenachweis wird mit
+regulären Git-Hooks ohne Force-Push veröffentlicht und am Remote bestätigt.
+Laufende Sessions verhindern diesen Schritt nicht. Später fertiggestellte Arbeit
+wird als nächster Commit veröffentlicht, auch während eine Aktivierung wartet.
+Die CI muss für jeden veröffentlichten Zweig zuverlässig durch Push ausgelöst
+werden; ein offener Pull Request ist dafür keine dauerhafte Voraussetzung.
+
+Erst erfolgreiche GitHub-Actions-Prüfungen für genau diesen Commit (Source privacy,
+Design gate, Functionality auf Linux/macOS und Update-Sandbox) erlauben die Übergabe
+an den lokalen Operator. Fehlende, übersprungene oder fehlgeschlagene Prüfungen
+sind keine Freigabe. Der Operator erhält `--target COMMIT --attempt JOURNALORDNER`.
+Er bereitet isoliert Build, Abhängigkeiten und Rückkehr vor, wartet auf das vorhandene
+Neustarttor, sichert den aktuellen Bestand konsistent und aktiviert nach UPDATE.md.
+Nur sein `status.json` mit `phase: live`, passendem `target` und tatsächlichem
+Versionsnachweis bestätigt den Abschluss. Es darf nur einen Live-Operator geben.
+
+Neuere geprüfte Nachfolger können noch nicht gestartete ältere Releases ersetzen.
+Eine laufende Aktivierung bleibt auf ihren Commit festgelegt; weitere folgen danach.
+Unbestätigte oder fehlgeschlagene Aktivierung blockiert weitere Wechsel, niemals
+weitere Pushes. Ein nach Prozessabbruch unbekannter Wechsel wird nicht blind wiederholt.
+Nach Prüfung des Rückkehrjournals kann der lokale Betreiber den blockierten Eintrag
+gezielt auflösen; keine Daten oder Sicherungen automatisch löschen.
+
+Status und Fehler stehen in `GET /api/system/source-work` unter `release` und im
+CLI-Status. Der Kern meldet Live-Erfolg und Fehler über die vorhandenen App-Mitteilungen.
+Die Veröffentlichung benötigt keinen aktiven Chat und keine erneute Nutzerfreigabe
+für jede bereits beauftragte Änderung. Unfertige oder widersprüchliche Quellarbeit
+bleibt ausdrücklich außerhalb des Releases.

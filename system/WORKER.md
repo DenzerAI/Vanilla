@@ -75,3 +75,8 @@ Steuerbare HTML-Präsentationen verwenden eigenständige responsive Dokumente mi
 Vorschau ergänzt Vor/Zurück, Folienstand und Tastatursteuerung beim Präsentieren.
 Normale HTML-Ergebnisse benötigen keine Folienmarker. Format und Grenzen führt
 `wrapper/surfaces/library.md`, Abschnitt HTML-Präsentation.
+
+Ist der lokale Veröffentlichungsdienst eingerichtet, folgt nach erfolgreicher
+Quellübergabe automatisch Push, CI-Prüfung und Aktivierung über den Hostoperator.
+Laufende Sessions verhindern keine Commits oder Pushes; nur der Live-Neustart wartet.
+Vor einer Fertigmeldung den tatsächlichen Übergabe- und Veröffentlichungsstatus lesen.
