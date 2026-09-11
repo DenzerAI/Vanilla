@@ -73,7 +73,9 @@ test("Claude native state uses the installation data directory without changing 
   const claude=options.find(o=>o.id==='claw-code'),hermes=options.find(o=>o.id==='hermes');
   assert.equal(claude.contextEnv.CLAUDE_CONFIG_DIR,path.join(store.dataRoot,'claude'));
   assert.equal((await stat(claude.contextEnv.CLAUDE_CONFIG_DIR)).isDirectory(),true);
-  assert.equal(hermes.contextEnv.CLAUDE_CONFIG_DIR,path.join(store.dataRoot,'claude'));
+  assert.equal(hermes.contextEnv.CLAUDE_CONFIG_DIR,undefined);
+  assert.equal(hermes.contextEnv.HERMES_HOME,path.join(store.dataRoot,'hermes'));
+  assert.equal(claude.contextEnv.CODEX_HOME,undefined);
   assert.equal(claude.contextEnv.UWE_WORKSPACE,store.root);
   assert.ok(!Object.entries(claude.contextEnv).some(([k,v])=>/TOKEN|KEY|SECRET/.test(k) && v));
 });

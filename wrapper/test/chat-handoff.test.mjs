@@ -51,3 +51,20 @@ test('Fast control uses native tier identifiers only', () => {
   assert.equal(fastTier({serviceTiers:[{id:'priority',name:'Fast'}]}).id,'priority');
   assert.equal(fastTier({serviceTiers:[]}),null);
 });
+
+test('long handoff retains the initial objective and latest progress without another model call', async t => {
+  const root=await mkdtemp(path.join(os.tmpdir(),'long-handoff-'));
+  t.after(()=>rm(root,{recursive:true,force:true}));
+  const store={root};
+  const snapshot=await saveHandoff(store,'chat',{turns:[{status:'completed',items:[
+    {type:'userMessage',content:[{text:'Initial objective: preserve the export.'}]},
+    {type:'agentMessage',text:'intermediate '.repeat(4000)},
+    {type:'mcpToolCall',tool:'Validate export',status:'failed'},
+    {type:'agentMessage',text:'Latest progress: validation remains open.'},
+  ]}]});
+  const result=await handoffInstructions(store,{handoffSnapshot:snapshot});
+  assert.match(result,/Initial objective/);
+  assert.match(result,/Latest progress/);
+  assert.match(result,/Validate export/);
+  assert.ok(result.length<26000);
+});

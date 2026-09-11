@@ -136,8 +136,7 @@ Nicht erneut gemeldete Sitzungseinstellungen werden nach erfolgreichem Laden
 nicht aus einem veralteten Snapshot weiter angeboten. Speichervorgänge sind
 geordnet; die Oberfläche erhält Änderungen über den vorhandenen Ereignisstream.
 
-Befehlsauswahl steht in ACP-Chats neben Modus und Modell; vorhandener Entwurfstext
-bleibt als Argument erhalten. Erst Senden führt den Befehl aus. `configOptions`
+Native Befehle bleiben in ACP-Chats direkt als Texteingabe verfügbar. Erst Senden führt den Befehl aus. `configOptions`
 haben Vorrang vor den älteren Modus-/Modellfeldern. Unterstützt sind native
 Select-Optionen einschließlich gruppierter Werte und unbekannter Kategorien;
 unbekannte Eingabetypen erscheinen mit einem Hinweis. Änderungen gehen an
@@ -345,3 +344,36 @@ Anmeldung für Gemini oder Kimi: `npm run worker:login -- gemini` beziehungsweis
 `npm run worker:login -- kimi` öffnet die jeweilige interaktive CLI mit dem eigenen
 Vanilla-Profil. Dort den nativen Anmeldedialog verwenden. Der Anmeldeeinstieg
 beachtet auch verwaltete Codex/Gemini-Versionen; keine Hostprofile werden importiert.
+
+
+## Einheitlicher Chatanschluss · Version 2
+
+ModelPicker ist der einzige Einstieg unter dem Composer für beide Anbieter.
+Claude-Fast verwendet die nativ gemeldete Select-Option fast mit on/off;
+Anbieterwechsel im ruhenden Chat benötigen keinen zusätzlichen Bestätigungsschritt.
+Der vorhandene Übergabeanschluss erhält den vollständigen Verlauf und liefert
+bei langen Chats den Anfang samt jüngstem Stand als begrenzten Kontextblock.
+Es entsteht kein weiterer Modellaufruf für die Zusammenfassung.
+
+ACP-Sitzungsaufbau und Wiederherstellung erhalten 60 Sekunden statt des kurzen
+allgemeinen RPC-Limits. Ein Timeout nennt die Sitzungsöffnung, wiederholt sie
+nicht automatisch und bleibt ein Fehler. Nicht angemeldete native Anschlüsse
+melden auch beim Wiederöffnen und vor einer Nachricht konkret die fehlende
+Anmeldung, bevor Nutzerarbeit angenommen wird; Handshake ist kein Modelltest.
+
+Anbieterbezogene Prozessstarts, Claude-Verbrauchsabfrage und CLI-Anmeldung
+validieren ihr eigenes Profil und die gemeinsamen Home-/Temp-Verzeichnisse.
+Andere Anbieterprofile werden weder geprüft noch als Umgebungsvariable übergeben.
+Fremde Verknüpfungen im tatsächlich verwendeten Profil bleiben abgewiesen.
+Der Aufruf ohne Anbieter behält die vollständige Installationsprüfung.
+Keine Profile, Zugangsdaten oder gespeicherten Berechtigungen werden verändert.
+Datenmigration: keine; bestehende native Sitzungen und Übergabedateien bleiben
+kompatibel. Rückkehr stellt die frühere gemeinsame Profilprüfung wieder her.
+Prüfung: worker-environment, worker-models, chat-handoff, acp-session und workers.
+
+Eine ausdrücklich konfigurierte lokale `worker-auth.json` mit Format 1 kann
+`environment["claw-code"]` auf `oauth` oder `api-key` setzen. Nur dann übernimmt
+der Claude-Prozess genau die benannte Dienstvariable; andere Anbieter erhalten
+sie nicht. Die Datei enthält ausschließlich die Auswahl, keine Zugangswerte.
+Fehlende Dienstvariable, unbekanntes Format oder Auswahl stoppen die Anmeldung.
+Ohne lokale Auswahl werden keine geerbten Anbieterzugänge übernommen.

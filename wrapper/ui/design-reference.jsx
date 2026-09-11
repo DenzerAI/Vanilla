@@ -52,6 +52,7 @@ export function DesignReference({ theme, tone, accent }) {
   const [seamPreview, setSeamPreview] = useState(50);
   const [jobPreviewFilter, setJobPreviewFilter] = useState('all');
   const [modePreview, setModePreview] = useState("default");
+  const [pickerWorkerPreview, setPickerWorkerPreview] = useState("codex"), [nativeFastPreview, setNativeFastPreview] = useState("off");
   const [modelPreview, setModelPreview] = useState(["gpt-6-astra", "medium"]);
   const [avatarPreview, setAvatarPreview] = useState("kibo");
   const [avatarMotionPreview, setAvatarMotionPreview] = useState("face");
@@ -129,9 +130,11 @@ export function DesignReference({ theme, tone, accent }) {
       <p className="page-note">Einzeilige Pille mit gedämpftem Platzhalter, transparenter Tönung, Hintergrundunschärfe und feiner innerer Glaskante. Mehrzeiliger Text erweitert die Schreibfläche; reduzierte Transparenz erhält einen deckenden Hintergrund.</p>
       <h3 className="section-heading">Modellwahl · Anbieter und Denkaufwand</h3>
       <ChapterScrubber chapters={[{id:"example-one",title:"Erste Eingabe",description:"Eine Frage im Gespräch",meta:"Beispiel"},{id:"example-two",title:"Zweite Eingabe",description:"Eine weitere Nachricht",meta:"Beispiel"}]} />
-      <ModelPicker mode={modePreview} onModeChange={setModePreview} serviceTier={modelPreview[2]} onSpeedChange={tier => setModelPreview(old => [old[0], old[1], tier])} model={modelPreview[0]} effort={modelPreview[1]} onChange={(model, effort) => setModelPreview(old => [model, effort, old[2]])}
-        models={[{model:"gpt-6-astra",displayName:"GPT-6 Astra",serviceTiers:[{id:"priority",name:"Fast"}],defaultReasoningEffort:"medium",supportedReasoningEfforts:["low","medium","high","xhigh","max","ultra"].map(reasoningEffort => ({reasoningEffort}))}]}
-        hasConversation onProviderChange={async () => { throw new Error("Lokale Designvorschau. Anbieter im Chat auswählen."); }}/>
+      <ModelPicker workerId={pickerWorkerPreview} planAvailable={pickerWorkerPreview === "codex"}
+        workerSession={pickerWorkerPreview === "claw-code" ? {configOptions:[{id:"fast",type:"select",currentValue:nativeFastPreview,options:[{value:"on"},{value:"off"}]}]} : undefined}
+        onSessionChange={async change => setNativeFastPreview(change.value)} mode={modePreview} onModeChange={setModePreview} serviceTier={modelPreview[2]} onSpeedChange={tier => setModelPreview(old => [old[0], old[1], tier])} model={modelPreview[0]} effort={modelPreview[1]} onChange={(model, effort) => setModelPreview(old => [model, effort, old[2]])}
+        models={[{model:pickerWorkerPreview === "codex" ? "gpt-6-astra" : "claude-example",displayName:pickerWorkerPreview === "codex" ? "GPT-6 Astra" : "Claude · Beispiel",serviceTiers:[{id:"priority",name:"Fast"}],defaultReasoningEffort:"medium",supportedReasoningEfforts:["low","medium","high","xhigh","max","ultra"].map(reasoningEffort => ({reasoningEffort}))}]}
+        hasConversation onProviderChange={async worker => { setPickerWorkerPreview(worker); setModelPreview([worker === "codex" ? "gpt-6-astra" : "claude-example", "medium"]); }}/>
       <p className="page-note">Kompakter Glasregler mit mittiger Stufe und Fast-Blitz. Klick auf die Mitte öffnet Modell- und Anbieterwahl mit Original-Icons. Das Terrakotta-Quadratfeld wird je nativer Stufe dichter, breiter und lebhafter und bleibt bei reduzierter Bewegung statisch. Die Beispieldaten bleiben lokal; im Chat liefert der Anbieter seine verfügbaren Werte.</p>
       <h3 className="section-heading">Inbox · Gesprächszeile</h3>
       <InboxPatternPreview/>

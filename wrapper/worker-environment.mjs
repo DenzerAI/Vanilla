@@ -1,5 +1,5 @@
 import path from 'node:path';
-import {mkdir, readdir, realpath} from 'node:fs/promises';
+import {mkdir, readdir, realpath, readFile} from 'node:fs/promises';
 
 // Only operating-system plumbing crosses from the launcher to an agent.
 // Provider keys, proxy credentials and host profile variables are not plumbing.
@@ -8,7 +8,7 @@ export function workerEnvironment(env = process.env) {
     .filter(key => typeof env[key] === 'string').map(key => [key, env[key]]));
 }
 
-export async function installationEnvironment(dataRoot) {
+export async function installationEnvironment(dataRoot, workerId, environment = process.env) {
   const root = await realpath(dataRoot);
   const folders = {HOME:'worker-home',USERPROFILE:'worker-home',CODEX_HOME:'codex',
     CLAUDE_CONFIG_DIR:'claude',HERMES_HOME:'hermes',OPENCLAW_STATE_DIR:'openclaw',
@@ -23,13 +23,37 @@ export async function installationEnvironment(dataRoot) {
       if (e.isDirectory()) await verify(file);
     }
   }
+  const profileKeys = {codex:'CODEX_HOME', 'claw-code':'CLAUDE_CONFIG_DIR', hermes:'HERMES_HOME', openclaw:'OPENCLAW_STATE_DIR', gemini:null, kimi:null};
+  if (workerId !== undefined && !Object.hasOwn(profileKeys, workerId)) throw Error('Unbekanntes Worker-Profil.');
+  const nativeKeys = ['CODEX_HOME','CLAUDE_CONFIG_DIR','HERMES_HOME','OPENCLAW_STATE_DIR'];
+  const selected = Object.entries(folders).filter(([key]) => workerId === undefined || !nativeKeys.includes(key) || key === profileKeys[workerId]);
   const result = {};
-  for (const [key,folder] of Object.entries(folders)) {
+  for (const [key,folder] of selected) {
     const dir = path.join(root,folder);
     await mkdir(dir,{recursive:true,mode:0o700});
     if (!inside(await realpath(dir))) throw Error('Worker-Profil liegt außerhalb dieser Installation.');
     result[key] = dir;
   }
-  for (const folder of ['codex','claude','hermes','openclaw','worker-home']) await verify(path.join(root,folder));
+  for (const folder of new Set(selected.map(([, folder]) => folder))) await verify(path.join(root,folder));
+  // A deployed installation can explicitly bind its own service credential.
+  // New installations never adopt ambient provider credentials by default.
+  if (workerId === 'claw-code') {
+    const authFile = path.join(root, 'worker-auth.json');
+    let auth;
+    try {
+      if (!inside(await realpath(authFile))) throw Error('Worker-Anmeldung liegt außerhalb dieser Installation.');
+      auth = JSON.parse(await readFile(authFile, 'utf8'));
+    } catch (error) { if (error.code !== 'ENOENT') throw error; }
+    if (auth) {
+      if (auth.version !== 1) throw Error('Unbekanntes Format der Worker-Anmeldung.');
+      const source = auth.environment?.['claw-code'];
+      if (source !== undefined) {
+        const key = new Map([['oauth','CLAUDE_CODE_OAUTH_TOKEN'], ['api-key','ANTHROPIC_API_KEY']]).get(source);
+        if (!key) throw Error('Unbekannte Claude-Anmeldequelle.');
+        if (!environment[key]) throw Error('Der konfigurierte Claude-Zugang fehlt im Dienst. Bitte Dienstanmeldung prüfen.');
+        result[key] = environment[key];
+      }
+    }
+  }
   return result;
 }

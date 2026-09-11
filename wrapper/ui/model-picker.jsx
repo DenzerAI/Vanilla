@@ -6,13 +6,13 @@ import { BrandIcon } from "./brand-icon.jsx";
 import { AppLoader } from "./app-loader";
 import { ReasoningSlider, reasoningLabel } from "./components/ui/amount-slider";
 import { workerName } from "../../system/worker-catalog.mjs";
-import { supportedEffort, visibleModels, fastTier } from "../worker-models.mjs";
+import { supportedEffort, visibleModels, fastTier, sessionFast } from "../worker-models.mjs";
 import "./model-picker.css";
 
 const modelName = model => (model?.displayName || model?.model || "Modell auswählen")
   .replace(/^(GPT-\d+(?:\.\d+)?)-/, "$1 ").replace(/(?<=\w)-(?=[A-Za-z])/g, " ");
 
-export function ModelPicker({ models = [], model, effort, onChange, context, workerId = "codex", workers = [], onProviderChange, onRefresh, hasConversation = false, disabled = false, providerDisabled = false, running = false, serviceTier = null, onSpeedChange, reduceMotion = false, mode = "default", onModeChange, modeDisabled = false, planAvailable = true }) {
+export function ModelPicker({ workerSession, onSessionChange, models = [], model, effort, onChange, context, workerId = "codex", workers = [], onProviderChange, onRefresh, hasConversation = false, disabled = false, providerDisabled = false, running = false, serviceTier = null, onSpeedChange, reduceMotion = false, mode = "default", onModeChange, modeDisabled = false, planAvailable = true }) {
   const [details, setDetails] = useState(false);
   const content = useRef(null);
   const [open, setOpen] = useState(false), [position, setPosition] = useState({});
@@ -22,6 +22,11 @@ export function ModelPicker({ models = [], model, effort, onChange, context, wor
   const choices = visibleModels(models, workerId);
   const selected = models.find(m => m.model === model);
   const speed = workerId === "codex" ? fastTier(selected) : null;
+  const nativeFast = sessionFast(workerSession);
+  const fastAvailable = speed && onSpeedChange || nativeFast && onSessionChange;
+  const fastActive = speed ? serviceTier === speed.id : nativeFast?.enabled;
+  const toggleFast = () => speed ? onSpeedChange(fastActive ? null : speed.id)
+    : onSessionChange({configId:nativeFast.id, value:fastActive ? nativeFast.off : nativeFast.on});
   const efforts = selected?.supportedReasoningEfforts || [];
   const effortLabel = reasoningLabel(efforts.find(e => e.reasoningEffort === effort)?.displayName || effort || "");
   const expanded = details || !choices.length || provider !== workerId;
@@ -65,10 +70,10 @@ export function ModelPicker({ models = [], model, effort, onChange, context, wor
   const modeLabel = mode === "plan" ? "Planen" : "Umsetzen";
   const ModeIcon = mode === "plan" ? SquarePen : Wrench;
   const heading = ({ current, reset, automatic, onReset } = {}) => <div className="model-compact-heading">
-    <div className="model-header-side">{speed && onSpeedChange && <button type="button" className="icon-button model-fast"
-      disabled={disabled || pending} aria-label="Fast" aria-pressed={serviceTier === speed.id}
+    <div className="model-header-side">{fastAvailable && <button type="button" className="icon-button model-fast"
+      disabled={disabled || pending || !!nativeFast && running} aria-label="Fast" aria-pressed={!!fastActive}
       title="Fast · höherer Verbrauch. Gilt ab der nächsten Nachricht."
-      onClick={() => void act(() => onSpeedChange(serviceTier === speed.id ? null : speed.id))}><Zap size={18}/></button>}</div>
+      onClick={() => void act(toggleFast)}><Zap size={18}/></button>}</div>
     <button type="button" className="model-summary" aria-label="Modell und Anbieter auswählen" aria-expanded={false}
       onClick={() => setDetails(true)}>
       {current && <output aria-live="off" title={current.description}><span key={current.value}>{reasoningLabel(current.label)}</span><ChevronDown size={12}/></output>}
@@ -122,7 +127,7 @@ export function ModelPicker({ models = [], model, effort, onChange, context, wor
       aria-haspopup="dialog" disabled={disabled} aria-expanded={open} aria-controls={open ? id : undefined}
       onClick={() => { setProvider(workerId); setDetails(false); setPosition({}); setError(""); setOpen(!open); if (!open) onRefresh?.(); }}>
       <span className="model-name">{selected ? modelName(selected) : workerName(workerId)}</span>
-      {!!efforts.length && <span className="model-effort">{effortLabel}</span>}{speed && serviceTier === speed.id && <Zap className="model-fast-indicator" size={12}/>}{mode === "plan" && <SquarePen size={12}/>}<ChevronDown size={14}/>
+      {!!efforts.length && <span className="model-effort">{effortLabel}</span>}{fastActive && <Zap className="model-fast-indicator" size={12}/>}{mode === "plan" && <SquarePen size={12}/>}<ChevronDown size={14}/>
     </button>
     {open && createPortal(<div ref={popup} id={id} role="dialog" aria-label="Modell und Denkaufwand" aria-busy={pending}
       className="model-popover glass" data-reduce-motion={reduceMotion} data-view={expanded ? "models" : "compact"} style={position}
@@ -133,7 +138,7 @@ export function ModelPicker({ models = [], model, effort, onChange, context, wor
         {!!choices.length && <button type="button" className="model-back" aria-label="Zurück zum Regler" onClick={showCompact}><ArrowLeft size={14}/><span>{modelName(selected)}</span></button>}
       <div className="model-providers" role="group" aria-label="KI-Anbieter">
         {providers.map(value => <button key={value} type="button" aria-pressed={provider === value} disabled={pending || disabled || providerDisabled}
-          onClick={() => { setProvider(value); setError(""); if (value !== workerId && !hasConversation) void act(async () => { await onProviderChange?.(value); setDetails(false); }); }}>
+          onClick={() => { setProvider(value); setError(""); if (value !== workerId && (!hasConversation || !running)) void act(async () => { await onProviderChange?.(value); setDetails(false); }); }}>
           <BrandIcon name={value}/><span>{workerName(value)}</span>
         </button>)}
       </div>

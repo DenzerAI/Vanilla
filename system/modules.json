@@ -560,8 +560,8 @@
         "meaning": "Programmfund ist kein Login. Nur eigene Profile und bestätigte Sitzung verwenden."
       },
       "limits": "Programmfund ist kein Login. Nur eigene Profile und bestätigte Sitzung verwenden. Automatische Installation nur für installierte Codex/Gemini ohne festen Programmpfad. Modellkatalog ist kein Zugangsnachweis.",
-      "version": 2,
-      "migration": "Bestehende eigene Anbieterprofile und natives Memory unverändert erhalten. Ergänzende nicht vertrauliche Fragequittungen verwenden tools.json, Verbrauchswerte additive Turn-/Chatfelder. Vor Rückkehr offene native Requests beenden. Kontingentabfrage nutzt denselben eigenen Profilweg, übernimmt keine Host-Anmeldungen und startet keine Modellantwort."
+      "version": 3,
+      "migration": "Bestehende eigene Anbieterprofile und natives Memory unverändert erhalten. Ergänzende nicht vertrauliche Fragequittungen verwenden tools.json, Verbrauchswerte additive Turn-/Chatfelder. Vor Rückkehr offene native Requests beenden. Kontingentabfrage nutzt denselben eigenen Profilweg, übernimmt keine Host-Anmeldungen und startet keine Modellantwort. Gemeinsame Modellwahl und anbieterbezogene Profilprüfung ohne Datenmigration; vorhandene native Einstellungen und Übergabeverläufe bleiben erhalten."
     },
     {
       "id": "jobs",
@@ -1038,8 +1038,8 @@
         "meaning": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen."
       },
       "limits": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen.",
-      "version": 9,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der bestehende Projektindex erhält abgeleitete Workspace-Metadaten. Jobkategorien werden aus dem optionalen Manifestfeld gelesen; keine Verschiebung von Dateien. Tresorformat 2: OS-geschützter installationsbezogener Schlüssel. Vor Quellaktivierung alten Bestand offline mit core.vault_migrate prüfen und übernehmen. Rückweg benötigt vollständige Datenwiederherstellung; Details docs/VAULT.md. Bestehende Ciphertexte und übrige Daten bleiben erhalten. Lokales MiniLM wird anhand der festgelegten Dateiprüfsummen geprüft und repariert; source.json allein bestätigt keine Bereitschaft. Bestehende Modellordner bleiben erhalten. Nach Restore gilt recovery/not-before als Zeitplangrenze. Normale Neustarts erhalten bestehende Wiederholungsregeln. Keine Tabellen entfernt. Streaming-Abgleiche erhalten sichtbare Inhalte und projizieren große Abschlussereignisse. Keine Datenmigration; ursprüngliche Worker-Verläufe bleiben erhalten."
+      "version": 10,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der bestehende Projektindex erhält abgeleitete Workspace-Metadaten. Jobkategorien werden aus dem optionalen Manifestfeld gelesen; keine Verschiebung von Dateien. Tresorformat 2: OS-geschützter installationsbezogener Schlüssel. Vor Quellaktivierung alten Bestand offline mit core.vault_migrate prüfen und übernehmen. Rückweg benötigt vollständige Datenwiederherstellung; Details docs/VAULT.md. Bestehende Ciphertexte und übrige Daten bleiben erhalten. Lokales MiniLM wird anhand der festgelegten Dateiprüfsummen geprüft und repariert; source.json allein bestätigt keine Bereitschaft. Bestehende Modellordner bleiben erhalten. Nach Restore gilt recovery/not-before als Zeitplangrenze. Normale Neustarts erhalten bestehende Wiederholungsregeln. Keine Tabellen entfernt. Streaming-Abgleiche erhalten sichtbare Inhalte und projizieren große Abschlussereignisse. Keine Datenmigration; ursprüngliche Worker-Verläufe bleiben erhalten. Gemeinsame Modellwahl und anbieterbezogene Profilprüfung ohne Datenmigration; vorhandene native Einstellungen und Übergabeverläufe bleiben erhalten."
     },
     {
       "id": "weather",

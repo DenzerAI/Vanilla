@@ -261,3 +261,24 @@ test('unavailable saved settings leave the original empty Claude session intact'
   await assert.rejects(worker.call('thread/resume',{threadId:'chat',cwd:'/fixture'}),/nicht mehr verfügbar/);
   assert.deepEqual(thread,previous);assert.equal(saved.length,0);assert.equal(worker.sessions.size,0);
 });
+
+test('native session setup has a bounded startup budget and never retries a timed-out mutation', async () => {
+  const {worker,rpc}=fixture(); const calls=[];
+  rpc.call=async (method,params,timeout)=>{calls.push({method,timeout});throw Error('session timeout');};
+  await assert.rejects(worker.setup('session/load',{sessionId:'native'}),/session timeout/);
+  assert.deepEqual(calls,[{method:'session/load',timeout:60000}]);
+  assert.equal(worker.setupCount,0);
+});
+
+test('expired authentication blocks restored sessions and prompts before accepting user work', async () => {
+  const {worker,rpc,thread,calls}=fixture();
+  worker.authenticated=false; worker.sessions.clear();
+  const original=structuredClone(thread.workerSession);
+  rpc.call=async()=>({configOptions:config('two')});
+  await assert.rejects(worker.call('thread/resume',{threadId:'chat',cwd:'/fixture'}),/nicht angemeldet/);
+  assert.deepEqual(thread.workerSession,original);
+  assert.equal(worker.sessions.size,0);
+  await assert.rejects(worker.call('turn/start',{threadId:'chat',input:[{type:'text',text:'Continue'}]}),/nicht angemeldet/);
+  assert.equal(thread.turns.length,0);
+  assert.equal(calls.length,0);
+});

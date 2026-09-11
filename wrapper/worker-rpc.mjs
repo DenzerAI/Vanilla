@@ -45,7 +45,7 @@ export class WorkerRPC extends EventEmitter {
       const id = ++this.nextId;
       const timer = setTimeout(() => {
         this.pending.delete(id);
-        reject(new Error("Worker antwortet nicht. Bitte Verbindung prüfen."));
+        reject(new Error(["session/new", "session/load"].includes(method) ? "Worker konnte die Sitzung nicht rechtzeitig öffnen. Bitte Anmeldung und Verbindung prüfen." : "Worker antwortet nicht. Bitte Verbindung prüfen."));
       }, timeout);
       this.pending.set(id, { resolve, reject, timer });
       try { this.write({ id, method, params }); } catch (error) { clearTimeout(timer); this.pending.delete(id); reject(error); }

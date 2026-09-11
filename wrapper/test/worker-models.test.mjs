@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { visibleModels, preferredModel, supportedEffort, sessionModelSelection, applySessionSelection } from '../worker-models.mjs';
+import { visibleModels, preferredModel, supportedEffort, sessionModelSelection, applySessionSelection, sessionFast } from '../worker-models.mjs';
 
 test('Codex picker excludes older, hidden and lookalike models without affecting other providers', () => {
   const models = ['gpt-5.5','gpt-5.4-mini','gpt-5.3-codex-spark','gpt-6-astra','gpt-5.6-sol','gpt-5.6-terra','gpt-5.6-luna','gpt-60','gpt-5.60'].map(model => ({model}));
@@ -46,4 +46,16 @@ test('queued native model choice uses newly acknowledged efforts and rejects una
   await assert.rejects(applySessionSelection(before,{model:'foreign'},()=>assert.fail('No native mutation allowed')),/nicht mehr verfügbar/);
   await assert.rejects(applySessionSelection(before,{model:'a',effort:'ultra'},()=>assert.fail('No native mutation allowed')),/Denkaufwand/);
   await assert.rejects(applySessionSelection(before,{model:'b'},async()=>before),/nicht bestätigt/);
+});
+
+test('Claude uses the resolved default label and only advertised native Fast values', () => {
+  const session={configOptions:[{id:'model',type:'select',currentValue:'default',options:[{value:'default',name:'Default (recommended)',description:'Claude Example'}]},
+    {id:'fast',type:'select',currentValue:'off',options:[{value:'on',name:'On'},{value:'off',name:'Off'}]}]};
+  assert.equal(sessionModelSelection(session).models[0].displayName,'Claude Example');
+  assert.deepEqual(sessionFast(session),{id:'fast',enabled:false,on:'on',off:'off'});
+  session.configOptions[1].currentValue='on';
+  assert.equal(sessionFast(session).enabled,true);
+  session.configOptions[1].options.pop();
+  assert.equal(sessionFast(session),null);
+  assert.equal(sessionFast(undefined),null);
 });
