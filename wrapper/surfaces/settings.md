@@ -186,7 +186,7 @@ Service steht nach Dein Agent in der Einstellungsnavigation. Betreuung, Arbeitsn
 
 Der gemeinsame `ThemeToggle` unter `ui/components/ui/theme-toggle.tsx` zeigt Mond
 und Sonne in einer kompakten Pille mit gleitendem Auswahlkreis. Er ersetzt
-Hell/Dunkel unter Aussehen und steht als eigene Abschlusszeile „Erscheinungsbild“
+Hell/Dunkel unter Aussehen und steht ohne zusätzliche sichtbare Beschriftung neben dem kompakten Neustart-Button
 im Agent-Menü. Beide verwenden dieselbe bestätigte, serverseitig gespeicherte
 Theme-Einstellung. Während der Speicherung ist der Schalter gesperrt; Fehler
 lassen die bisherige Auswahl bestehen und werden direkt angezeigt. Native

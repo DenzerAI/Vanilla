@@ -1,3 +1,5 @@
+import { execFile } from 'node:child_process';
+import { promisify } from 'node:util';
 import { createHash, randomUUID } from 'node:crypto';
 import { readdir, readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -59,4 +61,24 @@ export function createRestartGate({sessions, restart}) {
       return {restarting:true};
     },
   };
+}
+
+const execGit = promisify(execFile);
+// Read local evidence only. Fetch timestamps and commit dates are not push dates.
+export async function installationStatus(root) {
+  const git = async (...args) => {
+    try { return (await execGit('git', args, {cwd:root, timeout:3000, maxBuffer:256 * 1024})).stdout.trim(); }
+    catch { return ''; }
+  };
+  const [version, commit, refs] = await Promise.all([
+    readFile(path.join(root, 'system/version.json'), 'utf8').then(JSON.parse).then(v=>v.version).catch(()=>null),
+    git('log', '-1', '--format=%h%n%cI'),
+    git('for-each-ref', '--format=%(refname)', 'refs/remotes/'),
+  ]);
+  const pushes = await Promise.all(refs.split('\n').filter(Boolean).map(ref =>
+    git('reflog', 'show', '-1', '--date=iso-strict', '--format=%gD', '--grep-reflog=^update by push$', ref)));
+  const times = pushes.map(line=>line.match(/@\{(.+)\}$/)?.[1]).filter(time=>time && Number.isFinite(Date.parse(time)));
+  times.sort((a,b)=>Date.parse(b)-Date.parse(a));
+  const [hash, committedAt] = commit.split('\n');
+  return {version, commit:hash || null, committedAt:committedAt || null, pushedAt:times[0] || null};
 }

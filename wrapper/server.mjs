@@ -27,7 +27,7 @@ import { MessageDelivery } from "./message-delivery.mjs";
 import {localPath, localPort} from './isolation.mjs';
 import {sharedMemoryCodexConfig} from './shared-memory.mjs';
 import {notificationTargets, sendJobNotification, routineInstructions} from './job-notifications.mjs';
-import { serverFingerprint, createRestartGate } from "./updates.mjs";
+import { serverFingerprint, createRestartGate, installationStatus } from "./updates.mjs";
 import { coreEnabled, coreRequest, routedContext } from "./core-client.mjs";
 import { createMcpSnapshot } from './integration-snapshot.mjs';
 import {computerToolStatus} from "./ui/tool-content.mjs";
@@ -69,6 +69,8 @@ import { normalizeTool, mergeTools } from "./tool-events.mjs";
 import { runMode, PLAN_INSTRUCTIONS, planApprovalReply } from "./run-mode.mjs";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const root = path.resolve(here, "..");
+const serverStartedAt = new Date(Date.now() - process.uptime() * 1000).toISOString();
+const runningProductVersion = (await installationStatus(root)).version;
 await ensureCompanyBase(root);
 const sourceVersion = () => serverFingerprint(root);
 const startedSourceVersion = await sourceVersion();
@@ -754,6 +756,8 @@ installWorkerRoutes({ route, workers, active, store });
 route("GET", "/api/status", async () => ({
   engine: { name: workers.entry(workers.effectiveWorker).name, connected: workers.connected, version: workers.info?.userAgent || null },
   uptimeSeconds: Math.floor(process.uptime()),
+  startedAt: serverStartedAt,
+  installation: {...await installationStatus(root), version: runningProductVersion},
 }));
 route("GET", "/api/bootstrap", async (_body, url) => {
   await store.readIdentity();

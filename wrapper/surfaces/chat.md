@@ -8,7 +8,7 @@ Der zuständige Worker erzeugt den Titel mit dem gewählten Modell in einer sepa
 
 Die bisherige Projektgruppe heißt in der Seitenleiste „Workspace“. Hinzufügen und Bearbeiten verwenden dieselbe Bezeichnung im bestehenden Dialog. Projekt-IDs, Daten und Ordner bleiben erhalten.
 
-Die Agentenidentität oben links öffnet als ganzer Avatar-/Namensbutton das Agent-Menü. AgentMenu verwendet Avatar und das gemeinsame ChatMenu; der Verbindungspunkt ist Teil des Buttons, sein zugänglicher Name nennt den Zustand. Der konfigurierte Name wird nicht durch einen festen Produktnamen ersetzt. ServerDetails zeigt im geöffneten Menü Verbindung, installierte Vanilla-Produktversion, kurzen Quellstand, Serveradresse, tatsächlich gemeldete Engine samt vorhandener CLI-Version und gemessene HTTP-Antwortzeit. Entwicklung wird ausdrücklich gekennzeichnet; fehlende Werte werden nicht erfunden. Danach folgen Updates, Nutzung, Einstellungen, Archivierte Chats und Server neu starten. Updates öffnet die Versionsseite; eine bekannte neue Freigabe heißt Update verfügbar. Das Menü liest nur den vorhandenen Prüfstand. Kein separater Statusbutton und keine Agentenzeile am Fuß. Auch in Einstellungen und Inbox bleibt der Kopf erreichbar.
+Die Agentenidentität oben links öffnet als ganzer Avatar-/Namensbutton das Agent-Menü. AgentMenu verwendet Avatar und ChatMenu samt Verbindungspunkt und konfiguriertem Namen. ServerDetails zeigt Verbindung, laufende Produktversion, letzten lokalen Git-Commit mit Datum/Uhrzeit, letzten lokal belegten Push, Serverstart und Laufzeit sowie Server, Engine und gemessene Antwortzeit. Fehlende Daten heißen Nicht verfügbar beziehungsweise Nicht erfasst. Pushdaten stammen ausschließlich aus Remote-Reflog-Einträgen „update by push“, niemals aus Fetch- oder Commitzeiten. Es folgen Nutzung und Einstellungen. Archivierte Chats bleiben in Einstellungen erreichbar. Die Abschlusszeile enthält einen kleinen neutral umrandeten Neustart-Button und ThemeToggle ohne redundante Beschriftung. Kein separater Statusbutton oder Agentenfuß; der Kopf bleibt auch in Einstellungen und Inbox erreichbar.
 
 Die Projekt-/Chatnavigation liegt in der Seitenleiste. Ein unbenannter neuer Chat zeigt oben keinen Titel und keinen separaten Einstieg „Bestehenden Chat öffnen“. Benannte Entwürfe und bestehende Chats behalten ihr kompaktes Chatmenü. Bei mehreren Panels gehört jedes Drei-Punkte-Menü zum jeweiligen Panel. Die globale Chatleiste enthält die Ansichts- und Workspace-Aktionen ohne untere Trennlinie. Chatfläche zeigt Nutzereingaben, Antworten und kompakte Werkzeugaktivität. Der Composer besteht aus einer pillenförmigen Schreibzeile: Anhängen, Eingabe, genau ein Mikrofon für Diktat, Senden/Stoppen. Über der Pille steht ComposerHeading: ausschließlich ModelPicker rechts in caption, mit Einzug auf die Achse des Sendepfeils. Die Pille endet mit 8 px Abstand bündig zur Seitenleiste; sichere Displayränder bleiben berücksichtigt. Arbeitsmodus und Fast liegen im geöffneten Modellfenster: links der Fast-Blitz, rechts Wrench oder SquarePen mit Chevron. Das gemeinsame ChatMenu bietet Umsetzen und Planen ausgeschrieben mit Auswahlhaken. Tooltip und zugänglicher Name nennen den aktiven Modus. Planen bleibt ohne wirksamen Schreibschutz deaktiviert; während laufender Arbeit ist die Moduswahl gesperrt. Fokus, Escape und Klicks im Untermenü erhalten das übergeordnete Modellfenster. Im geschlossenen Modelltrigger kennzeichnet ein kleines Planicon den Planmodus. Fast verwendet aktiv Terrakotta (brand-accent), eine stärkere Kontur und den gemeinsamen Auswahlring. Touchziele bleiben mindestens 44 px hoch. Modellname und Denkaufwand bleiben gemeinsam auswählbar. Keine separate Worker-Beschriftung oder Computer-Use-Schaltfläche im Composer. Bei mehrzeiligen Entwürfen wächst die Schreibfläche; ihre Rundung bleibt erhalten. Zusätzliche direkt benötigte Aktionen sind knappe Iconbuttons mit Tooltip und zugänglichem Namen. Keine Konfiguration oder Verlaufsverwaltung im Composer.
 
@@ -182,7 +182,7 @@ werden durch die vereinfachte Darstellung nicht geändert.
 
 Die Überschrift „Workspace“ und die Projektzeilen bleiben beim Scrollen fest stehen. Nur die Chatliste des aufgeklappten Projekts scrollt im verbleibenden Platz. Die Chatliste verwendet den gemeinsamen ScrollEdgeFade: oben über 8 px und unten über 32 px bis zur tatsächlichen Unterkante der Seitenleiste, ausschließlich wenn in dieser Richtung weiterer Inhalt außerhalb des sichtbaren Bereichs liegt. Am Listenanfang und -ende entfällt der jeweilige Fade. Auswahlflächen bleiben außerhalb dieses schmalen Randes deckend; 32 px Endabstand halten den letzten Eintrag vollständig erreichbar. Im erzwungenen Kontrastmodus entfällt die Maske. Die Agentenzeile bleibt außerhalb des Scrollbereichs.
 
-Im Agentenmenü folgt unter „Archivierte Chats“ die Aktion „Server neu starten“ mit dem vorhandenen RotateCcw-Symbol und derselben Menügestaltung. Text und Symbol verwenden die zurückhaltende Sekundärfarbe `muted`. Sie nutzt den gemeinsamen Neustartablauf von SystemNotice, auch ohne verfügbares Update. Während des Neustarts ist die Aktion deaktiviert; laufende Sessions verlangen die bestehende Bestätigung.
+Im Agentenmenü steht „Neu starten“ als kompakter Button neben dem ThemeToggle. Text und RotateCcw-Symbol verwenden muted. Er nutzt den gemeinsamen Neustartablauf von SystemNotice; während des Neustarts ist er deaktiviert. Laufende Sessions verlangen weiterhin die bestehende Bestätigung.
 
 ## Gemeinsame Ladeanzeige
 
@@ -356,7 +356,7 @@ Unser Design zeigt beide gemeinsamen Bausteine ohne echten Mikrofonzugriff.
 
 Der gemeinsame `ThemeToggle` unter `ui/components/ui/theme-toggle.tsx` zeigt Mond
 und Sonne in einer kompakten Pille mit gleitendem Auswahlkreis. Er ersetzt
-Hell/Dunkel unter Aussehen und steht als eigene Abschlusszeile „Erscheinungsbild“
+Hell/Dunkel unter Aussehen und steht ohne zusätzliche sichtbare Beschriftung neben dem kompakten Neustart-Button
 im Agent-Menü. Beide verwenden dieselbe bestätigte, serverseitig gespeicherte
 Theme-Einstellung. Während der Speicherung ist der Schalter gesperrt; Fehler
 lassen die bisherige Auswahl bestehen und werden direkt angezeigt. Native
@@ -425,13 +425,18 @@ wenn ältere ungelesen sind. Routine-Chats werden nicht zusätzlich angeboten. O
 Anlass steht ein Gesprächsvorschlag bereit; er füllt nur den Entwurf und sendet
 nichts.
 
-Höchstens sieben Karten, fünf aufgefächert auf breiten Flächen, drei auf schmalen. Seitliche Karten
+Höchstens sieben Karten; sieben aufgefächert auf sehr breiten Flächen, fünf auf
+breiten, drei auf schmalen. Die Fläche ist bis 640 px breit, damit der Fächer
+sichtbar auseinandergeht statt zu stapeln. Seitliche Karten
 wählen aus; Klick auf die vordere öffnet den bestehenden Chat oder Berichtschat.
 Rückfragen ohne zugeordneten Chat und technische Hinweise verwenden ihre bisherigen
 Dialoge und Freigaben. Kein Auftrag startet durch die Vorschau. Erst erfolgreiches
 Öffnen eines Berichts markiert dessen Hinweis gelesen. Die gewählte ID bleibt bei
 Feed-Updates erhalten. Pfeile, Tastatur und horizontaler Touch-Wisch wechseln;
-vertikales Scrollen bleibt möglich. Keine automatische Rotation oder dauerhafte
+vertikales Scrollen bleibt möglich. Der Fächer rotiert von allein im Takt aus
+attentionFanMotion.autoplayInterval eine Karte weiter und läuft zyklisch durch.
+Er pausiert bei Maus, Tastaturfokus, begonnenem Entwurf, laufendem Öffnen,
+verborgener Ansicht und bei reduzierter Bewegung. Keine weitere dauerhafte
 Zusatzanimation. App-/Systemreduktion unterbindet den Federübergang. Karten wachsen
 mit Text, Themefarben und Bewegung stammen aus design-system.mjs. Unser Design
 zeigt denselben AttentionFan. Wetter ist eine Karte im gemeinsamen Fächer, kein zusätzlicher Bereich.
@@ -454,7 +459,7 @@ behält Auswahl/Öffnen. Tastaturfokus bietet dieselbe Hervorhebung.
 ChatStartHeading ordnet den belegten Zustand der Karte kurz ein, ohne Titel als
 Fragen zu wiederholen. Langsame Zeichenfolge, zwanzig Sekunden Lesezeit und
 höchstens eine sachliche Vertiefung aus dem vorhandenen Inhalt. Danach steht der
-Text still. Die Karten wechseln nie automatisch.
+Text still. Ein Kartenwechsel durch die Rotation setzt den Text neu.
 Der Textplatz bleibt auf zwei Zeilen begrenzt. Hover und Tastaturfokus pausieren nur den späteren Satzwechsel; die RPG-Schreibanimation läuft weiter. Ein Composer-Entwurf pausiert auch das Schreiben, ohne den Satz vorzeitig zu vervollständigen. Verborgene Ansichten stoppen Zeitgeber.
 Screenreader erhalten die vollständige Zeile ohne laufende Wortansagen. Reduzierte
 Bewegung zeigt einen statischen Satz. Aussehen → Visuell → Lebendiger Starttext
@@ -468,9 +473,12 @@ den gebündelten Posteingang aus ungelesenen Antworten, Hinweisen und
 Routine-Ergebnissen sowie das letzte abgeschlossene Gespräch im Workspace. Jede
 Karte benennt ihre Aktion und trägt ein eigenes Gesicht: der Posteingang eine
 Stapelliste aus Titel, Art und Zeit mit hervorgehobenem obersten Eintrag,
-Kalender, Wetter, Statistik und Kontingente ihre bestehenden Inhalte. Die
-Kennzeichnung oben links unterscheidet die Arten zusätzlich farblich aus den
-gemeinsamen Tokens; im Kontrastmodus entfällt die Farbe.
+Kalender, Wetter, Statistik und Kontingente ihre bestehenden Inhalte. Jede Art
+trägt zusätzlich einen eigenen Farbton aus den gemeinsamen Tokens, in Kennzeichen
+und als leichte Tönung von Fläche und Rand: Posteingang und Kalender die
+Markenfarbe, Kontingente Grün, offene Rückfragen Warnfarbe, Gespräche neutral.
+Die Statistik behält ihre eigenen Markenfarben. Ohne Transparenz bleibt die
+Tönung deckend; im Kontrastmodus entfällt sie.
 Beliebige zuletzt geänderte Dateien und nicht angebundenes Wetter werden nicht
 als Arbeitsanlass angeboten. Gespräche führen in ihren Chat, Ergebnisse in den
 Berichtschat, Aufträge in den bestehenden Dialog. Diese Aktionen starten keine Arbeit; die eingerichtete Wetterkarte startet auf ausdrücklichen Klick ihren Bericht mit kurzer Einordnung.
@@ -889,10 +897,17 @@ firma.md. Zusätzliche Chatfelder sind additiv und keine Nutzerrechte.
 
 ChatStart reserviert neben Statistik eine eigene Kontingent-Kachel. Die Auswahl
 öffnet Einstellungen → Nutzung, ohne neuen Chat, Nachricht oder Modellaufruf.
-AllowanceBars zeigt Anbieterwerte als verbrauchte Prozent, niemals als Tokenbudget.
-Alle benannten Kontingente und Reset-Zeitpunkte bleiben im Detail erhalten,
-einschließlich modellbezogener Claude-Wochenlimits, Credits und Reset-Gutschriften.
-Eine Karte zeigt bis zu zwei Balken. Abgelaufene Zeitfenster zeigen „neuer Stand
+AllowanceBars zeigt Anbieterwerte als Prozent, niemals als Tokenbudget. Die
+Detailansicht zeigt den verbrauchten Anteil; die Kachel zeigt den verbleibenden
+Anteil mit dem Zusatz „übrig“ und einem Balken, der sich leert. Der Balken ist
+grün, ab 25 Prozent Rest warm und ab 10 Prozent Rest rot; ohne gemeldeten Wert
+bleibt er neutral. Die Kachel zeigt höchstens drei Zeilen und nur
+Hauptkontingente, die tatsächlich Arbeit tragen: pro Anbieter das Wochenfenster,
+danach das kurze Fenster. Nebenkontingente wie Spark-Modelle, App- oder
+modellbezogene Fenster erscheinen nur im Detail, zusammen mit einem Hinweis auf
+ihre Anzahl. Alle benannten Kontingente und Reset-Zeitpunkte bleiben im Detail
+erhalten, einschließlich modellbezogener Claude-Wochenlimits, Credits und
+Reset-Gutschriften. Abgelaufene Zeitfenster zeigen „neuer Stand
 ausstehend“, fehlende Werte bleiben unbekannt und Fehler behalten erkennbar den
 letzten Stand. Reset-Gutschriften werden nur angezeigt, niemals eingelöst.
 

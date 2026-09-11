@@ -155,3 +155,6 @@ verkürzt, Sprungmarken stehen mittig am linken Panelrand, Nachrichtenaktionen
 bleiben auch unter der globalen Hoverregel ungefüllt und kompakt. Skeleton und
 Bausteinreferenz folgen derselben Anordnung. Keine Datenmigration; native
 Rückfragen und Antwortwege bleiben unverändert. Vertrag: wrapper/surfaces/chat.md.
+
+
+Das Agentenmenü liest additive Installationsdaten über /api/status: laufende Produktversion, Startzeit und Laufzeit des Wrappers sowie aktuellen lokalen Commit mit Commitzeit. Die Pushzeit ist ausschließlich der letzte lokal belegte Remote-Reflog-Eintrag „update by push“; fehlende oder abgelaufene Belege bleiben null. Kein Netzwerkabruf, keine Git-Mutation und keine Datenmigration. Ältere Server werden mit fehlenden Statuswerten dargestellt. Neustart und ThemeToggle teilen die kompakte Abschlusszeile; Archiv bleibt in Einstellungen. Vertrag: wrapper/surfaces/chat.md.

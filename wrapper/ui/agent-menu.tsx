@@ -1,7 +1,7 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChatMenu } from "./chat-controls.jsx";
 import { Avatar } from "./avatar.jsx";
-import { Activity, Archive, RotateCcw, Settings } from "./icons.jsx";
+import { Activity, RotateCcw, Settings } from "./icons.jsx";
 
 import { ThemeToggle } from "./components/ui/theme-toggle";
 
@@ -58,8 +58,13 @@ function AgentName({ name }: { name: string }) {
   </span>;
 }
 
+function timestamp(value?: string) {
+  if (!value || !Number.isFinite(Date.parse(value))) return "Nicht erfasst";
+  return new Date(value).toLocaleString("de-DE", {day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit"});
+}
+
 function ServerDetails({ connectionState, preview }: Pick<Props, "connectionState" | "preview">) {
-  const [status, setStatus] = useState<{ online: boolean; latency?: number; engine?: { name?: string; connected?: boolean } } | null>(null);
+  const [status, setStatus] = useState<{ online: boolean; latency?: number; engine?: { name?: string; connected?: boolean }; uptimeSeconds?: number; startedAt?: string; installation?: { version?: string; commit?: string; committedAt?: string; pushedAt?: string } } | null>(null);
   useEffect(() => {
     if (preview) return;
     let disposed = false;
@@ -73,7 +78,7 @@ function ServerDetails({ connectionState, preview }: Pick<Props, "connectionStat
         const response = await fetch("/api/status", { cache: "no-store", signal: controller.signal });
         if (!response.ok) throw new Error();
         const data = await response.json();
-        if (!disposed) setStatus({ online: true, engine: data.engine, latency: Math.round(performance.now() - start) });
+        if (!disposed) setStatus({ ...data, online: true, latency: Math.round(performance.now() - start) });
       } catch {
         if (!disposed) setStatus({ online: false });
       } finally {
@@ -88,6 +93,11 @@ function ServerDetails({ connectionState, preview }: Pick<Props, "connectionStat
   return <div className="agent-server-details">
     <p role="status">{label}</p>
     {!preview && <dl>
+      <dt>Version</dt><dd>{status?.installation?.version ? `Vanilla ${status.installation.version}` : "Nicht verfügbar"}</dd>
+      <dt>Letzter Commit</dt><dd>{status?.installation?.commit || "Nicht verfügbar"}<br/>{timestamp(status?.installation?.committedAt)}</dd>
+      <dt>Letzter Push</dt><dd title="Letzter lokal belegter Git-Push. Fetch und Commit zählen nicht als Push.">{timestamp(status?.installation?.pushedAt)}</dd>
+      <dt>Letzter Neustart</dt><dd>{timestamp(status?.startedAt)}</dd>
+      <dt>Laufzeit</dt><dd>{status?.uptimeSeconds == null ? "Nicht verfügbar" : `${Math.floor(status.uptimeSeconds / 86400)} T ${Math.floor(status.uptimeSeconds / 3600) % 24} Std ${Math.floor(status.uptimeSeconds / 60) % 60} Min`}</dd>
       <dt>Server</dt><dd>{window.location.host}</dd>
       <dt>Engine</dt><dd>{status?.engine?.name || "Nicht verfügbar"}{status?.engine?.connected === false ? " · getrennt" : ""}</dd>
       <dt>Antwortzeit</dt><dd>{status?.online ? `${status.latency} ms` : "Nicht verfügbar"}</dd>
@@ -102,13 +112,11 @@ export function AgentMenu({ theme, onThemeChange, name, avatar, avatarColor, con
     className="profile-button agent-menu-trigger"
     menuClassName="agent-menu"
     selected={undefined}
-    footer={<span className="agent-theme-row"><span>Erscheinungsbild</span><ThemeToggle theme={theme} onThemeChange={onThemeChange} menuItem /></span>}
+    footer={<span className="agent-theme-row"><button type="button" role="menuitem" className="agent-restart-button" disabled={restartBusy} onClick={onRestart}><RotateCcw size={14} strokeWidth={1.55}/>{restartBusy ? "Startet neu …" : "Neu starten"}</button><ThemeToggle theme={theme} onThemeChange={onThemeChange} menuItem /></span>}
     header={<ServerDetails connectionState={connectionState} preview={preview} />}
     items={[
-      { id: "usage", label: "Nutzung", icon: <Activity size={18} strokeWidth={1.55} />, action: () => onNavigate("usage") },
+      { id: "usage", label: "Nutzung & Statistik", icon: <Activity size={18} strokeWidth={1.55} />, action: () => onNavigate("usage") },
       { id: "settings", label: "Einstellungen", icon: <Settings size={18} strokeWidth={1.55} />, action: () => onNavigate("general") },
-      { id: "archive", label: "Archivierte Chats", icon: <Archive size={18} strokeWidth={1.55} />, action: () => onNavigate("archive") },
-      { id: "restart", label: restartBusy ? "Startet neu …" : "Server neu starten", icon: <RotateCcw size={18} strokeWidth={1.55} />, disabled: restartBusy, action: onRestart },
     ]}
   >
     <span className="agent-menu-avatar"><Avatar avatar={avatar} color={avatarColor} /><span aria-hidden="true" className={`status-dot ${connectionState === "online" && !restartBusy ? "online" : "offline"}`} /></span>
