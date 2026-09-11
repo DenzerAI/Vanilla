@@ -2725,7 +2725,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
             ))}
             {/* A quiet, left-aligned empty line; the page keeps only title, create, search, filters and the list. */}
             {jobFilter !== "templates" && !jobsLoading && !jobsError && visibleJobs.length === 0 && (
-              <p className="section-intro" role="status">
+              <p className="section-intro jobs-empty" role="status">
                 {jobs.some(j=>Boolean(j.managed)===(jobFilter==='system'))
                   ? "Keine passenden Aufträge"
                   : jobFilter === 'system' ? "Keine Systemaufträge" : "Noch keine Aufträge"}

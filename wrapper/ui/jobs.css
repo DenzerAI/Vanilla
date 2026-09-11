@@ -1,5 +1,6 @@
 .jobs-layout { display: flex; flex: 1; min-width: 0; min-height: 0; overflow: hidden; }
 .jobs-page { min-width: 0; }
+.jobs-page .jobs-empty { margin-top: var(--space-24); }
 .jobs-layout.has-detail .jobs-page { flex: 1; padding: var(--space-32) var(--space-24); }
 .jobs-page .job-row.selected { background: var(--surface); border-radius: var(--radius-control); }
 .job-detail { flex: 1; min-width: 0; overflow: auto; padding: var(--space-32); border-left: 1px solid var(--border); }
