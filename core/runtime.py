@@ -326,6 +326,10 @@ class Runtime:
                         self.stall_memory = getattr(self, 'stall_memory', {})
                         for key, title, body in stalled(time(), result.get('entries', []), result.get('release', {}).get('releases', []), self.stall_memory):
                             self.notifications.system('source-stall-' + key, 'update', 'source-work', title, body, 'failed')
+                        from .stall_watch import blocked
+                        self.blocked_memory = getattr(self, 'blocked_memory', {})
+                        for key, title, body in blocked(result.get('entries', []), self.blocked_memory, self.config.data / 'source-work'):
+                            self.notifications.system('source-blocked-' + key, 'update', 'source-work', title, body, 'failed')
                         if result.get('release', {}).get('error'):
                             import hashlib
                             error = result['release']['error']

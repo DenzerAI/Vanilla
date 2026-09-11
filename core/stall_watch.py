@@ -14,6 +14,33 @@ PHASES = {
 UNREPORTED_SECONDS = 30 * 60
 
 
+def blocked(entries, memory, log_dir=None):
+    """Notice once per blocked build and reason, with the tail of its log so the cause is readable in the app."""
+    import hashlib
+    notices = []
+    for entry in entries or []:
+        if entry.get("status") != "blocked":
+            continue
+        reason = (entry.get("reason") or "Grund unbekannt.").strip()
+        key = "bau-" + entry["id"] + "-blocked-" + hashlib.sha256(reason.encode()).hexdigest()[:8]
+        if memory.get(key):
+            continue
+        memory[key] = True
+        detail = ""
+        try:
+            if log_dir is not None:
+                lines = [x.strip() for x in (log_dir / (entry["id"] + ".log")).read_text(errors="replace").splitlines() if x.strip()]
+                detail = " ".join(lines[-4:])[-400:]
+        except OSError:
+            detail = ""
+        body = f"„{entry.get('name') or entry['id']}“ ist in der Kette stehen geblieben: {reason}"
+        if detail:
+            body += f" Zuletzt im Protokoll: {detail}"
+        body += " Nichts davon ist gespeichert oder live. Ursache beheben und erneut mit „ready“ übergeben."
+        notices.append((key, "Bauauftrag blockiert", body))
+    return notices
+
+
 def _watched(entries, releases):
     for entry in entries or []:
         if entry.get("status") in {"queued", "checking"}:

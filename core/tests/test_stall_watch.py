@@ -31,3 +31,22 @@ def test_a_working_build_without_ready_is_reported_after_half_an_hour():
     assert stalled(1000 + 60 * 60, entries, [], memory) == []
     assert stalled(1000 + 61 * 60, [{"id": "w1", "name": "offen", "status": "integrated"}], [], memory) == []
     assert memory == {}
+
+
+def test_blocked_build_is_reported_once_per_reason_with_log_tail(tmp_path):
+    from core.stall_watch import blocked
+    log_dir = tmp_path
+    (log_dir / "abc.log").write_text("$ git commit\n{\n  \"ok\": false,\n  \"errors\": [\"platform: Quelländerung ohne Vertrag\"]\n}\n")
+    entries = [{"id": "abc", "name": "haken", "status": "blocked", "reason": "Schritt fehlgeschlagen: git commit"},
+               {"id": "def", "name": "ok", "status": "integrated"}]
+    memory = {}
+    first = blocked(entries, memory, log_dir)
+    assert len(first) == 1
+    key, title, body = first[0]
+    assert title == "Bauauftrag blockiert"
+    assert "„haken“" in body and "git commit" in body and "Quelländerung ohne Vertrag" in body and "ready" in body
+    assert blocked(entries, memory, log_dir) == []
+    entries[0]["reason"] = "Schritt fehlgeschlagen: pytest"
+    again = blocked(entries, memory, log_dir)
+    assert len(again) == 1 and again[0][0] != key
+    assert blocked([{"id": "x", "status": "blocked", "reason": "r"}], {}, log_dir / "fehlt")[0][2].endswith("übergeben.")
