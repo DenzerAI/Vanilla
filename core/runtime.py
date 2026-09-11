@@ -188,8 +188,9 @@ class Runtime:
             previous = self._frozen
             held = False
             try:
-                if handler == 'backup':
-                    self.frozen = True
+                if handler in {'backup', 'frontend'}:
+                    if handler == 'backup':
+                        self.frozen = True
                     if self.config.start_adapter:
                         current = await self.request('GET','/api/updates',timeout=5)
                         self.adapter_active = current.get('activeCount',0)
@@ -197,7 +198,7 @@ class Runtime:
                     if self.adapter_active or others or self.active_writes:
                         self.queue.defer(run['id'],60)
                         return None
-                    if self.config.start_adapter:
+                    if handler == 'backup' and self.config.start_adapter:
                         held = True  # Also release if the acknowledgement is lost.
                         await self.request('POST','/api/system/backup-hold',json={'hold':True})
                 task = asyncio.create_task(asyncio.to_thread(self.operations.run,handler))

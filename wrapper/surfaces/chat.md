@@ -1099,7 +1099,7 @@ Schritts über `/thread/item` geladen. Der bestehende Chat-Datenschutz gilt vor 
 beiden Antworten. Originalverlauf, Exportanschluss und Worker-Kontext bleiben vollständig.
 Auch bereits vorhandene Werkzeugdaten werden erst aufgeklappt gerendert.
 Fehler und Zeitüberschreitungen bieten Wiederholen im betroffenen Bereich; Entwürfe
-bleiben erhalten. Leseanfragen ohne eigenes Abbruchsignal enden nach 15 Sekunden.
+bleiben erhalten. Leseanfragen ohne eigenes Abbruchsignal erhalten bis zu 65 Sekunden, passend zum nativen Worker-Limit. Beim Chatwechsel, Verlassen oder Sperren wird der nicht mehr benötigte Verlaufsabruf sofort abgebrochen; andere Panels bleiben unabhängig. Abbrüche zeigen eine verständliche Wiederholungsmöglichkeit.
 
 Der Startfächer zeigt vorhandene Hinweise direkt. Aufträge, Profil und Berichte
 ergänzen sich unabhängig; eine langsame Quelle sperrt die anderen nicht. Der

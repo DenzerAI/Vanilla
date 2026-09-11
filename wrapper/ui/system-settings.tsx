@@ -47,6 +47,7 @@ export function SystemSettings({api, section, chats, onJobs, onLibrary, onConnec
     {section==='system'&&<>
       <Group title="Heartbeat">
         <SettingRow title="Wiederanlauf des Systems" description={status.service.loaded?'Der Kerndienst startet nach Prozessende und nach der Benutzeranmeldung. Ein Neustart des Macs allein ist keine Anmeldung.':'Kein automatischer Kerndienst aktiv. Bei Prozessende muss diese Installation manuell gestartet werden.'}><span>{status.service.loaded?'Aktiv':'Manuell'}</span></SettingRow>
+        {toggle('system','frontend_check','Ladeleistung täglich prüfen','Prüft um 04:15 Uhr bei ruhendem Betrieb die lokale Auslieferung ohne KI-Aufruf. Auffälligkeiten erscheinen unter Aufträge.')}
         {toggle('system','heartbeat','System jede Minute prüfen','Prüft Erreichbarkeit, Auftragsplanung und freien Speicher lokal ohne LLM.')}
         {toggle('system','auto_restart','Worker-Anschluss wieder starten','Startet einen beendeten Worker-Anschluss erneut. Unterbrochene externe Aufträge werden nicht automatisch wiederholt.')}
         {toggle('system','notifications','Probleme anzeigen','Hinweise bei Zustandsänderungen, ohne Meldung bei jedem erfolgreichen Check.')}

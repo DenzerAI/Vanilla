@@ -631,6 +631,8 @@ def create_app(config=None):
                     # Verify the configured archive and key before enabling its schedule.
                     await asyncio.to_thread(operations.backups.command, "snapshots", "--json")
                 settings.set_group("backup", enabled=enabled)
+            elif id == "system-frontend":
+                settings.set_group("system", frontend_check=enabled)
             elif id == "system-memory":
                 settings.set_group("memory", dreaming=enabled)
             else:

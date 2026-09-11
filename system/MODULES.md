@@ -95,3 +95,12 @@ Rückkehrregeln stehen im [Workspace-Vertrag](../wrapper/surfaces/workspaces.md)
 ## Updates, GitHub und Beiträge
 
 Die Module github, updates und contributions erweitern die vorhandenen Anschlüsse. Der Kern hält Zustände und Freigaben dauerhaft; technische Prüfungen und ein separat eingerichteter Operator sichern die Übernahme. Modulstatus nennt konkrete Einrichtungsgrenzen. Führend: ../docs/UPDATES.md und ../docs/GITHUB.md.
+
+
+Die lokale Ladeprüfung ergänzt den vorhandenen Wartungshandler `frontend` und
+den additiven Schalter `system.frontend_check`. Sie wartet auf ruhende Arbeit,
+liest ausschließlich lokale Auslieferung und verwendet keine Modellaufrufe.
+Backup- und Updatepausen behalten ihre unabhängigen Sperren. Die Prüfung wählt
+den App-Einstieg index.html ausdrücklich, auch bei zusätzlichem Design-Build.
+Bestehende Nutzerdaten und Aufträge bleiben erhalten; vor Rückkehr zu einem
+älteren Handlerbestand die Ladeprüfung deaktivieren. Ablauf: docs/OPERATIONS.md.
