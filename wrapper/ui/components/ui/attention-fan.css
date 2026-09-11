@@ -92,3 +92,22 @@
  .chat-start-intro { gap: var(--space-8); }
  .welcome.agent-chat-welcome.chat-start .identity-avatar { width: 56px; height: 56px; }
 }
+
+/* Posteingang: one stack card instead of one card per event. */
+.attention-fan-stack { display: flex; flex-direction: column; gap: var(--space-8); width: 100%; min-height: 0; margin: 0; padding: 0; list-style: none; overflow: hidden; }
+.attention-fan-stack-row { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; padding-left: var(--space-8); border-left: 2px solid var(--border); }
+.attention-fan-stack-row.is-lead { border-left-color: var(--brand-accent); }
+.attention-fan-stack-title { font-size: var(--text-caption); line-height: var(--leading-tight); color: var(--muted); display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 1; overflow: hidden; overflow-wrap: anywhere; }
+.attention-fan-stack-row.is-lead .attention-fan-stack-title { font-size: var(--text-control); font-weight: var(--weight-medium); color: var(--text); -webkit-line-clamp: 2; }
+.attention-fan-stack-meta { font-size: var(--text-caption); line-height: var(--leading-normal); color: var(--muted); opacity: .75; }
+.attention-fan-stack-row:not(.is-lead) .attention-fan-stack-meta { display: none; }
+.attention-fan-count { margin-left: auto; min-width: var(--space-20); padding: 0 var(--space-4); border-radius: var(--radius-pill); background: var(--brand-accent); color: var(--surface); font-size: var(--text-caption); font-variant-numeric: tabular-nums; text-align: center; flex-shrink: 0; }
+.attention-fan-kind-label { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* Each card keeps its own face instead of one shared grey. */
+.attention-fan-card[data-kind="request"] .attention-fan-kind svg { color: var(--warning); }
+.attention-fan-card[data-kind="inbox"] .attention-fan-kind svg { color: var(--brand-accent); }
+.attention-fan-card[data-kind="statistics"] .attention-fan-kind svg,
+.attention-fan-card[data-kind="allowances"] .attention-fan-kind svg { color: var(--success); }
+.attention-fan-card[data-kind="chat"] .attention-fan-kind svg { color: var(--muted); }
+@media (forced-colors: active) { .attention-fan-count { background: CanvasText; color: Canvas; } .attention-fan-stack-row { border-left-color: CanvasText; } }

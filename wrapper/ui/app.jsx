@@ -2300,7 +2300,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                   <div className="message-column" role="alert"><p>{threadError}</p><button onClick={retryChatHistory}>Verlauf erneut laden</button></div>
                 ) : !visibleTurns.length ? (
                   <ChatStart visible={foreground && view === "chat" && readablePane} api={api} routines={!!boot.features?.routines} revision={libraryRevision} composing={!!text.trim() || attachments.length>0} greeting={greeting} profile={boot.settings} requests={requests} notifications={notificationState.data?.items || []} chats={chats.filter(c=>!c.private)} projectId={projectId} error={notificationState.error}
-                    onOpen={async item=>{
+                    onOpen={async entry=>{
+                      const item=entry.kind==='inbox'?(entry.lead||entry):entry;
                       if(item.kind==='calendar'){await openCalendarReport();return;}
                       if(item.kind==='statistics'){await openStatisticsReport();return;}
                       if(item.kind==='weather'){await openWeatherReport(item);return;}
