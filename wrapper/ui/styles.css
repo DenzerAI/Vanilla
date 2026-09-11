@@ -2320,7 +2320,6 @@ nav {
   .app:not(.collapsed) .sidebar {
     visibility: visible;
     position: fixed;
-    width: 255px;
     height: 100dvh;
     box-shadow: var(--shadow-panel-right);
   }

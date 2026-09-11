@@ -404,3 +404,21 @@
   .turn-activity-status > :is(.turn-step-count, .turn-duration) { display: none; }
   .activity-group { margin-block: 0; }
 }
+
+/* Bare message controls share the visual axis of the progress glyph. */
+.message-actions { --message-action-size: var(--control-target); }
+.message-actions .icon-button {
+  width: var(--message-action-size); height: var(--message-action-size);
+  border-radius: 0; border-color: transparent; background: transparent; box-shadow: none;
+}
+.message-actions .icon-button:is(:hover, :active, .selected, [aria-pressed="true"], [aria-expanded="true"]) {
+  border-color: transparent; background: transparent; box-shadow: none;
+}
+.agent-actions {
+  margin-block: 0;
+  margin-inline-start: calc((var(--control-turn-loader-slot) - var(--message-action-size)) / 2);
+}
+.turn-response-progress { margin-block: var(--space-4); }
+@media (pointer: coarse), (max-width: 650px) {
+  .message-actions { --message-action-size: var(--control-touch); }
+}

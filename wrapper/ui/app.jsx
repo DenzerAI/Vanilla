@@ -638,6 +638,14 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const [mountedPanes, setMountedPanes] = useState(() => [...new Set([0, ...savedLayout.order])]);
   const [activePane, setActivePane] = useState(savedLayout.active);
   const [paneWidth, setPaneWidth] = useState(0);
+  const [mobileViewport, setMobileViewport] = useState(() => window.matchMedia("(max-width: 650px)").matches);
+  useEffect(() => {
+    const query = window.matchMedia("(max-width: 650px)");
+    const update = () => setMobileViewport(query.matches);
+    update();
+    query.addEventListener("change", update);
+    return () => query.removeEventListener("change", update);
+  }, []);
   const [paneWeights, setPaneWeights] = useState(savedLayout.weights);
   const [maximizedPane, setMaximizedPane] = useState(false);
   const [, redrawSessions] = useState(0);
@@ -653,7 +661,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   useEffect(() => {
     if (!embedded) writePaneState("layout", {order:paneOrder, active:activePane, weights:paneWeights});
   }, [embedded, paneOrder, activePane, paneWeights]);
-  const visible = visiblePanes(paneOrder, activePane, paneWidth, maximizedPane);
+  const visible = visiblePanes(paneOrder, activePane, paneWidth, maximizedPane || mobileViewport);
   const activatePane = (id) => { activePaneRef.current = id; setActivePane(id); };
   function changePaneCount(count) {
     const order = selectPaneCount(paneOrder, activePane, count);
@@ -2251,13 +2259,13 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 {!sidebar && <IconButton label="Seitenleiste anzeigen" onClick={() => setSidebar(true)}>{icon(PanelLeft)}</IconButton>}
               </div>
               <div className="row">
-                {paneOrder.length === 1 && headerSession?.hasTitle && <ChatTitle session={headerSession} compact/>}
-                <LayoutPicker count={paneOrder.length} onChange={changePaneCount}/>
+                {(mobileViewport || paneOrder.length === 1) && headerSession?.hasTitle && <ChatTitle session={headerSession} compact/>}
+                {!mobileViewport && <LayoutPicker count={paneOrder.length} onChange={changePaneCount}/>}
                 <IconButton label={panel ? "Workspace schließen" : "Workspace öffnen"} active={!!panel} aria-expanded={!!panel} aria-controls="workspace-panel" onClick={() => { if (!panel) setSelectedFile(null); let last = lastWorkspaceView.current; try { last ||= localStorage.getItem("workspace-last-view"); } catch {} setPanel(panel ? null : (["files", "review", ...(boot.capabilities?.terminal ? ["terminal"] : [])].includes(last) ? last : "files")); }}>{icon(PanelRight)}</IconButton>
               </div>
             </header>}
 
-            {!embedded && paneOrder.length > 1 && (visible.length < paneOrder.length || maximizedPane) && <div className="pane-tabs" role="tablist" aria-label="Offene Chats">
+            {!embedded && !mobileViewport && paneOrder.length > 1 && (visible.length < paneOrder.length || maximizedPane) && <div className="pane-tabs" role="tablist" aria-label="Offene Chats">
               {paneOrder.map((id,index) => { const session=sessions.current[id].current; return <button key={id} role="tab" tabIndex={activePane===id ? 0 : -1} onKeyDown={e=>{const offset=e.key==="ArrowRight"?1:e.key==="ArrowLeft"?-1:0;if(offset){e.preventDefault();const next=paneOrder[(paneOrder.indexOf(id)+offset+paneOrder.length)%paneOrder.length];activatePane(next);requestAnimationFrame(()=>panesRef.current?.parentElement.querySelector(`[aria-controls="chat-pane-${next}"]`)?.focus())}}} aria-selected={activePane===id} aria-controls={`chat-pane-${id}`} onClick={()=>activatePane(id)}>{session?.running ? <AppLoader /> : session?.unread ? icon(Check,14) : icon(MessageCircle,14)}<span>{session?.title || `Chat ${index+1}`}</span></button> })}
               {maximizedPane && <IconButton label="Aufteilung wiederherstellen" onClick={()=>setMaximizedPane(false)}>{icon(PanelLeft,16)}</IconButton>}
             </div>}
@@ -2279,7 +2287,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               onDrop={e=>{if(chatLocked) {e.preventDefault();return;} if(!Array.from(e.dataTransfer.types).includes("Files")) return; e.preventDefault(); e.stopPropagation(); dragDepth.current=0; setDraggingFiles(false); void upload(e.dataTransfer.files);}}
             >
               {draggingFiles && <div className="chat-file-drop" role="status">{icon(Paperclip,24)}<span>Dateien hier anhängen</span></div>}
-              {(embedded ? showPaneHeader : paneOrder.length > 1) && <div className="pane-header"><div className="row">
+              {!mobileViewport && (embedded ? showPaneHeader : paneOrder.length > 1) && <div className="pane-header"><div className="row">
                 <ChatTitle session={localSession} compact extraItems={[
                   {id:"maximize-panel", label:(embedded ? isMaximized : maximizedPane) ? "Aufteilung wiederherstellen" : `Chat ${paneLabel} maximieren`, icon:icon(Maximize,16), action:()=>embedded ? onMaximize?.() : (activatePane(0),setMaximizedPane(v=>!v))},
                   {id:"close-panel", label:`Chat ${paneLabel} schließen`, icon:icon(X,16), action:()=>embedded ? onClosePane?.() : closePane(0)},

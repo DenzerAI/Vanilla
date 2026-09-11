@@ -1380,3 +1380,17 @@ Nachrichten abarbeiten und native Ziele beenden, da deren Steueranschluss fehlt.
 Protokolltest ersetzt keinen authentifizierten Modelllauf beim jeweiligen Anbieter.
 Prüfung: worker-commands, worker-commands-http, acp-session, Chat-Privatsperre,
 Typecheck, Designprüfung und Desktop/mobile Browseremulation.
+### Mobile Navigation und bündige Nachrichtenaktionen
+
+Bis 650 px zeigt der Chat ausschließlich die aktive Pane. LayoutPicker, Pane-Tabs
+und Pane-Kopfaktionen werden nicht angeboten; Titel und Chatwechsel bleiben im
+gemeinsamen Kopf und der Navigation erreichbar. Gespeicherte Desktop-Aufteilung,
+Pane-Identitäten und Entwürfe bleiben erhalten. Das mobile Menü nutzt die
+Bildschirmbreite abzüglich space-32 und schließt bei jeder Chatauswahl.
+
+MessageActions verwenden auf Desktop und Mobile transparente, ungefüllte
+Icon-Schaltflächen ohne runden Hintergrund oder Auswahlrahmen, auch beim Öffnen
+und Hover. Tastaturfokus bleibt sichtbar. Die erste Agentenaktion liegt mittig
+auf derselben Achse wie das Fortschrittsicon; die unsichtbare Trefferfläche bleibt
+control-target beziehungsweise control-touch groß. Der vertikale Abstand zum
+Fortschritt beträgt space-4, die Aktionszeile hat keine zusätzlichen Blockränder.

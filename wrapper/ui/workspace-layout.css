@@ -30,7 +30,7 @@
 }
 @media (max-width: 650px) {
   .app:not(.embedded-chat):not(.collapsed) { grid-template-columns: 0 minmax(0, 1fr); }
-  .app:not(.collapsed) .sidebar { width: min(var(--sidebar-width, 268px), calc(100vw - 48px)); }
+  .app:not(.collapsed) .sidebar { width: calc(100vw - var(--space-32)); }
   .sidebar-resizer, .workspace-resizer { display: none; }
   .app .workspace-panel { min-width: 0; max-width: 100vw; width: 100vw; top: 0; }
   .app .workspace-panel.workspace-expanded { width: 100vw; }
