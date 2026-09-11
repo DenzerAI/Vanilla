@@ -6,11 +6,11 @@ import path from 'node:path';
 import {Storage} from '../storage.mjs';
 import {filterJobs} from '../ui/jobs-view.mjs';
 import {normalizeJobCategory,jobCategoryLabel,jobCategoryOptions} from '../ui/job-categories.mjs';
-test('categories sort independently from workspaces, status and system routines',()=>{
+test('workspace filters ignore legacy categories and keep system routines separate',()=>{
   const jobs=[{id:'a',projectId:'default',category:'Marketing',name:'Report',status:'active'}, {id:'b',projectId:'special',category:'Marketing',name:'Review',status:'paused'},{id:'c',name:'General',status:'active'},{id:'s',name:'System',managed:true,category:'Internal'}];
-  assert.deepEqual(filterJobs(jobs,'all','','Marketing').map(j=>j.id),['a','b']);
-  assert.deepEqual(filterJobs(jobs,'active','','Marketing').map(j=>j.id),['a']);
-  assert.deepEqual(filterJobs(jobs,'all','','').map(j=>j.id),['c']);
+  assert.deepEqual(filterJobs(jobs,'all','','default').map(j=>j.id),['a','c']);
+  assert.deepEqual(filterJobs(jobs,'active','','special').map(j=>j.id),[]);
+  assert.deepEqual(filterJobs(jobs,'all','','special').map(j=>j.id),['b']);
   assert.deepEqual(filterJobs(jobs,'system','','Marketing').map(j=>j.id),['s']);
   assert.deepEqual(jobCategoryOptions(jobs),['Marketing']);assert.equal(jobCategoryLabel(jobs[2]),'Allgemein');
   assert.equal(normalizeJobCategory(' ALLGEMEIN '),'');assert.equal(normalizeJobCategory('Eigener Bereich'),'Eigener Bereich');

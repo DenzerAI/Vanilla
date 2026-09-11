@@ -31,7 +31,7 @@ export function createSystemSearch(api) {
         const data=await catalog('/library');
         if(data.truncated) warnings.push('Ergebnisse: Die Erfassung ist auf 5.000 Dateien begrenzt.');
         if(data.warnings?.length) warnings.push('Ergebnisse: Einige Dateien konnten nicht erfasst werden.');
-        return {results:match(data.entries || [],'file',e=>e.name,e=>['Ergebnisse',e.origin,e.missing?'Datei fehlt':''].filter(Boolean).join(' · '),e=>`${e.path} ${e.origin || ''} ${e.worker || ''} ${e.category || 'Allgemein'} ${e.jobName || ''}`)};
+        return {results:match(data.entries || [],'file',e=>e.name,e=>['Ergebnisse',e.origin,e.missing?'Datei fehlt':''].filter(Boolean).join(' · '),e=>`${e.path} ${e.origin || ''} ${e.worker || ''} ${e.jobName || ''}`)};
       }},
       {label:'Aufträge',load:async()=>({results:match(await catalog('/jobs'),'job',j=>j.name,()=> 'Auftrag',j=>`${j.instructions || ''} ${j.description || ''}`)})},
       {label:'Skills',load:async()=>{

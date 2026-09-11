@@ -1,5 +1,4 @@
-import {WorkspaceInfo,WorkspaceDefinitionEditor,JobCategoryField,JobCategoryFilter} from './workspace-settings';
-import {jobCategoryLabel} from './job-categories.mjs';
+import {WorkspaceInfo,WorkspaceDefinitionEditor} from './workspace-settings';
 import {PageHeading} from './page-heading';
 import {submitMessage} from "./message-submit.mjs";
 import {ProductUpdates} from "./product-updates";
@@ -591,7 +590,6 @@ const projectGlyphs = { folder: Folder, code: Braces, briefcase: Briefcase, glob
 function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNumber = 0, panePosition = 0, showPaneHeader = false, isMaximized = false, onMaximize, onClosePane, onOpenFile, onOpenCalendar, paneVisible = true, paneActive = false, initialProject = "default" }) {
   const [libraryRevision,setLibraryRevision]=useState(0);
   const [libraryJob,setLibraryJob]=useState(null);
-  const [resultCategories,setResultCategories]=useState([]);
   const historyReads=useRef(null);
   historyReads.current ||= createLatestRead((url,signal)=>api(url,undefined,true,signal));
   useEffect(()=>()=>historyReads.current.cancel(),[]);
@@ -1825,7 +1823,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const [workspaceOpening,setWorkspaceOpening]=useState(false);
   const workspaceRequest=useRef(null);
   const workspaceOpenLock=useRef(false);
-  const [jobCategory,setJobCategory]=useState(null);
+  const [jobWorkspace,setJobWorkspace]=useState('all');
   async function configureWorkspace(targetId) {
     if(workspaceOpenLock.current)return;
     workspaceOpenLock.current=true;setWorkspaceOpening(true);
@@ -1963,14 +1961,13 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     document.addEventListener('keydown', close);
     return () => { cancelAnimationFrame(frame); document.removeEventListener('keydown', close); };
   }, [view, modal?.type, modal?.job?.id, modal?.template?.id]);
-  useEffect(()=>{if(modal?.type!=='job')return;let active=true;api('/library').then(data=>{if(active)setResultCategories(data.categories||[]);}).catch(()=>{});return()=>{active=false;};},[modal?.type,modal?.job?.id]);
-  const visibleJobs = filterJobs(jobs, jobFilter, search, jobCategory);
+  const visibleJobs = filterJobs(jobs, jobFilter, search, jobWorkspace);
   const jobEditor = modal?.type === 'job' && !modal.job?.managed ? <JobForm
     key={modal.job?.id || modal.template?.id || 'new'}
     routines={!!boot.features?.routines} configurationReady={!!boot.features?.jobConfiguration} initialTemplate={modal.template}
     workers={boot.workers || []} projects={boot.projects || []}
     modelsByWorker={boot.modelsByWorker || {}} defaultProjectId={projectId}
-    job={modal.job} jobs={[...jobs,...resultCategories.map(category=>({category}))]} connections={integrations.connections}
+    job={modal.job} jobs={jobs} connections={integrations.connections}
     onSave={guard(async job => {
       await api('/jobs/save', job);
       setJobs(await api('/jobs'));
@@ -2622,7 +2619,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 </button>
               ))}
             </div>
-            {boot.features?.jobCategories&&!["system","templates"].includes(jobFilter)&&<JobCategoryFilter jobs={jobs} value={jobCategory} onChange={setJobCategory}/>}
+            {!["system","templates"].includes(jobFilter)&&<FilterPicker label="Workspace" value={jobWorkspace} onChange={setJobWorkspace} options={[{value:"all",label:"Alle Workspaces"},...boot.projects.map(p=>({value:p.id,label:p.name}))]}/>}
             {jobFilter === "templates" && <JobTemplateList query={search} onChoose={template => setModal({type: "job", template})} />}
             {jobFilter !== "templates" && jobsLoading && !jobs.length && !jobsError && <Skeleton layout="jobs" label="Aufträge werden geladen …"/>}
             {jobFilter !== "templates" && jobsError && <p role="alert">{jobsError} <button onClick={loadJobs}>Erneut laden</button></p>}
@@ -2657,7 +2654,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                             : "Täglich") +
                           " um " +
                           j.schedule?.time}{" "}
-                    · {j.managed ? 'System' : (boot.projects.find(p=>p.id === (j.projectId || 'default'))?.name || 'Workspace')} · {jobStateLabel(j)}{!j.managed && j.status!=='invalid' && ' · '+jobCategoryLabel(j)}
+                    · {j.managed ? 'System' : (boot.projects.find(p=>p.id === (j.projectId || 'default'))?.name || 'Workspace')} · {jobStateLabel(j)}
                     {j.lastRun &&
                       " · " +
                         {
@@ -3625,7 +3622,6 @@ function JobForm({ job, jobs=[], initialTemplate, connections, workers, projects
           worker,
           connectionId: f.get("connectionId"),
           projectId: f.get('projectId'),
-          category: f.get('category')||'',
           model: worker === 'auto' || ['python','n8n'].includes(worker) ? '' : model,
           effort: model && worker !== 'auto' && !['python','n8n'].includes(worker) ? effort : '',
           ...(worker==='python'?{python:{handler:'script',script:f.get('script'),timeout:Number(f.get('timeout')),input:JSON.parse(String(f.get('pythonInput')||'{}'))},retry:{count:Number(f.get('retries')||0),idempotent:f.get('idempotent')==='on'}}:{}),
@@ -3682,7 +3678,6 @@ function JobForm({ job, jobs=[], initialTemplate, connections, workers, projects
           required
         />
       </Field>
-      <JobCategoryField Field={Field} jobs={jobs} value={draft.category||''} onChange={category=>setDraft(d=>({...d,category}))}/>
       <Field label="Workspace" hint="Jeder Lauf erstellt einen eigenen Chat in diesem Workspace.">
         <select name="projectId" defaultValue={job?.projectId || defaultProjectId || 'default'}>{projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select>
       </Field>

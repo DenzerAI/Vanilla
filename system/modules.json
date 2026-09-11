@@ -641,8 +641,8 @@
         "meaning": "Ausführung über Scheduler; Abschluss und Zustellbeleg prüfen."
       },
       "limits": "Ausführung über Scheduler; Abschluss und Zustellbeleg prüfen.",
-      "version": 7,
-      "migration": "Bestehende zentrale Jobordner, Kennungen und Laufbelege erhalten. Optionale Modell-/Effortfelder ergänzen das Manifest; vorhandene Zeitwerte werden weiterhin eindeutig eingelesen. Backup-Zeitplan erst nach erfolgreicher Prüfung des vorhandenen Archivs aktivieren. Keine Verschiebung in Bereichsordner. category ist optional und rein organisatorisch; fehlend oder leer heißt Allgemein. Alte Leser ignorieren die Zusatzangabe. Workspace, Zeitplan und Ablage bleiben unverändert. Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Nach Restore gilt recovery/not-before als Zeitplangrenze. Normale Neustarts erhalten bestehende Wiederholungsregeln. Keine Tabellen entfernt."
+      "version": 8,
+      "migration": "Bestehende zentrale Jobordner, Kennungen und Laufbelege erhalten. Optionale Modell-/Effortfelder ergänzen das Manifest; vorhandene Zeitwerte werden weiterhin eindeutig eingelesen. Backup-Zeitplan erst nach erfolgreicher Prüfung des vorhandenen Archivs aktivieren. Keine Verschiebung in Bereichsordner. category ist optional und rein organisatorisch; fehlend oder leer heißt Allgemein. Alte Leser ignorieren die Zusatzangabe. Workspace, Zeitplan und Ablage bleiben unverändert. Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Nach Restore gilt recovery/not-before als Zeitplangrenze. Normale Neustarts erhalten bestehende Wiederholungsregeln. Keine Tabellen entfernt. Oberfläche organisiert Aufträge und Ergebnisse ausschließlich nach Workspace. Alte Kategorieangaben bleiben kompatibel gespeichert, ohne Anzeige oder Bearbeitung. Keine Datenmigration."
     },
     {
       "id": "library",
@@ -684,8 +684,8 @@
         "meaning": "Dateibestand; Vorschau ist kein Suchindex."
       },
       "limits": "Dateibestand; Vorschau ist kein Suchindex.",
-      "version": 3,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Während Sicherung und Wiederherstellungsprüfung weist der gemeinsame Server Schreibaktionen ab; lesende Bibliotheksansichten bleiben erreichbar. Kein Dateiformat geändert. Vertrag docs/OPERATIONS.md. Additive Indexfelder categoryOverride (null/fehlend: erben, leer: Allgemein), category, jobCategory, jobName und jobAvailable. Keine Dateiverschiebung. Alte Leser ignorieren Zusatzfelder; vorhandene Overrides bleiben erhalten. Vertrag wrapper/surfaces/library.md."
+      "version": 4,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Während Sicherung und Wiederherstellungsprüfung weist der gemeinsame Server Schreibaktionen ab; lesende Bibliotheksansichten bleiben erreichbar. Kein Dateiformat geändert. Vertrag docs/OPERATIONS.md. Additive Indexfelder categoryOverride (null/fehlend: erben, leer: Allgemein), category, jobCategory, jobName und jobAvailable. Keine Dateiverschiebung. Alte Leser ignorieren Zusatzfelder; vorhandene Overrides bleiben erhalten. Vertrag wrapper/surfaces/library.md. Oberfläche organisiert Aufträge und Ergebnisse ausschließlich nach Workspace. Alte Kategorieangaben bleiben kompatibel gespeichert, ohne Anzeige oder Bearbeitung. Keine Datenmigration."
     },
     {
       "id": "skills",
@@ -1266,7 +1266,7 @@
       "title": "Optionale Workspaces",
       "purpose": "Themenbezogene Gespräche, Dateien und Arbeitsweisen mit demselben Assistenten und gemeinsamer Firmenbasis organisieren.",
       "stage": "implemented",
-      "version": 1,
+      "version": 2,
       "contract": "wrapper/surfaces/workspaces.md",
       "setup": "wrapper/surfaces/workspaces.md#einrichtung",
       "data": "Bestehende Projekte und Pfade; AGENTS.md mit optionalem YAML-Steckbrief Version 1. SQLite/State führt abgeleitete Metadaten und workspaceOnboarding am Chat. WORKSPACES.md ist ein erzeugtes Verzeichnis. Skills bleiben Dateien.",
@@ -1297,7 +1297,7 @@
         "meaning": "Gespeicherte und frisch gelesene Beschreibungen, Einrichtungsstatus und konkrete Dateifehler. Kein Nachweis einer Worker-Anmeldung."
       },
       "limits": "Freiwillige Spezialisierungen im gemeinsamen Arbeitsbereich, keine Benutzer-/Mandantensandbox. Keine Hierarchie oder Hintergrundaufträge. Native Anbieterfähigkeiten und Memory bleiben erhalten.",
-      "migration": "Opt-in YAML-Kopf, unveränderte IDs/Pfade und bestehender Markdown-Text. Neue Ordner nur unter projects/. Unbekannte oder beschädigte Steckbriefe werden nicht überschrieben. Alte Leser behalten Dateien, erzwingen aber keine neuen Revisions-/Einrichtungsregeln. Rückkehr erfordert beendete aktive Einrichtung und Sicherung von Beschreibungen, State und Chats."
+      "migration": "Opt-in YAML-Kopf, unveränderte IDs/Pfade und bestehender Markdown-Text. Neue Ordner nur unter projects/. Unbekannte oder beschädigte Steckbriefe werden nicht überschrieben. Alte Leser behalten Dateien, erzwingen aber keine neuen Revisions-/Einrichtungsregeln. Rückkehr erfordert beendete aktive Einrichtung und Sicherung von Beschreibungen, State und Chats. Oberfläche organisiert Aufträge und Ergebnisse ausschließlich nach Workspace. Alte Kategorieangaben bleiben kompatibel gespeichert, ohne Anzeige oder Bearbeitung. Keine Datenmigration."
     },
     {
       "id": "github",

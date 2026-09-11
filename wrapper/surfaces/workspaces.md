@@ -94,3 +94,12 @@ und Pfade, Konflikte, Symlinks und wiederholbare Einrichtung.
 Worker einschließlich frischer Folge-Turns und Neustart. Anbieter-Logins und
 inhaltliche Interviewqualität werden dadurch nicht als live getestet erklärt.
 Desktop-/Handybedienung benötigt zusätzlich die visuelle Prüfung des Builds.
+
+
+## Gemeinsame Ordnung für Aufträge und Ergebnisse
+
+Workspaces bündeln Gespräche, Aufträge und Ergebnisse. Ohne eigene Aufteilung
+bleibt Allgemein der Einstieg. WorkspaceInfo erklärt diese gemeinsame Zuordnung;
+Kategorien werden nicht mehr als zusätzliche Organisation empfohlen. Die
+Referenz zeigt den produktiven FilterPicker mit „Alle Workspaces“. Bestehende
+Dateipfade, Projektkennungen und Arbeitsweisen bleiben unverändert.

@@ -33,7 +33,7 @@ import { ModelPicker } from "./model-picker.jsx";
 import { InboxPatternPreview } from "./inbox";
 import { PanelLight } from "./panel-light";
 import {LibraryThumbnail} from './library-thumbnail.jsx';
-import {LibraryPreview,ResultCategoryPreview} from './library.jsx';
+import {LibraryPreview} from './library.jsx';
 import {Skeleton} from './skeleton.tsx';
 import React, {useState} from "react";
 import { SettingsPatterns } from "./settings-patterns.jsx";
@@ -75,7 +75,7 @@ export function DesignReference({ theme, tone, accent }) {
       {section === 'icons' && <><h3 className="section-heading">Systemicons</h3><IconMotionPreview/></>}
       {section === 'components' && <>
       <h3 className="section-heading">Bedienelemente & Seitenaufbau</h3>
-      <section><h2>Firma</h2><FirmaPreview/><h3>Workspace und Auftragskategorien</h3><WorkspaceSettingsPreview/></section>
+      <section><h2>Firma</h2><FirmaPreview/><h3>Workspaces</h3><WorkspaceSettingsPreview/></section>
       <SettingsPatterns/>
       <h3 className="section-heading">Gespeicherte Stimmen · Beispiel</h3><VoiceProfilesPreview/>
       <h3 className="section-heading">Chat-Sperre · Beispiel</h3>
@@ -161,7 +161,7 @@ export function DesignReference({ theme, tone, accent }) {
       <div className="panel-light-preview"><PanelLight mode="animated"/><span>Dezente Tiefe mit ruhiger Lichtbewegung</span></div>
       <h3 className="section-heading">Dateivorschau</h3>
       <p className="page-note">Quick Look verwendet die gemeinsame Glasfläche, einen kompakten Dateikopf und aufklappbare Informationen. Die Ergebnisansicht ergänzt kompakte Listen und ein Bildraster mit direkter Auswahlvorschau im rechten Workspace. Doppelklick oder Leertaste öffnen Quick Look.</p>
-      <ResultCategoryPreview/><div className="library-entries-grid" aria-label="Dateisymbole">{['HTML','PDF','MP3','ZIP'].map(format=><div key={format}><LibraryThumbnail entry={{name:'Beispiel.'+format,path:'',missing:true,kind:format==='MP3'?'audio':'download'}}/></div>)}</div>
+      <div className="library-entries-grid" aria-label="Dateisymbole">{['HTML','PDF','MP3','ZIP'].map(format=><div key={format}><LibraryThumbnail entry={{name:'Beispiel.'+format,path:'',missing:true,kind:format==='MP3'?'audio':'download'}}/></div>)}</div>
       <button onClick={()=>setPreview(true)}>Vorschau öffnen</button>
       {preview&&<LibraryPreview entry={{id:'example',name:'Dateivorschau',path:'output/beispiel',origin:'Designbeispiel'}} onClose={()=>setPreview(false)}><div className="library-preview"><p>Hier steht das Bild oder Dokument. Dateiaktionen bleiben im rechten Workspace; diese Großansicht zeigt ausschließlich den Inhalt.</p></div></LibraryPreview>}
       <h3 className="section-heading">HTML · gerenderte Dokumente</h3>

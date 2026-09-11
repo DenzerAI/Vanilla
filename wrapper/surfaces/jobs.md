@@ -129,26 +129,16 @@ Uhrzeiten bleiben beim YAML-Austausch zwischen Oberfläche und Kern Zeichenkette
 auch unquoted 10:30, 16:00 und 23:59. Speichern und erneutes Einlesen dürfen
 keinen gültigen Tagesplan in einen ungültigen Auftrag verwandeln.
 
-## Optionale Auftragskategorien
+## Workspace-Zuordnung
 
-`category` ist ein optionaler kurzer eigener Name im bestehenden job.yaml.
-Leer oder „Allgemein“ bedeutet Allgemein. JobForm bietet vorhandene Kategorien
-und die Vorschläge Marketing, Immobilien, Angebote und Vertrieb; freie Namen
-sind erlaubt. Die Liste zeigt Kategorie und Workspace getrennt und bietet einen
-zusätzlichen Filter neben den bestehenden Statusfiltern. Systemaufträge und
-Vorlagen behalten ihre eigene Einteilung.
-
-Kategorien ändern keine Workspace-Zuordnung, Arbeitsweise, Zeitplanung oder
-Ablage. Sie erfordern keinen spezialisierten Workspace. Dieselbe Angabe ist
-über routine_create/routine_update im Chat verfügbar. Direkte Manifeständerungen
-werden frisch gelesen, ungültige Werte sichtbar als Dateifehler behandelt.
-Alte Manifeste bleiben ohne Migration Allgemein; alte Leser ignorieren das
-Zusatzfeld. Kategorie leeren hebt die Sortierung auf. Bestehende Job-/Laufdaten
-bleiben beim Auftrag und im vorhandenen Backup.
-
-JobCategoryField und JobCategoryFilter verwenden native Eingaben im vorhandenen
-Formular, gemeinsame Abstände und eine lokale Referenz unter Unser Design.
-Prüfungen: job-categories.test.mjs und core/tests/test_routines.py.
+Aufträge verwenden den gemeinsamen FilterPicker „Workspace“ mit „Alle Workspaces“
+und den vorhandenen Projektnamen. Nutzerstatus und Suche werden damit kombiniert;
+System und Vorlagen behalten ihre eigene Einteilung. Fehlende projectId bedeutet
+den Workspace Allgemein (default). JobForm behält die bestehende Workspace-Auswahl.
+Kategoriefeld, Kategoriefilter und Kategorie in der Listenzeile entfallen.
+Alte Kategorieangaben bleiben beim Speichern bestehender Aufträge erhalten, werden
+in der Oberfläche aber weder angezeigt noch für Filter verwendet. Keine Migration,
+kein Verschieben von Dateien oder Änderung von Zeitplänen.
 
 ## Gemeinsamer Integrationsstand
 Die Benachrichtigungsansicht teilt gleichzeitige Leseanfragen. Kategorien,
@@ -182,9 +172,8 @@ links eine kurze Zeile („Noch keine Aufträge“, „Keine passenden Aufträge
 ## Aufträge und Ergebnisse
 
 Aufträge bleibt der Menübegriff; Routinen bezeichnet wiederkehrende Aufträge.
-Kategorie beschreibt einen Bereich wie Marketing, nicht die Art einer Aufgabe
-oder das Dateiformat. Ergebnisse verwenden dieselben Namen. Eigene Kategorien
-von Ergebnissen stehen beim Bearbeiten eines Auftrags ebenfalls zur Auswahl.
+Workspace ist die gemeinsame organisatorische Zuordnung für Aufträge und Ergebnisse.
+Beide Ansichten verwenden dieselbe Beschriftung „Alle Workspaces“.
 Ergebnisse ansehen führt aus den Auftragsdetails zur nach jobId gefilterten
 Ergebnisansicht, auch vor dem ersten Ergebnis. Ergebnis im Chat öffnen bleibt
 für textuelle Laufantworten erhalten. Rückweg und Datenvertrag: library.md.

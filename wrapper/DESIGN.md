@@ -1230,8 +1230,8 @@ Tastatur erklärbar. Plus und bestehendes Kontextmenü führen zur nativen
 Chat-Einrichtung. Der Beschreibungseditor verwendet Modal, SettingRow,
 Settings-Skeleton und vorhandene Formfelder; auf schmalen Fenstern umbrechen
 Felder und Aktionen. Speichern zeigt Fehler am erhaltenen Entwurf.
-Auftragskategorien verwenden eine native Combobox aus Input/Datalist im JobForm
-und einen separaten Select-Filter. Gemeinsame Abstände und Schriftrollen gelten.
+Aufträge und Ergebnisse verwenden den bestehenden FilterPicker für Workspaces.
+Gemeinsame Abstände und Schriftrollen gelten.
 Die identischen Komponenten stehen unter Unser Design; den fachlichen Ablauf,
 Bestandsregeln und Grenzen führen surfaces/workspaces.md und surfaces/jobs.md.
 
@@ -1428,13 +1428,13 @@ unverändert. Ein älterer UI-Stand zeigt wieder die ausführliche Darstellung.
 
 ### Aufträge und Ergebnisse
 
-Die Navigation verwendet Inbox, Aufträge, Ergebnisse und Firma. Die Ergebnisansicht
-ergänzt den vorhandenen FilterPicker um Kategorie; Dateiart und Workspace bleiben
-getrennt. ResultCategoryEditor verwendet native Formular-/Datalist-Felder und die
-vorhandenen umbrechenden Aktionszeilen. Speichern, Fehler und Rückkehr zur Kategorie
-des Auftrags bleiben in der Vorschau. Unser Design zeigt denselben Baustein.
-Die beiden Querverweise verwenden vorhandene Buttons ohne neue Palette oder Motion.
-Daten- und Rückkehrvertrag: surfaces/library.md und surfaces/jobs.md.
+Aufträge und Ergebnisse verwenden denselben FilterPicker „Workspace“ und die
+Auswahl „Alle Workspaces“. Die Auftragsseite kombiniert ihn mit Status und Suche,
+die Ergebnisse mit Dateityp/Favoriten und Suche. Kategorieeingaben, Kategoriefilter
+und die zusätzliche Kategorie in Auftragszeilen entfallen. JobForm behält seine
+Workspace-Auswahl. Die gemeinsame Referenz zeigt denselben FilterPicker.
+Bestehende Buttons verbinden Auftrag und Ergebnisse. Keine neuen Tokens oder
+Animationen. Daten-/Rückkehrvertrag: surfaces/library.md und surfaces/jobs.md.
 
 
 ### Slash-Vorschläge über der Eingabe

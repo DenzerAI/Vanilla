@@ -10,7 +10,7 @@ bleiben unverändert über die globale Suche und ihren vorhandenen Editor erreic
 
 PageHeading bleibt der einzige Seitentitel, mit Ansichtswechsel Liste/Bildraster
 und Aktualisieren. Darunter stehen kompakte Suche und die gemeinsamen FilterPicker
-für Dateityp/Favoriten und Arbeitsbereich. Der Trefferstatus steht unter der Liste.
+für Dateityp/Favoriten und Workspace. Der Trefferstatus steht unter der Liste.
 Keine großen Symbolkacheln oder zusätzlichen Herkunftszeilen in der Listenansicht.
 
 Die Standardansicht ist eine kompakte Liste mit Name, Art und Änderungsdatum,
@@ -152,35 +152,19 @@ auch ohne Steuerbrücke. Ältere Viewer verwenden den bestehenden Endpunkt ohne
 Zusatzparameter. Ein Zurücksetzen verliert nur die neuen Anzeigeaktionen.
 
 
-## Kategorien und Auftragsherkunft · Version 3
+## Workspaces und Auftragsherkunft · Version 4
 
-Die Oberfläche heißt Ergebnisse, die Navigation bleibt Inbox, Aufträge, Ergebnisse,
-Firma und Workspaces. Bestehende library-Routen, Kennungen, Favoriten und Dateien
-bleiben erhalten. Kategorie, Workspace und Dateityp sind unabhängige Filter.
-Die Kategorie verwendet denselben kurzen freien Namen und dieselbe Validierung
-wie Aufträge. Der Katalog enthält Auftrags- und Ergebniskategorien; Allgemein ist
-weiterhin die leere Kategorie. Auch die globale Suche berücksichtigt Kategorien.
+Ergebnisse verwenden ausschließlich Dateityp/Favoriten und den gemeinsamen
+FilterPicker „Workspace“ mit „Alle Workspaces“. Kategorieauswahl, Kategorieeditor
+und Kategoriebegriffe in der Suche entfallen. Der Workspace stammt weiterhin aus
+der bestehenden projectId; Auftragsergebnisse übernehmen ihn vom Auftrag.
+Zum Auftrag und Ergebnisse ansehen behalten ihre bisherigen Detailverweise.
+Der gezielte Auftragsfilter ist über Alle Aufträge wieder aufhebbar.
 
-Ergebnisse aus Auftrags-output/ und registrierten Auftragschats erhalten jobId
-und den Workspace des Auftrags. Bei jedem Abruf wird seine aktuelle Kategorie
-übernommen. Die Vorschau verwendet ResultCategoryEditor mit nativer Input/Datalist,
-vorhandenem Formular und explizitem Speichern. Fehler erhalten den Entwurf.
-Eine eigene Zuordnung bleibt beim Neuladen erhalten; „Vom Auftrag übernehmen“
-stellt die Vererbung wieder her. Unser Design zeigt denselben Baustein mit lokalen
-Beispieldaten. Zum Auftrag öffnet vorhandene Auftragsdetails; Ergebnisse ansehen
-am Auftrag öffnet die nach jobId gefilterte Ergebnisansicht, mit Alle Aufträge
-als Rückweg. Ein gelöschter oder unlesbarer Auftrag bleibt als nicht verfügbar
-gekennzeichnet; vorhandene Ergebnisse und letzte bekannte Kategorie bleiben erhalten.
-
-Daten/Migration: library.json Version 1 bleibt kompatibel. Additive Felder
-jobCategory, jobName und jobAvailable beschreiben den zuletzt gelesenen Auftrag.
-categoryOverride ist null/fehlend für Vererbung, sonst ein validierter Name;
-explizit leer bedeutet Allgemein. category ist die abgeleitete Anzeige.
-POST /api/library/category schreibt ausschließlich Indexmetadaten über dieselbe
-Warteschlange wie Refresh/Favoriten; keine Dateiverschiebung oder Manifeständerung.
-Alte Leser ignorieren Zusatzfelder und erhalten Dateien/Favoriten. Nach Rückkehr
-entfällt die Kategoriebedienung; erneutes Update übernimmt erhaltene Overrides.
-Prüfung: wrapper/test/service-platform.test.mjs sowie Desktop-/Handyansicht.
-
-Der Index erfasst auch lokale Dateilinks finaler Antworten einschließlich ihrer
-Auftragsherkunft. Die Chatansicht behält ihre Duplikatfilter unverändert.
+Die bestehenden Indexfelder und Kategorie-API bleiben zur Datenkompatibilität
+vorhanden, werden von der Oberfläche aber nicht mehr bedient. Keine Migration,
+keine Dateiverschiebung, keine Löschung von Favoriten oder eigenen Zuordnungen.
+Ältere Oberflächen können gespeicherte Kategorien weiterhin lesen.
+Der Index erfasst lokale Dateilinks finaler Antworten mit ihrer Auftragsherkunft;
+die Chatansicht behält ihre Duplikatfilter. Ein fehlender Auftrag bleibt als
+nicht verfügbar gekennzeichnet, seine Dateien bleiben erhalten.
