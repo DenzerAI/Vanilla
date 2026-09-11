@@ -119,5 +119,10 @@
         "0974a61d68add0f67856100d614538f7786c3520def340d0386256225066c437"
       ]
     }
+  },
+  "legacyReviewedAssets": {
+    "wrapper/public/app-icon.svg": [
+      "f7049982cc53fec15ad6770985701f6f7d27eb4dc9e0f2e6bbb1b2088f8d8760"
+    ]
   }
 }

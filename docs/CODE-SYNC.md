@@ -193,3 +193,10 @@ weiter UPDATE.md und den vorhandenen Update-/Hostweg. Dieser Dienst installiert
 keine ungeprüften Änderungen in die laufende App und führt keine Pushes aus.
 Abschalten: bei ruhender Wartung die lokale Konfiguration sichern und entfernen.
 Die Git-Arbeitskopien und die bereits gespeicherten Commits bleiben erhalten.
+
+Historisch geprüfte Assetversionen können mit pfadgebundenen SHA-256-Werten in
+legacyReviewedAssets erhalten bleiben. Sie gelten ausschließlich beim Prüfen
+alter Commitbäume, niemals als Erlaubnis für einen neuen Index. Geänderte Assets
+benötigen weiterhin die aktuelle Einzelprüfung. Exakt hashgeprüfte neutrale
+Einrichtungsvorlagen dürfen Formulierungen mit lokalen Arbeitsregeln teilen;
+sonstige Inhaltsmuster und abweichende Vorlagen bleiben prüfpflichtig.

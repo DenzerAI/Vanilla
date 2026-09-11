@@ -358,3 +358,14 @@ def test_reviewed_neutral_template_may_share_a_local_instruction(repo):
     assert not scanner.findings
     scanner.entry(name, raw + b'\nChanged template\n')
     assert any(x['type'] == 'changed-neutral-template' for x in scanner.findings)
+
+
+def test_historical_asset_review_does_not_allow_old_asset_in_new_index(repo):
+    name = 'wrapper/public/app-icon.svg'
+    raw = b'<svg xmlns="http://www.w3.org/2000/svg"><title>Fixture</title></svg>'
+    scanner = guard.Scanner(repo)
+    scanner.policy['legacyReviewedAssets'] = {name: [hashlib.sha256(raw).hexdigest()]}
+    scanner.entry(name, raw, historical=True)
+    assert not scanner.findings
+    scanner.entry(name, raw)
+    assert any(x['type'] == 'unreviewed-asset' for x in scanner.findings)

@@ -178,7 +178,8 @@ class Scanner:
         if name.startswith('templates/') and digest != self.policy['neutralTemplates'].get(name):
             self.add('changed-neutral-template', name, revision=revision)
         if PurePosixPath(name).suffix in {'.png', '.woff2', '.svg', '.ttf'}:
-            if digest != self.policy['reviewedBinaryAssets'].get(name):
+            historical_review = historical and digest in self.policy.get('legacyReviewedAssets', {}).get(name, [])
+            if digest != self.policy['reviewedBinaryAssets'].get(name) and not historical_review:
                 self.add('unreviewed-asset', name, revision=revision)
             return
         if len(raw) > 5_000_000 or b'\0' in raw:
