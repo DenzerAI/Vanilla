@@ -1485,3 +1485,8 @@ Bestehende ComposerQuestion und native Antwortwege werden wiederverwendet;
 Freitext und gewöhnliche Chatfragen erzeugen keine künstlichen Auswahlkarten.
 Keine Datenmigration. Rückkehr verändert nur Darstellung; Entwürfe, Nachrichten,
 Profile und native Rückfragen behalten ihre bisherigen Datenformate.
+
+Die äußere App-Hülle verwendet overflow: clip. Auch programmatischer Fokus
+oder ScrollIntoView darf sie nicht verschieben; ausschließlich die inneren
+Bereiche scrollen. Insbesondere bleiben mobiler Kopf und Composer beim
+Öffnen eines Chats an ihren Bildschirmkanten. Keine Datenmigration.

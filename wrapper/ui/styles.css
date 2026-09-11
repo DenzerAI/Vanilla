@@ -227,7 +227,7 @@ kbd {
   display: grid;
   grid-template-columns: 268px minmax(0, 1fr);
   height: 100dvh;
-  overflow: hidden;
+  overflow: clip;
 }
 .app.collapsed {
   grid-template-columns: 0 minmax(0, 1fr);
