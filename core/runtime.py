@@ -33,7 +33,10 @@ class Runtime:
         self.next_restart = 0
         self.restart_delay = 5
         self.stopping = False
-        self.frozen = False
+        self.shutdown = None
+        self.restore_hold = (config.data / "restore-hold.json").exists()
+        self.frozen = self.restore_hold
+        self.active_writes = 0
         self.maintenance_lock = asyncio.Lock()
         self.client = httpx.AsyncClient(timeout=httpx.Timeout(60, connect=3), trust_env=False)
         self.stream = StreamHub(self, queue.db)
@@ -64,11 +67,13 @@ class Runtime:
         return bool(self.adapter_active or self.queue.db.rows("SELECT id FROM executions WHERE status IN ('dispatching','running')"))
 
     async def spawn_adapter(self):
-        env = {**os.environ, "UWE_PORT": str(self.config.adapter_port), "UWE_WORKSPACE": str(self.config.workspace), "UWE_DATA_ROOT": str(self.config.data), "AGENT_CORE_URL": f"http://127.0.0.1:{self.config.port}", "AGENT_INTERNAL_TOKEN": self.config.adapter_token, "AGENT_PYTHON": sys.executable}
+        env = {**os.environ, "UWE_PORT": str(self.config.adapter_port), "UWE_WORKSPACE": str(self.config.workspace), "UWE_DATA_ROOT": str(self.config.data), "AGENT_CORE_URL": f"http://127.0.0.1:{self.config.port}", "AGENT_INTERNAL_TOKEN": self.config.adapter_token, "AGENT_PYTHON": sys.executable, "VANILLA_RECOVERY_HOLD": "1" if self.restore_hold else "0"}
         self.process = await asyncio.create_subprocess_exec("node", str(self.config.root / "wrapper/server.mjs"), cwd=self.config.root, env=env)
         self.last_adapter_check = 0
 
     async def start(self):
+        if self.operations:
+            self.operations.backups.discard_staging()
         self.notifications.recover()
         if self.config.start_adapter:
             await self.spawn_adapter()
@@ -80,7 +85,7 @@ class Runtime:
     async def deliver_notifications(self):
         while True:
             try:
-                if self.config.start_adapter:
+                if self.config.start_adapter and not self.frozen:
                     await self.notifications.deliver_next(self)
             except asyncio.CancelledError:
                 raise
@@ -93,9 +98,10 @@ class Runtime:
             return
         if self.process and self.process.returncode is not None:
             self.error = "Worker-Anschluss beendet; Wiederanlauf wird geprüft."
+            for row in self.queue.db.rows("SELECT id FROM executions WHERE status IN ('dispatching','running') AND thread_id IS NOT NULL"):
+                self.queue.finish(row["id"], "interrupted", error="Worker-Anschluss wurde beendet. Externe Ergebnisse vor erneutem Start prüfen.")
+            self.adapter_active = 0
             if time() >= self.next_restart and self.operations and self.operations.settings.values["system"]["auto_restart"]:
-                for row in self.queue.db.rows("SELECT id FROM executions WHERE status IN ('dispatching','running') AND thread_id IS NOT NULL"):
-                    self.queue.finish(row["id"], "interrupted", error="Worker-Anschluss wurde beendet. Externe Ergebnisse vor erneutem Start prüfen.")
                 await self.spawn_adapter()
                 self.next_restart = time() + self.restart_delay
                 self.restart_delay = min(300, self.restart_delay * 2)
@@ -113,7 +119,8 @@ class Runtime:
         while True:
             try:
                 await self.supervise()
-                await asyncio.to_thread(self.queue.schedule)
+                if not self.frozen:
+                    await asyncio.to_thread(self.queue.schedule)
                 self.last_schedule = time()
                 limit = self.operations.settings.values["system"]["parallel_jobs"] if self.operations else 1
                 self.running = {id: task for id, task in self.running.items() if not task.done()}
@@ -142,23 +149,8 @@ class Runtime:
                 if handler == "script":
                     result = await self.execute_script(job, run)
                 else:
-                    async with self.maintenance_lock:
-                        if handler == "backup":
-                            self.frozen = True
-                            if self.config.start_adapter:
-                                current = await self.request("GET", "/api/updates", timeout=5)
-                                self.adapter_active = current.get("activeCount", 0)
-                            others = self.queue.db.rows("SELECT id FROM executions WHERE status IN ('dispatching','running') AND id<>?", (run["id"],))
-                            if self.adapter_active or others:
-                                self.queue.defer(run["id"], 60)
-                                return
-                        task = asyncio.create_task(asyncio.to_thread(self.operations.run, handler))
-                        self.maintenance_tasks.add(task)
-                        try:
-                            result = await asyncio.shield(task)
-                        finally:
-                            if task.done():
-                                self.maintenance_tasks.discard(task)
+                    result = await self.run_maintenance(handler, run)
+                    if result is None: return
                 self.queue.finish(run["id"], "completed", result)
             else:
                 if not self.config.start_adapter:
@@ -176,9 +168,38 @@ class Runtime:
                 self.queue.retry(run["id"])
             except (ValueError, TypeError):
                 pass
-        finally:
-            if 'handler' in locals() and handler == "backup":
-                self.frozen = False
+    async def run_maintenance(self, handler, run):
+        async with self.maintenance_lock:
+            previous = self.frozen
+            held = False
+            try:
+                if handler == 'backup':
+                    self.frozen = True
+                    if self.config.start_adapter:
+                        current = await self.request('GET','/api/updates',timeout=5)
+                        self.adapter_active = current.get('activeCount',0)
+                    others = self.queue.db.rows("SELECT id FROM executions WHERE status IN ('dispatching','running') AND id<>?", (run['id'],))
+                    if self.adapter_active or others or self.active_writes:
+                        self.queue.defer(run['id'],60)
+                        return None
+                    if self.config.start_adapter:
+                        held = True  # Also release if the acknowledgement is lost.
+                        await self.request('POST','/api/system/backup-hold',json={'hold':True})
+                task = asyncio.create_task(asyncio.to_thread(self.operations.run,handler))
+                self.maintenance_tasks.add(task)
+                try:
+                    return await asyncio.shield(task)
+                except asyncio.CancelledError:
+                    # A thread cannot be cancelled: retain the lock and pause
+                    # until it has removed its plaintext staging directory.
+                    await task
+                    raise
+                finally:
+                    self.maintenance_tasks.discard(task)
+            finally:
+                if held:
+                    await self.request('POST','/api/system/backup-hold',json={'hold':False})
+                self.frozen = previous or self.restore_hold
 
     async def stop_process(self, process):
         if process.returncode is not None:
@@ -290,7 +311,7 @@ class Runtime:
     async def maintain(self):
         while True:
             try:
-                if self.operations:
+                if self.operations and not self.frozen:
                     await asyncio.to_thread(self.operations.memory.flush)
                     if self.config.public_origin:
                         await asyncio.to_thread(self.operations.tailscale)

@@ -17,6 +17,7 @@ def atomic_write(path: Path, text: str):
             f.flush()
             os.fsync(f.fileno())
         os.replace(temporary, path)
+        sync_directory(path.parent)
     finally:
         temporary.unlink(missing_ok=True)
 
@@ -31,3 +32,11 @@ def read_json(path: Path, default=None):
 def sha256(path: Path):
     with path.open("rb") as f:
         return hashlib.file_digest(f, "sha256").hexdigest()
+
+
+def sync_directory(path: Path):
+    directory = os.open(path, os.O_RDONLY)
+    try:
+        os.fsync(directory)
+    finally:
+        os.close(directory)

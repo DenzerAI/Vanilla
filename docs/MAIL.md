@@ -60,9 +60,9 @@ Benachrichtigungs- und Berichtsliste. Eine Folgeaufgabe erteilt keine Versandfre
 
 ## Tresor und Wiederherstellung
 
-ProviderVault verschlüsselt Anbieterwerte mit Fernet aus cryptography in SQLite. Der installationsbezogene Schlüssel liegt unter data/control/provider-vault/provider.key, Verzeichnis 0700, Datei 0600; kein System-Schlüsselbund und kein Import von Host-Credentials. Node-Verbindungen nutzen denselben Tresor über den geschützten internen Kernanschluss. Im Standalone-Adapter ist Speichern ohne Kern nicht verfügbar. Systemzugangs-Schlüssel bleiben getrennt.
+ProviderVault verschlüsselt Anbieterwerte mit Fernet aus cryptography in SQLite. Der Schutzschlüssel liegt in einem eigenen installationsgebundenen Eintrag der Betriebssystem-Schlüsselverwaltung. Die lokale Datei vault.json enthält nur Format und zufällige Zuordnung. Es werden keine fremden Konten gesucht oder übernommen. Node-Verbindungen verwenden denselben Tresor über den geschützten internen Kernanschluss. Systemzugänge teilen die Ablage, sind für Anbieteraktionen aber gesperrt. Migration, Grenzen und Wiederherstellung: [VAULT](VAULT.md).
 
-Backups nehmen SQLite und den lokalen Tresorschlüssel gemeinsam auf. Wiederherstellung ersetzt beide zusammen; reine Datenbankkopien genügen nicht. Der lokale Schlüssel schützt vor Klartext in Datenbank/Export, nicht vor einem Angreifer mit vollständigem Zugriff auf den Betriebssystembenutzer. Nach Anbieter-App-Rotation bestehende Konten erneut verbinden. Trennen löscht den lokal gespeicherten Kontozugang und beendet den Abruf, widerruft aber nicht automatisch die Anbieterfreigabe. Diese lässt sich im Google-/Microsoft-Konto entfernen.
+Verschlüsselte Backups nehmen SQLite und eine Wiederherstellungskopie des Tresorschlüssels gemeinsam auf. Wiederherstellung ersetzt beide zusammen; reine Datenbankkopien genügen nicht. Der lokale Schlüssel schützt vor Klartext in Datenbank/Export, nicht vor einem Angreifer mit vollständigem Zugriff auf den Betriebssystembenutzer. Nach Anbieter-App-Rotation bestehende Konten erneut verbinden. Trennen löscht den lokal gespeicherten Kontozugang und beendet den Abruf, widerruft aber nicht automatisch die Anbieterfreigabe. Diese lässt sich im Google-/Microsoft-Konto entfernen.
 
 ## Belege und Abnahme
 

@@ -86,3 +86,13 @@ Quelle: https://github.com/21st-dev/magic-mcp/blob/main/server.json (08.09.2026)
 Gmail und Outlook verwenden denselben vorhandenen Modal und Katalogplatz mit `MailConnectionForm`. Die App-Registrierung, eigene Kontoanmeldung, Prüfen, Abgleichen und Trennen sind an den Python-Kern angeschlossen. Die Einrichtung liefert ihre tatsächliche Rücksprungadresse. „Mit Agent einrichten“ ergänzt ausschließlich den Chatentwurf mit dem vorhandenen Bauplan; es startet weder Anmeldung noch Versand. Gespeicherte Postfächer erscheinen projektbezogen unter Eingerichtet. Ein neuer Clone enthält keine Appregistrierung und keine Konten. Statusfelder und Rechte: docs/MAIL.md. Bestehende ältere Microsoft-Graph-Serviceverbindungen werden nicht automatisch umgestellt.
 
 Kalender verwendet den vorhandenen Microsoft-Service-Dialog; Outlook und Gmail verwenden den Mail-Dialog. Die Einrichtungen und Rechte bleiben getrennt. Ein Kontostatus `connected` mit erfolgreichem Abgleich zeigt das verbundene Postfach; gespeicherte Appwerte allein genügen nicht.
+
+
+## Gemeinsamer Tresor
+
+Anbieterwerte verwenden den installationsbezogenen Tresor gemäß
+[Schlüsselablage](../../docs/VAULT.md). Nur der interne authentisierte Kernanschluss
+liefert Werte an den Adapter; öffentliche Listen enthalten ausschließlich Metadaten.
+Ein gesperrter Tresor ist kein getrennter Anbieter. Fehlgeschlagene
+Metadatenspeicherung nimmt Ersetzen und Entfernen eines Schlüssels zurück;
+scheitert auch diese Rücknahme, wird ausdrücklich eine erneute Prüfung verlangt.

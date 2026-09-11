@@ -6,7 +6,7 @@ import './system-settings.css';
 
 type Api = (path: string, data?: any) => Promise<any>;
 const date = (value: number | string) => value ? new Date(typeof value === 'number' ? value * 1000 : value).toLocaleString('de-DE') : 'Noch nicht ausgeführt';
-const names: Record<string,string> = {ok:'In Ordnung', error:'Prüfen', running:'Läuft', queued:'In Warteschlange', dispatching:'Wird übergeben', completed:'Abgeschlossen', failed:'Fehlgeschlagen', interrupted:'Gestoppt', cancelled:'Abgebrochen'};
+const names: Record<string,string> = {ok:'In Ordnung', ready:'Bereit', stale:'Veraltet', disabled:'Pausiert', unconfigured:'Nicht eingerichtet', degraded:'Unvollständig', paused:'Prüfung erforderlich', error:'Prüfen', running:'Läuft', queued:'In Warteschlange', dispatching:'Wird übergeben', completed:'Abgeschlossen', failed:'Fehlgeschlagen', interrupted:'Gestoppt', cancelled:'Abgebrochen'};
 function Toggle({label, value, change}: any) { return <button type="button" role="switch" aria-label={label} aria-checked={value} className="apple-switch" onClick={()=>change(!value)}><span/></button>; }
 function Group({title, children}: any) { return <><h3 className="section-heading">{title}</h3><div className="settings-group">{children}</div></>; }
 
@@ -14,14 +14,15 @@ export function SystemSettings({api, section, chats, onJobs, onLibrary, onConnec
   const [status,setStatus]=useState<any>(null), [draft,setDraft]=useState<any>(null), [error,setError]=useState(''), [message,setMessage]=useState(''), [busy,setBusy]=useState(false);
   const [snapshots,setSnapshots]=useState<any[]|null>(null), [restore,setRestore]=useState<any>(null), [access,setAccess]=useState(false), [password,setPassword]=useState('');
   const [target,setTarget]=useState(''), [backupPassword,setBackupPassword]=useState(''), [chatId,setChatId]=useState('');
+  const [loadError,setLoadError]=useState('');
   const dirty=useRef(false);
   async function load(reset=false) {
-    const s=await api('/system/status'); setStatus(s);
+    const s=await api('/system/status'); setStatus(s); setLoadError('');
     if(reset || !dirty.current) {setDraft(s.settings); setTarget(s.settings.values.backup.target); dirty.current=false;}
   }
   useEffect(()=>{
     let mounted=true;
-    const refresh=()=>{if(mounted) load().catch(e=>{if(mounted)setError(e.message);});};
+    const refresh=()=>{if(mounted) load().catch(e=>{if(mounted)setLoadError(e.message);});};
     refresh(); const timer=setInterval(()=>{if(document.visibilityState==='visible') refresh();},15000);
     return ()=>{mounted=false;clearInterval(timer);};
   },[]);
@@ -34,22 +35,24 @@ export function SystemSettings({api, section, chats, onJobs, onLibrary, onConnec
   const toggle=(group:string,key:string,title:string,description:string)=> <SettingRow title={title} description={description}><Toggle label={title} value={draft.values[group][key]} change={(v:boolean)=>change(group,key,v)}/></SettingRow>;
   const number=(group:string,key:string,title:string,min:number,max:number,description?:string)=><SettingRow title={title} description={description}><input aria-label={title} type="number" min={min} max={max} value={draft.values[group][key]} onChange={e=>change(group,key,e.target.valueAsNumber)}/></SettingRow>;
   const time=(group:string,key:string,title:string)=><SettingRow title={title} description="Lokale Zeitzone dieses Macs"><input aria-label={title} type="time" value={draft.values[group][key]} onChange={e=>change(group,key,e.target.value)}/></SettingRow>;
-  if((!status || !draft) && !error) return <Skeleton variant="settings" label="System wird geladen …"/>;
-  if(!status || !draft) return <p role="status">{error || 'System wird geladen …'} {error&&<button onClick={()=>act(()=>load())}>Erneut laden</button>}</p>;
+  if((!status || !draft) && !error && !loadError) return <Skeleton variant="settings" label="System wird geladen …"/>;
+  if(!status || !draft) return <p role="status">{error || loadError || 'System wird geladen …'} {(error||loadError)&&<button onClick={()=>act(()=>load())}>Erneut laden</button>}</p>;
   const v=draft.values;
   return <div className="system-settings" aria-busy={busy}>
+    {loadError&&<p className="form-error" role="alert">{loadError} <button onClick={()=>act(()=>load())}>Erneut laden</button></p>}
     {error&&<p className="form-error" role="alert">{error} <button onClick={()=>act(()=>load(true),'Aktuelle Einstellungen geladen.')}>Neu laden</button></p>}
     {message&&<p className="form-help" role="status">{message}</p>}
     {section!=='access'&&<div className="settings-save-row"><span role="status">{dirty.current?'Ungespeicherte Änderungen':message || 'Keine Änderungen'}</span><button type="button" className="primary" disabled={busy || !dirty.current} onClick={()=>act(async()=>{const saved=await api('/system/settings',draft);dirty.current=false;setDraft(saved);},'Einstellungen gespeichert.')}>{busy?'Bitte warten …':'Einstellungen speichern'}</button></div>}
     <fieldset disabled={busy}>
     {section==='system'&&<>
       <Group title="Heartbeat">
+        <SettingRow title="Wiederanlauf des Systems" description={status.service.loaded?'Der Kerndienst startet nach Prozessende und nach der Benutzeranmeldung. Ein Neustart des Macs allein ist keine Anmeldung.':'Kein automatischer Kerndienst aktiv. Bei Prozessende muss diese Installation manuell gestartet werden.'}><span>{status.service.loaded?'Aktiv':'Manuell'}</span></SettingRow>
         {toggle('system','heartbeat','System jede Minute prüfen','Prüft Erreichbarkeit, Auftragsplanung und freien Speicher lokal ohne LLM.')}
-        {toggle('system','auto_restart','Bei Ausfällen wieder starten','Nach wiederholten Fehlern; laufende Arbeit wird vorher geprüft.')}
+        {toggle('system','auto_restart','Worker-Anschluss wieder starten','Startet einen beendeten Worker-Anschluss erneut. Unterbrochene externe Aufträge werden nicht automatisch wiederholt.')}
         {toggle('system','notifications','Probleme anzeigen','Hinweise bei Zustandsänderungen, ohne Meldung bei jedem erfolgreichen Check.')}
         {toggle('system','quiet_hours','Ruhezeiten für Hinweise','Prüfungen und Aufträge laufen weiter. Die Zustände bleiben in den Einstellungen sichtbar.')}
         {v.system.quiet_hours&&<>{time('system','quiet_start','Ruhezeit ab')}{time('system','quiet_end','Ruhezeit bis')}</>}
-        <SettingRow title="Letzte Prüfung" description={date(status.heartbeat?.checked_at)}><span>{!v.system.heartbeat?'Pausiert':status.heartbeat?status.heartbeat.ok?'In Ordnung':'Prüfen':'Dienst einrichten'}</span></SettingRow>
+        <SettingRow title="Letzte Prüfung" description={date(status.heartbeat?.checked_at)}><span>{names[status.heartbeat?.state] || 'Nicht eingerichtet'}</span></SettingRow>
         {Object.entries(status.checks).map(([key,c]:any)=><SettingRow key={key} title={c.message}><span className={c.ok?'':'form-error'}>{c.ok?'In Ordnung':'Prüfen'}</span></SettingRow>)}
       </Group>
       <Group title="Hintergrundbetrieb">
@@ -72,8 +75,8 @@ export function SystemSettings({api, section, chats, onJobs, onLibrary, onConnec
         <SettingRow title="Vorhandene Gespräche aufnehmen" description="Durchsucht auch abgeschlossene Chats aus der Zeit vor der Einrichtung. Ausgeschlossene Chats werden übersprungen."><button onClick={()=>act(()=>api('/memory/capture',{backfill:true}),'Vorhandene Gespräche wurden geprüft.')}>Nachtragen</button></SettingRow>
       </Group>
       <Group title="Lokale Suche">
-        <SettingRow title="Embedding-Modell" description={status.embeddings.model || 'Mehrsprachiges lokales Suchmodell'}><span>{status.embeddings.ready?'Installiert':'Noch nicht bereit'}</span></SettingRow>
-        <SettingRow title="Semantische Suche" description="Volltext, unscharfe Suche und lokale Embeddings ergänzen sich. Nach der Installation arbeitet das Modell offline."><div className="row"><button onClick={()=>act(()=>api('/system/setup',{action:status.embeddings.ready?'test-embeddings':'embeddings'}),status.embeddings.ready?'Lokale Suchberechnung erfolgreich.':'Suchmodell installiert und indiziert.')}>{status.embeddings.ready?'Lokal testen':'Modell installieren'}</button><button onClick={()=>run('index')}>Neu indizieren</button></div></SettingRow>
+        <SettingRow title="Embedding-Modell" description={status.embeddings.message || status.embeddings.error || 'Mehrsprachiges lokales Suchmodell'}><span>{status.embeddings.ready?'Bereit':'Wortsuche verfügbar'}</span></SettingRow>
+        <SettingRow title="Semantische Suche" description="Volltext, unscharfe Suche und lokale Embeddings ergänzen sich. Nach der Installation arbeitet das Modell offline."><div className="row"><button onClick={()=>act(()=>api('/system/setup',{action:status.embeddings.ready?'test-embeddings':'embeddings'}),status.embeddings.ready?'Lokale Suchberechnung erfolgreich.':'Suchmodell installiert und indiziert.')}>{busy?'Bitte warten …':status.embeddings.ready?'Lokal testen':status.embeddings.configured?'Modell reparieren':'Modell installieren'}</button><button onClick={()=>run('index')}>Neu indizieren</button></div></SettingRow>
         <SettingRow title="Memory-Werkzeuge für Worker" description="Suche, Kontext und versionierte Notizen über denselben lokalen MCP-Anschluss."><button onClick={()=>act(async()=>{const r=await api('/system/mcp');await navigator.clipboard.writeText(JSON.stringify(r,null,2));},'MCP-Konfiguration kopiert. Sie enthält keine Zugangsdaten.')}>Konfiguration kopieren</button></SettingRow>
       </Group>
       <Group title="Einträge entfernen">
@@ -89,7 +92,11 @@ export function SystemSettings({api, section, chats, onJobs, onLibrary, onConnec
         <SettingRow title="Freier Speicher" description={`${Math.round(status.storage.free_mb/1024)} GB verfügbar · SQLite ${Math.round(status.storage.database_bytes/1024/1024*10)/10} MB`}/>
         {number('retention','minimum_free_mb','Untergrenze in MB',100,100000,'Der Heartbeat meldet, wenn der freie Speicher darunter fällt.')}
       </Group>
+      {status.recovery?.paused&&<Group title="Wiederherstellung prüfen">
+        <SettingRow title="Betrieb pausiert" description="Aufträge, Postfächer und unbestätigte Sendungen zuerst prüfen. Die bisherige Installation muss beendet sein. Offene alte Vorgänge werden nicht automatisch wiederholt."><button onClick={()=>act(()=>api('/system/backups/resume',{}),'Betrieb wird nach dem Neustart fortgesetzt.')} >Geprüft · Betrieb fortsetzen</button></SettingRow>
+      </Group>}
       <Group title="Verschlüsselte Sicherung">
+        <SettingRow title="Sicherungszustand" description={status.backup?.message}><span>{names[status.backup?.state] || 'Nicht eingerichtet'}</span></SettingRow>
         <SettingRow title="Sicherungsordner" description="Absoluter Pfad außerhalb des Workspace. Ein lokaler Ordner schützt vor Änderungen; für einen Geräteausfall ein externes Laufwerk verwenden."><input aria-label="Sicherungsordner" value={target} onChange={e=>setTarget(e.target.value)} placeholder="Automatisch: data/backups"/></SettingRow>
         <SettingRow title="Sicherung einrichten" description={status.backup_installed?'Sicherungsschlüssel unten eingeben und für einen Gerätewechsel getrennt aufbewahren. Er wird im lokalen Tresor gespeichert.':'Das geprüfte Backup-Programm wird lokal installiert.'}><button onClick={()=>act(async()=>{if(!status.backup_installed)await api('/system/setup',{action:'backup'});await api('/system/backup/setup',{target,password:backupPassword||undefined}); setBackupPassword(''); await load(true);},'Sicherungsziel verbunden und täglicher Zeitplan aktiviert.')}>Einrichten / verbinden</button></SettingRow>
         <SettingRow title="Sicherungsschlüssel" description="Für ein neues Archiv einen eigenen Schlüssel wählen; bei einem bestehenden Archiv dessen Schlüssel eingeben."><input aria-label="Sicherungsschlüssel" type="password" autoComplete="new-password" value={backupPassword} onChange={e=>setBackupPassword(e.target.value)}/></SettingRow>
@@ -98,7 +105,7 @@ export function SystemSettings({api, section, chats, onJobs, onLibrary, onConnec
         {number('backup','daily','Tägliche Versionen',1,90)}
         {number('backup','weekly','Wöchentliche Versionen',0,52)}
         {number('backup','monthly','Monatliche Versionen',0,24)}
-        <SettingRow title="Letzte Sicherung" description={date(status.maintenance.find((m:any)=>m.name==='backup')?.checked_at)}><button disabled={!v.backup.target} onClick={()=>run('backup')}>Jetzt sichern</button></SettingRow>
+        <SettingRow title="Letzte bestätigte Sicherung" description={date(status.backup?.last_success?.checked_at)}><button disabled={!v.backup.target} onClick={()=>run('backup')}>Jetzt sichern</button></SettingRow>
         <SettingRow title="Wiederherstellen" description="Zuerst in einen separaten Ordner entpacken und prüfen. Erst danach den Systemstand ersetzen."><button disabled={!v.backup.target} onClick={()=>act(async()=>setSnapshots((await api('/system/backups')).snapshots),'Sicherungsstände geladen.')}>Sicherungen anzeigen</button></SettingRow>
         {snapshots?.length===0&&<SettingRow title="Noch keine Sicherungen" description="Mit Jetzt sichern den ersten Stand erstellen."/>}
         {snapshots?.slice().reverse().map(s=><SettingRow key={s.id} title={date(s.time)} description={s.short_id||s.id.slice(0,8)}><button onClick={()=>act(async()=>setRestore(await api('/system/backups/restore',{snapshot:s.id})),'Sicherung entpackt und Prüfsummen bestätigt.')}>Wiederherstellung prüfen</button></SettingRow>)}
@@ -112,7 +119,8 @@ export function SystemSettings({api, section, chats, onJobs, onLibrary, onConnec
     </>}
     {section==='access'&&<>
       <Group title="Zugang">
-        <SettingRow title="Anmeldung" description={status.access.enabled?'Der Zugangsschlüssel liegt im macOS-Schlüsselbund.':'Auf diesem Gerät ist noch keine Anmeldung eingerichtet.'}><button onClick={()=>setAccess(true)}>{status.access.enabled?'Schlüssel ändern':'Schlüssel setzen'}</button></SettingRow>
+        <SettingRow title="Schlüsselablage" description={status.vault?.message || 'Status wird geprüft.'}/>
+        <SettingRow title="Anmeldung" description={status.access.enabled?'Der Zugang liegt verschlüsselt im eigenen Tresor.':'Auf diesem Gerät ist noch keine Anmeldung eingerichtet.'}><button onClick={()=>setAccess(true)}>{status.access.enabled?'Schlüssel ändern':'Schlüssel setzen'}</button></SettingRow>
         <SettingRow title="Mobil mit Tailscale" description="Private HTTPS-Verbindung zwischen deinen angemeldeten Geräten. Die App bleibt an localhost gebunden."><button onClick={onConnections}>Verbindung einrichten</button></SettingRow>
         {status.access.origin&&<SettingRow title="Mobile Adresse" description={status.access.origin}><a href={status.access.origin} target="_blank" rel="noreferrer">Öffnen</a></SettingRow>}
       </Group>
@@ -120,7 +128,7 @@ export function SystemSettings({api, section, chats, onJobs, onLibrary, onConnec
 
     </fieldset>
     {access&&<Modal wide={false} title="Zugangsschlüssel" onClose={()=>{setAccess(false);setPassword('');}}><form onSubmit={e=>{e.preventDefault();act(async()=>{await api('/system/access',{password});setPassword('');setAccess(false);location.reload();},'Zugang eingerichtet. Bitte erneut anmelden.');}}><label className="field"><span>Neuer Zugangsschlüssel</span><input type="password" autoComplete="new-password" minLength={8} required value={password} onChange={e=>setPassword(e.target.value)}/></label><p className="form-help">Bestehende Browser-Sitzungen werden abgemeldet.</p><div className="row end"><button className="primary" disabled={busy}>Schlüssel speichern</button></div></form></Modal>}
-    {restore&&<Modal wide={false} title="Geprüfte Sicherung übernehmen" onClose={()=>setRestore(null)}><p>Die Prüfsummen und die SQLite-Datenbank sind gültig. Dieser Stand ersetzt beim Neustart den Workspace und die Datenbank. Der aktuelle Stand wird zuvor lokal zur Rückkehr aufbewahrt.</p><p className="form-help">Sicherung: {restore.snapshot.slice(0,12)} · Laufende Arbeit zuerst abschließen.</p><div className="row end"><button onClick={()=>setRestore(null)}>Abbrechen</button><button className="primary" disabled={busy} onClick={()=>act(()=>api('/system/backups/apply',{id:restore.id}),'Wiederherstellung wird beim Neustart übernommen.')}>Stand übernehmen und neu starten</button></div></Modal>}
+    {restore&&<Modal wide={false} title="Geprüfte Sicherung übernehmen" onClose={()=>setRestore(null)}><p>Die Prüfsummen und die SQLite-Datenbank sind gültig. Dieser Stand ersetzt beim Neustart den Workspace und die Datenbank. Der aktuelle Stand wird zuvor lokal zur Rückkehr aufbewahrt. Danach bleibt der Betrieb bis zu deiner Prüfung pausiert.</p><p className="form-help">Sicherung: {restore.snapshot.slice(0,12)} · Laufende Arbeit abschließen und Eingangskanäle anhalten.</p><div className="row end"><button onClick={()=>setRestore(null)}>Abbrechen</button><button className="primary" disabled={busy} onClick={()=>act(()=>api('/system/backups/apply',{id:restore.id}),'Wiederherstellung wird beim Neustart übernommen.')}>Stand übernehmen und neu starten</button></div></Modal>}
   </div>;
 }
 

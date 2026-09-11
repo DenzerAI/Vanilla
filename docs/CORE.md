@@ -164,3 +164,9 @@ Betriebsprüfungen; der Umbau führt keine Testnachrichten an externe Empfänger
 ## Strukturierte Kundendaten
 
 Der [CRM-Kern](CRM.md) erweitert die vorhandene Datenbank additiv. Seine geprüften Schreibwege unterscheiden Rohsignal, Vorschlag und Fakt und halten ältere Feldwerte als Historie. `memory_context` ergänzt erkannte CRM-Kandidaten mit frisch gelesenen, versionsgebundenen Daten innerhalb des bisherigen Zeichenbudgets. Empfangs-/Prüflücken bleiben sichtbar. Die eigentliche Pipeline und externe Datenabgleiche sind separate Verbraucher; ihre UI-Studie ist noch nicht produktiv angebunden.
+
+
+Die lokale Bedeutungssuche und ihr Reparatur-/Installationsvertrag stehen in
+[OPERATIONS.md#lokale-suche](OPERATIONS.md#lokale-suche). Modellbereitschaft folgt
+einer erfolgreichen lokalen Berechnung; Textpassagen beachten das Tokenlimit.
+Vektoren mit alter Modell-/Passagenidentität werden aus den Originalen neu aufgebaut.

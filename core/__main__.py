@@ -11,15 +11,22 @@ def main():
     from .restore import apply_pending
     apply_pending(config)
     config = Config.environment()
-    uvicorn.run(
-        create_app(config),
+    app = create_app(config)
+    server = uvicorn.Server(uvicorn.Config(
+        app,
         host=config.host,
         port=config.port,
         proxy_headers=False,
         log_level="info",
         access_log=False,
         timeout_graceful_shutdown=5,
-    )
+    ))
+    # Controlled restart must return to execv. Re-raising SIGTERM after
+    # graceful shutdown (uvicorn) would terminate a manually started core.
+    app.state.runtime.shutdown = lambda: setattr(server, "should_exit", True)
+    server.run()
+    if not server.started:
+        raise SystemExit(3)
     marker = config.data / "restart.json"
     if marker.exists():
         marker.unlink()

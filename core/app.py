@@ -86,11 +86,13 @@ def create_app(config=None):
 
     @asynccontextmanager
     async def lifespan(app):
-        queue.recover()
+        if not runtime.restore_hold:
+            queue.recover()
         await asyncio.to_thread(knowledge.scan)
         await runtime.start()
-        mail.task = asyncio.create_task(mail.loop())
-        calendar.task = asyncio.create_task(calendar.loop())
+        if not runtime.restore_hold:
+            mail.task = asyncio.create_task(mail.loop())
+            calendar.task = asyncio.create_task(calendar.loop())
         yield
         await calendar.close()
         await mail.close()
@@ -140,8 +142,8 @@ def create_app(config=None):
 
     @app.middleware("http")
     async def access(request: Request, call_next):
-        if runtime.frozen and request.method not in {"GET", "HEAD", "OPTIONS"} and request.url.path not in {"/api/auth/login"} and not request.url.path.startswith("/internal/"):
-            return JSONResponse({"error": "Sicherung oder Neustart läuft. Bitte kurz warten."}, status_code=503)
+        if runtime.frozen and request.method not in {"GET", "HEAD", "OPTIONS"} and request.url.path not in ({"/api/auth/login", "/api/system/backups/resume"} if runtime.restore_hold else {"/api/auth/login"}) and not request.url.path.startswith("/internal/"):
+            return JSONResponse({"error": "Wiederherstellung prüfen und unter Speicher & Sicherung fortsetzen." if runtime.restore_hold else "Sicherung oder Neustart läuft. Bitte kurz warten."}, status_code=503)
         host = request.headers.get("host", "")
         allowed = {f"127.0.0.1:{config.port}", f"localhost:{config.port}", "testserver"}
         if config.public_origin:
@@ -231,7 +233,12 @@ def create_app(config=None):
                         raise HTTPException(423, 'Diese Chatdatei ist privat.')
             except HTTPException as error:
                 return JSONResponse({'error': error.detail}, status_code=error.status_code)
-        response = await call_next(request)
+        writing = request.method not in {"GET", "HEAD", "OPTIONS"}
+        if writing: runtime.active_writes += 1
+        try:
+            response = await call_next(request)
+        finally:
+            if writing: runtime.active_writes -= 1
         if request.url.path.startswith('/api/') and 'application/json' in response.headers.get('content-type', '') and response.status_code == 200:
             raw = b''.join([chunk async for chunk in response.body_iterator])
             payload = json.loads(raw)

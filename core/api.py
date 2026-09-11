@@ -10,7 +10,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 
-from .files import atomic_write
+from .files import atomic_write, sync_directory
 from .knowledge import LocalEmbeddings
 from .service import install
 from .settings import SettingsUpdate
@@ -129,8 +129,14 @@ def routes(operations, queue):
             except ImportError:
                 raise ValueError("Die lokale Suchlaufzeit fehlt. Den mitgelieferten Systeminstaller ausführen.")
             o.config.embedding_model = str(o.config.data / "models/embeddings")
-            o.knowledge.embeddings = LocalEmbeddings(o.config)
-            return await asyncio.to_thread(o.run, "index")
+            def activate_search():
+                with o.knowledge.lock:
+                    o.knowledge.embeddings = LocalEmbeddings(o.config)
+                    result = o.run("index")
+                    if not result["embeddingIndex"].get("ready"):
+                        raise ValueError(result["embeddingIndex"].get("error") or "Lokale Suche ist noch nicht einsatzbereit.")
+                    return result
+            return await asyncio.to_thread(activate_search)
         if b.action == "test-embeddings":
             vectors = await asyncio.to_thread(o.knowledge.embeddings.encode, ["Die Solaranlage erzeugt Strom.", "Photovoltaik liefert Energie."])
             if not vectors:
@@ -151,16 +157,56 @@ def routes(operations, queue):
     async def stage_restore(b: SnapshotInput):
         return await asyncio.to_thread(o.backups.stage_restore, b.snapshot)
 
-    async def restart():
-        if await o.runtime.has_active_work():
-            raise ValueError("Bitte laufende Aufträge und Gespräche vor dem Neustart beenden.")
-        o.runtime.frozen = True
-        atomic_write(o.config.data / "restart.json", '{"requested":true}')
-        async def stop():
-            await asyncio.sleep(0.5)
-            os.kill(os.getpid(), signal.SIGTERM)
-        asyncio.create_task(stop())
-        return {"ok": True, "restarting": True}
+    async def restart(record=None, resume=False):
+        runtime = o.runtime
+        async with runtime.maintenance_lock:
+            previous = runtime.frozen
+            runtime.frozen = True
+            pending = o.config.data / 'restore-pending.json'
+            marker = o.config.data / 'restart.json'
+            hold = o.config.data / 'restore-hold.json'
+            old_hold = hold.read_text() if resume and hold.exists() else None
+            staged = marked = adapter_held = False
+            try:
+                if runtime.active_writes > 1 or await runtime.has_active_work():
+                    raise ValueError("Bitte laufende Aufträge und Gespräche vor dem Neustart beenden.")
+                if runtime.config.start_adapter:
+                    adapter_held = True
+                    await runtime.request('POST','/api/system/backup-hold',json={'hold':True})
+                if record:
+                    from .backups import verify_apply
+                    await asyncio.to_thread(verify_apply, record['path'], o.config)
+                    if pending.exists():
+                        raise ValueError('Eine Wiederherstellung ist bereits vorgemerkt.')
+                    atomic_write(pending, json.dumps(record))
+                    staged = True
+                atomic_write(marker, '{"requested":true}')
+                marked = True
+                if resume:
+                    if old_hold is None:
+                        raise ValueError('Keine Wiederherstellung wartet auf Prüfung.')
+                    hold.unlink()
+                async def stop():
+                    await asyncio.sleep(0.5)
+                    if runtime.shutdown:
+                        runtime.shutdown()
+                    else:
+                        os.kill(os.getpid(), signal.SIGTERM)
+                asyncio.create_task(stop())
+                return {"ok": True, "restarting": True}
+            except BaseException:
+                if staged: pending.unlink(missing_ok=True)
+                if marked: marker.unlink(missing_ok=True)
+                if old_hold is not None: atomic_write(hold,old_hold)
+                sync_directory(o.config.data)
+                if adapter_held:
+                    try:
+                        await runtime.request('POST','/api/system/backup-hold',json={'hold':False})
+                    except Exception:
+                        # A lost release acknowledgement keeps this core paused.
+                        raise ValueError('Wartungspause konnte nicht aufgehoben werden. Anschluss prüfen.') from None
+                runtime.frozen = previous
+                raise
 
     @router.post("/api/system/restart")
     async def restart_system():
@@ -168,11 +214,14 @@ def routes(operations, queue):
 
     @router.post("/internal/restart")
     async def restart_from_adapter():
-        # The adapter's existing gate has already checked its current sessions.
         if o.runtime.python_processes or o.runtime.maintenance_tasks:
             raise ValueError("Bitte laufende Python- oder Wartungsaufträge zuerst beenden.")
         o.runtime.adapter_active = 0
         return await restart()
+
+    @router.post("/api/system/backups/resume")
+    async def resume_restore():
+        return await restart(resume=True)
 
     @router.post("/api/system/backups/apply")
     async def apply_restore(request: Request):
@@ -180,12 +229,7 @@ def routes(operations, queue):
         record = o.db.get("backup/restore/" + str(b.get("id", "")))["value"]
         if not record or not record["verified"]:
             raise ValueError("Zuerst eine Sicherung wiederherstellen und prüfen.")
-        if await o.runtime.has_active_work():
-            raise ValueError("Bitte laufende Arbeit zuerst beenden.")
-        from .backups import verify_apply
-        await asyncio.to_thread(verify_apply, record["path"], o.config)
-        atomic_write(o.config.data / "restore-pending.json", json.dumps(record))
-        return await restart()
+        return await restart(record)
 
     @router.post("/api/memory/capture")
     async def capture(request: Request):

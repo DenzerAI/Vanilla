@@ -38,8 +38,7 @@ Installationen. `…heartbeat` ruft `python -m core.heartbeat` alle 60 Sekunden 
 ```sh
 .venv/bin/python -m core.service status
 .venv/bin/python -m core.service install
-# Nur bei bereits gestopptem manuellem Kern aktivieren:
-.venv/bin/python -m core.service install --activate
+# Die Aktivierung übernimmt der freigegebene Host-Operator aus README.md.
 .venv/bin/python -m core.service uninstall
 ```
 
@@ -243,7 +242,7 @@ Pause überschreibt. Diese Prüfungen versenden keine echten Nachrichten.
 
 ## Kundenbasis: Zugang und Sicherung
 
-Systemzugänge und Anbieterwerte verwenden den installationsgebundenen Fernet-Tresor in data/control/provider-vault und verschlüsselte Datensätze in SQLite. Keine Hostschlüsselbund-Fallbacks. App-Anmeldung ist über den bestehenden Einstellungsweg aktivierbar. Vor einem neuen Backup einen eigenen Wiederherstellungsschlüssel eingeben und getrennt vom Gerät aufbewahren. Ein ausdrücklich gewählter erreichbarer externer Ordner ist zulässig; Workspace und laufende Daten bleiben als Ziel ausgeschlossen.
+Systemzugänge und Anbieterwerte verwenden den installationsgebundenen Fernet-Tresor in data/control/provider-vault und verschlüsselte Datensätze in SQLite. Der Schutzschlüssel liegt in einem eigenen Betriebssystem-Eintrag; keine fremden Konten oder Klartext-Fallbacks. App-Anmeldung ist über den bestehenden Einstellungsweg aktivierbar. Vor einem neuen Backup einen eigenen Wiederherstellungsschlüssel eingeben und getrennt vom Gerät aufbewahren. Ein ausdrücklich gewählter erreichbarer externer Ordner ist zulässig; Workspace und laufende Daten bleiben als Ziel ausgeschlossen.
 
 Sicherungsschema 3 enthält Firmenbasis, Workspace einschließlich Identität und Ergebnisse, SQLite, Memory-Git-Historie, Diktataufnahmen, Provider-/Systemtresorschlüssel und eigene Codex-Verläufe. Modellgewichte und Caches werden neu aufgebaut; native Worker-Anmeldungen werden am Ziel erneut eingerichtet. Hostadressen und Dienstdefinitionen werden am Ziel neu bestimmt. Restore prüft den Bestand vor dem Ersetzen und führt die bisherige Rückkehrsicherung fort. Alte Sicherungen ohne Firmenbasis/Aufnahmen stellen diese Bestandteile nicht wieder her. Healthchecks sind keine vollständige Kundenauslieferungsabnahme.
 
@@ -273,3 +272,143 @@ aktivierte Quellübergabe aus docs/CODE-SYNC.md. Status steht unter
 /api/system/source-work und in der bestehenden maintenance-Zeile source-work.
 Lange Prüfungen laufen außerhalb des Ereignisloops und werden beim geregelten
 Herunterfahren abgewartet. Ein gespeicherter Commit ist keine Live-Aktivierung.
+
+
+## Geschützte Schlüsselablage ab Tresorformat 2
+
+[VAULT.md](VAULT.md) führt Einrichtung, Offline-Migration, Neustartverhalten
+und Wiederherstellung. App-Anmeldung, Anbieter und Backup verwenden denselben
+Anschluss. Neue App-Zugangswerte samt Metadaten und Sitzungswiderruf werden
+transaktional gespeichert. Beim Scheitern der Host-Datei bleibt der alte Zugang
+gültig. Vor dem Abschluss einer Wiederherstellung wird der geprüfte
+Sicherungsschlüssel in einen neuen installationsbezogenen OS-Eintrag übernommen;
+bei Fehlern stellt das vorhandene Journal den alten Dateistand wieder her.
+
+
+## Lokale Suche
+
+Der Systeminstaller prüft Plattform, CPU, verfügbaren Plattenplatz und, soweit das
+Betriebssystem ihn meldet, den Arbeitsspeicher vor der Laufzeitinstallation.
+Die festgelegten Pakete unterstützen macOS 14+ auf Apple Silicon und Linux
+(glibc 2.28+) auf ARM64 oder x86-64, mindestens 4 GiB RAM und
+2 GiB freier Platz für die Suchlaufzeit einschließlich Modell. Das ist eine
+konservative Installationsgrenze, keine Reservierung für parallel laufende Worker.
+Eine nicht auslesbare RAM-Größe bleibt im Prüfprofil ausdrücklich unbekannt.
+Intel-Macs werden vor dem Download abgewiesen, weil die festgelegte Torch-Version
+kein entsprechendes Wheel anbietet. Linux benötigt weiterhin seine eigene
+Zielhost-Abnahme; dieser Entwicklungsstand wird auf macOS ARM64 geprüft.
+
+Festes Standardmodell ist das mehrsprachige
+[MiniLM-L12-v2](https://huggingface.co/sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2)
+unter Apache-2.0. Repository, Revision und SHA-256 jedes notwendigen Files stehen
+in `core/models.py`; die Gewichte benötigen rund 471 MB, der Tokenizer rund 9 MB.
+`requirements-embeddings.lock` hält die Python-Laufzeit fest. Linux installiert
+vorab das CPU-Wheel aus dem [offiziellen PyTorch-Index](https://pytorch.org/get-started/locally/),
+um CUDA-Pakete zu vermeiden. Die Berechnung nutzt höchstens zwei CPU-Threads,
+Achter-Batches und keine GPU, keinen fremden Modellserver und keinen Cloudfallback.
+
+Die lokale Suche wird vor Diktat, Sprachausgabe und Backup eingerichtet, damit
+ein Fehler eines nachfolgenden Moduls die Suche nicht überspringt. Der gesamte
+Systeminstaller meldet einen späteren Fehler trotzdem als fehlgeschlagen.
+Ein Modell gilt erst nach Dateiprüfung, lokalem Laden und deutscher Bedeutungsprobe
+als installiert. Unterbrochene Downloads bleiben als `.part` erhalten; der nächste
+Durchlauf setzt sie fort oder beginnt neu, falls der Server Range nicht unterstützt.
+Beschädigte Dateien werden einzeln ersetzt, geprüfte Dateien wiederverwendet.
+Eine Dateisperre verhindert parallele Reparaturen und Laden während des Austauschs.
+Ein früherer `source.json`-Marker allein wird nie akzeptiert. Ein Start prüft die
+verwalteten Dateien unabhängig vom Marker und lädt ausschließlich lokale Dateien.
+Die Installation benötigt Internet, der Betrieb danach nicht. Downloads senden
+keine Texte oder Anmeldeinformationen an Hugging Face.
+
+Unter **Memory → Lokale Suche** stehen Zustand, konkreter Fehler, Installieren/
+Reparieren, lokale Testberechnung und Neuindizierung. Fehlt die Python-Laufzeit,
+muss der mitgelieferte Systeminstaller laufen; die Webaktion installiert nur
+Modellgewichte. Eine CLI-Installation bei bereits laufendem Kern wird nach
+dessen Neustart erkannt; die Webaktion aktiviert das Modell unmittelbar.
+Bereitschaft bedeutet eine erfolgreiche Berechnung im aktuellen
+Prozess. Ein leerer Index prüft das Modell ebenfalls. Ohne Modell arbeitet die
+Wortsuche weiter; die Systemprüfung lässt diese Einschränkung sichtbar.
+Nach Einrichtung werden bestehende Dokumente indiziert; bei normalem Start
+folgt der bestehende 30-Sekunden-Indexer. Ein dauerhaft fehlerhaftes Modell wird
+über Reparieren erneut initialisiert.
+
+Textpassagen richten sich nach dem tatsächlichen Tokenlimit des Modells und
+überlappen. So werden lange Dokumente nicht bei der Embedding-Berechnung still
+abgeschnitten. Die neue Vektoridentität `tokens-v2` bewirkt einen wiederholbaren
+Neuaufbau aus vorhandenen Texten, ohne Originale oder Tabellen zu verändern.
+Projektgrenzen gelten auch für die sinngemäße Suche. Explizit konfigurierte eigene
+lokale Modelle bleiben möglich und erhalten eine Inhaltsidentität; deren Qualität
+ist separat zu prüfen. Für Sicherungen bleiben Modellgewichte ersetzbare Downloads,
+Originaldokumente und lokale Konfiguration gehören in die Sicherung.
+
+Gezielte Einrichtung, Reparatur und Prüfung ohne Schlüsselbundzugriff:
+
+```sh
+.venv/bin/python -m core.models
+.venv/bin/python -m core.models --check
+VANILLA_TEST_EMBEDDING_MODEL=data/control/models/embeddings .venv/bin/python -m pytest core/tests/test_models.py -q
+```
+
+Der letzte Test blockiert Netzwerkverbindungen während echter lokaler Inferenz
+und prüft deutsche Bedeutungsähnlichkeit, späte Textpassagen, Projekttrennung und
+Indexinvalidierung. Ohne gesetzten Modellpfad wird nur diese echte Modellprobe
+übersprungen; Download-/Reparaturfehler werden mit isolierten Testdateien geprüft.
+Trennen: explizite Modellkonfiguration entfernen beziehungsweise den verwalteten
+Modellordner bei gestopptem Kern entfernen; Wortsuche und Originale bleiben erhalten.
+
+## Sicherung und Wiederanlauf: Betriebsgrenzen
+
+Sicherungsschema 4 ergänzt die vorhandenen Daten um lokale Kanal- und
+Nachrichtenablagen für den Legacy-Import. Im integrierten Betrieb bleiben ihre
+SQLite-Datensätze führend. Neue Sicherungen prüfen alle Wurzeln und Dateihashes;
+Schema 2 und 3 bleiben lesbar. Archivziel, verschlüsselter Schlüssel und
+Schlüsselmetadaten werden erst nach erfolgreicher Archivprüfung gemeinsam
+übernommen. Alte Archivschlüssel bleiben beim Zielwechsel erhalten. Ziele
+innerhalb einer gesicherten Firmenbasis sind ebenso ausgeschlossen wie Workspace
+und Systemdaten. Eine fehlgeschlagene Entpackung entfernt ihre Arbeitskopie;
+nach einem Prozessabbruch entfernt der nächste Start verbliebene Backup-Arbeitskopien.
+
+Der vorhandene Wartungs-Lock verbindet Sicherung und Restore mit dem Neustart.
+Laufende Aufträge, Gespräche und aktive Eingangskanäle verhindern die Übernahme;
+Kanäle vorher ausdrücklich anhalten. Währenddessen werden neue öffentliche
+Schreibzugriffe und Worker-Übergaben abgewiesen. Der Adapter erhält eine eigene
+Sicherungspause. Sie muss bei Integration des Update-Operators unabhängig von
+dessen Update-Pause bestehen bleiben: Das Freigeben einer Pause darf die andere
+nicht aufheben. Kein zusätzlicher Supervisor wird installiert.
+
+Offline-Restore kopiert zuerst alle Bestandteile, schreibt Dateien und Journal
+auf den Datenträger und tauscht dann den Bestand. Unterbrochene Übernahmen
+rollen beim nächsten Start zurück; ein bereits abgeschlossener Tausch stellt
+seinen fehlenden Abschlussnachweis wieder her. Alte Bestände bleiben als lokale
+Rückkehrkopien erhalten und werden nicht durch die normale Aufbewahrung gelöscht.
+Sie und geprüfte Restore-Arbeitskopien enthalten sensible Daten; lokale
+Datenträgerverschlüsselung bleibt eine Eigenschaft des Kundengeräts.
+
+Nach erfolgreichem Restore bleibt `restore-hold.json` aktiv. Die Oberfläche ist
+zum Prüfen erreichbar; Auftragsplanung, Postfach-/Kalenderabruf und automatischer
+Versand pausieren. Offene Ausführungen werden als unterbrochen, offene
+Nachrichtenübergaben und Benachrichtigungen als unbestätigt übernommen.
+App-Sitzungen werden ungültig. Zeitpläne holen keine Termine vor der Übernahme
+nach; vorhandene Ereigniscursor überspringen alte Ereignisse. Ausstehende
+Einmalaufträge benötigen bei Bedarf einen neuen ausdrücklichen Auftrag.
+Unter **Speicher & Sicherung → Geprüft · Betrieb fortsetzen** wird die Pause
+mit anschließendem Neustart aufgehoben. Unbestätigte alte Sendungen bleiben
+weiterhin zur Einzelprüfung gesperrt. Vorher die alte Installation beenden,
+Ergebnisse beim Anbieter abgleichen und native Worker-/Kanal-Anmeldungen am
+Ziel erneut einrichten. Der Archivstand kann spätere externe Aktionen nicht kennen.
+
+`status.backup` unterscheidet nicht eingerichtet, deaktiviert, unvollständig,
+laufend, veraltet, Fehler und bereit. Der letzte erfolgreiche Snapshot bleibt
+getrennt vom letzten Versuch sichtbar. „Bereit“ bedeutet Archiv erstellt und
+5-Prozent-Stichprobe geprüft; es behauptet keinen vollständigen Restore-Test.
+Heartbeat-Ergebnisse älter als 150 Sekunden gelten als veraltet. Fehlende
+Sicherungseinrichtung bleibt auch im Healthcheck sichtbar.
+
+Der Schalter für Wiederanlauf steuert ausschließlich den Node-Adapter nach
+Prozessende. Ein beendeter Kern wird nur durch den bereits aktivierten
+launchd-Kerndienst neu gestartet. Ohne diesen ist nach einem Prozessabsturz ein manueller Start notwendig.
+Ein ausdrücklich angeforderter Neustart einschließlich Restore/Fortsetzen nutzt
+den bestehenden restart.json-/execv-Weg in core.__main__ und startet sich selbst neu. Start nach einem Rechnerneustart setzt die
+Benutzeranmeldung voraus. Minutenprüfung und Kerndienst werden getrennt gemeldet;
+ein hängender, noch lebender Prozess wird nicht blind beendet. Ein tatsächlicher
+Host-Neustarttest ist eine separate Betriebsabnahme am Kundengerät.

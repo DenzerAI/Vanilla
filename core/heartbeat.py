@@ -19,7 +19,10 @@ def check(data: Path, port=1989, restart=False):
     try:
         with urlopen(f"http://127.0.0.1:{port}/healthz", timeout=5) as response:
             health = json.load(response)
-        checks.update(health.get("checks", {}))
+        values = health.get('checks')
+        if not isinstance(values,dict) or not values or any(not isinstance(v,dict) or not isinstance(v.get('ok'),bool) for v in values.values()):
+            raise ValueError('Unvollständige Systemprüfung.')
+        checks.update(values)
         checks["api"] = {"ok": True, "message": "Erreichbar"}
     except Exception:
         checks["api"] = {"ok": False, "message": "Anwendung antwortet nicht."}

@@ -97,6 +97,7 @@ const nativeCodex = new Codex({
 });
 const workers = new Workers({ store, root, codex: nativeCodex });
 await workers.init();
+let backupHold = false;
 const clients = new Set(),
   loaded = new ThreadLoading(),
   active = new Map(),
@@ -440,6 +441,7 @@ const deliveryRecovery = setInterval(() => {
 deliveryRecovery.unref();
 
 async function sendTurn(id, b, delivery) {
+  if (backupHold || process.env.VANILLA_RECOVERY_HOLD === "1") throw Object.assign(new Error("Wartung oder Wiederherstellungsprüfung läuft."), {deliveryPaused:true});
   if (turnLocks.has(id)) throw Object.assign(new Error("Eine Nachricht wird gerade übergeben. Bitte kurz warten."), {deliveryPaused:true});
   if (restartGate.restarting) throw Object.assign(new Error("Der Server wird neu gestartet. Bitte kurz warten."), {deliveryPaused:true});
   turnLocks.add(id);
@@ -660,6 +662,12 @@ route("POST", "/api/updates/presence", body => {
   if (body.active === true) browserSessions.set(body.id, Date.now()+20000);
   else browserSessions.delete(body.id);
   return {ok:true};
+});
+route("POST", "/api/system/backup-hold", body => {
+  if (!coreEnabled || typeof body.hold !== 'boolean') throw new Error('Ungültige Wartungspause.');
+  if (body.hold && (active.size || turnLocks.size || voiceSessions.size || liveBrowserSessions().length || channels.live.size || channels.starting.size)) throw new Error('Laufende Arbeit und aktive Eingangskanäle vor der Sicherung oder Wiederherstellung anhalten.');
+  backupHold = body.hold;
+  return {ok:true,hold:backupHold};
 });
 route("POST", "/api/updates/restart", body => restartGate.request(body));
 
@@ -1383,6 +1391,7 @@ const scheduler = setInterval(async () => {
 }, 15000);
 scheduler.unref();
 const server = http.createServer(async (req, res) => {
+  if ((backupHold || process.env.VANILLA_RECOVERY_HOLD === "1") && req.url !== "/api/system/backup-hold" && !["GET", "HEAD", "OPTIONS"].includes(req.method)) return send(res, 503, {error:"Wiederherstellung prüfen und Betrieb ausdrücklich fortsetzen."});
   if (coreEnabled && req.headers["x-agent-internal"] !== token) return send(res, 403, {error:"Interner Worker-Anschluss geschützt."});
   const allowedHosts = new Set([`127.0.0.1:${port}`, `localhost:${port}`]);
   if (!allowedHosts.has(req.headers.host)) {

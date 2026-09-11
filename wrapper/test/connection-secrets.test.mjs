@@ -133,3 +133,18 @@ test('generic connections retain provider and category across renaming and rejec
  await assert.rejects(f.call('/connections/save',{name:'Ungültig',kind:'link',url:'https://example.com',category:'unknown'}),/Unbekannte Verbindungskategorie/);
  assert.equal(f.store.state.connections.length,1);
 });
+
+test('metadata write failures restore previous secret on replace and delete', async t => {
+  const f = await fixture(t);
+  await f.secrets.save('synthetic', 'original', 'Test');
+  const before = structuredClone(f.store.state.secrets);
+  f.store.save = async () => { throw Error('synthetic persistence failure'); };
+  await assert.rejects(f.secrets.save('synthetic', 'replacement', 'Changed'));
+  assert.equal(f.keys.get('synthetic'), 'original');
+  assert.deepEqual(f.store.state.secrets, before);
+  await assert.rejects(f.secrets.remove('synthetic'));
+  assert.equal(f.keys.get('synthetic'), 'original');
+  assert.deepEqual(f.store.state.secrets, before);
+  await assert.rejects(f.secrets.save('new-synthetic', 'new', 'New'));
+  assert.equal(f.keys.has('new-synthetic'), false);
+});

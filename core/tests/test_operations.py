@@ -138,7 +138,7 @@ def test_stream_bounds_slow_clients_and_preserves_frames(config, db):
     asyncio.run(scenario())
 
 
-def test_real_encrypted_backup_restore_and_corruption(config, db, monkeypatch):
+def test_real_encrypted_backup_restore_and_corruption(config, db, monkeypatch, native_keys):
     binary=Path(os.environ.get('AGENT_TEST_RESTIC', str(Path(__file__).resolve().parents[2]/'data/control/bin/restic')))
     if not binary.exists():
         if os.environ.get('AGENT_REQUIRE_RESTIC'): pytest.fail('Pinned restic is required for customer acceptance')
@@ -153,6 +153,7 @@ def test_real_encrypted_backup_restore_and_corruption(config, db, monkeypatch):
     company=config.root/'firmenbasis';company.mkdir();(company/'FIRMA.md').write_text('# Synthetische Firma')
     audio=config.data/'dictations';audio.mkdir();(audio/'synthetic.wav').write_bytes(b'synthetic recording')
     o.configure_access('synthetic-installation-password')
+    db.put('control/message-delivery.json',{'version':1,'messages':[{'id':'synthetic-message','chatId':'chat','status':'waiting','revision':1}],'gates':{}})
     k.scan()
     result=o.backups.snapshot()
     assert result['snapshot']
@@ -170,11 +171,20 @@ def test_real_encrypted_backup_restore_and_corruption(config, db, monkeypatch):
     moved=Config(root=config.root.parent/'fresh-customer',start_adapter=False)
     moved_stage=moved.data/'restores/checked';shutil.copytree(base,moved_stage)
     (moved.data/'restore-pending.json').write_text(json.dumps({'path':str(moved_stage),'snapshot':result['snapshot']}))
+    native_keys.locked=True
+    with pytest.raises(ValueError,match='Tresorschlüssel'): apply_pending(moved)
+    assert not (moved.data/'agent.sqlite3').exists()
+    assert json.loads((moved.data/'restore-last.json').read_text())['rolled_back']
+    native_keys.locked=False
+    (moved.data/'restore-pending.json').write_text(json.dumps({'path':str(moved_stage),'snapshot':result['snapshot']}))
     apply_pending(moved)
+    assert not (moved.data/'provider-vault/provider.key').exists()
     restored_db=Database(moved.data/'agent.sqlite3')
     assert read_secret('system-access',moved,restored_db)=='synthetic-installation-password'
     assert (moved.root/'firmenbasis/FIRMA.md').is_file()
     assert (moved.data/'dictations/synthetic.wav').is_file()
+    assert (moved.data/'restore-hold.json').is_file()
+    assert restored_db.get('control/message-delivery.json')['value']['messages'][0]['status']=='unknown'
     restored_db.close()
     from core.files import sha256
     from cryptography.fernet import Fernet

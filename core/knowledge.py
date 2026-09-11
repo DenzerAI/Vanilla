@@ -38,66 +38,95 @@ def decode_vector(value):
 
 
 class LocalEmbeddings:
-    """Only loads an explicitly configured local model directory. No cloud fallback."""
+    """Local files only; status means successful inference, never just a marker."""
 
     def __init__(self, config):
         self.path = config.embedding_model
         self.revision = config.embedding_revision
+        self.managed = bool(self.path and Path(self.path).resolve() == (config.data / "models/embeddings").resolve())
         self.model = None
         self.lock = threading.RLock()
         self.error = None
         self.identity = ""
         if self.path:
             root = Path(self.path).expanduser().resolve()
-            if not root.is_dir():
-                self.error = "Der konfigurierte lokale Modellordner fehlt."
-            else:
-                config_hash = hashlib.sha256()
-                for file in sorted(root.rglob("*")):
-                    if file.is_file() and not file.is_symlink():
-                        if any(
-                            part.startswith(".")
-                            for part in file.relative_to(root).parts
-                        ):
-                            continue
-                        config_hash.update(str(file.relative_to(root)).encode())
-                        with file.open("rb") as content:
-                            for chunk in iter(lambda: content.read(1024 * 1024), b""):
-                                config_hash.update(chunk)
-                self.identity = (
-                    (self.revision or config_hash.hexdigest()) + ":" + root.name
-                )
+            try:
+                if not root.is_dir():
+                    raise ValueError("Der konfigurierte lokale Modellordner fehlt.")
+                from .models import MODEL, REVISION, model_lock, verify_model
+                source = root / "source.json"
+                if source.is_file():
+                    self.managed |= json.loads(source.read_text()).get("repository") == MODEL
+                with model_lock(root):
+                    if self.managed:
+                        verify_model(root)
+                        identity = REVISION
+                    else:
+                        config_hash = hashlib.sha256()
+                        for file in sorted(root.rglob("*")):
+                            if file.is_file() and not file.is_symlink() and not any(part.startswith(".") for part in file.relative_to(root).parts):
+                                config_hash.update(str(file.relative_to(root)).encode())
+                                with file.open("rb") as content:
+                                    for chunk in iter(lambda: content.read(1024 * 1024), b""):
+                                        config_hash.update(chunk)
+                        identity = config_hash.hexdigest()
+                # Token-aware passages require fresh vectors; user revision cannot mask changed files.
+                self.identity = identity + ":tokens-v2"
+            except (OSError, ValueError) as error:
+                self.error = str(error)[:300]
 
     def status(self):
-        return {
-            "configured": bool(self.path),
-            "ready": self.model is not None,
-            "model": self.identity or None,
-            "error": self.error,
-            "localOnly": True,
-        }
+        ready = self.model is not None and not self.error
+        state = "ready" if ready else "error" if self.error else "installed" if self.identity else "missing"
+        return {"configured": bool(self.path), "ready": ready, "state": state,
+                "model": self.identity or None, "error": self.error, "localOnly": True,
+                "message": "Sinngemäße Suche verfügbar." if ready else self.error or
+                ("Suchmodell vorhanden, lokale Berechnung noch nicht geprüft." if self.identity else
+                 "Suchmodell fehlt. Aktuell ist nur die Wortsuche verfügbar."), "device": "cpu"}
+
+    def _load(self):
+        if self.model is None:
+            from .models import load_model, model_lock, verify_model
+            with model_lock(Path(self.path)):
+                if self.managed:
+                    verify_model(Path(self.path))
+                model = load_model(Path(self.path))
+                # Publish readiness only after successful inference in encode().
+                return model
+        return self.model
 
     def encode(self, texts):
         if not self.path or self.error:
             return None
         with self.lock:
             try:
-                if self.model is None:
-                    from sentence_transformers import SentenceTransformer
-
-                    self.model = SentenceTransformer(
-                        str(Path(self.path).expanduser().resolve()),
-                        local_files_only=True,
-                        trust_remote_code=False,
-                    )
-                return self.model.encode(
-                    texts, normalize_embeddings=True, show_progress_bar=False
-                ).tolist()
+                import math
+                from .models import BATCH_SIZE
+                model = self._load()
+                vectors = model.encode(texts, batch_size=BATCH_SIZE,
+                                       normalize_embeddings=True, show_progress_bar=False).tolist()
+                if len(vectors) != len(texts) or any(not v or not all(math.isfinite(x) for x in v) for v in vectors):
+                    raise ValueError("Ungültige lokale Suchvektoren.")
+                self.model = model
+                return vectors
             except Exception as error:
-                self.error = (
-                    "Lokales Embedding-Modell nicht verfügbar: " + str(error)[:250]
-                )
+                self.model = None
+                self.error = "Lokales Suchmodell nicht verfügbar: " + str(error)[:250]
                 return None
+
+    def chunks(self, text):
+        with self.lock:
+            if self.model is None and not self.encode(["Lokale Suche prüfen."]):
+                return None
+            tokenizer = self.model.tokenizer
+            offsets = tokenizer(text, add_special_tokens=False, return_offsets_mapping=True,
+                                truncation=False, verbose=False)["offset_mapping"]
+            budget = max(8, int(self.model.max_seq_length) - tokenizer.num_special_tokens_to_add(False))
+            overlap = min(16, budget // 4)
+            if not offsets:
+                return [text]
+            return [text[offsets[i][0]:offsets[min(i + budget, len(offsets)) - 1][1]]
+                    for i in range(0, len(offsets), budget - overlap)]
 
 
 class Knowledge:
@@ -207,6 +236,9 @@ class Knowledge:
     def embed(self):
         with self.lock:
             count = 0
+            if not self.embeddings.status().get("ready"):
+                if self.embeddings.encode(["Lokale Suche prüfen."]) is None:
+                    return {"indexed": 0, **self.embeddings.status()}
             for doc in self.db.rows("SELECT * FROM documents ORDER BY path"):
                 model = self.embeddings.identity
                 if self.db.rows(
@@ -214,13 +246,13 @@ class Knowledge:
                     (doc["path"], model, doc["digest"]),
                 ):
                     continue
-                chunks = [
-                    doc["content"][i : i + 1400]
-                    for i in range(0, max(1, len(doc["content"])), 1200)
-                ]
-                vectors = self.embeddings.encode(
-                    [doc["title"] + "\n" + text for text in chunks]
-                )
+                if hasattr(self.embeddings, "chunks"):
+                    chunks = self.embeddings.chunks(doc["content"])
+                    vectors = self.embeddings.encode(chunks) if chunks is not None else None
+                else:
+                    chunks = [doc["content"][i:i + 1400]
+                              for i in range(0, max(1, len(doc["content"])), 1200)]
+                    vectors = self.embeddings.encode([doc["title"] + "\n" + text for text in chunks])
                 if vectors is None:
                     break
                 with self.db.transaction() as cx:

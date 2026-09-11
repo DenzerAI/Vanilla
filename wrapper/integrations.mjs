@@ -39,11 +39,19 @@ export function createSecretStore(store, keychain = { save: saveSecret, read: re
       safeName(id);
       if(systemSecret(id)) throw new Error('Systemschlüssel über Zugang oder Speicher & Sicherung verwalten.');
       if (format !== undefined && format !== 'crm-credentials') throw new Error('Unbekanntes Secret-Format.');
+      const previousValue = await keychain.has(id) ? await keychain.read(id) : undefined;
       await keychain.save(id, value);
       const entry = { id, name: providerSecret(id)?.name || String(name || id).slice(0, 100), updatedAt: new Date().toISOString(), ...(format ? {format} : {}) };
       const previous = store.state.secrets;
       store.state.secrets = previous.filter(s => s.id !== id).concat(entry);
-      try { await store.save(); } catch (error) { store.state.secrets = previous; throw error; }
+      try { await store.save(); } catch (error) {
+        store.state.secrets = previous;
+        try {
+          if (previousValue === undefined) await keychain.remove(id);
+          else await keychain.save(id, previousValue);
+        } catch { throw new Error('Speicherung und Rücknahme fehlgeschlagen. Verbindung vor weiterer Verwendung prüfen.'); }
+        throw error;
+      }
       return entry;
     },
     list: () => exclusive(async () => {
@@ -73,9 +81,16 @@ export function createSecretStore(store, keychain = { save: saveSecret, read: re
       const provider = providerSecret(id);
       if (provider && (await jsonFile(path.join(store.dataRoot, provider.file), {}))[provider.flag])
         throw new Error(`Bitte zuerst die ${provider.name}-Verbindung entfernen.`);
+      const previous = store.state.secrets;
+      const previousValue = await keychain.has(id) ? await keychain.read(id) : undefined;
       await keychain.remove(id);
-      store.state.secrets = store.state.secrets.filter(s => s.id !== id);
-      await store.save();
+      store.state.secrets = previous.filter(s => s.id !== id);
+      try { await store.save(); } catch (error) {
+        store.state.secrets = previous;
+        try { if (previousValue !== undefined) await keychain.save(id, previousValue); }
+        catch { throw new Error('Löschen und Rücknahme fehlgeschlagen. Verbindung vor weiterer Verwendung prüfen.'); }
+        throw error;
+      }
       return { ok: true };
     },
   };

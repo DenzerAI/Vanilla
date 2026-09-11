@@ -14,7 +14,7 @@ from zoneinfo import ZoneInfo
 from .backups import Backups
 from .database import dump
 from .files import atomic_write, read_json
-from .secrets import save_secret, register_secret
+from .provider_vault import ProviderVault
 from .service import label, service_status
 
 
@@ -67,21 +67,58 @@ class Operations:
             checks["adapter"] = {"ok": bool(runtime and runtime.process and runtime.process.returncode is None and not runtime.error), "message": "Worker-Anschluss"}
         checks['leases'] = {'ok': not bool(self.db.rows("SELECT id FROM executions WHERE status IN ('running','dispatching') AND lease_until<?", (time(),))), 'message':'Rückmeldungen laufender Aufträge'}
         checks['automations'] = {'ok': not bool(self.db.rows("SELECT id FROM jobs j WHERE j.status='invalid' OR (j.status='active' AND (SELECT status FROM executions e WHERE e.job_id=j.id ORDER BY created_at DESC LIMIT 1) IN ('failed','interrupted'))")), 'message':'Automationen'}
-        if self.knowledge.embeddings.path:
-            checks['embeddings'] = {'ok': not bool(self.knowledge.embeddings.error), 'message':'Lokale Suchberechnung'}
+        checks['embeddings'] = {'ok': bool(self.knowledge.embeddings.status().get('ready')), 'message':'Lokale Suchberechnung'}
         if self.config.public_origin:
             network = self.network_cache[1]
             checks['tailscale'] = {'ok': bool(network.get('connected') and network.get('serving') and time()-self.network_cache[0]<120), 'message':'Privater HTTPS-Zugang'}
-        v = self.settings.values
-        if v["backup"]["enabled"]:
-            rows = self.db.rows("SELECT checked_at,status FROM maintenance WHERE name='backup'")
-            checks["backup"] = {"ok": bool(rows and rows[0]["status"] == "ok" and time() - rows[0]["checked_at"] < 90000), "message": "Letzte Sicherung"}
+        backup = self.backup_status()
+        checks['backup'] = {'ok':backup['state']=='ready','state':backup['state'],'message':backup['message']}
+        if runtime and runtime.restore_hold:
+            checks['recovery'] = {'ok':False,'state':'paused','message':'Wiederherstellung wartet auf Prüfung und Fortsetzen.'}
         return checks
+
+    def backup_status(self):
+        options = self.settings.values['backup']
+        last = self.db.get('backup/last-success')['value']
+        if last and last.get('target') != options['target']: last = None
+        target_error = None
+        if options['target']:
+            try:
+                if not (self.backups.target/'config').is_file():
+                    target_error = 'Sicherungsarchiv ist nicht erreichbar oder nicht eingerichtet.'
+            except (ValueError,OSError) as error:
+                target_error = str(error)[:200]
+        rows = self.db.rows("SELECT * FROM maintenance WHERE name='backup'")
+        attempt = rows[0] if rows else None
+        if not options['target']:
+            state,message = 'unconfigured','Noch kein Sicherungsziel eingerichtet.'
+        elif not options['enabled']:
+            state,message = 'disabled','Automatische Sicherung ist ausgeschaltet.'
+        elif not self.backups.binary:
+            state,message = 'error','Backup-Programm fehlt.'
+        elif target_error:
+            state,message = 'error',target_error
+        elif attempt and attempt['status']=='running':
+            active = bool(self.db.rows("SELECT id FROM executions WHERE job_id='system-backup' AND status IN ('dispatching','running')"))
+            state,message = ('running','Sicherung läuft.') if active else ('error','Letzter Sicherungsversuch wurde unterbrochen.')
+        elif attempt and attempt['status']=='error':
+            state,message = 'error','Letzter Sicherungsversuch fehlgeschlagen.'
+        elif not last:
+            state,message = 'degraded','Ziel eingerichtet; erste bestätigte Sicherung fehlt.'
+        elif not 0 <= time()-last['checked_at'] < 90000:
+            state,message = 'stale','Letzte bestätigte Sicherung ist älter als 25 Stunden.'
+        else:
+            state,message = 'ready','Letzte Sicherung erstellt und stichprobenartig geprüft.'
+        return {'state':state,'message':message,'last_success':last,'last_attempt':attempt}
 
     def status(self):
         from .source_work import SourceWork
         heartbeat = read_json(self.config.data / "heartbeat.json", None)
-        return {"sourceWork": SourceWork(self.config.data).status(), "settings": self.settings.read(), "checks": self.checks(), "heartbeat": heartbeat, "service": service_status(self.config), "embeddings": self.knowledge.embeddings.status(), "maintenance": self.db.rows("SELECT * FROM maintenance ORDER BY name"), "memory": {"sources": self.db.rows("SELECT count(*) n FROM memory_sources WHERE forgotten=0")[0]["n"], "pending": len(self.memory.pending), "mode": "local-extractive", "changes": self.db.rows("SELECT * FROM memory_changes ORDER BY created_at DESC LIMIT 20")}, "storage": {"free_mb": shutil.disk_usage(self.config.data).free // 1024**2, "database_bytes": (self.config.data / "agent.sqlite3").stat().st_size}, "backup_installed": bool(self.backups.binary), "access": {"enabled": self.config.login_required, "origin": self.config.public_origin}, "stream": {"connected": bool(self.runtime and self.runtime.stream.connected), "clients": len(self.runtime.stream.clients) if self.runtime else 0}}
+        enabled = self.settings.values['system']['heartbeat']
+        fresh = bool(heartbeat and 0 <= time()-heartbeat.get('checked_at',0) < 150)
+        heartbeat = {**(heartbeat or {}),'ok':bool(enabled and fresh and heartbeat.get('ok')),'state':'disabled' if not enabled else 'unconfigured' if not heartbeat else 'stale' if not fresh else 'ready' if heartbeat.get('ok') else 'error'}
+        recovery = {'paused':bool(self.runtime and self.runtime.restore_hold),'last':read_json(self.config.data/'restore-last.json',None)}
+        return {"sourceWork": SourceWork(self.config.data).status(), "backup":self.backup_status(), "recovery":recovery, "settings": self.settings.read(), "checks": self.checks(), "heartbeat": heartbeat, "service": service_status(self.config), "embeddings": self.knowledge.embeddings.status(), "maintenance": self.db.rows("SELECT * FROM maintenance ORDER BY name"), "memory": {"sources": self.db.rows("SELECT count(*) n FROM memory_sources WHERE forgotten=0")[0]["n"], "pending": len(self.memory.pending), "mode": "local-extractive", "changes": self.db.rows("SELECT * FROM memory_changes ORDER BY created_at DESC LIMIT 20")}, "storage": {"free_mb": shutil.disk_usage(self.config.data).free // 1024**2, "database_bytes": (self.config.data / "agent.sqlite3").stat().st_size}, "backup_installed": bool(self.backups.binary), "vault": ProviderVault(self.config.data / "provider-vault", self.db).status(), "access": {"enabled": self.config.login_required, "origin": self.config.public_origin}, "stream": {"connected": bool(self.runtime and self.runtime.stream.connected), "clients": len(self.runtime.stream.clients) if self.runtime else 0}}
 
     def run(self, handler):
         try:
@@ -93,12 +130,14 @@ class Operations:
             elif handler == "memory":
                 result = self.memory.dream()
             elif handler == "backup":
+                self.record(handler,"running",{})
                 result = self.backups.snapshot()
             elif handler == "cleanup":
                 result = self.cleanup()
             else:
                 raise ValueError("Unbekannte Systemfunktion.")
-            self.record(handler, "ok", result)
+            state = "error" if handler == "index" and not result["embeddingIndex"].get("ready") else "ok"
+            self.record(handler, state, result)
             return result
         except Exception as error:
             self.record(handler, "error", {"message": str(error)[:200]})
@@ -133,26 +172,49 @@ class Operations:
         if self.settings.values["backup"]["enabled"]:
             self.backups.prune()
         # Only remove old verified staging copies, never applied restore safety copies.
-        pending = read_json(self.config.data / 'restore-pending.json', {})
-        for p in (self.config.data / 'restores').glob('*'):
-            if p.is_dir() and not p.is_symlink() and str(p) not in str(pending.get('path','')) and p.stat().st_mtime < now - values['logs_days']*86400:
-                shutil.rmtree(p)
-                cleared += 1
+        with self.backups.lock:
+            pending = read_json(self.config.data / 'restore-pending.json', {})
+            for p in (self.config.data / 'restores').glob('*'):
+                protected = pending.get('path') and Path(pending['path']).is_relative_to(p)
+                if p.is_dir() and not p.is_symlink() and not protected and p.stat().st_mtime < now - values['logs_days']*86400:
+                    shutil.rmtree(p)
+                    cleared += 1
         return {"events_removed": events, "logs_cleaned": cleared}
 
     def configure_access(self, password):
         if len(password) < 8:
             raise ValueError("Bitte mindestens acht Zeichen verwenden.")
-        save_secret("system-access", password, self.config, self.db)
         api_token = secrets.token_urlsafe(48)
-        save_secret("system-api", api_token, self.config, self.db)
-        register_secret(self.db, "system-access", "System · Anmeldung")
-        register_secret(self.db, "system-api", "System · Lokale Werkzeuge")
-        host = read_json(self.config.data / "host.json", {})
-        atomic_write(self.config.data / "host.json", dump({**host, "access_enabled": True}))
-        self.config.login_password, self.config.access_token = password, api_token
-        with self.db.transaction() as cx:
-            cx.execute("DELETE FROM sessions")
+        vault = ProviderVault(self.config.data / 'provider-vault', self.db)
+        host_path = self.config.data / 'host.json'
+        with self.db.lock:
+            old_host = host_path.read_text() if host_path.exists() else None
+            host = json.loads(old_host) if old_host else {}
+            encrypted = {name: vault.encrypt(name, value) for name, value in
+                         [('system-access', password), ('system-api', api_token)]}
+            # Both credentials and their metadata commit together. A failed
+            # host-file write leaves the previous login and browser sessions valid.
+            wrote_host = False
+            try:
+                with self.db.transaction() as cx:
+                    for name, value in encrypted.items():
+                        cx.execute('INSERT INTO records VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at',
+                                   (vault.name(name), dump(value), time()))
+                    state = self.db.get('control/state.json')['value']
+                    if state:
+                        state['secrets'] = [s for s in state.get('secrets', []) if s['id'] not in encrypted] + [
+                            {'id': 'system-access', 'name': 'System · Anmeldung', 'system': True},
+                            {'id': 'system-api', 'name': 'System · Lokale Werkzeuge', 'system': True}]
+                        cx.execute('UPDATE records SET value=?,updated_at=? WHERE key=?', (dump(state), time(), 'control/state.json'))
+                    cx.execute('DELETE FROM sessions')
+                    atomic_write(host_path, dump({**host, 'access_enabled': True}))
+                    wrote_host = True
+            except BaseException:
+                if wrote_host:
+                    if old_host is None: host_path.unlink(missing_ok=True)
+                    else: atomic_write(host_path, old_host)
+                raise
+            self.config.login_password, self.config.access_token = password, api_token
         return {"ok": True, "loginRequired": True}
 
     def tailscale_binary(self):

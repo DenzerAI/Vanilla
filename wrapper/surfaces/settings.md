@@ -330,3 +330,35 @@ erhalten, unbenutzte Eingabeschemas verbleiben beim Worker. Der normale Anschlus
 liefert weiterhin die vollständigen Daten. Der Abruf erfolgt beim Öffnen der
 Verbindungen, Schlüssel oder eines abhängigen Dialogs, nicht beim normalen Chatstart.
 Keine Migration von Zugängen, Werkzeugen oder Einstellungen.
+
+## Installationsbezogene Schlüsselablage
+
+Zugang zeigt vor Anmeldung eine vorhandene SettingRow „Schlüsselablage“ aus
+`/api/system/status.vault`. Die Zeile unterscheidet noch nicht eingerichtet,
+geschützt eingerichtet, Migration erforderlich und beschädigte Zuordnung.
+Geschützt eingerichtet behauptet keine aktuell entsperrte OS-Schlüsselverwaltung.
+Polling liest keine Schlüssel und öffnet keine Betriebssystemdialoge. Fehler beim
+Speichern bleiben im bestehenden Formular sichtbar. Anbieterzugänge werden
+weiter ausschließlich unter Verbindungen eingerichtet.
+
+
+## Zustand der lokalen Suche
+
+Memory verwendet weiterhin die vorhandenen SettingRow-Zeilen. „Bereit“ setzt
+erfolgreiche lokale Berechnung voraus. Andernfalls bleibt „Wortsuche verfügbar“
+sichtbar, mit konkretem Modellfehler oder noch ausstehender Prüfung.
+Installieren beziehungsweise Reparieren und Lokal testen verwenden denselben
+Systemanschluss. Während der Anfrage sind die bestehenden Bedienelemente gesperrt;
+„Bitte warten …“ meldet Arbeit ohne erfundene Prozentwerte. Erst abgeschlossene
+Modellprüfung und Indizierung bestätigen die Einrichtung.
+
+
+## Sicherungszustand und Wiederherstellungsprüfung
+
+Speicher & Sicherung zeigt den Zustand und den letzten bestätigten Snapshot in
+vorhandenen SettingRow-Zeilen. Ein neuer Fehlversuch überschreibt dessen Datum
+nicht. Nach Restore erscheint vor der Sicherung die Gruppe Wiederherstellung
+prüfen mit einer ausdrücklich beschrifteten Fortsetzen-Aktion. Der vorhandene
+Übernahmedialog erklärt die anschließende Betriebspause. System nennt Adapter-Wiederanlauf und Kerndienst getrennt;
+ein veralteter Heartbeat wird niemals als In Ordnung angezeigt. Bestehende
+Tokens, Formulare, Busy- und Fehlerrückmeldungen gelten unverändert.

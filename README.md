@@ -88,7 +88,7 @@ die Aktivierung der laufenden Anwendung bleibt ein eigener Schritt.
 
 Die folgenden `host-service.py`-Befehle beschreiben den launchd-Installationsweg auf einem entsprechend berechtigten Zielhost. Sie setzen freie Ports 1989/1990 und die funktionierende native Tailscale-CLI voraus.
 
-Dieser Abschnitt ist ein Operator-Ablauf für einen regulär berechtigten Host-Prozess. Er ist keine Umgehung einer Worker-Sandbox. Die Web-App darf weiterhin weder Dienste installieren noch Serve oder Schlüsselbund ändern.
+Dieser Abschnitt ist ein Operator-Ablauf für einen regulär berechtigten Host-Prozess. Er ist keine Umgehung einer Worker-Sandbox. Die App verwendet ausschließlich ihren eigenen installationsbezogenen Tresoreintrag; fremde Schlüsselbund-Einträge bleiben unberührt. Dienst- und Netzwerkaktivierung folgen dem gesonderten Betriebsweg.
 
 Einmalig einen **stabilen eigenen Clone außerhalb der Werkbank und temporärer Verzeichnisse** anlegen:
 
@@ -174,8 +174,8 @@ Der getrennte Skilltree ist fertig gebaut und wird bereits über die bestehende 
 
 ## Bekannte Grenzen
 
-- Embedding-Modellgewichte fehlen; ohne Modell arbeitet die Suche mit Volltext/Fuzzy-Suche. Optionale Installation über `requirements-embeddings.lock` und `python -m core.models`.
-- System-Schlüsselbund, persönliche Worker-Logins und globale Aktivierung über die App bleiben gesperrt. Ein eigener lokaler Tresor ist vor produktiven Anbieter-Verbindungen erforderlich.
+- Das lokale Suchmodell wird durch `setup:system` automatisch eingerichtet und geprüft. Ohne erfolgreiche Einrichtung bleibt die Wortsuche verfügbar; Reparatur unter Memory oder über `python -m core.models`. Zielhost-Grenzen und Offlineprüfung: [Lokale Suche](docs/OPERATIONS.md#lokale-suche).
+- Die Schlüsselablage benötigt eine verfügbare Betriebssystem-Schlüsselverwaltung. Eigene Worker-Anmeldungen bleiben installationsbezogen; fremde Profile werden nicht übernommen. Einrichtung und Migration stehen in docs/VAULT.md.
 - Die vorhandenen Memory-Verlustfälle des Quellaudits sind nicht vollständig behoben oder abgenommen.
 - Restic ist optional; lokales Backup ist noch kein vollständiges ausfallsicheres Wiederherstellungskonzept. Vollständiger Betriebsumfang, eigene Zugänge und echter Restore-Test bleiben offen.
 - Der Scanner erkennt bekannte Muster; er beweist nicht die Abwesenheit unbekannter Namen oder kodierter Geheimnisse.
@@ -189,3 +189,18 @@ App-Backend. `npm run ui:verify` erkennt fehlende, veraltete oder veränderte
 Builddateien. Der Ablauf für eigene Erweiterungen und andere Installationen
 steht in [docs/UI-UPDATES.md](docs/UI-UPDATES.md). Git-Push und Serverneustart
 allein aktualisieren keinen lokal noch alten UI-Build.
+
+## Entwicklungsstand Sicherung und Wiederanlauf
+
+Der Betriebsanschluss unterstützt Sicherungsschema 4, atomare Archiveinrichtung,
+Restore mit Rückkehrjournal und anschließender ausdrücklicher Betriebsfreigabe.
+Offene alte Aufträge und Sendungen werden nicht automatisch wiederholt.
+Der vorhandene kontrollierte Neustart kehrt über den Server-Shutdown zum
+execv-Startweg zurück; ein Prozessabsturz bleibt Aufgabe des freigegebenen
+Hostdienstes. Zustand, Grenzen und Migration führt [OPERATIONS.md](docs/OPERATIONS.md#sicherung-und-wiederanlauf-betriebsgrenzen).
+
+Automatisierte Abnahme verwendet echte verschlüsselte restic-Archive und eine
+separate synthetische Zielinstallation, einschließlich beschädigter Bestände und
+abgebrochener Dateitausche. Der OS-Schlüsselspeicher ist dabei simuliert; die
+native Schlüsselablage und ein tatsächlicher Rechnerneustart benötigen weiterhin
+eine eigene Geräteabnahme. Quellcode und Testnachweis aktivieren keinen Hostdienst.

@@ -229,9 +229,9 @@
         "endpoint": "GET /api/mail/setup",
         "meaning": "OAuth-App bereit ist noch kein verbundenes Postfach. Zusätzlich /api/mail/accounts und letzten Sync prüfen."
       },
-      "limits": "Gmail und Outlook: Lesen, Entwürfe und expliziter Versand. CRM-Übergabe erzeugt Belege und Vorschläge; Entscheidungen bleiben separat. Kalender nutzt den eigenen Microsoft-Serviceanschluss. Weitere Messenger sind keine Mailpostfächer.",
-      "version": 1,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "limits": "Gmail und Outlook: Lesen, Entwürfe und expliziter Versand. CRM-Übergabe erzeugt Belege und Vorschläge; Entscheidungen bleiben separat. Kalender nutzt den eigenen Microsoft-Serviceanschluss. Weitere Messenger sind keine Mailpostfächer. Schlüsselablage setzt eine erreichbare native OS-Schlüsselverwaltung voraus; siehe docs/VAULT.md.",
+      "version": 2,
+      "migration": "Tresorformat 2: OS-geschützter installationsbezogener Schlüssel. Vor Quellaktivierung alten Bestand offline mit core.vault_migrate prüfen und übernehmen. Rückweg benötigt vollständige Datenwiederherstellung; Details docs/VAULT.md. Bestehende Ciphertexte und übrige Daten bleiben erhalten."
     },
     {
       "id": "chat",
@@ -343,8 +343,8 @@
         "meaning": "Eingerichtet, verbunden und authentifiziert getrennt auswerten."
       },
       "limits": "Eingerichtet, verbunden und authentifiziert getrennt auswerten.",
-      "version": 6,
-      "migration": "Bestehende Chat-IDs, Entwürfe und native Sitzungen erhalten. Forkfamilie und Statistikfelder sind additiv; Fork-Zähler bei Rückkehr nicht aus alten Kopien erraten. Nachrichtenkennungen und persistente Übergabebelege bleiben führend. Native Rückfragen vor Adapterwechsel beantworten oder stoppen; UI-Präferenzen sind browserlokal. workspaceOnboarding ist ein optionaler Verweis auf den einzigen Einrichtungschat je Workspace; Forks übernehmen ihn nicht. Einrichtung verwendet die bestehende Nachrichtenübergabe. Der separate Adapter liefert gebaute Assets direkt aus dist aus und meldet fehlende Dateien mit 404 statt HTML."
+      "version": 7,
+      "migration": "Bestehende Chat-IDs, Entwürfe und native Sitzungen erhalten. Forkfamilie und Statistikfelder sind additiv; Fork-Zähler bei Rückkehr nicht aus alten Kopien erraten. Nachrichtenkennungen und persistente Übergabebelege bleiben führend. Native Rückfragen vor Adapterwechsel beantworten oder stoppen; UI-Präferenzen sind browserlokal. workspaceOnboarding ist ein optionaler Verweis auf den einzigen Einrichtungschat je Workspace; Forks übernehmen ihn nicht. Einrichtung verwendet die bestehende Nachrichtenübergabe. Der separate Adapter liefert gebaute Assets direkt aus dist aus und meldet fehlende Dateien mit 404 statt HTML. Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Restore markiert offene Nachrichtenübergaben als unknown. Die gemeinsame Betriebspause blockiert neue Übergaben bis zur ausdrücklichen Fortsetzung; unbestätigte alte Nachrichten bleiben einzeln prüfpflichtig. Vertrag docs/OPERATIONS.md."
     },
     {
       "id": "speech",
@@ -383,8 +383,8 @@
         "meaning": "localReady oder eingerichteter Cloudanbieter plus gewählte Stimme."
       },
       "limits": "localReady oder eingerichteter Cloudanbieter plus gewählte Stimme.",
-      "version": 1,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 2,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der gemeinsame Installer richtet die unabhängige lokale Suche vor Sprache und Sicherung ein. Sprachdaten werden dabei nicht migriert."
     },
     {
       "id": "dictation",
@@ -473,8 +473,8 @@
         "meaning": "Gespeichert, getestet, verbunden und ausführbar getrennt behandeln; reine Links versprechen kein Werkzeug."
       },
       "limits": "Gespeichert, getestet, verbunden und ausführbar getrennt behandeln; reine Links versprechen kein Werkzeug.",
-      "version": 1,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 2,
+      "migration": "Tresorformat 2: OS-geschützter installationsbezogener Schlüssel. Vor Quellaktivierung alten Bestand offline mit core.vault_migrate prüfen und übernehmen. Rückweg benötigt vollständige Datenwiederherstellung; Details docs/VAULT.md. Bestehende Ciphertexte und übrige Daten bleiben erhalten."
     },
     {
       "id": "workers",
@@ -592,8 +592,8 @@
         "meaning": "Ausführung über Scheduler; Abschluss und Zustellbeleg prüfen."
       },
       "limits": "Ausführung über Scheduler; Abschluss und Zustellbeleg prüfen.",
-      "version": 3,
-      "migration": "Bestehende zentrale Jobordner, Kennungen und Laufbelege erhalten. Optionale Modell-/Effortfelder ergänzen das Manifest; vorhandene Zeitwerte werden weiterhin eindeutig eingelesen. Backup-Zeitplan erst nach erfolgreicher Prüfung des vorhandenen Archivs aktivieren. Keine Verschiebung in Bereichsordner. category ist optional und rein organisatorisch; fehlend oder leer heißt Allgemein. Alte Leser ignorieren die Zusatzangabe. Workspace, Zeitplan und Ablage bleiben unverändert."
+      "version": 4,
+      "migration": "Bestehende zentrale Jobordner, Kennungen und Laufbelege erhalten. Optionale Modell-/Effortfelder ergänzen das Manifest; vorhandene Zeitwerte werden weiterhin eindeutig eingelesen. Backup-Zeitplan erst nach erfolgreicher Prüfung des vorhandenen Archivs aktivieren. Keine Verschiebung in Bereichsordner. category ist optional und rein organisatorisch; fehlend oder leer heißt Allgemein. Alte Leser ignorieren die Zusatzangabe. Workspace, Zeitplan und Ablage bleiben unverändert. Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Nach Restore gilt recovery/not-before als Zeitplangrenze. Normale Neustarts erhalten bestehende Wiederholungsregeln. Keine Tabellen entfernt."
     },
     {
       "id": "library",
@@ -633,7 +633,7 @@
       },
       "limits": "Dateibestand; Vorschau ist kein Suchindex.",
       "version": 2,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Während Sicherung und Wiederherstellungsprüfung weist der gemeinsame Server Schreibaktionen ab; lesende Bibliotheksansichten bleiben erreichbar. Kein Dateiformat geändert. Vertrag docs/OPERATIONS.md."
     },
     {
       "id": "skills",
@@ -705,15 +705,16 @@
         "platform"
       ],
       "verification": [
-        "core/tests/test_operations.py"
+        "core/tests/test_operations.py",
+        "core/tests/test_models.py"
       ],
       "status": {
         "endpoint": "GET /api/system/status",
         "meaning": "FTS ist unabhängig von optionalen Embeddings; noch nicht indexierte Formate kennzeichnen."
       },
       "limits": "FTS ist unabhängig von optionalen Embeddings; noch nicht indexierte Formate kennzeichnen.",
-      "version": 3,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der gemeinsam genutzte MCP-Katalog ergänzt optionale Routine-Kategorien; bestehende CRM-/Memory-Werkzeugfelder bleiben kompatibel."
+      "version": 4,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der gemeinsam genutzte MCP-Katalog ergänzt optionale Routine-Kategorien; bestehende CRM-/Memory-Werkzeugfelder bleiben kompatibel. Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Suchvektoren erhalten die Identität tokens-v2 und werden aus vorhandenen Originaldateien neu berechnet; keine Änderung an Quelldokumenten oder am Datenbankschema."
     },
     {
       "id": "channels",
@@ -794,7 +795,7 @@
       "stage": "implemented",
       "contract": "docs/OPERATIONS.md",
       "setup": "docs/CUSTOMER-SETUP.md#operations",
-      "data": "Installationsdaten in data/control und workspaces; Code enthält keine Kundendaten.",
+      "data": "Verschlüsselte Werte in SQLite; Schutzschlüssel im eigenen Betriebssystem-Eintrag. Verschlüsselte Sicherungen enthalten eine Wiederherstellungskopie. Vertrag docs/VAULT.md.",
       "sources": [
         "core/api.py",
         "core/backups.py",
@@ -807,7 +808,9 @@
         "scripts/start-core.mjs",
         "scripts/verify-hero-keys.mjs",
         "scripts/verify-modules.py",
-        "scripts/verify-start.py"
+        "scripts/verify-start.py",
+        "core/vault_keys.py",
+        "core/vault_migrate.py"
       ],
       "entrypoints": [
         "GET /api/auth/session",
@@ -833,21 +836,25 @@
         "POST /api/system/tailscale",
         "POST /api/system/tool",
         "POST /internal/restart",
-        "GET /api/system/readiness"
+        "GET /api/system/readiness",
+        "POST /api/system/backups/resume",
+        "POST /api/system/backup-hold"
       ],
       "dependencies": [
         "platform"
       ],
       "verification": [
-        "core/tests/test_operations.py"
+        "core/tests/test_operations.py",
+        "core/tests/test_provider_vault.py",
+        "core/tests/test_recovery.py"
       ],
       "status": {
         "endpoint": "GET /api/system/readiness",
         "meaning": "Prozess, vollständige lokale Basis und tatsächliche Worker-Ausführbarkeit getrennt prüfen; Kundenanschlüsse werden nicht pauschal als bereit erklärt."
       },
       "limits": "Betriebszustand, Login, Backup und Restore-Nachweis separat prüfen.",
-      "version": 3,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 5,
+      "migration": "Tresorformat 2: OS-geschützter installationsbezogener Schlüssel. Vor Quellaktivierung alten Bestand offline mit core.vault_migrate prüfen und übernehmen. Rückweg benötigt vollständige Datenwiederherstellung; Details docs/VAULT.md. Bestehende Ciphertexte und übrige Daten bleiben erhalten. Fehlende oder fehlerhafte Suchberechnung bleibt als Einschränkung sichtbar; der Volltextindex bleibt nutzbar. Sicherungsschema 4; Schema 2/3 weiter lesbar. Restore setzt eine dauerhafte Betriebspause, quarantänisiert offene Übergaben und verhindert alte Zeitpläne. Details docs/OPERATIONS.md."
     },
     {
       "id": "platform",
@@ -995,7 +1002,8 @@
       ],
       "dependencies": [],
       "verification": [
-        "core/tests/test_modules.py"
+        "core/tests/test_modules.py",
+        "core/tests/test_models.py"
       ],
       "status": {
         "endpoint": "GET /api/system/modules",
@@ -1003,7 +1011,7 @@
       },
       "limits": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen.",
       "version": 4,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der bestehende Projektindex erhält abgeleitete Workspace-Metadaten. Jobkategorien werden aus dem optionalen Manifestfeld gelesen; keine Verschiebung von Dateien."
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der bestehende Projektindex erhält abgeleitete Workspace-Metadaten. Jobkategorien werden aus dem optionalen Manifestfeld gelesen; keine Verschiebung von Dateien. Tresorformat 2: OS-geschützter installationsbezogener Schlüssel. Vor Quellaktivierung alten Bestand offline mit core.vault_migrate prüfen und übernehmen. Rückweg benötigt vollständige Datenwiederherstellung; Details docs/VAULT.md. Bestehende Ciphertexte und übrige Daten bleiben erhalten. Lokales MiniLM wird anhand der festgelegten Dateiprüfsummen geprüft und repariert; source.json allein bestätigt keine Bereitschaft. Bestehende Modellordner bleiben erhalten. Nach Restore gilt recovery/not-before als Zeitplangrenze. Normale Neustarts erhalten bestehende Wiederholungsregeln. Keine Tabellen entfernt."
     },
     {
       "id": "weather",
