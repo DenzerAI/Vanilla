@@ -2,7 +2,7 @@
 
 ## Automatische Chat-Titel
 
-Der zuständige Worker erzeugt den Titel mit dem gewählten Modell in einer separaten Hintergrundanfrage anhand der ersten Nutzernachricht. Beide Anschlusswege verwenden die zentrale Regel und Prüfung in `chat-title.mjs`: möglichst 2–3 Wörter, höchstens 4 Wörter und 28 Zeichen einschließlich Leerzeichen. Das Hauptthema steht zuerst; bei Überlänge wird neu formuliert, niemals abgeschnitten. Ein ungültiges Ergebnis wird einmal neu angefragt, danach gilt „Neues Anliegen“. Manuelle Benennungen bleiben geschützt; bestehende Titel werden nur auf ausdrücklichen Auftrag überarbeitet.
+Der zuständige Worker erzeugt den Titel mit dem gewählten Modell in einer separaten Hintergrundanfrage anhand der ersten Nutzernachricht. Beide Anschlusswege verwenden die zentrale Regel und Prüfung in `chat-title.mjs`: möglichst 2–3 Wörter, höchstens 4 Wörter und 28 Zeichen einschließlich Leerzeichen. Das Hauptthema steht zuerst; bei Überlänge wird neu formuliert, niemals abgeschnitten. Ein ungültiges Ergebnis wird einmal neu angefragt, danach gilt „Neues Anliegen“. Jeder Worker vergibt Titel: Die ACP-Titelsitzung heftet das Chat-Modell mit dem Mechanismus an, den die Sitzung selbst anbietet, also `session/set_config_option` bei Konfigurationsoptionen und andernfalls `session/set_model`. Ein nicht verfügbares oder nicht bestätigtes Modell kostet nur die Anheftung, niemals den Titel; die Anfrage läuft dann mit der Standardauswahl der Sitzung weiter. Manuelle Benennungen bleiben geschützt; bestehende Titel werden nur auf ausdrücklichen Auftrag überarbeitet.
 
 ## Aufbau und Erweiterungen
 

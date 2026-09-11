@@ -68,6 +68,38 @@ test('ACP uses same model and an isolated session', async () => {
   assert.equal(await generateTitle({ rpc }, { cwd: '/tmp', model: 'chosen', text: 'Angebot' }), 'Angebot prüfen');
   assert.equal(calls[1].p.modelId, 'chosen'); assert.equal(rpc.listenerCount('message'), 0);
 });
+test('ACP config options select the chat model natively', async () => {
+  const rpc = new EventEmitter(); const calls = [];
+  rpc.write = () => {};
+  const options = [{ id: 'model', type: 'select', category: 'model', currentValue: 'default',
+    options: [{ value: 'default', name: 'Standard' }, { value: 'claude-opus-5', name: 'Opus' }] }];
+  rpc.call = async (method, p) => {
+    calls.push({ method, p });
+    if (method === 'session/new') return { sessionId: 'title', configOptions: options };
+    if (method === 'session/set_config_option') return { configOptions: options };
+    if (method === 'session/prompt') {
+      rpc.emit('message', { method: 'session/update', params: { sessionId: 'title', update: { sessionUpdate: 'agent_message_chunk', content: { text: 'Titel vergeben' } } } });
+      return { stopReason: 'end_turn' };
+    }
+    return {};
+  };
+  assert.equal(await generateTitle({ rpc }, { cwd: '/tmp', model: 'claude-opus-5', text: 'Kein Titel' }), 'Titel vergeben');
+  assert.deepEqual(calls[1], { method: 'session/set_config_option', p: { sessionId: 'title', configId: 'model', value: 'claude-opus-5' } });
+});
+test('an unusable model selection still yields a generated title', async () => {
+  const rpc = new EventEmitter();
+  rpc.write = () => {};
+  rpc.call = async (method) => {
+    if (method === 'session/new') return { sessionId: 'title', configOptions: [{ id: 'model', type: 'select', category: 'model', currentValue: 'default', options: [{ value: 'default' }] }] };
+    if (method === 'session/set_config_option') throw new Error('Method not found');
+    if (method === 'session/prompt') {
+      rpc.emit('message', { method: 'session/update', params: { sessionId: 'title', update: { sessionUpdate: 'agent_message_chunk', content: { text: 'Titel trotzdem' } } } });
+      return { stopReason: 'end_turn' };
+    }
+    return {};
+  };
+  assert.equal(await generateTitle({ rpc }, { cwd: '/tmp', model: 'entfallenes-modell', text: 'Kein Titel' }), 'Titel trotzdem');
+});
 test('invalid model titles are retried once and never cut mid-word', async () => {
   const c = chat(); let calls = 0;
   await assignChatTitle({ chat: c, text: 'Auftrag', save: noop, emit: noop, generate: async () => { calls++; return null; } });
