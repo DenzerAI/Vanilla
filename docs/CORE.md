@@ -68,6 +68,15 @@ Arbeitsanweisungen. Firmenbasis, Identität und Systemregeln werden weiterhin
 über den bestehenden gemeinsamen Einstieg geladen. Das ist keine Sandbox für
 alle Werkzeuge eines Workers.
 
+Der Kontextabruf vor einer Nachricht liest nur die benötigten aktuellen
+Quelldateien und ihre Versionen. Er berechnet keine Links oder Rückverweise der
+Wissensansicht. Das gilt auch für freigegebene gemeinsame Notizen. Privatsperren,
+Pfadgrenzen, Dateigrößenprüfung und Aktualisierung des Suchindex bleiben aktiv.
+Die vollständige Linknavigation wird weiterhin beim Öffnen einer Wissensdatei
+berechnet. So wächst die Nachrichtenvorbereitung nicht mit dem gesamten
+Verweisgraphen und belastet parallele Chatabrufe nicht mit dieser Zusatzarbeit.
+Keine Änderung an Datenformaten oder gespeicherten Inhalten; keine Migration nötig.
+
 ## Auftragsausführung
 
 Manuelle Starts und Zeitpläne erzeugen SQLite-Läufe. Pro Job kann nur ein Lauf

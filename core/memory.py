@@ -290,7 +290,7 @@ class Memory:
                 for hit in hits:
                     if not hit["path"].startswith("notes/shared/"):
                         continue
-                    doc = self.knowledge.read(hit["path"])
+                    doc = self.knowledge.read(hit["path"], include_links=False)
                     text, offset = passage(doc["text"], query, min(left, 1200))
                     result["sources"].append({"path": hit["path"], "version": doc["version"], "method": hit["method"], "offset": offset, "text": text})
                     left -= len(text)
