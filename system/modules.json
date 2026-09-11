@@ -289,7 +289,9 @@
         "wrapper/ui/pane-attention.mjs",
         "wrapper/ui/pane-persistence.mjs",
         "wrapper/ui/reply-card-preview.tsx",
-        "wrapper/ui/step-count.tsx"
+        "wrapper/ui/step-count.tsx",
+        "wrapper/ui/latest-read.mjs",
+        "wrapper/test/latest-read.test.mjs"
       ],
       "entrypoints": [
         "GET /api/agent/files",
@@ -829,7 +831,9 @@
         "scripts/verify-modules.py",
         "scripts/verify-start.py",
         "core/vault_keys.py",
-        "core/vault_migrate.py"
+        "core/vault_migrate.py",
+        "core/frontend_check.py",
+        "core/tests/test_frontend_check.py"
       ],
       "entrypoints": [
         "GET /api/auth/session",

@@ -11,6 +11,7 @@ from time import time
 from datetime import datetime
 from zoneinfo import ZoneInfo
 
+from .frontend_check import check_frontend, FrontendCheckError
 from .backups import Backups
 from .database import dump
 from .files import atomic_write, read_json
@@ -32,11 +33,13 @@ class Operations:
             ("memory", "Memory pflegen", values["memory"]["dreaming"], {"type": "daily", "time": values["memory"]["dream_time"]}),
             ("backup", "System sichern", values["backup"]["enabled"], {"type": "daily", "time": values["backup"]["time"]}),
             ("cleanup", "Speicher pflegen", True, {"type": "daily", "time": "04:00"}),
+            ("frontend", "Ladeleistung prüfen", values["system"]["frontend_check"], {"type": "daily", "time": "04:15"}),
             ("index", "Suchindex aktualisieren", False, {"type": "manual"}),
             ("update-check", "Vanilla-Updates prüfen", True, {"type": "manual"}),
         ]
         descriptions = {
             'update-check': 'Prüft verfügbare Vanilla-Versionen über den bestehenden Updateanschluss. Installiert keine Version ohne Aktivierungsauftrag.',
+            'frontend': 'Prüft täglich um 04:15 Uhr bei ruhendem Betrieb lokale Ladezeiten, Datenmengen, Komprimierung und den aktivierten Stand ohne KI-Aufruf. Meldet Fehler; verändert weder Code noch Daten.',
             'memory': 'Verdichtet gespeicherte Gesprächsauszüge lokal, verlinkt die Quellen und schreibt einen Pflegebericht. Originalgespräche bleiben erhalten.',
             'backup': 'Erstellt eine verschlüsselte Sicherung von Datenbank und Arbeitsdateien. Benötigt ein eingerichtetes Sicherungsziel und einen verfügbaren Sicherungsschlüssel.',
             'cleanup': 'Bereinigt alte Ereignisse und Protokolle nach den Aufbewahrungsfristen. Gespräche und Arbeitsdateien bleiben erhalten.',
@@ -134,6 +137,10 @@ class Operations:
             elif handler == "backup":
                 self.record(handler,"running",{})
                 result = self.backups.snapshot()
+            elif handler == "frontend":
+                result = check_frontend(self.config)
+                if not result["ok"]:
+                    raise FrontendCheckError(result)
             elif handler == "cleanup":
                 result = self.cleanup()
             else:
@@ -142,7 +149,7 @@ class Operations:
             self.record(handler, state, result)
             return result
         except Exception as error:
-            self.record(handler, "error", {"message": str(error)[:200]})
+            self.record(handler, "error", error.details if isinstance(error, FrontendCheckError) else {"message": str(error)[:200]})
             raise
 
     def cleanup(self):

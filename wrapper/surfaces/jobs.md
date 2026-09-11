@@ -163,3 +163,9 @@ Der bestehende Scheduler führt genau einen verwalteten lesenden Systemauftrag s
 Systemmeldungen vom Typ ai-update stammen aus der Hintergrundpflege von KI-Programmen,
 nicht aus einer fiktiven Auftragsausführung. NotificationRow und die Einzelmeldung
 öffnen KI & Modelle. Lesestatus und Deduplizierung bleiben im bestehenden Speicher.
+
+### Automatische Ladeprüfung
+
+`system-frontend` prüft täglich um 04:15 Uhr in der konfigurierten Zeitzone die lokale Auslieferung ohne LLM. Aktive Arbeit verschiebt die Prüfung um eine Minute. Startpaket (320 KiB Brotli), Komprimierung, Cache-Regeln, API-Datenmengen, drei Antwortzeitproben und aktiver Versionsstand werden begrenzt geprüft. Ergebnisse enthalten nur Messwerte, keine Gesprächsinhalte oder Zugangsdaten. Fehler verwenden die vorhandenen Auftragsmeldungen. Keine automatischen Codeänderungen, Neustarts oder Löschungen. WLAN und Darstellung auf dem Endgerät sind damit nicht gemessen.
+
+Der bestehende Systemschalter `system.frontend_check` und die Pause im Systemauftrag steuern dieselbe Einstellung. Fehlende Werte erhalten additiv `true`; ausdrücklich gespeichertes `false` bleibt erhalten. Bestehende Aufträge, Chats und Worker-Kontext bleiben bestehen.

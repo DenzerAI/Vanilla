@@ -6,6 +6,7 @@ import {ProductUpdates} from "./product-updates";
 import {GitHubConnectionForm} from "./github-connection";
 import {MailConnectionForm} from "./mail-connection";
 
+import {createLatestRead} from './latest-read.mjs';
 import {DeferredItem} from './deferred-item.jsx';
 import {DeliveryChecks} from './delivery-checks';
 import {useLiveAction} from './live-action';
@@ -202,7 +203,7 @@ const api = createSharedApi(requestApi);
 let csrf = "";
 let serverOwnsIdentity = false;
 async function requestApi(url, data, retry = true, signal) {
-  if (data === undefined && !signal) signal = AbortSignal.timeout(15000);
+  if (data === undefined && !signal) signal = AbortSignal.timeout(65000);
   const r = await fetch(
     "/api" + url,
     data === undefined
@@ -604,6 +605,9 @@ function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, 
 const projectGlyphs = { folder: Folder, code: Braces, briefcase: Briefcase, globe: Globe, idea: BrainCircuit, calendar: Calendar, message: MessageCircle, files: FileText };
 function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNumber = 0, showPaneHeader = false, isMaximized = false, onMaximize, onClosePane, onOpenFile, onOpenCalendar, paneVisible = true, paneActive = false, initialProject = "default" }) {
   const [libraryRevision,setLibraryRevision]=useState(0);
+  const historyReads=useRef(null);
+  historyReads.current ||= createLatestRead((url,signal)=>api(url,undefined,true,signal));
+  useEffect(()=>()=>historyReads.current.cancel(),[]);
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     try { return Math.max(220, Math.min(400, Number(localStorage.getItem("sidebar-width")) || 268)); } catch { return 268; }
   });
@@ -897,7 +901,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       }
       if (chatRef.current === id) {
         setPrivacyLocked(locked);
-        if (locked) {setThread(null);setLoading(false);}
+        if (locked) {historyReads.current.cancel();setThread(null);setLoading(false);}
       }
       refreshChats().catch(()=>{});
     };
@@ -914,7 +918,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     setPrivacyLocked(false);
     await refreshChats();
     const id=chatRef.current;
-    const result=await api('/thread?view=chat&id='+encodeURIComponent(id));
+    const result=await historyReads.current.read('/thread?view=chat&id='+encodeURIComponent(id));
     if(chatRef.current===id) setThread(result.thread);
   }
   async function refreshChats() {
@@ -1343,6 +1347,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       return sessions.current[activePaneRef.current].current.newDraft(targetProjectId);
     }
     if (busy && !boot?.features?.messageDelivery) { notify("Bitte warten, bis die Nachricht übertragen wurde."); return; }
+    historyReads.current.cancel();
     saveDraft();
     setGreeting(nextChatGreeting());
     const id =
@@ -1416,6 +1421,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     if (busy && !boot?.features?.messageDelivery) { notify("Bitte warten, bis die Nachricht übertragen wurde."); return; }
     if(targetTurnId){followScroll.current=false;setReplyTarget({chatId:id,turnId:targetTurnId});}
     if (chatRef.current === id) { setView("chat"); setModal(null); return; }
+    historyReads.current.cancel();
     saveDraft();
     const metadata = restoredMetadata || chats.find((c) => c.id === id);
     chooseProject(metadata?.projectId || projectRef.current);
@@ -1437,31 +1443,35 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     setThreadError("");
     setChatMenu(null);
     followScroll.current = !targetTurnId;
+    let pending;
     try {
       if (metadata?.locked) return;
       if(id.startsWith("outbox-")){setThread({id,turns:[]});return;}
-      const r = await api("/thread?view=chat&id=" + id);
-      if (chatRef.current !== id) return;
+      pending = historyReads.current.read("/thread?view=chat&id=" + encodeURIComponent(id));
+      const r = await pending;
+      if (chatRef.current !== id || !pending.isCurrent()) return;
       setThread(r.thread);
       if (r.thread.model) setModel(r.thread.model);
       if (!targetTurnId && saved && !saved.following) { followScroll.current = false; requestAnimationFrame(() => { if (chatRef.current === id && scrollRef.current) scrollRef.current.scrollTop = saved.scroll; }); }
     } catch (error) {
-      if (chatRef.current === id) setThreadError(error.name === "TimeoutError" ? "Der Verlauf braucht zu lange. Du kannst den Abruf erneut versuchen." : error.message);
+      if (chatRef.current === id && (!pending || pending.isCurrent())) setThreadError(["TimeoutError","AbortError"].includes(error.name) ? "Die Verbindung zum Verlauf wurde unterbrochen. Bitte erneut versuchen." : error.message);
     } finally {
-      if (chatRef.current === id) setLoading(false);
+      if (chatRef.current === id && (!pending || pending.isCurrent())) setLoading(false);
     }
   }
   async function retryChatHistory() {
     const id=chatRef.current;
     if(!id)return;
     setLoading(true);setThreadError("");
+    let pending;
     try {
-      const result=await api('/thread?view=chat&id='+encodeURIComponent(id));
-      if(chatRef.current===id)setThread(result.thread);
+      pending=historyReads.current.read('/thread?view=chat&id='+encodeURIComponent(id));
+      const result=await pending;
+      if(chatRef.current===id && (!pending || pending.isCurrent()))setThread(result.thread);
     } catch(error) {
-      if(chatRef.current===id)setThreadError("Der Verlauf konnte nicht geladen werden. Bitte erneut versuchen.");
+      if(chatRef.current===id && (!pending || pending.isCurrent()))setThreadError("Der Verlauf konnte nicht geladen werden. Bitte erneut versuchen.");
     } finally {
-      if(chatRef.current===id)setLoading(false);
+      if(chatRef.current===id && (!pending || pending.isCurrent()))setLoading(false);
     }
   }
   async function refreshAudioConnections() {
@@ -2705,7 +2715,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 >
                   {icon(Play, 17)}
                 </IconButton>
-                {j.schedule?.type !== "manual" && j.status !== "invalid" && (!j.managed || ["system-memory","system-backup"].includes(j.id)) && (
+                {j.schedule?.type !== "manual" && j.status !== "invalid" && (!j.managed || ["system-memory","system-backup","system-frontend"].includes(j.id)) && (
                   <button
                     type="button"
                     role="switch"

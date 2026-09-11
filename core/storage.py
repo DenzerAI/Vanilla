@@ -169,7 +169,7 @@ class Storage:
                     raise ValueError("Wiederholungen benötigen count zwischen 0 und 3 sowie idempotent als Wahrheitswert.")
                 if value.get("worker") == "python":
                     runner = value.get("python", {})
-                    if runner.get("handler", "script") not in {"script", "health", "index", "memory", "backup", "cleanup"}:
+                    if runner.get("handler", "script") not in {"script", "health", "index", "memory", "backup", "cleanup", "frontend"}:
                         raise ValueError("Unbekannte Python-Funktion.")
                     if not 1 <= int(runner.get("timeout", 300)) <= 3600:
                         raise ValueError("Laufzeit muss zwischen 1 und 3600 Sekunden liegen.")

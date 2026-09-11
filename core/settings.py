@@ -10,6 +10,7 @@ class Options(BaseModel):
 
 class SystemOptions(Options):
     heartbeat: bool = True
+    frontend_check: bool = True
     auto_restart: bool = True
     notifications: bool = True
     quiet_hours: bool = False
