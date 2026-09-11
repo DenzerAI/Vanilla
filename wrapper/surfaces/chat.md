@@ -898,10 +898,17 @@ Summen ohne Zeit-/Modellbeleg bleiben ausschließlich in Gesamt. Keine rückwirk
 Schätzung, destruktive Migration oder Änderung privater Chatdaten. Alte Leser
 ignorieren Zusatzfelder und zeigen weiterhin den gespeicherten Berichtstext.
 
-## Direkte Pane-Tastenkürzel · Version 2.0.0
+## Direkte Pane-Tastenkürzel · Version 2.1.0
 
-Ctrl + Shift + 1–4 wählt die geöffnete Chat-Pane mit dieser festen Nummer,
-setzt ihren Composerfokus und startet das Diktat über den bestehenden Mikrofonweg.
+Ctrl + Shift + 1–4 wählt das erste bis vierte geöffnete Chatfeld in der
+Ansichtsreihenfolge von links nach rechts, setzt den Composerfokus und startet
+das Diktat. Bei „1 Chat“ bedient die 1 immer das verbliebene Chatfeld, auch nach
+Verkleinern einer Viereransicht. Interne Pane-IDs bleiben unabhängig erhalten;
+Tabnamen, Menüaktionen und zugängliche Eingabebeschriftungen verwenden dieselbe
+Ansichtsnummer. Schmale oder maximierte Ansichten erhalten die Reihenfolge aller
+geöffneten Felder. Eine Änderung dieser Zuordnung vor dem Mikrofonstart bricht
+die ausstehende Geste ab. Keine Migration von Chats, Entwürfen oder Belegungen;
+Rückkehr zu 2.0 verwendet wieder die internen Pane-Nummern.
 Erneutes Drücken derselben Kombination beendet die Aufnahme und sendet den
 Erkennungstext einmal zusammen mit vorhandenem Entwurf und Anhängen. Während
 Mikrofonfreigabe bricht erneutes Drücken den ausstehenden Start ab; während

@@ -603,7 +603,7 @@ function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, 
   );
 }
 const projectGlyphs = { folder: Folder, code: Braces, briefcase: Briefcase, globe: Globe, idea: BrainCircuit, calendar: Calendar, message: MessageCircle, files: FileText };
-function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNumber = 0, showPaneHeader = false, isMaximized = false, onMaximize, onClosePane, onOpenFile, onOpenCalendar, paneVisible = true, paneActive = false, initialProject = "default" }) {
+function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNumber = 0, panePosition = 0, showPaneHeader = false, isMaximized = false, onMaximize, onClosePane, onOpenFile, onOpenCalendar, paneVisible = true, paneActive = false, initialProject = "default" }) {
   const [libraryRevision,setLibraryRevision]=useState(0);
   const historyReads=useRef(null);
   historyReads.current ||= createLatestRead((url,signal)=>api(url,undefined,true,signal));
@@ -628,6 +628,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const [savedLayout] = useState(() => readPaneLayout());
   const [paneRestored, setPaneRestored] = useState(false);
   const [paneOrder, setPaneOrder] = useState(savedLayout.order);
+  const paneLabel = (embedded ? panePosition : Math.max(0,paneOrder.indexOf(0))) + 1;
   const [mountedPanes, setMountedPanes] = useState(() => [...new Set([0, ...savedLayout.order])]);
   const [activePane, setActivePane] = useState(savedLayout.active);
   const [paneWidth, setPaneWidth] = useState(0);
@@ -2269,14 +2270,14 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
             </header>}
 
             {!embedded && paneOrder.length > 1 && (visible.length < paneOrder.length || maximizedPane) && <div className="pane-tabs" role="tablist" aria-label="Offene Chats">
-              {paneOrder.map(id => { const session=sessions.current[id].current; return <button key={id} role="tab" tabIndex={activePane===id ? 0 : -1} onKeyDown={e=>{const offset=e.key==="ArrowRight"?1:e.key==="ArrowLeft"?-1:0;if(offset){e.preventDefault();const next=paneOrder[(paneOrder.indexOf(id)+offset+paneOrder.length)%paneOrder.length];activatePane(next);requestAnimationFrame(()=>panesRef.current?.parentElement.querySelector(`[aria-controls="chat-pane-${next}"]`)?.focus())}}} aria-selected={activePane===id} aria-controls={`chat-pane-${id}`} onClick={()=>activatePane(id)}>{session?.running ? <AppLoader /> : session?.unread ? icon(Check,14) : icon(MessageCircle,14)}<span>{session?.title || `Chat ${id+1}`}</span></button> })}
+              {paneOrder.map((id,index) => { const session=sessions.current[id].current; return <button key={id} role="tab" tabIndex={activePane===id ? 0 : -1} onKeyDown={e=>{const offset=e.key==="ArrowRight"?1:e.key==="ArrowLeft"?-1:0;if(offset){e.preventDefault();const next=paneOrder[(paneOrder.indexOf(id)+offset+paneOrder.length)%paneOrder.length];activatePane(next);requestAnimationFrame(()=>panesRef.current?.parentElement.querySelector(`[aria-controls="chat-pane-${next}"]`)?.focus())}}} aria-selected={activePane===id} aria-controls={`chat-pane-${id}`} onClick={()=>activatePane(id)}>{session?.running ? <AppLoader /> : session?.unread ? icon(Check,14) : icon(MessageCircle,14)}<span>{session?.title || `Chat ${index+1}`}</span></button> })}
               {maximizedPane && <IconButton label="Aufteilung wiederherstellen" onClick={()=>setMaximizedPane(false)}>{icon(PanelLeft,16)}</IconButton>}
             </div>}
             <div className={"chat-panes " + (!embedded && visible.length > 1 ? "multiple" : "")} ref={embedded ? undefined : panesRef}>
             {!embedded && sharedParticlesEnabled(boot.settings.welcomeParticles || "on", visible.map(id => sessions.current[id].current)) && <WelcomeParticles reduceMotion={boot.settings.reduceMotion === "on"} theme={boot.settings.theme} />}
             <section
               id={`chat-pane-${paneNumber}`}
-              role="region" aria-label={`Chat ${paneNumber+1}: ${chatTitle}`}
+              role="region" aria-label={`Chat ${paneLabel}: ${chatTitle}`}
               data-pane={embedded ? undefined : 0}
               data-trailing-pane={!embedded && visible.at(-1) === 0 ? "true" : undefined}
               hidden={!embedded && !visible.includes(0)}
@@ -2292,8 +2293,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               {draggingFiles && <div className="chat-file-drop" role="status">{icon(Paperclip,24)}<span>Dateien hier anhängen</span></div>}
               {(embedded ? showPaneHeader : paneOrder.length > 1) && <div className="pane-header"><div className="row">
                 <ChatTitle session={localSession} compact extraItems={[
-                  {id:"maximize-panel", label:(embedded ? isMaximized : maximizedPane) ? "Aufteilung wiederherstellen" : `Chat ${paneNumber+1} maximieren`, icon:icon(Maximize,16), action:()=>embedded ? onMaximize?.() : (activatePane(0),setMaximizedPane(v=>!v))},
-                  {id:"close-panel", label:`Chat ${paneNumber+1} schließen`, icon:icon(X,16), action:()=>embedded ? onClosePane?.() : closePane(0)},
+                  {id:"maximize-panel", label:(embedded ? isMaximized : maximizedPane) ? "Aufteilung wiederherstellen" : `Chat ${paneLabel} maximieren`, icon:icon(Maximize,16), action:()=>embedded ? onMaximize?.() : (activatePane(0),setMaximizedPane(v=>!v))},
+                  {id:"close-panel", label:`Chat ${paneLabel} schließen`, icon:icon(X,16), action:()=>embedded ? onClosePane?.() : closePane(0)},
                 ]}/>
               </div></div>}
               {chatLocked ? <LockedChat key={chatId} id={chatId} api={api} onDone={()=>void privacyUnlocked().catch(error=>notify(error.message))}/> : <>
@@ -2405,7 +2406,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                     ref={inputRef}
                     placeholder={questionState.request ? "Sonstiges" : "Nachricht"}
                     readOnly={!!questionState.request && (!questionState.question?.custom || questionState.pending)}
-                    aria-label={`${questionState.request ? "Sonstiges zur Rückfrage" : "Nachricht"} für Chat ${paneNumber+1}${composerActive ? ", ausgewählt" : ""}`}
+                    aria-label={`${questionState.request ? "Sonstiges zur Rückfrage" : "Nachricht"} für Chat ${paneLabel}${composerActive ? ", ausgewählt" : ""}`}
                     value={composerText}
                     rows={1}
                     onChange={(e) => setComposerText(e.target.value)}
@@ -2492,7 +2493,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               </>}
             </section>
             {!embedded && mountedPanes.filter(id=>id!==0).map(id=><div key={id} data-pane={id} data-trailing-pane={visible.at(-1) === id ? "true" : undefined} hidden={!visible.includes(id)} className={"pane-slot secondary-pane " + (activePane===id ? "active-pane" : "")} style={{order:paneOrder.indexOf(id)*2, flexGrow:paneWeights[id] || 1}}>
-              <App embedded onOpenCalendar={()=>setView('calendar')} paneVisible={view === "chat" && visible.includes(id)} paneActive={activePane===id} paneNumber={id} sessionRef={sessions.current[id]} onSessionChange={sessionChanged} initialProject={projectId} isMaximized={maximizedPane} showPaneHeader={paneOrder.length>1} onActivate={()=>activatePane(id)} onMaximize={()=>{activatePane(id);setMaximizedPane(v=>!v)}} onClosePane={()=>closePane(id)} onOpenFile={path=>{activatePane(id);requestAnimationFrame(()=>guard(openFile)(path))}}/>
+              <App embedded onOpenCalendar={()=>setView('calendar')} paneVisible={view === "chat" && visible.includes(id)} paneActive={activePane===id} paneNumber={id} panePosition={paneOrder.indexOf(id)} sessionRef={sessions.current[id]} onSessionChange={sessionChanged} initialProject={projectId} isMaximized={maximizedPane} showPaneHeader={paneOrder.length>1} onActivate={()=>activatePane(id)} onMaximize={()=>{activatePane(id);setMaximizedPane(v=>!v)}} onClosePane={()=>closePane(id)} onOpenFile={path=>{activatePane(id);requestAnimationFrame(()=>guard(openFile)(path))}}/>
             </div>)}
             {!embedded && visible.slice(0,-1).map((id,index)=><div className="pane-divider-slot" key={`divider-${id}`} style={{order:paneOrder.indexOf(id)*2+1}}><PaneDivider value={Math.round(100*(paneWeights[id] || 1)/((paneWeights[id] || 1)+(paneWeights[visible[index+1]] || 1)))} onResize={delta=>resizePanes(id,visible[index+1],delta)}/></div>)}
             </div>

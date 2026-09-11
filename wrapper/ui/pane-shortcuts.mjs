@@ -39,16 +39,17 @@ export function bindPaneShortcuts(target,{state,available,active,session,notify,
    if(session(active())?.cancelDictation()||pending)event.preventDefault();
    return;
   }
-  const s=state(),id=matchPaneShortcut(event,s.bindings);
-  if(id<0)return;
+  const s=state(),position=matchPaneShortcut(event,s.bindings);
+  if(position<0)return;
   event.preventDefault();clear();
-  if(!s.order.includes(id)){notify(`Chat ${id+1} ist nicht geöffnet.`);return;}
+  const id=s.order[position];
+  if(id===undefined){notify(`Die Ansicht enthält keinen Chat ${position+1}.`);return;}
   const selected=session(id),chatId=selected?.id,projectId=selected?.projectId;
   s.activate(id);
   frame=schedule(()=>{
    frame=undefined;
    const current=session(id);
-   if(!eligible()||active()!==id||!state().order.includes(id)||!current||current.id!==chatId||current.projectId!==projectId)return;
+   if(!eligible()||active()!==id||state().order[position]!==id||!current||current.id!==chatId||current.projectId!==projectId)return;
    current.focusComposer();current.toggleDictation();
   });
  };

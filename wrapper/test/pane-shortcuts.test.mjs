@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {bindPaneShortcuts,defaultPaneShortcuts,parsePaneShortcuts,matchPaneShortcut,validPaneShortcut,shortcutFromEvent} from '../ui/pane-shortcuts.mjs';
-import {visiblePanes} from '../ui/chat-layout.mjs';
+import {visiblePanes,selectPaneCount} from '../ui/chat-layout.mjs';
 import {bindDictationShortcut} from '../ui/dictation-shortcut.mjs';
-test('default digit codes select all four fixed pane identities even with shifted characters',()=>{
+test('default digit codes select all four configured positions even with shifted characters',()=>{
  for(let n=1;n<=4;n++)assert.equal(matchPaneShortcut({code:`Digit${n}`,key:['!','@','#','$'][n-1],ctrlKey:true,shiftKey:true},defaultPaneShortcuts()),n-1);
  assert.equal(matchPaneShortcut({code:'Digit2',ctrlKey:true},defaultPaneShortcuts()),-1);
  assert.equal(matchPaneShortcut({code:'Digit2',ctrlKey:true,shiftKey:true,altKey:true},defaultPaneShortcuts()),-1);
@@ -70,4 +70,27 @@ test('chat replacement, lost focus or a newly opened dialog cancel deferred star
  for(const change of [r=>r.sessions[0].id='other',r=>r.sessions[0].projectId='other',r=>r.events.blur(),r=>r.events.visibilitychange(),r=>r.state.modal='search',r=>r.allow(false),r=>r.state.view='settings']){
   const r=router();r.press(1);change(r);r.flush();assert.deepEqual(r.calls,[['activate',0]]);
  }
+});
+
+test('reducing four panes to one routes shortcut 1 to any retained active chat',()=>{
+ for(let active=0;active<4;active++){
+  const r=router();r.state.order=selectPaneCount([0,1,2,3],active,1);
+  for(let press=0;press<2;press++){r.press(1);r.flush();}
+  assert.deepEqual(r.calls.filter(c=>c[0]==='dictation'),[['dictation',active],['dictation',active]]);
+  assert.ok(!r.calls.some(c=>c[0]==='notice'));
+  r.press(0,{key:'Escape'});assert.deepEqual(r.calls.at(-1),['cancel',active]);
+ }
+});
+test('one through four fields, gaps and reopened layouts follow displayed order',()=>{
+ for(let active=0;active<4;active++)for(let count=1;count<=4;count++){
+  const r=router();r.state.order=selectPaneCount([0,1,2,3],active,count);
+  for(let n=1;n<=count;n++){r.press(n);r.flush();assert.deepEqual(r.calls.at(-1),['dictation',r.state.order[n-1]]);}
+  if(count<4){r.press(count+1);r.flush();assert.equal(r.calls.at(-1)[0],'notice');}
+  r.state.order=selectPaneCount(r.state.order,active,4);
+  for(let n=1;n<=4;n++){r.press(n);r.flush();assert.deepEqual(r.calls.at(-1),['dictation',r.state.order[n-1]]);}
+ }
+ const r=router();r.state.order=[3,1];r.press(1);r.flush();assert.deepEqual(r.calls.at(-1),['dictation',3]);r.press(2);r.flush();assert.deepEqual(r.calls.at(-1),['dictation',1]);
+});
+test('layout remapping before deferred capture never starts the former position',()=>{
+ const r=router();r.state.order=[2,3];r.press(1);r.state.order=[3,2];r.flush();assert.deepEqual(r.calls,[['activate',2]]);
 });
