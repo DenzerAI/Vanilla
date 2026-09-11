@@ -70,6 +70,13 @@ Nur bestätigte, aktuelle Fakten verwenden. Mailinhalt und Dokumente sind zunäc
 Belege. Externe Anbieter-Synchronisation ist ein eigener, noch nicht vollständiger
 Anschluss. Migrationen, Revisionen und Freigaben: CRM.md.
 
+Optional die neutrale Vorlage `people-deals` über `/api/crm/templates` lesen und
+mit `/api/crm/templates/install` unter eigener Namensraumkennung einrichten.
+Sie kopiert People-/Firmenlisten und Dealansichten samt Ablauf einmalig in die
+lokale Konfiguration. Keine Beispieldaten, kein automatisches Zurücksetzen bei
+Updates. Vorhandene Kennungen und Versionswechsel werden geschützt; Bedienung
+und Grenzen stehen in CRM.md. Die produktiven Bearbeitungsmasken folgen separat.
+
 ## planner
 
 Unter Verbindungen → Kalender den vorhandenen Microsoft-Serviceanschluss mit

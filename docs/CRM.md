@@ -12,6 +12,101 @@ Data ist der strukturierte Datenkern eines Arbeitsbereichs. Pipeline, Kontaktlis
 - Typisierte Zusatzfelder: Text, Datum, Wahrheitswert, ganze Zahl, Auswahl und Mehrfachwerte. Geburtsdatum ist bewusst kein Standardfeld; ein solches Zusatzfeld müsste ausdrücklich angelegt werden. Felddefinitionen sind nach Anlage unveränderlich, damit bestehende Werte nicht durch eine Typänderung ungültig werden.
 - Versionierte Definitionen für gespeicherte Listen-/Boardansichten mit Feldspalten und Gleichheitsfiltern. Ein Board verweist auf einen definierten Ablauf. Die UI zum Bauen eigener Ansichten folgt separat.
 
+## Produktkern, CRM-Modul und betriebliche Konfiguration
+
+Die Plattform verantwortet Datenbankbetrieb, Eigentümeranmeldung, Sicherung,
+Updateverfahren und gemeinsame Oberflächenbausteine. Der CRM-Kern verantwortet
+Personen, Firmen, Vorgänge, Beziehungen, Herkunft, Revisionen und geprüfte
+Schreibwege. Produktvorlagen liefern einen neutralen Start. Betriebsdaten,
+Zusatzfelder, eigene Abläufe und gespeicherte Ansichten gehören der Installation.
+Sie werden nicht aus neuen Produktvorgaben erneut aufgebaut.
+
+Ein Deal ist ein eigenständiger Vorgang (`case`), verbunden mit Firmen und
+Kontaktpersonen über die vorhandenen Beziehungen. Eine Firma kann mehrere Deals
+mit unabhängigen Beträgen, Phasen und nächsten Schritten haben. Ein Lead ist eine
+Dealphase, kein zweiter Personentyp. Die Kontaktakte bleibt bestehen, wenn ein
+Deal abgeschlossen oder verloren wird. People, Firmenliste, Dealliste und
+Pipeline verwenden dieselben Fakten. Der allgemeine Kern schreibt keine
+Verkaufsphasen vor; betriebliche Abläufe können auch andere Vorgangsarten führen.
+
+### Neutrale Startvorlage
+
+`core/crm_templates.py` führt den lesbaren, versionierten Katalog. Die Vorlage
+`people-deals`, Version 1, liefert People- und Firmenlisten sowie eine Dealliste
+und ein Board. Ihr Ablauf ist Lead → Angebot → Laufend → Abgeschlossen, ergänzt
+um Verloren. Laufend meint die aktive Durchführung; Abgeschlossen und Verloren
+sind Endzustände. Erlaubte Übergänge stehen in der Vorlagendefinition. Neue Deals
+beginnen bei Lead und offene Phasen benötigen weiterhin nächsten Schritt und
+Datum. Geldbeträge bleiben ganzzahlige Untereinheiten mit eigener Währung.
+Angebots- und Abschlussdatum können zunächst als typisierte Zusatzfelder ergänzt
+werden; es gibt keine zweite Angebots- oder Buchhaltungsdatenbank.
+
+GET `/api/crm/templates` liest Katalog und Installationsnachweise ohne Einrichtung.
+POST `/api/crm/templates/install` benötigt die vorhandene Eigentümeranmeldung und
+CSRF-Prüfung. Eingabe beispielsweise
+`{"template_id":"people-deals","version":1,"namespace":"sales"}`.
+Die API legt ausschließlich Definitionen an, keine Personen, Firmen, Deals,
+Verbindungen oder Beispieldaten. Es gibt keinen entsprechenden Agenten-Schreibbefehl.
+`crm_schema` macht die lokal eingerichteten Definitionen weiterhin lesbar.
+
+Die Einrichtung kopiert den Ablauf nach `sales-deals` und die Ansichten nach
+`sales-people`, `sales-companies`, `sales-deals` und `sales-pipeline` in die bereits
+vorhandenen Tabellen. Ablauf- und Ansichtskennungen haben getrennte Namensräume.
+Beide Dealansichten filtern explizit auf diesen Ablauf; fremde Vorgänge erscheinen
+nicht versehentlich im Board. Listen und Board sind gespeicherte Definitionen,
+noch keine neu ausgelieferten Bildschirmmasken.
+
+### Schutz bei Einrichtung und Updates
+
+Ablauf, Ansichten, Versionsnachweis und Audit werden in einer einzigen Transaktion
+angelegt. Ein Konflikt mit einer vorhandenen Kennung bricht alles ab. Vorhandene
+Ansichten werden dabei auch dann nicht ersetzt, wenn sie ähnlich aussehen.
+Wiederholung derselben Vorlage und Version im selben Namensraum schreibt nichts;
+insbesondere bleiben inzwischen angepasste Spalten, Filter und Bezeichnungen
+bestehen. Eine andere Version oder Vorlage im belegten Namensraum wird abgewiesen.
+Eine zusätzliche Einrichtung braucht einen anderen Namensraum.
+
+Die Tabelle `crm_template_installations` speichert ursprünglichen Snapshot,
+Vorlagenversion, lokale Ressourcenkennungen, Akteur und Zeitpunkt. Die aktuellen
+betrieblichen Definitionen bleiben in `crm_workflows` und `crm_views` führend.
+Veröffentlichte Vorlagenversionen sind unveränderlich: neue Standardvorgaben
+erscheinen als neue Katalogversion und werden niemals beim Start oder Lesen in
+bestehende Installationen eingespielt. Ansichten werden über den vorhandenen
+revisionsgeschützten Schreibweg angepasst. Geänderte Abläufe erhalten eine neue
+ID; bestehende Deals werden nicht automatisch umgehängt. Eigene Zusatzfelder
+bleiben unter `custom.*`, besondere Fachlogik folgt dem Modulvertrag und nutzt
+die bestehenden CRM-Schnittstellen. Änderungen an gemeinsamen Kernquellen pro
+Betrieb sind kein Konfigurationsweg.
+
+Modulversion 3 ergänzt nur die Installationstabelle; die bestehende SQLite-Datei
+und alle IDs, Fakten, Historien, Felder, Abläufe und Ansichten bleiben erhalten.
+Ein alter Datenbestand erhält die leere Tabelle ohne Startvorlagen. Normale
+Datenbanksicherungen enthalten Konfiguration und Herkunft gemeinsam. Alter Code
+kann die vorhandenen CRM-Fakten und Definitionen weiterhin lesen, kennt jedoch
+den Vorlagenkatalog und dessen Einrichtung nicht. Bei Rückkehr die zusätzliche
+Tabelle erhalten; keine Gegenmigration durch Löschen ausführen. Änderungen
+bestehender Datenformate oder Abläufe erfordern weiterhin die isolierte Prüfung,
+Sicherung und Rückkehr nach UPDATE.md. Diese erste Trennung garantiert keine
+Kompatibilität beliebiger späterer Erweiterungen.
+
+### Nächster Oberflächenausbau
+
+Zuerst produktive People-/Firmenakten und Dealbearbeitung an dieselben geprüften
+Schreibwege anbinden. Die Dealmaske führt Titel, Betrag/Währung, Zuständigkeit,
+Firma/Kontakte, Phase, nächsten Schritt und Datum; Listen und Board lesen die
+lokalen Ansichts- und Ablaufdefinitionen. Der Kern prüft auch beim Verschieben
+Revision, Übergang und Pflichtangaben. Boardanzahl und sichtbare Karten müssen
+denselben gefilterten, vollständig beziehungsweise sichtbar paginierten Bestand
+verwenden. Summen werden pro Währung gebildet. Keine zweite Statuskopie auf
+Personen oder Firmen, keine stillen Schreibaktionen aus KI-Vorschlägen.
+
+Danach Konfiguration für eigene Spalten, Zusatzfelder und Abläufe anbieten;
+Änderungen bereits genutzter Abläufe mit ausdrücklichem Zuordnungs- und
+Migrationsweg bauen. Branchenpakete sind zusätzliche versionierte Vorlagen.
+Anbietersynchronisation folgt separat mit Feldführungsregeln, Konfliktprüfung und
+stabilen externen Kennungen. Personendaten oder betriebliche Migrationen aus einer
+anderen Installation sind kein Bestandteil neutraler Produktvorlagen.
+
 ## Entscheidungsweg
 
 Rohsignal → Vorschlag mit Feldwerten → ausdrückliche Eigentümerentscheidung → Fakt.
@@ -58,6 +153,7 @@ API-Basis `/api/crm`:
 | Aktion | Weg |
 | --- | --- |
 | Feld-/Ablauf-/Ansichtsdefinitionen lesen | GET /schema |
+| Startvorlagen lesen und explizit einrichten | GET /templates, POST /templates/install |
 | Deterministische Suche und Gleichheitsfilter | POST /query |
 | Aktuelle Akte, Historie, Versionsprüfung | GET /entities/{id}, GET /entities/{id}/history, POST /entities/{id}/check |
 | Quelle erfassen/einordnen | POST /sources, GET /sources/{id}, POST /sources/{id}/classify |

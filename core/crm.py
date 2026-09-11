@@ -12,7 +12,8 @@ from .database import dump
 from .crm_schema import SCHEMA
 from .crm_models import (STANDARD, Address, Change, Decision, Email, EntityQuery, Evidence,
                          ExternalID, FieldDefinition, Money, Phone, Process, Proposal,
-                         Relation, SavedView, Workflow)
+                         Relation, SavedView, TemplateInstallation, Workflow)
+from .crm_templates import catalog, template
 
 
 def uid():
@@ -61,6 +62,7 @@ class CRM:
         return {'version': 1, 'scope': 'workspace', 'entities': {k:self.fields(k) for k in STANDARD},
                 'workflows': [json.loads(r['definition']) for r in self.db.rows('SELECT definition FROM crm_workflows ORDER BY id')],
                 'views': [dict(id=r['id'],revision=r['revision'],definition=json.loads(r['definition'])) for r in self.db.rows('SELECT * FROM crm_views ORDER BY id')],
+                'template_installations': self.template_installations(),
                 'rules': ['source_then_proposal_then_decision', 'per_field_provenance', 'version_required',
                           'open_case_requires_next_step_and_date', 'no_name_merge', 'no_note_fallback'],
                 'sync': 'No automatic connector polling or external writes are enabled.'}
@@ -82,17 +84,58 @@ class CRM:
 
     def define_workflow(self, definition, actor='owner'):
         definition = Workflow.model_validate(definition)
+        with self.db.transaction() as cx:
+            return self._define_workflow(cx, definition, actor)
+
+    def _define_workflow(self, cx, definition, actor):
         ids = {s.id for s in definition.stages}
         if len(ids) != len(definition.stages) or definition.initial not in ids:
             raise ValueError('Start und Zustandskennungen müssen eindeutig sein.')
         if any(not set(s.transitions) <= ids or len(set(s.transitions)) != len(s.transitions) for s in definition.stages):
             raise ValueError('Übergang verweist auf einen unbekannten oder doppelten Zustand.')
-        with self.db.transaction() as cx:
-            if cx.execute('SELECT 1 FROM crm_workflows WHERE id=?',(definition.id,)).fetchone():
-                raise FileExistsError('Ablauf existiert. Änderungen als neue Ablaufversion anlegen.')
-            cx.execute('INSERT INTO crm_workflows VALUES(?,?)', (definition.id, dump(definition.model_dump())))
-            self._audit(cx, None, 'workflow.define', actor, 'Ablauf angelegt', definition.id)
+        if cx.execute('SELECT 1 FROM crm_workflows WHERE id=?',(definition.id,)).fetchone():
+            raise FileExistsError('Ablauf existiert. Änderungen als neue Ablaufversion anlegen.')
+        cx.execute('INSERT INTO crm_workflows VALUES(?,?)', (definition.id, dump(definition.model_dump())))
+        self._audit(cx, None, 'workflow.define', actor, 'Ablauf angelegt', definition.id)
         return definition.model_dump()
+
+    def template_installations(self):
+        return [dict(row, resources=json.loads(row['resources'])) for row in self.db.rows(
+            'SELECT namespace,template_id,version,resources,actor,installed_at FROM crm_template_installations ORDER BY namespace')]
+
+    def templates(self):
+        return {'templates': catalog(), 'installations': self.template_installations()}
+
+    def install_template(self, installation, actor='owner'):
+        installation = TemplateInstallation.model_validate(installation)
+        with self.db.transaction() as cx:
+            current = cx.execute('SELECT * FROM crm_template_installations WHERE namespace=?',
+                                 (installation.namespace,)).fetchone()
+            if current:
+                if (current['template_id'], current['version']) != (installation.template_id, installation.version):
+                    raise FileExistsError('Vorlage bereits eingerichtet. Versionswechsel benötigt eine ausdrückliche Migration oder einen neuen Namensraum.')
+                # Retrying an installation never resets a locally edited view or workflow.
+                return dict(namespace=current['namespace'], template_id=current['template_id'],
+                            version=current['version'], resources=json.loads(current['resources']), created=False)
+            snapshot = template(installation.template_id, installation.version)
+            workflow_id = installation.namespace + '-deals'
+            self._define_workflow(cx, Workflow.model_validate(dict(snapshot['workflow'], id=workflow_id)), actor)
+            resources = {'workflow': workflow_id, 'views': {}}
+            for source in snapshot['views']:
+                definition = dict(source)
+                key = definition.pop('key')
+                view_id = installation.namespace + '-' + key
+                if definition['kind'] == 'case':
+                    definition['workflow'] = workflow_id
+                    definition['filters'] = [{'field': 'process.workflow', 'equals': workflow_id}]
+                self._save_view(cx, SavedView.model_validate(dict(definition, id=view_id, expected_revision=0)), actor)
+                resources['views'][key] = view_id
+            cx.execute('INSERT INTO crm_template_installations VALUES(?,?,?,?,?,?,?)',
+                       (installation.namespace, installation.template_id, installation.version,
+                        dump(snapshot), dump(resources), actor, time()))
+            self._audit(cx, None, 'template.install', actor, 'CRM-Startvorlage als lokale Definitionen eingerichtet', installation.namespace)
+        return dict(namespace=installation.namespace, template_id=installation.template_id,
+                    version=installation.version, resources=resources, created=True)
 
     def normalize(self, kind, change):
         change = Change.model_validate(change)
@@ -449,6 +492,10 @@ class CRM:
 
     def save_view(self, view, actor='owner'):
         view = SavedView.model_validate(view)
+        with self.db.transaction() as cx:
+            return self._save_view(cx, view, actor)
+
+    def _save_view(self, cx, view, actor):
         for key in view.columns:
             root = key if key in self.fields(view.kind) else key.partition('.')[0]
             definition = self.fields(view.kind).get(root)
@@ -462,15 +509,14 @@ class CRM:
             raise ValueError('Board benötigt Vorgänge und einen definierten Ablauf.')
         if view.workflow and not self.db.rows('SELECT 1 FROM crm_workflows WHERE id=?',(view.workflow,)):
             raise ValueError('Ablauf nicht vorhanden.')
-        with self.db.transaction() as cx:
-            current = cx.execute('SELECT revision FROM crm_views WHERE id=?',(view.id,)).fetchone()
-            revision = current['revision'] if current else 0
-            if revision != view.expected_revision:
-                raise FileExistsError('Ansicht wurde zwischenzeitlich verändert.')
-            definition = view.model_dump(exclude={'expected_revision'})
-            cx.execute('INSERT INTO crm_views VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET revision=excluded.revision,definition=excluded.definition',
-                       (view.id,revision+1,dump(definition)))
-            self._audit(cx,None,'view.save',actor,'Ansicht gespeichert',view.id)
+        current = cx.execute('SELECT revision FROM crm_views WHERE id=?',(view.id,)).fetchone()
+        revision = current['revision'] if current else 0
+        if revision != view.expected_revision:
+            raise FileExistsError('Ansicht wurde zwischenzeitlich verändert.')
+        definition = view.model_dump(exclude={'expected_revision'})
+        cx.execute('INSERT INTO crm_views VALUES(?,?,?) ON CONFLICT(id) DO UPDATE SET revision=excluded.revision,definition=excluded.definition',
+                   (view.id,revision+1,dump(definition)))
+        self._audit(cx,None,'view.save',actor,'Ansicht gespeichert',view.id)
         return dict(id=view.id,revision=revision+1,definition=definition)
 
     def context_sources(self, query, budget=2500):

@@ -169,6 +169,12 @@ class SavedView(Strict):
     expected_revision: int = Field(strict=True, ge=0)
 
 
+class TemplateInstallation(Strict):
+    template_id: str = Field(pattern=r'^[a-z][a-z0-9_-]{0,59}$')
+    version: int = Field(strict=True, ge=1)
+    namespace: str = Field(pattern=r'^[a-z][a-z0-9_-]{0,39}$')
+
+
 # Birth date is intentionally not a default field. A user can explicitly define a date extension.
 STANDARD = {}
 for entity_kind, names in {
