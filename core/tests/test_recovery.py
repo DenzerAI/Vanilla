@@ -250,3 +250,21 @@ def test_main_uses_controlled_shutdown_and_exec_after_cleanup(config,monkeypatch
     entry.main()
     assert calls==['cleaned','exec']
     assert not (config.data/'restart.json').exists()
+
+
+def test_maintenance_hold_resumes_in_place_for_the_matching_operator(config,monkeypatch):
+    from core.app import create_app
+    atomic_write(config.data/'updates/maintenance.json','{"id":"release-1","nonce":"secret"}')
+    app=create_app(config)
+    with TestClient(app) as client:
+        assert app.state.runtime.update_hold and app.state.runtime.frozen
+        assert app.state.mail.task is None
+        assert client.post('/internal/maintenance/resume',json={'id':'release-1'}).status_code==403
+        headers={'x-agent-update':'secret'}
+        assert client.post('/internal/maintenance/resume',json={'id':'other'},headers=headers).status_code==400
+        response=client.post('/internal/maintenance/resume',json={'id':'release-1'},headers=headers)
+        assert response.status_code==200 and response.json()['resumed'] is True
+        assert not app.state.runtime.update_hold and not app.state.runtime.frozen
+        assert app.state.mail.task is not None
+        assert not (config.data/'updates/maintenance.json').exists()
+        assert client.post('/internal/maintenance/resume',json={'id':'release-1'},headers=headers).status_code==403
