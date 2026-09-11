@@ -136,3 +136,64 @@ def test_independent_runtime_holds_cannot_release_each_other():
     assert runtime.frozen
     runtime.update_hold = False
     assert not runtime.frozen
+
+
+def test_blocked_reason_names_the_failing_step_output(queue):
+    service, repo = queue
+    row = service.begin("hook-message")
+    (Path(row["path"]) / "rejected.txt").write_text("fixture")
+    (repo / ".githooks/pre-commit").write_text("#!/bin/sh\nif test -f rejected.txt; then echo 'Fixture hook rejected the tree' >&2; exit 1; fi\n")
+    (Path(row["path"]) / ".githooks/pre-commit").write_text("#!/bin/sh\nif test -f rejected.txt; then echo 'Fixture hook rejected the tree' >&2; exit 1; fi\n")
+    service.ready(row["id"])
+    result = service.tick()["entries"][0]
+    assert result["status"] == "blocked"
+    assert result["reason"] == "Schritt fehlgeschlagen: git commit: Fixture hook rejected the tree"
+
+
+def test_prune_closes_contained_entries_and_keeps_unintegrated_work(queue):
+    service, repo = queue
+    done = service.begin("done")
+    (Path(done["path"]) / "done.txt").write_text("done\n")
+    service.ready(done["id"])
+    assert service.tick()["entries"][0]["status"] == "integrated"
+    later = service.begin("later")
+    (Path(later["path"]) / "later.txt").write_text("later\n")
+    service.ready(later["id"])
+    assert service.tick()["entries"][1]["status"] == "integrated"
+    empty = service.begin("empty-blocked")
+    with service.locked() as state:
+        next(x for x in state["entries"] if x["id"] == empty["id"]).update(status="blocked", reason="fixture")
+        service.save(state)
+    unmerged = service.begin("unmerged")
+    (Path(unmerged["path"]) / "keep.txt").write_text("keep\n")
+    git(Path(unmerged["path"]), "add", "keep.txt")
+    git(Path(unmerged["path"]), "-c", "user.name=Test", "-c", "user.email=test@example.invalid", "commit", "-m", "Local commit")
+    with service.locked() as state:
+        next(x for x in state["entries"] if x["id"] == unmerged["id"]).update(status="blocked", reason="fixture")
+        service.save(state)
+    active = service.begin("active")
+    (Path(active["path"]) / "draft.txt").write_text("draft")
+    orphan = repo / ".verify/source-candidates/orphan"
+    git(repo, "worktree", "add", "-b", "candidate/orphan", str(orphan))
+    result = service.prune()
+    assert result["closed"] == ["done", "empty-blocked"]
+    assert [(x["name"], x["reason"]) for x in result["open"]] == [("unmerged", "enthält nicht übernommene Commits"), ("active", "enthält offene Änderungen")]
+    assert [x["name"] for x in result["entries"]] == ["later", "unmerged", "active"]
+    assert not Path(done["path"]).exists() and not Path(empty["path"]).exists() and not orphan.exists()
+    assert Path(unmerged["path"]).exists() and Path(active["path"]).exists()
+    branches = git(repo, "branch", "--list", "work/*", "candidate/*")
+    assert "work/done-" not in branches and "candidate/orphan" not in branches and "work/unmerged-" in branches
+    assert (repo / "done.txt").read_text() == "done\n"
+    result = service.discard(unmerged["id"])
+    assert result["discarded"] == "unmerged" and [x["name"] for x in result["entries"]] == ["later", "active"]
+    assert not Path(unmerged["path"]).exists()
+
+
+def test_prune_keeps_the_receipt_the_release_service_still_needs(queue):
+    service, repo = queue
+    row = service.begin("head")
+    (Path(row["path"]) / "head.txt").write_text("head\n")
+    service.ready(row["id"])
+    assert service.tick()["entries"][0]["status"] == "integrated"
+    assert service.prune()["closed"] == []
+    assert service.status()["entries"][0]["status"] == "integrated"

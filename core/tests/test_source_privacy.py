@@ -369,3 +369,21 @@ def test_historical_asset_review_does_not_allow_old_asset_in_new_index(repo):
     assert not scanner.findings
     scanner.entry(name, raw)
     assert any(x['type'] == 'unreviewed-asset' for x in scanner.findings)
+
+
+def test_conflicting_source_branches_are_named_instead_of_failing(repo):
+    install(repo)
+    git(repo, 'checkout', '-qb', 'conflicting-feature')
+    write(repo, 'core/example.py', 'VERSION = "feature"\n')
+    git(repo, 'add', 'core/example.py')
+    commit(repo)
+    git(repo, 'checkout', '-q', 'main')
+    write(repo, 'core/example.py', 'VERSION = "main"\n')
+    git(repo, 'add', 'core/example.py')
+    commit(repo)
+    head = git(repo, 'rev-parse', 'HEAD').stdout
+    result = sync.merge(repo, 'conflicting-feature')
+    assert result['merged'] is False and result['conflicts'] == ['core/example.py']
+    assert 'Konflikt' in result['error'] and 'core/example.py' in result['error']
+    assert git(repo, 'rev-parse', 'HEAD').stdout == head
+    assert git(repo, 'status', '--porcelain').stdout == ''
