@@ -52,3 +52,12 @@ test('locking narrated chat stops it',async()=>{
  const {audio}=fixture();await audio.start(null,{chatId:'a',mode:'follow'});
  audio.event({method:'chat/privacy',params:{id:'a'}});assert.equal(audio.state.chatId,undefined);
 });
+test('ACP prose is spoken at the tool boundary and never duplicated at completion',async()=>{
+ const {audio,played,players}=fixture();await audio.start(null,{chatId:'a',mode:'follow'});
+ audio.event({method:'item/started',params:{threadId:'a',turnId:'t',item:{id:'a1',type:'agentMessage',text:''}}});
+ audio.event({method:'item/agentMessage/delta',params:{threadId:'a',turnId:'t',itemId:'a1',delta:'Ich prüfe die Datei.'}});
+ assert.deepEqual(played,[]);
+ audio.event({method:'item/started',params:{threadId:'a',turnId:'t',item:{id:'tool',type:'mcpToolCall'}}});
+ assert.deepEqual(played,['Ich prüfe die Datei.']);
+ audio.event(event('a1','Ich prüfe die Datei.'));players[0].finish();await tick();assert.equal(played.length,1);audio.stop();
+});

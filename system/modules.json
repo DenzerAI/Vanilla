@@ -390,7 +390,10 @@
         "wrapper/ui/message-speech.tsx",
         "wrapper/ui/speech-playback.mjs",
         "wrapper/ui/voice-profiles.jsx",
-        "wrapper/ui/voice-profiles.mjs"
+        "wrapper/ui/voice-profiles.mjs",
+        "wrapper/ui/chat-audio.mjs",
+        "wrapper/ui/chat-audio-controls.tsx",
+        "wrapper/ui/chat-audio.css"
       ],
       "entrypoints": [
         "GET /api/speech/status",
@@ -406,15 +409,17 @@
         "platform"
       ],
       "verification": [
-        "wrapper/test/speech.test.mjs"
+        "wrapper/test/speech.test.mjs",
+        "wrapper/test/chat-audio.test.mjs",
+        "wrapper/test/speech-playback.test.mjs"
       ],
       "status": {
         "endpoint": "GET /api/speech/status",
         "meaning": "localReady oder eingerichteter Cloudanbieter plus gewählte Stimme."
       },
       "limits": "localReady oder eingerichteter Cloudanbieter plus gewählte Stimme.",
-      "version": 3,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der gemeinsame Installer richtet die unabhängige lokale Suche vor Sprache und Sicherung ein. Sprachdaten werden dabei nicht migriert. voiceProfiles ergänzt bestehende Einstellungen additiv als Liste von id/name; bisherige voiceId bleibt erhalten. Profile enthalten keine Schlüssel. Ältere Versionen erhalten die zusätzliche Liste beim Schreiben, können sie aber nicht verwalten."
+      "version": 4,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der gemeinsame Installer richtet die unabhängige lokale Suche vor Sprache und Sicherung ein. Sprachdaten werden dabei nicht migriert. voiceProfiles ergänzt bestehende Einstellungen additiv als Liste von id/name; bisherige voiceId bleibt erhalten. Profile enthalten keine Schlüssel. Ältere Versionen erhalten die zusätzliche Liste beim Schreiben, können sie aber nicht verwalten. ChatAudio ergänzt flüchtige exklusive Arbeitsbegleitung und Pause im Browser. Keine Datenmigration; Neuladen beendet Wiedergabe."
     },
     {
       "id": "dictation",

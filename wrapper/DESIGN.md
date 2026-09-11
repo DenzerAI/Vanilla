@@ -1508,3 +1508,29 @@ Die Bausteinreferenz zeigt auch den Panelstart. Keine Datenmigration.
 Der Modulplatzhalter der Ordneransicht verwendet ebenfalls die kompakte Dateiliste.
 Slash-Befehle blenden beim Modulimport keine zusätzliche Liste im Composer ein;
 der geladene Befehlsbaustein zeigt seinen eigenen Abrufstatus.
+
+
+## Chatübergreifendes Vorlesen und Arbeitsbegleitung
+
+„Chat vorlesen“ im Chatmenü aktiviert die sichtbaren künftigen Agenten-Prosameldungen
+und Endantworten dieses Chats. Keine Werkzeugausgaben oder Reasoning-Inhalte.
+Abgeschlossene Meldungen werden dedupliziert; ACP-Prosa wird spätestens beim
+folgenden Werkzeugstart vorgelesen. Es spricht genau eine Quelle pro Browser-Tab.
+Eine andere Antwort, Stimmprobe oder Begleitung schaltet die vorherige Quelle aus.
+Navigation und Panelwechsel lassen die Quelle bestehen. Neuladen startet stumm.
+Der Lautsprecher unter einer Antwort verwendet dieselbe gemeinsame ChatAudio-Steuerung.
+
+ChatAudioButton zeigt rechts am betroffenen Chat Pause/Play, bei wartender Begleitung
+einen Lautsprecher. Die globale kompakte Steuerung bleibt oben mittig auch ohne
+Seitenleiste erreichbar; ihr Tooltip nennt den Quellchat. Stop schaltet vollständig aus.
+Mikrofonstart pausiert vor dem Öffnen sofort auch ausstehende Ausgabe. Solange das
+Diktat aktiv ist, ist keine Wiedergabe möglich; anschließend bewusst fortsetzen.
+Pause erhält die Audioposition; nach fünf Minuten endet die Quelle. Während Pause
+entfallen Zwischenmeldungen, die letzte Endantwort bleibt zum Fortsetzen bereit.
+Ein überholter Rückstau wird durch die neueste Meldung ersetzt. Fertiges manuelles
+Vorlesen verschwindet; eine aktivierte Begleitung wartet sichtbar auf neue Arbeit.
+Archivieren und Sperren beenden die Quelle. Fehler stehen an der globalen Steuerung.
+
+Gemeinsame IconButton-Bausteine und vorhandene Tokens, keine Animation oder weitere
+Einstellungsseite. Unser Design enthält eine isolierte Play/Pause/Stop-Vorschau.
+Nur flüchtiger Browserzustand, keine Migration gespeicherter Chats oder Stimmen.

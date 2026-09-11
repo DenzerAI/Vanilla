@@ -46,7 +46,7 @@ Stimme**. Verbinden allein wechselt den Anbieter nicht. Kein Cloud-Fallback.
 Der Button bleibt auffindbar, bei laufender Antwort deaktiviert und zeigt
 Vorbereiten/Stoppen sowie tatsächliche Fehler. Code und Werkzeugtexte werden
 nicht vorgelesen. Wechsel auf eine andere Antwort stoppt die vorherige Ausgabe;
-Entfernen des Buttons beim Chatwechsel beendet seine Wiedergabe. Die
+Chatwechsel erhält die gemeinsame Wiedergabe. Die
 lokale Installation erfolgt eigenständig mit `npm --prefix wrapper run
 setup:speech`, ohne ein zusätzliches Erkennungsmodell herunterzuladen.
 
@@ -75,3 +75,7 @@ HTML-Folien. Der Renderer behält denselben iframe beim Größenwechsel. Die
 optionale Steuerbrücke wird nur in die isolierte Vorschau eingefügt, niemals in
 die Originaldatei. Dokumentformat und Rückkehrgrenzen führt
 `wrapper/surfaces/library.md`, Abschnitt HTML-Präsentation.
+
+`chat.audio.control` ergänzt ChatAudioControls, ChatAudioButton und ChatAudio um
+flüchtige Arbeitsbegleitung, Pause und exklusiven Besitz über Navigation hinweg.
+Vertrag: wrapper/VOICE.md, Chatübergreifendes Vorlesen und Arbeitsbegleitung.

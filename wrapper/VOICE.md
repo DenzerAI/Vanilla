@@ -55,3 +55,29 @@ die bereits geprüfte lokale Suche bleibt installiert. Suchmodellvertrag:
 ## Gespeicherte ElevenLabs-Stimmen
 
 `voiceProfiles` ergänzt speech-settings.json additiv um bis zu 50 Profile mit `id` und `name`. Bestehende `voiceId` bleibt unverändert; ohne Profile gilt eine leere Liste. POST /api/speech/voices/save prüft die ID über GET /v1/voices/{voice_id}, übernimmt ohne eigenen Namen den Anbieternamen und aktualisiert identische IDs statt Duplikaten. `select:true` wählt die Stimme, wechselt aber keinen Anbieter. POST /api/speech/voices/remove entfernt nur das lokale Profil und leert eine dazugehörige aktive Auswahl; beim Anbieter wird nichts gelöscht. Schreibvorgänge sind serialisiert und atomar. Schlüssel liegen in der lokalen .env. Trennen erhält Profile. Ältere Versionen bewahren das Zusatzfeld beim Speichern, bieten keine Profilverwaltung.
+
+
+## Chatübergreifendes Vorlesen und Arbeitsbegleitung
+
+„Chat vorlesen“ im Chatmenü aktiviert die sichtbaren künftigen Agenten-Prosameldungen
+und Endantworten dieses Chats. Keine Werkzeugausgaben oder Reasoning-Inhalte.
+Abgeschlossene Meldungen werden dedupliziert; ACP-Prosa wird spätestens beim
+folgenden Werkzeugstart vorgelesen. Es spricht genau eine Quelle pro Browser-Tab.
+Eine andere Antwort, Stimmprobe oder Begleitung schaltet die vorherige Quelle aus.
+Navigation und Panelwechsel lassen die Quelle bestehen. Neuladen startet stumm.
+Der Lautsprecher unter einer Antwort verwendet dieselbe gemeinsame ChatAudio-Steuerung.
+
+ChatAudioButton zeigt rechts am betroffenen Chat Pause/Play, bei wartender Begleitung
+einen Lautsprecher. Die globale kompakte Steuerung bleibt oben mittig auch ohne
+Seitenleiste erreichbar; ihr Tooltip nennt den Quellchat. Stop schaltet vollständig aus.
+Mikrofonstart pausiert vor dem Öffnen sofort auch ausstehende Ausgabe. Solange das
+Diktat aktiv ist, ist keine Wiedergabe möglich; anschließend bewusst fortsetzen.
+Pause erhält die Audioposition; nach fünf Minuten endet die Quelle. Während Pause
+entfallen Zwischenmeldungen, die letzte Endantwort bleibt zum Fortsetzen bereit.
+Ein überholter Rückstau wird durch die neueste Meldung ersetzt. Fertiges manuelles
+Vorlesen verschwindet; eine aktivierte Begleitung wartet sichtbar auf neue Arbeit.
+Archivieren und Sperren beenden die Quelle. Fehler stehen an der globalen Steuerung.
+
+Gemeinsame IconButton-Bausteine und vorhandene Tokens, keine Animation oder weitere
+Einstellungsseite. Unser Design enthält eine isolierte Play/Pause/Stop-Vorschau.
+Nur flüchtiger Browserzustand, keine Migration gespeicherter Chats oder Stimmen.

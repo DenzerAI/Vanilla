@@ -1920,6 +1920,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   };
   const copyConversation = guard(async () => { await navigator.clipboard.writeText(conversationText(thread, chatTitle)); notify("Gespräch kopiert."); });
   const audioState=useChatAudio();
+  useEffect(()=>{if(!embedded && chats.some(c=>c.id===audioState.chatId && (c.archived||c.locked))) chatAudio.stop();},[embedded,chats,audioState.chatId]);
   const localSession = {
     welcome: !chatId && !loading && !thread?.turns?.length,
     private:current?.private, locked:chatLocked, lock:guard(()=>changeChatPrivacy(api,"lock",chatId)),
