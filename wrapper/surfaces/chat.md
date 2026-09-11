@@ -210,6 +210,11 @@ Bearbeiten und Verzweigen bleibt erhalten. Löschen steht als eigener
 Papierkorb-Iconbutton neben den übrigen Nutzeraktionen; das zusätzliche
 Drei-Punkte-Menü entfällt. Der bestehende Löschdialog bleibt erhalten.
 Nachrichtenaktionen erscheinen bei Hover oder Tastaturfokus; auf Touch bleiben sie sichtbar und umbrechbar. Der aktive Vorlesen-Stoppen-Button bleibt immer sichtbar.
+Je Antwortblock trägt genau die abgeschlossene letzte Agentenantwort die Aktionszeile.
+Zwischenmeldungen und die noch laufende Antwort erhalten keine; sie sind keine
+geschlossene Nachricht. Verzweigen und Erneut ausführen beziehen sich ohnehin auf
+den gesamten Turn. Nach Abschluss erscheint die Zeile an der letzten Antwort,
+ohne dass zuvor Platz dafür reserviert wird.
 Fertige Agentenantworten erhalten den gemeinsamen Vorlesen-/Stoppen-Button
 `MessageSpeech` (bestehender IconButton, Volume2/Square/LoaderCircle).
 Während einer laufenden Antwort ist Vorlesen deaktiviert. Kommentare,

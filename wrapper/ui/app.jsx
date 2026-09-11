@@ -140,7 +140,7 @@ import { Modal } from "./modal.jsx";
 import "./sidebar-refinement.css";
 import { appearanceOptions, projectIcons, projectColors, projectColor, relativeTime, projectChatList, chatDateGroup } from "./appearance.mjs";
 import { fonts, typography } from "./design-system.mjs";
-import { timestamp, relativeTimeLabel, dayLabel, durationLabel, activityLabel, groupItems } from "./chat-presentation.mjs";
+import { timestamp, relativeTimeLabel, dayLabel, durationLabel, activityLabel, groupItems, actionRowIndex } from "./chat-presentation.mjs";
 import { workerName } from "../../system/worker-catalog.mjs";
 import { AgentMenu } from "./agent-menu";
 import { Avatar } from "./avatar.jsx";
@@ -436,6 +436,7 @@ const ChatTurn = React.memo(function ChatTurn({ onForkTurn, onEditTurn, onRetryT
   const messages = groups.filter(group => group.type === "message" && !(collapseCommentary && isCommentary(group.item)));
   const firstReply = messages.findIndex(group => group.item.type !== "userMessage");
   const lastReply = messages.findLastIndex(group => group.item.type !== "userMessage");
+  const actionRow = actionRowIndex(messages, running);
   const header = <div className="turn-response-header">
     <div className="turn-author">
       <span className="agent-signature" aria-hidden="true"><Avatar avatar={actions.agentProfile?.avatar} color={actions.agentProfile?.avatarColor} /></span>
@@ -455,7 +456,7 @@ const ChatTurn = React.memo(function ChatTurn({ onForkTurn, onEditTurn, onRetryT
   return <section className="chat-turn" id={`pane-${paneNumber}-turn-${turn.id}`} tabIndex={-1} aria-label="Nachricht und Antwort">
     {messages.map((group, index) => <React.Fragment key={group.id}>
       {index === firstReply && header}
-      {statisticsSnapshot && turn.id === 'briefing-'+statisticsSnapshot.id && group.item.type==='agentMessage'?<StatisticsDashboard data={statisticsSnapshot} api={statisticsApi} visible={visible} reduceMotion={actions.agentProfile?.reduceMotion==='on'}/>:<Item item={group.item} beforeActions={index === lastReply ? <>{progress}{artifacts}</> : null} workerId={workerId} {...actions} running={actionsDisabled} sentAt={turn.startedAt} completedAt={!running && group.item.id === finalMessage?.id ? turn.completedAt : null} />}
+      {statisticsSnapshot && turn.id === 'briefing-'+statisticsSnapshot.id && group.item.type==='agentMessage'?<StatisticsDashboard data={statisticsSnapshot} api={statisticsApi} visible={visible} reduceMotion={actions.agentProfile?.reduceMotion==='on'}/>:<Item item={group.item} beforeActions={index === lastReply ? <>{progress}{artifacts}</> : null} showActions={index === actionRow} workerId={workerId} {...actions} running={actionsDisabled} sentAt={turn.startedAt} completedAt={!running && group.item.id === finalMessage?.id ? turn.completedAt : null} />}
     </React.Fragment>)}
     {firstReply === -1 && !turn.deliveryOnly && <>{header}{progress}{artifacts}</>}
     {turn.error && <div className="inline-error">{icon(AlertCircle)}{turn.error.message}</div>}
@@ -469,7 +470,7 @@ function DeliveryMark({receipt}) {
   const glyph=status==="started"?<DeliveryChecks double/>:status==="accepted"?<DeliveryChecks/>:failed?icon(AlertCircle,12):icon(Clock,12);
   return <span className="message-delivery">{failed?<button type="button" title={receipt.error || labels[status]} aria-label={labels[status]} onClick={()=>messageOutbox.retry(receipt.clientMessageId)}>{glyph}</button>:<span role="status" aria-label={labels[status]} title={labels[status]}>{glyph}</span>}</span>;
 }
-function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, agentProfile, workerId, onFork, onEdit, onRetry, onDelete, onFile, running, sentAt, completedAt, workspace, directory, toolOpen, onToolToggle }) {
+function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, showActions = false, agentProfile, workerId, onFork, onEdit, onRetry, onDelete, onFile, running, sentAt, completedAt, workspace, directory, toolOpen, onToolToggle }) {
   const i = item;
   const UserActions = i.delivery && !i.delivery.turnId ? "div" : MessageActions;
   const disclosure = {open:!!toolOpen?.[i.id], onToggle:event=>{if(event.target === event.currentTarget) onToolToggle?.(i.id,event.currentTarget.open);}};
@@ -521,7 +522,9 @@ function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, 
         {i.type === "plan" && <span className="eyebrow">Plan</span>}
         <Markdown text={i.text} onFile={onFile} workspace={workspace} directory={directory} />
         {beforeActions}
-        <MessageActions className="agent-actions">
+        {/* Only the finished answer of a turn carries the action row. A streaming
+            or intermediate message is not a closed message and gets none. */}
+        {showActions && <MessageActions className="agent-actions">
           {i.type === "agentMessage" && i.phase !== "commentary" && <MessageSpeech text={i.text} disabled={running} api={api} Button={IconButton} />}
           <CopyButton label="Antwort kopieren" size={15} text={i.text} />
           <IconButton label="Ab dieser Antwort verzweigen" disabled={running} onClick={onFork}>
@@ -534,7 +537,7 @@ function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, 
           >
             {icon(RotateCcw, 15)}
           </IconButton>
-        </MessageActions>
+        </MessageActions>}
       </div>
     );
   if (i.type === "reasoning")

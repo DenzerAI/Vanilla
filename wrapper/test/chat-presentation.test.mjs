@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { timestamp, dayLabel, durationLabel, groupItems, activityLabel } from '../ui/chat-presentation.mjs';
+import { timestamp, dayLabel, durationLabel, groupItems, activityLabel, actionRowIndex } from '../ui/chat-presentation.mjs';
 test('chat timestamps accept protocol seconds and never invent missing dates', () => {
   assert.equal(timestamp(1788700000), 1788700000000);
   assert.equal(timestamp(null), null);
@@ -49,4 +49,17 @@ test('short adapter names retain public command and browser activities without i
   assert.equal(activityKind({type:'mcpToolCall',server:'cua_repl',tool:'js'}), 'browser');
   assert.equal(activityKind({type:'commandExecution',toolName:'js',command:JSON.stringify({code:'await cua.getState();'})}), 'browser');
   assert.equal(activityKind({type:'commandExecution',toolName:'exec',aggregatedOutput:'tools.exec_command({cmd:"pwd"})'}), 'tool');
+});
+
+test('only the finished last answer of a turn carries the action row', () => {
+  const messages = groupItems([
+    {id:'u', type:'userMessage', content:[{type:'text', text:'Auftrag'}]},
+    {id:'a', type:'agentMessage', phase:'commentary', text:'Ich schaue nach'},
+    {id:'b', type:'agentMessage', text:'Fertig'},
+  ]);
+  assert.equal(actionRowIndex(messages, true), -1, 'nothing is closed while the turn runs');
+  assert.equal(actionRowIndex(messages, false), 2);
+  assert.equal(actionRowIndex(messages.slice(0, 2), false), 1, 'a commentary-only turn stays copyable');
+  assert.equal(actionRowIndex(messages.slice(0, 1), false), -1, 'a user message keeps its own row');
+  assert.equal(actionRowIndex([], false), -1);
 });

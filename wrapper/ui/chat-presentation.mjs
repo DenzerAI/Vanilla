@@ -82,6 +82,13 @@ export function groupItems(items = []) {
   return groups;
 }
 
+// Exactly one action row per turn: the closed last answer carries it. While the
+// turn still runs, no message is finished, so no row is rendered or reserved.
+export function actionRowIndex(messages = [], running = false) {
+  if (running) return -1;
+  return messages.findLastIndex(group => group.item?.type !== 'userMessage');
+}
+
 export function activitySummary(items = []) {
   const meaningful = items.some(i => i.type !== 'reasoning') ? items.filter(i => i.type !== 'reasoning') : items;
   const labels = [...new Set(meaningful.map(item => activityLabel(item)))];
