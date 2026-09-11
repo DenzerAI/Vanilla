@@ -1,9 +1,15 @@
 #!/usr/bin/env node
 import { createInterface } from 'node:readline';
-import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, renameSync, existsSync } from 'node:fs';
 const file = process.env.DELIVERY_FIXTURE_STATE;
 let state = existsSync(file) ? JSON.parse(readFileSync(file, 'utf8')) : { threads: {}, calls: [] };
-const save = () => writeFileSync(file, JSON.stringify(state));
+const save = () => {
+  // Readers and the restart test must always see a complete fixture snapshot,
+  // including when the worker is interrupted during a write.
+  const temporary = file + '.' + process.pid + '.tmp';
+  writeFileSync(temporary, JSON.stringify(state));
+  renameSync(temporary, file);
+};
 const output = obj => process.stdout.write(JSON.stringify(obj) + '\n');
 const event = (method, params) => output({method,params});
 function finish(thread, turn) {
