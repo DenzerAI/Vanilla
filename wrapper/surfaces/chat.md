@@ -309,12 +309,20 @@ Die Modellwahl behält während einer Öffnung ihre horizontale Ausrichtung unab
 Die Reasoning-Spur ist eine horizontale Pille, ihr stärker mattierter Glasgriff eine vertikale Pille mit 16 px Blur. Bereits erreichte Punkte verschwinden; nur die noch vorausliegenden Rastpunkte bleiben neutral sichtbar. Die native Stufe Ultra verstärkt Terrakotta-Sättigung, Schweiflänge und Tempo zusätzlich, mit weichem Übergang beim Ziehen. Andere höchste Stufen werden nicht als Ultra behandelt. Die Werte liegen in amountSliderMotion und den slider-Glas-/Akzentrollen; reduzierte Bewegung bleibt statisch.
 
 
-## Adaptive HTML-Vorschau
+## Adaptive HTML-Vorschau · Version 1.1.0
 
 HTML-Links öffnen FileContent im kompakten Workspace als gerenderte Seite.
-Die verfügbare iframe-Breite bestimmt den responsiven Dokumentaufbau. „Vollbild“
-vergrößert denselben Workspace, ohne den iframe neu zu laden. Die vorhandene
-Kopfaktion führt zur kompakten Breite zurück. Bearbeiten ist eine getrennte Aktion.
+Die verfügbare iframe-Breite bestimmt den responsiven Dokumentaufbau. „Vergrößern“
+erweitert denselben Workspace und „Verkleinern“ stellt dessen vorherige Breite
+wieder her. „Vollbild“ verwendet separat die native Browserfunktion auf demselben
+HtmlPreview-Element, ohne den iframe zu versetzen oder neu zu laden. Escape und
+„Vollbild verlassen“ führen zurück. Fehlende Browserunterstützung wird angezeigt.
+„Präsentieren“ aktiviert die Foliensteuerung für markierte Dokumente; ohne Folien
+bleibt HTML frei scrollbar. Dateititel, gemeinsame IconButtons und ein kompakter
+Folienzähler sind die einzigen zusätzlichen Elemente. Im Vollbild bleiben die
+Steuerelemente erreichbar; andere Workspace-Aktionen liegen außerhalb der Bühne.
+Bearbeiten bleibt getrennt. Das vollständige Dokumentprotokoll steht im
+Bibliotheksvertrag.
 Die Bibliothek nutzt denselben HtmlPreview-Baustein und ihre bestehende Großansicht.
 Darstellung, Bearbeitung und Isolation führt [der Bibliotheksvertrag](library.md#html-dokumente-im-workspace-und-in-der-großansicht).
 

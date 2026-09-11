@@ -5,7 +5,7 @@ import React, {useEffect, useState} from 'react';
 import {Markdown} from './chat-rich-content.jsx';
 import {fileKind} from './artifact-content.mjs';
 
-export function FileContent({path, api, readOnly = false, reading = false, compact = false, scope = "workspace", onEnlarge}) {
+export function FileContent({path, api, readOnly = false, reading = false, compact = false, scope = "workspace", onEnlarge, enlarged = false}) {
   const [attempt, setAttempt] = useState(0), [state, setState] = useState({loading:true}), [text, setText] = useState(''), [saving, setSaving] = useState(false), [saveError, setSaveError] = useState(''), [mediaReady, setMediaReady] = useState(false);
   const [source, setSource] = useState(false), [savedText, setSavedText] = useState(''), [revision, setRevision] = useState(0);
   const kind = fileKind(path), vector = /\.svg$/i.test(path), url = '/api/file/raw?path=' + encodeURIComponent(path) + '&scope=' + encodeURIComponent(scope);
@@ -45,7 +45,7 @@ export function FileContent({path, api, readOnly = false, reading = false, compa
     <div className="html-file-actions" role="group" aria-label={vector?'SVG-Ansicht':'HTML-Ansicht'}>
       <button type="button" aria-pressed={!source} onClick={()=>setSource(false)}>Vorschau</button>
       <button type="button" aria-pressed={source} onClick={()=>setSource(true)}>{readOnly?'Quelltext':'Bearbeiten'}</button>
-      {onEnlarge && <button type="button" onClick={onEnlarge}>Vollbild</button>}
+      {onEnlarge && <button type="button" onClick={onEnlarge} aria-pressed={enlarged}>{enlarged?'Verkleinern':'Vergrößern'}</button>}
       <button type="button" disabled={saving || text!==savedText} onClick={()=>setAttempt(n=>n+1)}>Aktualisieren</button>
     </div>
     {text!==savedText && <p className="html-file-status" role="status">Ungespeicherte Änderungen. Die Vorschau zeigt den gespeicherten Stand.</p>}

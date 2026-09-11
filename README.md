@@ -216,3 +216,13 @@ Codex- und Gemini-CLIs können in Arbeitspausen aus eigenen geprüften Programmk
 aktualisiert werden. Andere Programme zeigen ihren verfügbaren Prüf-/Anbieterweg.
 Ein öffentlicher Modelleintrag ist kein eingerichteter Zugang. Einrichtung,
 Datenhaltung und Abnahmegrenzen führt [WORKERS.md](wrapper/WORKERS.md).
+
+## Geräte & Netzwerk
+
+Verbindungen enthält Android (ADB), Samsung TV und die geführte Tailscale-Einrichtung.
+Geräte werden einzeln verbunden und für Arbeitsbereiche/Agenten freigegeben.
+Platform Tools und Tailscale benötigen ihre native Installation; die App zeigt
+die offiziellen Einstiege. Private Serve-Freigaben und expliziter, durch eine
+App-Anmeldung geschützter Funnel verwenden nur eigene Regeln. Zentral verwaltetes
+HTTPS bleibt beim Host-Betriebsweg. Keine automatische Geräte- oder Netzwerkfreigabe.
+Modellgrenzen, Rechte, Migration und Prüfwege: [Gerätevertrag](docs/DEVICES.md).

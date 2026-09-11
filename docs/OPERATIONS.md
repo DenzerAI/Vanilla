@@ -420,3 +420,7 @@ Ein regulär berechtigter Hostprozess richtet den unabhängigen Updateoperator e
 Bei gemeinsamer Installation bleiben Updatepause und Wiederherstellungspause
 unabhängig wirksam. Das Ende einer temporären Wartung hebt keinen dieser Gründe
 auf. Während einer Pause bleiben auch Indexierung und Quellübergaben angehalten.
+
+Die Registrierung der Systemaufträge enthält die Updateprüfung einschließlich
+Beschreibung und verwendet weiterhin denselben Scheduler. Geräteanschlüsse
+werden über ihren eigenen Vertrag docs/DEVICES.md eingerichtet.

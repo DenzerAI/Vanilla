@@ -69,3 +69,9 @@ anmelden. Anschließend dort nicht weiter schreiben. Reine Pläne, Vorschauen oh
 Umsetzungsauftrag und abgebrochene Arbeiten nicht als bereit melden.
 Den zurückgegebenen Status ausdrücklich unterscheiden: gespeichert, geprüft und
 zusammengeführt sind noch nicht live. Ablauf und Fehler führen docs/CODE-SYNC.md.
+
+Steuerbare HTML-Präsentationen verwenden eigenständige responsive Dokumente mit
+`data-presentation-slide` auf den äußeren Folienelementen. Die gemeinsame
+Vorschau ergänzt Vor/Zurück, Folienstand und Tastatursteuerung beim Präsentieren.
+Normale HTML-Ergebnisse benötigen keine Folienmarker. Format und Grenzen führt
+`wrapper/surfaces/library.md`, Abschnitt HTML-Präsentation.

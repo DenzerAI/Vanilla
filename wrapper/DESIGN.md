@@ -498,12 +498,20 @@ Erneut ausführen sendet die ursprüngliche Nachricht samt Anhängen als neuen T
 Skeletons übernehmen die produktiven Layoutklassen: integration-grid/-item für Verbindungen und Skills, library-entries-list/-grid und library-entry für Dateien, job-row/-info für Aufträge sowie SettingRow für Einstellungen. Die Suche teilt ihre Zeilengeometrie mit system-search-placeholder. Textformen reservieren echte Schriftzeilen (lh/em); Chatblasen, Absätze und Signatur folgen dem Gesprächslayout. Keine allgemeine Kartenhöhe über alle Bereiche. Layoutwechsel und mobile Spalten folgen denselben Regeln wie geladene Inhalte.
 
 
-## Adaptive HTML-Vorschau
+## Adaptive HTML-Vorschau · Version 1.1.0
 
 HTML-Links öffnen FileContent im kompakten Workspace als gerenderte Seite.
-Die verfügbare iframe-Breite bestimmt den responsiven Dokumentaufbau. „Vollbild“
-vergrößert denselben Workspace, ohne den iframe neu zu laden. Die vorhandene
-Kopfaktion führt zur kompakten Breite zurück. Bearbeiten ist eine getrennte Aktion.
+Die verfügbare iframe-Breite bestimmt den responsiven Dokumentaufbau. „Vergrößern“
+erweitert denselben Workspace und „Verkleinern“ stellt dessen vorherige Breite
+wieder her. „Vollbild“ verwendet separat die native Browserfunktion auf demselben
+HtmlPreview-Element, ohne den iframe zu versetzen oder neu zu laden. Escape und
+„Vollbild verlassen“ führen zurück. Fehlende Browserunterstützung wird angezeigt.
+„Präsentieren“ aktiviert die Foliensteuerung für markierte Dokumente; ohne Folien
+bleibt HTML frei scrollbar. Dateititel, gemeinsame IconButtons und ein kompakter
+Folienzähler sind die einzigen zusätzlichen Elemente. Im Vollbild bleiben die
+Steuerelemente erreichbar; andere Workspace-Aktionen liegen außerhalb der Bühne.
+Bearbeiten bleibt getrennt. Das vollständige Dokumentprotokoll steht im
+Bibliotheksvertrag.
 Die Bibliothek nutzt denselben HtmlPreview-Baustein und ihre bestehende Großansicht.
 Darstellung, Bearbeitung und Isolation führt [der Bibliotheksvertrag](surfaces/library.md#html-dokumente-im-workspace-und-in-der-großansicht).
 
@@ -1302,3 +1310,12 @@ Settings-Skeleton und native Details. Neue Versionen und Wartezustände verwende
 Text statt eigener Statusgrafiken. Der öffentliche Modellkatalog bleibt sichtbar
 als fremde Informationsquelle gekennzeichnet. Der vorhandene Startfächer und
 NotificationRow öffnen die KI-Einstellungen. Keine neue Palette oder Kartenform.
+
+## Geräteanschlüsse
+
+Geräte & Netzwerk erweitert ausschließlich den vorhandenen Verbindungskatalog.
+Gerätedialoge verwenden Field, SettingRow, Modal, apple-switch und native Details.
+Freigabe und letzte Verbindungsprüfung erhalten getrennte Textzustände; keine
+Live-Verbindung durch einen lediglich gespeicherten Status behaupten. Die
+Fernbedienung nutzt die vorhandenen umbrechenden Aktionszeilen. Bildschirmbilder
+bleiben auf Dialogbreite und 60 vh begrenzt. Aufbau führt surfaces/connections.md.

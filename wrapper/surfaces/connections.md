@@ -96,3 +96,32 @@ liefert Werte an den Adapter; öffentliche Listen enthalten ausschließlich Meta
 Ein gesperrter Tresor ist kein getrennter Anbieter. Fehlgeschlagene
 Metadatenspeicherung nimmt Ersetzen und Entfernen eines Schlüssels zurück;
 scheitert auch diese Rücknahme, wird ausdrücklich eine erneute Prüfung verlangt.
+
+## Geräte & Netzwerk
+
+Die zusätzliche Kataloggruppe enthält Android (ADB), Samsung TV und Tailscale.
+`DeviceConnection` und `NetworkConnection` verwenden den bestehenden Modal,
+Field, SettingRow, native Details und den gemeinsamen Schalter. Technische
+Geräteanschlüsse verwenden das vorhandene Plug-Symbol statt neuer Markenbilder.
+Keine zusätzliche Hauptnavigation oder Geräteübersicht außerhalb der Verbindungen.
+Der Katalog zeigt Geräte erst, wenn der Server `deviceConnections` meldet.
+
+Android: Name → USB oder WLAN/Tailscale → Geräteadresse und Verbindungsport bzw.
+USB-Auswahl → Hinzufügen. Danach Verbinden, Verbindung prüfen und Trennen.
+Die separate Codekopplung erklärt Kopplungsport und Verbindungsport am selben Ort.
+Samsung: Name und WebSocket-Adresse; öffentliche WSS-Adressen erst unter Fernzugriff.
+Arbeitsbereich, Agenten und Aktionsrechte liegen zunächst unter Details.
+Freigeben wird erst nach bestätigter Verbindung möglich und mit Speichern bestätigt;
+Sofort sperren wirkt direkt auch während einer laufenden Anfrage. Adressänderung
+nimmt die Freigabe serverseitig zurück. Veraltete Dialoge erhalten den Entwurf
+mit Konfliktmeldung. Kopplungscodes werden nach jedem Versuch aus dem Feld entfernt.
+Fernbedienung und Nutzungsprotokoll sind aufklappbar; Bildschirmbilder passen in
+Viewport und Dialog. Schmale Ansichten lassen die vorhandenen Aktionszeilen umbrechen.
+
+Gespeichert, zuletzt verbunden und für Agenten freigegeben sind unterschiedliche
+Zustände. USB-Suche beginnt nur auf Klick; es gibt keine automatische Geräteaktion.
+Entfernen benennt den zusätzlichen Widerruf der nativen ADB-Kopplung am Gerät.
+Tailscale zeigt Installation, Kontoanmeldung und Serve im normalen Dialog.
+Funnel liegt unter Öffentlicher Zugriff und benötigt App-Anmeldung und ausdrücklichen
+Schalter. Zentral verwaltete Installationen zeigen ihren Host-Betriebsweg.
+Technischer Vertrag, Modellgrenzen und Migration: [Geräte](../../docs/DEVICES.md).

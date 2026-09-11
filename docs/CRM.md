@@ -75,3 +75,7 @@ Der vorhandene MCP-Bridge-Prozess führt zusätzlich `crm_schema`, `crm_search`,
 ## Bewusst noch offen
 
 Echter erster CRM-Sync mit Rechten, Feldführungsregeln, Paging, Delta-/Löschsignalen und Wiederanlauf; automatische geprüfte Übernahmeregeln; externe Schreibwarteschlange; produktive Bearbeitungs-/Prüfmasken; ein Builder für Ansichten und Abläufe; Relation ändern/beenden; kontrollierte Identitätszusammenführung; dokumentierte Export-/Lösch-/Aufbewahrungsabläufe. Angebote und Rechnungen bleiben zunächst zuzuordnende externe Geschäftsdokumente; kein Nachbau einer Buchhaltung. Die Beispiel-Pipeline ist durch Heute und Kalender ersetzt. Heute liest fällige CRM-Schritte; die Kalender-/Kontakt-Beispiele schreiben keine Fakten. Weitere produktive Masken müssen explizit diesen Vertrag verwenden.
+
+Der gemeinsame MCP-Einstieg bietet zusätzlich registrierte Gerätewerkzeuge an.
+CRM-Werkzeuge und ihre Daten bleiben über dieselben bestehenden Schnittstellen
+erreichbar; eine Gerätefreigabe verleiht keine zusätzlichen CRM-Rechte.

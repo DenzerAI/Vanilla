@@ -2,7 +2,7 @@ import {Skeleton} from './skeleton.tsx';
 import React,{useState,useEffect,useRef} from 'react';
 import {ArrowLeft,Folder,FileText,RefreshCw,Download,Lock,ChevronRight} from './icons.jsx';
 import {FileContent} from './file-content.jsx';
-export function AgentFiles({api,initialFolder,onPreview,projectId,projectName}) {
+export function AgentFiles({api,initialFolder,onPreview,projectId,projectName,enlarged=false}) {
   const openedTarget=useRef(null);
   const [showProtected,setShowProtected]=useState(false);
   const [path,setPath]=useState(''),[file,setFile]=useState(null),[data,setData]=useState(null),[error,setError]=useState(''),[revision,setRevision]=useState(0);
@@ -30,7 +30,7 @@ export function AgentFiles({api,initialFolder,onPreview,projectId,projectName}) 
       <span title={file || (data?.root ? data.root+'/'+path : path)}>{file?file.split('/').pop():displayPath?displayPath.split('/').pop():rootName}</span>
       {file?<a className="icon-button" aria-label="Datei herunterladen" href={'/api/file/raw?scope=agent&path='+encodeURIComponent(file)+'&download=1'}><Download size={16}/></a>:<button className="icon-button" aria-label="Dateien aktualisieren" onClick={()=>setRevision(n=>n+1)}><RefreshCw size={15}/></button>}
     </div>
-    {file?<div className="workspace-file-list"><FileContent key={file} path={file} api={api} scope="agent" readOnly onEnlarge={onPreview?()=>onPreview(file):undefined}/></div>:<>
+    {file?<div className="workspace-file-list"><FileContent key={file} path={file} api={api} scope="agent" readOnly enlarged={enlarged} onEnlarge={onPreview?()=>onPreview(file):undefined}/></div>:<>
       {displayPath && <div className="workspace-file-path" title={[data?.root,path].filter(Boolean).join('/')}>{[rootName,...displayPath.split('/').filter(Boolean).slice(0,-1)].join(' › ')}</div>}
       <div className="workspace-file-list" aria-label="Ordnerinhalt">
       {error?<div role="alert"><p>{error}</p><button onClick={()=>setRevision(n=>n+1)}>Erneut versuchen</button></div>:loading?<Skeleton compact label="Ordner wird geladen …"/>:!visibleEntries.length?<p>{protectedCount ? "Nur geschützte Einträge in diesem Ordner." : "Dieser Ordner ist leer."}</p>:visibleEntries.map(entry=><button key={entry.path} className="file-row" disabled={!entry.accessible} title={!entry.accessible?'Geschützter Eintrag':entry.path} onClick={()=>entry.directory?setPath(entry.path):setFile(entry.path)}>

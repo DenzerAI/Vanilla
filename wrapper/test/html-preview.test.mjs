@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtemp,writeFile,mkdir,rm} from 'node:fs/promises';
+import {mkdtemp,writeFile,readFile,mkdir,rm} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {readHtmlPreview,htmlPreviewPolicy} from '../html-preview.mjs';
@@ -18,6 +18,10 @@ test('HTML preview accepts complete document bytes and rejects non-HTML, directo
     const file=join(folder,'report.html');
     const html='<!doctype html><title>Übersicht</title><script>document.title="Fertig"</script>';
     await writeFile(file,html);assert.equal((await readHtmlPreview(file)).toString(),html);
+    const controlled=(await readHtmlPreview(file,{channel:'test-channel'})).toString();
+    assert.ok(controlled.includes('vanilla-presentation-v1'));
+    assert.equal(await readFile(file,'utf8'),html);
+    assert.equal((await readHtmlPreview(file)).toString(),html);
     await assert.rejects(readHtmlPreview(join(folder,'report.txt')),/Nur HTML/);
     await mkdir(join(folder,'directory.html'));await assert.rejects(readHtmlPreview(join(folder,'directory.html')),/Keine Datei/);
     await writeFile(file,Buffer.alloc(2000001));await assert.rejects(readHtmlPreview(file),/zu groß/);

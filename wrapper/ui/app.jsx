@@ -39,6 +39,8 @@ import { SettingsNavigationRow } from "./settings-patterns.jsx";
 import { AppLoader, LoaderProvider } from './app-loader';
 import { SystemNotice } from "./system-notice.jsx";
 import { jobTemplates, jobCategories, jobFromTemplate } from "../job-templates.mjs";
+const DeviceConnection = lazySurface(() => import('./device-connection.tsx'), 'DeviceConnection', 'list');
+const NetworkConnection = lazySurface(() => import('./device-connection.tsx'), 'NetworkConnection', 'list');
 import { uploadAttachmentBatch } from "./attachment-upload.mjs";
 import "./workspace-layout.css";
 import { createChatScroll } from "./chat-scroll.mjs";
@@ -2485,7 +2487,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                   </select>
                   <div className="row">
                   <IconButton label={workspaceExpanded ? "Kompakte Workspace-Breite" : "Workspace vergrößern"} aria-pressed={workspaceExpanded} onClick={()=>{
-                    if (workspaceExpanded) setWorkspaceWidth(null);
+                    // Keep the user-sized compact width when returning from the large view.
                     setWorkspaceExpanded(value=>!value);
                   }}>{icon(workspaceExpanded ? Minimize : Maximize, 16)}</IconButton>
                   <IconButton label="Workspace schließen" onClick={() => setPanel(null)}>{icon(X,16)}</IconButton>
@@ -2513,10 +2515,10 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                                 {icon(Download, 16)}
                               </a>
                             </div>
-                            <FileContent key={selectedFile} path={selectedFile} api={api} onEnlarge={()=>setWorkspaceExpanded(true)} />
+                            <FileContent key={selectedFile} path={selectedFile} api={api} enlarged={workspaceExpanded} onEnlarge={()=>setWorkspaceExpanded(value=>!value)} />
                           </>
                         ) : (
-                          boot.workspaceToolsVersion ? <AgentFiles key={`${projectId}:${agentFolderTarget || ""}`} projectId={agentFolderTarget ? undefined : projectId} projectName={agentFolderTarget ? undefined : project?.name} api={api} initialFolder={agentFolderTarget || `${boot.workspace}/${project?.path || ""}`.replace(/\/$/, "")} onPreview={()=>setWorkspaceExpanded(true)}/> : <p role="status">Die neue Agent-Dateiansicht wird nach dem nächsten Serverstart verfügbar. Laufende Aufträge können zuerst fertig werden.</p>
+                          boot.workspaceToolsVersion ? <AgentFiles key={`${projectId}:${agentFolderTarget || ""}`} projectId={agentFolderTarget ? undefined : projectId} projectName={agentFolderTarget ? undefined : project?.name} api={api} initialFolder={agentFolderTarget || `${boot.workspace}/${project?.path || ""}`.replace(/\/$/, "")} enlarged={workspaceExpanded} onPreview={()=>setWorkspaceExpanded(value=>!value)}/> : <p role="status">Die neue Agent-Dateiansicht wird nach dem nächsten Serverstart verfügbar. Laufende Aufträge können zuerst fertig werden.</p>
                         )}
                       </div>
                     ) : panel === "terminal" ? (
@@ -3505,7 +3507,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       {modal?.type==='image-create'&&<Modal title="Bild erstellen" onClose={()=>setModal(null)}><ImageForm api={api} Field={Field} projects={boot.projects} projectId={projectId} connections={integrations.connections} onCreated={entry=>{setLibraryRevision(v=>v+1);setModal({type:'library-file',entry});}}/></Modal>}
       {modal?.type==='skill-hub'&&<Modal title="Skill hinzufügen" onClose={()=>setModal(null)}><SkillHub api={api} Field={Field} onSelect={skill=>setModal({type:'skill',skill})} onCreated={()=>setModal({type:'skill-create'})}/></Modal>}
       {modal?.type==='skill-create'&&<Modal title="Eigenen Skill erstellen" onClose={()=>setModal(null)}><CreateSkillForm api={api} Field={Field} onCreated={async()=>{await loadSkills();setModal(null);}}/></Modal>}
-      {modal?.type==='tailscale'&&<Modal title="Tailscale" onClose={()=>setModal(null)}><TailscaleConnection api={api}/></Modal>}
+      {modal?.type==='device-connection'&&<Modal title={modal.connection.id?'Verbindung bearbeiten':'Verbindung hinzufügen'} onClose={()=>setModal(null)}><DeviceConnection key={modal.connection.id||modal.connection.provider} connection={modal.connection} api={api} Field={Field} projects={boot.projects||[]} workers={boot.workers||[]} onClose={()=>setModal(null)}/></Modal>}
+      {modal?.type==='tailscale'&&<Modal title="Tailscale" onClose={()=>setModal(null)}>{boot.features.deviceConnections?<NetworkConnection api={api}/>:<TailscaleConnection api={api}/>}</Modal>}
       {(modal === 'notifications'||modal?.type==='notifications') && <Modal title="Benachrichtigungen" onClose={()=>setModal(null)}><JobNotifications onUpdates={kind=>{setModal(null);setUpdatesTab(kind==='contribution'?'contributions':'version');openSettings(kind==='ai-update'?'engines':'updates');}} initialId={modal?.id} api={api} state={notificationState} Field={Field} requests={requests.length} onRequests={()=>setModal('activity')} onChat={async id=>{setModal(null);await openChat(id);}} onRun={item=>setModal({type:'job-run',job:{name:item.title,lastRun:{coreRunId:item.id.replace(/^attention-/,'')}}})}/></Modal>}
       {modal?.type === "job-run" && (
         <Modal title={modal.job.name} onClose={() => setModal(null)}>

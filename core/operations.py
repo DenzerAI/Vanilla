@@ -36,6 +36,7 @@ class Operations:
             ("update-check", "Vanilla-Updates prüfen", True, {"type": "manual"}),
         ]
         descriptions = {
+            'update-check': 'Prüft verfügbare Vanilla-Versionen über den bestehenden Updateanschluss. Installiert keine Version ohne Aktivierungsauftrag.',
             'memory': 'Verdichtet gespeicherte Gesprächsauszüge lokal, verlinkt die Quellen und schreibt einen Pflegebericht. Originalgespräche bleiben erhalten.',
             'backup': 'Erstellt eine verschlüsselte Sicherung von Datenbank und Arbeitsdateien. Benötigt ein eingerichtetes Sicherungsziel und einen verfügbaren Sicherungsschlüssel.',
             'cleanup': 'Bereinigt alte Ereignisse und Protokolle nach den Aufbewahrungsfristen. Gespräche und Arbeitsdateien bleiben erhalten.',

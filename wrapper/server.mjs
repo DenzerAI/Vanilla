@@ -1475,7 +1475,7 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     if (req.method === 'GET' && u.pathname === '/api/file/preview') {
-      const content = await readHtmlPreview(await readableFile(u));
+      const content = await readHtmlPreview(await readableFile(u), u.searchParams.has('presentation') ? {channel:u.searchParams.get('presentation')} : {});
       res.setHeader('Content-Type', 'text/html; charset=utf-8');
       res.setHeader('Content-Security-Policy', htmlPreviewPolicy);
       res.setHeader('Content-Length', content.length);

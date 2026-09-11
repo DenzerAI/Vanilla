@@ -21,3 +21,19 @@ iframe.html-document-preview { display: block; flex: 1; width: 100%; height: 100
   :root[data-theme] .modal.library-quicklook.html-quicklook { width: calc(100vw - var(--space-16)); height: calc(100dvh - var(--space-16)); max-height: calc(100dvh - var(--space-16)); padding: var(--space-8); }
 }
 @media (pointer: coarse) { .html-file-actions button { min-height: var(--control-touch); } }
+
+/* A single mounted document spans compact, enlarged and native fullscreen views. */
+.html-presentation { display: flex; flex: 1; flex-direction: column; width: 100%; min-width: 0; min-height: 0; background: var(--bg); border-radius: var(--radius-control); overflow: hidden; }
+.html-presentation-toolbar { display: flex; align-items: center; justify-content: flex-end; gap: var(--space-8); padding: var(--space-4) var(--space-8); flex-shrink: 0; }
+.html-presentation-title { display: none; flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-control); }
+.html-presentation-actions, .html-presentation-navigation { display: flex; align-items: center; justify-content: center; gap: var(--space-8); }
+.html-presentation-navigation { padding: var(--space-4) var(--space-8); flex-shrink: 0; font-size: var(--text-caption); font-variant-numeric: tabular-nums; }
+.html-presentation-navigation > span { min-width: 7ch; text-align: center; }
+.html-presentation iframe.html-document-preview { min-height: 0; height: auto; }
+.html-presentation > .html-file-status { padding: var(--space-8); }
+.html-presentation:fullscreen { width: 100%; height: 100%; border-radius: 0; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); box-sizing: border-box; }
+.html-presentation:fullscreen .html-presentation-title { display: block; }
+.html-presentation:fullscreen::backdrop { background: var(--bg); }
+.html-presentation:focus-visible { outline: 1px solid var(--focus-ring); outline-offset: -1px; }
+@media (pointer: coarse) { .html-presentation .icon-button { min-height: var(--control-touch); min-width: var(--control-touch); } }
+@media (forced-colors: active) { .html-presentation { background: Canvas; color: CanvasText; } }

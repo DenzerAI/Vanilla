@@ -58,3 +58,20 @@ Diktat- und Sprachinstallation selbst auf. Festgelegte Sprachpakete führt
 `runtime-assets.mjs`. Der Bereitschaftsmarker wird erst nach Dateiprüfung und
 erfolgreichem Laden durch Piper geschrieben; geänderte Versionen oder fehlende
 Dateien lösen bei erneuter Einrichtung eine Reparatur aus.
+
+## Geräte und Netzwerk
+
+`device-connections` verbindet Android/ADB, Samsung-Fernbedienung und Tailscale
+unter Verbindungen. Status: `/api/devices`, `/api/network/status`.
+Worker verwenden `device_list` und `device_action` für explizit freigegebene
+Geräte, Arbeitsbereiche, Worker und Aktionen. Keine automatische Kopplung,
+Freigabe oder öffentliche Veröffentlichung. Details und Migration: [Geräte](../docs/DEVICES.md).
+
+## HTML-Präsentation im Workspace
+
+`workspace.html-presentation` erweitert den gemeinsamen `HtmlPreview`: explizite
+Workspace-Vergrößerung, natives Browser-Vollbild und Navigation durch markierte
+HTML-Folien. Der Renderer behält denselben iframe beim Größenwechsel. Die
+optionale Steuerbrücke wird nur in die isolierte Vorschau eingefügt, niemals in
+die Originaldatei. Dokumentformat und Rückkehrgrenzen führt
+`wrapper/surfaces/library.md`, Abschnitt HTML-Präsentation.

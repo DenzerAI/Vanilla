@@ -64,8 +64,9 @@ Anzeigeweg. HTML erhält einen eigenen Dateitypfilter; Miniaturen zeigen ein
 Formatsymbol und starten keine Dokumentskripte.
 
 Ein HTML-Link im Chat öffnet zunächst die kompakte Workspace-Vorschau. HTML reagiert
-auf die tatsächliche iframe-Breite wie auf einem schmalen Gerät. „Vollbild“ erweitert
-denselben Workspace; die Kopfaktion führt zurück. Dabei bleiben iframe, Scrollposition
+auf die tatsächliche iframe-Breite wie auf einem schmalen Gerät. „Vergrößern“ erweitert
+denselben Workspace; „Verkleinern“ stellt die vorherige Breite wieder her. „Vollbild“
+nutzt die native Browserfunktion von HtmlPreview. Dabei bleiben iframe, Scrollposition
 und Dokumentzustand erhalten. Die Bibliothek behält Auswahlvorschau, Doppelklick und
 Vergrößern in LibraryPreview. Kein automatischer Wechsel in die Bibliothek oder ein Modal.
 Die Großansicht nutzt bei HTML fast die gesamte Fensterbreite und -höhe; auf dem
@@ -111,3 +112,41 @@ Quelltext bleibt separat lesbar beziehungsweise im schreibbaren Workspace
 bearbeitbar. SVG-Dateien werden als Bilder klassifiziert und erhalten echte
 Miniaturen. Die bestehenden Pfadprüfungen und Downloadheader bleiben erhalten.
 Keine Datenmigration; ältere Oberflächen zeigen wieder den Quelltext.
+
+
+### HTML-Präsentation · Version 1.1.0
+
+HtmlPreview besitzt eine schlanke Leiste aus gemeinsamen IconButtons für
+Präsentieren/Beenden und natives Vollbild/Verlassen. Im Vollbild erscheint der
+Dateititel; die übrige App liegt außerhalb der Bühne. Kopf und Foliensteuerung
+bleiben bei Touch, großer Schrift, Hell/Dunkel und Forced Colors erreichbar.
+Keine automatische Wiedergabe oder Folienwechsel. Browserablehnung erhält die
+Vorschau und zeigt einen kurzen Fehler. Vergrößern bleibt unabhängig verfügbar.
+
+Eigenständige Präsentationen kennzeichnen ihre Folien mit
+`data-presentation-slide`, beispielsweise `<section data-presentation-slide>`.
+Die äußeren markierten Elemente bilden in Dokumentreihenfolge bis zu 500 Folien.
+Sie werden beim Laden erfasst; größere Decks bleiben normale Dokumente.
+Sie verwenden responsives HTML und sind ohne Vorschau als normales Dokument lesbar.
+Erst „Präsentieren“ blendet andere Folien aus. Vor/Zurück, Pfeile links/rechts,
+PageUp/PageDown und Home/End steuern innerhalb der Grenzen; im Dokument zusätzlich
+Leertaste für Weiter. Eingabefelder, editierbare Inhalte und Modifikatortasten
+bleiben unberührt. Der Zähler zeigt die bestätigte Folie. Beenden stellt die
+ursprünglichen Hidden-Zustände und die Scrollposition vor Präsentationsbeginn
+wieder her. Unmarkiertes HTML bleibt scrollbar und erhält keine erfundenen Folien.
+
+Der optionale Queryparameter `presentation` am bestehenden Preview-Endpunkt
+aktiviert ausschließlich in der ausgelieferten Vorschau eine kleine Steuerbrücke.
+Die gespeicherte HTML-Datei und Downloads bleiben bytegleich. Der Kanal ist pro
+Dokumentöffnung zufällig und auf 8–80 ASCII-Buchstaben, Ziffern, `_` und `-`
+beschränkt. Das Protokoll `vanilla-presentation-v1` tauscht ausschließlich
+Hello, Modus, Navigation, Status und Beenden aus. Der Viewer prüft Fensterquelle,
+opaque Origin, Kanal, Nachrichtentyp und begrenzte Zähler. Die Brücke akzeptiert
+nur das direkte Elternfenster. Status meldet keine Dateiinhalte und löst weder
+Anbieteraufrufe noch beliebige App-Aktionen aus. Sandbox und CSP bleiben unverändert.
+
+Migration/Rückkehr: keine neuen Speicherdaten und keine Änderung von HTML-Dateien.
+Die Serverergänzung muss für Foliensteuerung aktiv sein; ältere Server liefern
+weiter die normale Vorschau ohne Präsentationsbutton. Neues Vollbild funktioniert
+auch ohne Steuerbrücke. Ältere Viewer verwenden den bestehenden Endpunkt ohne
+Zusatzparameter. Ein Zurücksetzen verliert nur die neuen Anzeigeaktionen.
