@@ -145,3 +145,12 @@ Suche behalten ihre technischen IDs. Der Index übernimmt Auftragskategorien und
 speichert optional eigene Kategoriezuordnungen; Aufträge und Ergebnisse verwenden
 dieselbe Validierung und gegenseitige Detailverweise. Daten-/Rückkehrvertrag:
 wrapper/surfaces/library.md. Keine Migration von Dateien, Chats oder Jobmanifesten.
+
+
+Die gemeinsame Chat-Feinausrichtung verwendet ComposerHeading aus chat-controls.jsx:
+Identität links und ModelPicker rechts oberhalb der unten bündigen Schreibpille.
+Antworten verzichten auf wiederholte Autorenzeilen. Der obere Fade ist um 20 %
+verkürzt, Sprungmarken stehen mittig am linken Panelrand, Nachrichtenaktionen
+bleiben auch unter der globalen Hoverregel ungefüllt und kompakt. Skeleton und
+Bausteinreferenz folgen derselben Anordnung. Keine Datenmigration; native
+Rückfragen und Antwortwege bleiben unverändert. Vertrag: wrapper/surfaces/chat.md.

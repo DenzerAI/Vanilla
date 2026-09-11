@@ -447,13 +447,13 @@ Der rechte Bereich „Workspace“ verwendet die eigene Rolle `workspace-panel-b
 
 ## Ruhiger Gesprächsfluss
 
-Ab Beginn steht über der Agentenantwort eine eigene Autorenzeile: ausgewählter Avatar, tatsächlicher Agentenname und relatives Nachrichtenalter (zum Beispiel „vor 2 Min.“). Der exakte Zeitstempel bleibt im Tooltip und time-Element zugänglich. Direkt unter dem jeweils neuesten Antworttext, vor den bei Hover eingeblendeten Nachrichtenaktionen, stehen ausgewählter AppLoader, Live-Status, Schrittanzahl und tatsächliche Bearbeitungszeit. Diese aufklappbare ActivityGroup wandert beim Streaming mit dem Text nach unten und bleibt nach Abschluss dort als kompakter Verlauf erhalten. Ohne Werkzeuge steht der kompakte Arbeitsstatus ebenfalls direkt unter dem Text vor den Aktionen. Die Aktionszeile reserviert keinen Platz zwischen Text und Status. Die Anzeige liegt im normalen Gesprächsfluss, ohne Inhalte zu überdecken; manuelles Hochscrollen pausiert weiterhin das automatische Mitlaufen. Der Spinner endet mit der Arbeit und behauptet keinen weiteren Fortschritt.
+Antworten beginnen direkt mit ihrem Inhalt. Der konfigurierte Avatar und Agentenname stehen in ComposerHeading links über der Eingabe, ModelPicker rechts. Eine wiederholte Autorenzeile und relatives Nachrichtenalter entfallen; der genaue Antwortzeitpunkt bleibt als Tooltip des Antwortblocks verfügbar. Direkt unter dem jeweils neuesten Antworttext, vor den bei Hover eingeblendeten Nachrichtenaktionen, stehen ausgewählter AppLoader, Live-Status, Schrittanzahl und tatsächliche Bearbeitungszeit. Diese aufklappbare ActivityGroup wandert beim Streaming mit dem Text nach unten und bleibt nach Abschluss dort als kompakter Verlauf erhalten. Ohne Werkzeuge steht der kompakte Arbeitsstatus ebenfalls direkt unter dem Text vor den Aktionen. Die Aktionszeile reserviert keinen Platz zwischen Text und Status. Die Anzeige liegt im normalen Gesprächsfluss, ohne Inhalte zu überdecken; manuelles Hochscrollen pausiert weiterhin das automatische Mitlaufen. Der Spinner endet mit der Arbeit und behauptet keinen weiteren Fortschritt.
 
 Zwischenmeldungen bleiben während der Arbeit im Gespräch sichtbar. Sobald eine abschließende Antwort vorliegt und die Arbeit beendet ist, werden Zwischenmeldungen und Werkzeugschritte in ihrer ursprünglichen Reihenfolge in die standardmäßig geschlossene Gruppe aufgenommen. Aufklappen zeigt den vollständigen Ablauf. Laufende oder fehlgeschlagene Turns ohne Abschlussantwort verlieren ihre sichtbaren Zwischenmeldungen nicht. Nutzernachrichten und Antworten behalten ihre Reihenfolge; Nachträge werden nicht vor die erste Nutzernachricht verschoben.
 
 Antworten nutzen die zentrale 15-px-Rolle conversation und die native Systemschrift (auf macOS San Francisco). Nutzernachrichten und Desktop-Eingabe nutzen control (14 px); Touch-Eingabe bleibt in reading. Links verwenden blue und Unterstreichung. Routinemäßige Prüfberichte werden nicht als Abschlussanhang erzeugt oder verlinkt. Dateien gehören in die Antwort, wenn sie ein angefragtes oder direkt nützliches Ergebnis liefern, etwa eine HTML-Visualisierung.
 
-Bei Nutzernachrichten bleibt die Uhrzeit eng unter dem Text; bei Agentenantworten ersetzt das relative Alter in der Autorenzeile die zusätzliche Uhrzeit am Fuß. Nachrichtenaktionen erscheinen auf Desktop bei Hover oder Tastaturfokus ohne Layoutsprung; auf Touch bleiben sie mit mindestens 44 px Bedienfläche sichtbar. Der aktive Vorlesen-Stoppen-Button bleibt erreichbar.
+Bei Nutzernachrichten bleibt die Uhrzeit eng unter dem Text; Agentenantworten zeigen keine dauerhafte Alters- oder Uhrzeitzeile. Nachrichtenaktionen erscheinen auf Desktop bei Hover oder Tastaturfokus ohne Layoutsprung; auf Touch bleiben sie mit mindestens 44 px Bedienfläche sichtbar. Der aktive Vorlesen-Stoppen-Button bleibt erreichbar.
 
 ## Dezentes Flächenlicht
 
@@ -476,7 +476,7 @@ Kopf und Bereichsauswahl nutzen control (14 px), Dateizeilen und Begleittexte sm
 „Befehle“ verwendet normale UI-Schrift im Leerzustand, Monospace nur für Eingabe und tatsächliche Ausgabe. Der kurze Hinweis benennt Einzelaufrufe und das 30-Sekunden-Limit. Die Eingabe bleibt unten als kompakte getönte Zeile. Die gemeinsame schwarze Materialfläche, feine Kante und Lichtbewegung bleiben in allen Ansichten sichtbar. Der Bereich ist kein persistentes Terminal und bietet keine neu erfundene native Finder-/Terminal-Anbindung.
 
 
-Avatar und Bearbeitungssymbol teilen eine feste senkrechte Mittelachse: Die Signatur reserviert `control-turn-loader-slot` (19,2 px, entsprechend dem 16-px-AppLoader mit Faktor 1,2) und zentriert darin den 24-px-Avatar per Flexbox. Eine spezifische Autorenregel verhindert, dass allgemeine Avatarregeln diese Größe überschreiben. Keine nachträgliche Transform-Verschiebung. Der bisherige Abstand zum Namen bleibt erhalten. Auch das statische Aktivitätssymbol nach Abschluss nutzt denselben Symbolplatz; der laufende Loader und sein Statustext bleiben unverändert. Name und relative Zeit stehen in einer eigenen, an der Textgrundlinie ausgerichteten Flexgruppe und dürfen bei Platzmangel umbrechen.
+Die erste Nachrichtenaktion und das Fortschrittssymbol teilen dieselbe senkrechte Mittelachse. Avatar und Name stehen ausschließlich in der gemeinsamen Composerzeile. Lange Namen kürzen dort mit Ellipse; der vollständige Name bleibt im Tooltip erhalten.
 
 ## Inbox
 
@@ -1238,7 +1238,7 @@ Bestandsregeln und Grenzen führen surfaces/workspaces.md und surfaces/jobs.md.
 Gesprächs-Skeletons stehen in derselben `message-column` wie geladene Turns.
 Dadurch teilen sie Maximalbreite, Panelränder und vertikale Abstände mit dem
 Verlauf und dem Composer, auch bei mehreren Panels und schmalen Fenstern.
-Die Autorenzeile verwendet `turn-author`, `agent-signature` und `turn-author-meta`.
+Der Skeleton beginnt wie echte Antworten direkt mit dem Inhalt und reserviert die gemeinsame Zeile oberhalb der Eingabe.
 Der App-Start verwendet ebenfalls Chatpanel, Nachrichtenspalte und Composerbereich
 statt eigener Inhaltsbreiten. Reine Layoutkorrektur, keine Datenmigration.
 
@@ -1356,7 +1356,7 @@ Unser Design und damit im gemeinsamen UI-Bauplan. Verhalten: surfaces/chat.md.
 
 ### Einheitliche Claude- und Codex-Bedienung
 
-Unter jedem Composer steht ausschließlich ModelPicker. Separate native
+Über jedem Composer stehen Identität und ModelPicker in einer gemeinsamen Zeile. Separate native
 Worker-Menüs entfallen auch bei Claude. Der nativ verfügbare Fast-Schalter
 verwendet denselben Blitz und Statusindikator im Modellfenster. Die bestätigte
 Beschreibung des nativen Default-Modells liefert, sofern gemeldet, seinen
@@ -1420,7 +1420,7 @@ Hover-/Tastaturdarstellung bestehen; Unser Design zeigt denselben Baustein.
 Abgeschlossene erfolgreiche Werkzeugverläufe sind mobil ausgeblendet; laufende
 Arbeit, Rückfragen, Fehler und unvollständige Schritte bleiben erreichbar.
 Die laufende Statuszeile zeigt mobil keine Schrittzahl oder Laufzeit.
-Die Autorenzeile behält Avatar und Namen, verzichtet mobil auf das relative Alter.
+Auch mobil steht die Identität einmal über dem Composer; eine Autorenzeile über jeder Antwort entfällt.
 Nachrichtenabstände verwenden space-8, Status-/Kopfabstände space-4.
 Keine Datenmigration: Originalverlauf, Geräte, Einstellungen und Exporte bleiben
 unverändert. Ein älterer UI-Stand zeigt wieder die ausführliche Darstellung.
@@ -1459,5 +1459,28 @@ MessageActions verwenden auf Desktop und Mobile transparente, ungefüllte
 Icon-Schaltflächen ohne runden Hintergrund oder Auswahlrahmen, auch beim Öffnen
 und Hover. Tastaturfokus bleibt sichtbar. Die erste Agentenaktion liegt mittig
 auf derselben Achse wie das Fortschrittsicon; die unsichtbare Trefferfläche bleibt
-control-target beziehungsweise control-touch groß. Der vertikale Abstand zum
+control-height (32 px) beziehungsweise control-touch (44 px) groß. Der vertikale Abstand zum
 Fortschritt beträgt space-4, die Aktionszeile hat keine zusätzlichen Blockränder.
+
+
+### Feinausrichtung im Chat
+
+ComposerHeading teilt sich die vorhandene Modellzeile mit der konfigurierten
+Identität, links Avatar und Name, rechts Modell und Denkstufe. Die Reihenfolge
+ist Rückfragen/Slash-Liste, Anhänge, Identität/Modell, Schreibpille. Unter der
+Pille stehen keine Zusatzzeilen. Die Unterkante liegt mit space-8 bündig zur
+Seitenleiste; sichere Displayränder gehen vor. Mehrzeiliger Text wächst nach oben.
+Antworten beginnen ohne wiederholte Autorenzeile; der genaue Zeitpunkt steht im
+Tooltip am Antwortblock. Relative Altersangaben entfallen dort.
+Der obere Verlauf-Fade beträgt 2.4 × space-64 statt 3 × space-64 (20 % kürzer).
+Der untere Fade und die automatische Scrollentscheidung bleiben unverändert.
+Nachrichtenaktionen haben am Desktop 32 px Trefferbreite ohne Zusatzlücke,
+auf Touch weiterhin 44 px. Auch die spezifische globale Hoverregel darf keine
+Fläche erzeugen; Iconfarbe und sichtbarer Tastaturfokus geben Rückmeldung.
+Uhrzeit und kompakte DeliveryChecks bleiben als ruhige Gruppe zusammen.
+Die Sprungmarken stehen am linken Panelrand, vertikal mittig, und behalten ihre
+Vorschau und Tastaturbedienung. Mobil bleiben sie ausgeblendet.
+Bestehende ComposerQuestion und native Antwortwege werden wiederverwendet;
+Freitext und gewöhnliche Chatfragen erzeugen keine künstlichen Auswahlkarten.
+Keine Datenmigration. Rückkehr verändert nur Darstellung; Entwürfe, Nachrichten,
+Profile und native Rückfragen behalten ihre bisherigen Datenformate.
