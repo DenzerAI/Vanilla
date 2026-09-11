@@ -242,7 +242,7 @@ Pause überschreibt. Diese Prüfungen versenden keine echten Nachrichten.
 
 ## Kundenbasis: Zugang und Sicherung
 
-Systemzugänge und Anbieterwerte verwenden den installationsgebundenen Fernet-Tresor in data/control/provider-vault und verschlüsselte Datensätze in SQLite. Der Schutzschlüssel liegt in einem eigenen Betriebssystem-Eintrag; keine fremden Konten oder Klartext-Fallbacks. App-Anmeldung ist über den bestehenden Einstellungsweg aktivierbar. Vor einem neuen Backup einen eigenen Wiederherstellungsschlüssel eingeben und getrennt vom Gerät aufbewahren. Ein ausdrücklich gewählter erreichbarer externer Ordner ist zulässig; Workspace und laufende Daten bleiben als Ziel ausgeschlossen.
+Systemzugänge und Anbieterwerte stehen in der lokalen .env im Installationsordner; SQLite enthält Referenzen. Die lesbare Datei bleibt privat, hat Rechte 0600 und wird nicht in Git übernommen. App-Anmeldung ist über den bestehenden Einstellungsweg aktivierbar. Vor einem neuen Backup einen eigenen Wiederherstellungsschlüssel eingeben und getrennt vom Gerät aufbewahren. Ein ausdrücklich gewählter erreichbarer externer Ordner ist zulässig; Workspace und laufende Daten bleiben als Ziel ausgeschlossen.
 
 Sicherungsschema 3 enthält Firmenbasis, Workspace einschließlich Identität und Ergebnisse, SQLite, Memory-Git-Historie, Diktataufnahmen, Provider-/Systemtresorschlüssel und eigene Codex-Verläufe. Modellgewichte und Caches werden neu aufgebaut; native Worker-Anmeldungen werden am Ziel erneut eingerichtet. Hostadressen und Dienstdefinitionen werden am Ziel neu bestimmt. Restore prüft den Bestand vor dem Ersetzen und führt die bisherige Rückkehrsicherung fort. Alte Sicherungen ohne Firmenbasis/Aufnahmen stellen diese Bestandteile nicht wieder her. Healthchecks sind keine vollständige Kundenauslieferungsabnahme.
 
@@ -277,16 +277,16 @@ Lange Prüfungen laufen außerhalb des Ereignisloops und werden beim geregelten
 Herunterfahren abgewartet. Ein gespeicherter Commit ist keine Live-Aktivierung.
 
 
-## Geschützte Schlüsselablage ab Tresorformat 2
+## Lokale Schlüsselablage in .env
 
 [VAULT.md](VAULT.md) führt Einrichtung, Offline-Migration, Neustartverhalten
-und Wiederherstellung. App-Anmeldung, Anbieter und Backup verwenden denselben
-Anschluss. Neue App-Zugangswerte samt Metadaten und Sitzungswiderruf werden
-transaktional gespeichert. Beim Scheitern der Host-Datei bleibt der alte Zugang
-gültig. Vor dem Abschluss einer Wiederherstellung wird der geprüfte
-Sicherungsschlüssel in einen neuen installationsbezogenen OS-Eintrag übernommen;
-bei Fehlern stellt das vorhandene Journal den alten Dateistand wieder her.
-
+und Wiederherstellung. App-Anmeldung, Anbieter und Backup verwenden dieselbe
+.env im Installationsordner; SQLite enthält nur Referenzen. Fehlgeschlagene
+Schreibvorgänge erhalten den alten Zugang und die bisherigen Sitzungen.
+Sicherungsschema 5 enthält .env im verschlüsselten Archiv. Restore nimmt sie
+in dasselbe Rückkehrjournal wie die Datenbank auf. Ältere Sicherungen 2 bis 4
+werden vor dem Austausch mit ihrem Recovery-Schlüssel lokal umgewandelt.
+Neue Zugänge und Wiederherstellungen benötigen keinen OS-Schlüsselbund.
 
 ## Lokale Suche
 

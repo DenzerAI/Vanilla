@@ -131,24 +131,24 @@ class Backups:
             with self.db.lock:
                 if self.settings.read()['version'] != previous['version']:
                     raise FileExistsError('Einstellungen wurden inzwischen geändert. Bitte erneut verbinden.')
-                vault = ProviderVault(self.config.data/'provider-vault', self.db)
+                vault = ProviderVault(self.config.data/'provider-vault', self.db, self.config.root)
                 values = {'system-backup': password}
                 old_target = previous['values']['backup']['target']
                 if old_target and old_target != str(directory):
                     # Do not silently discard an unreadable old archive key.
                     values['system-backup-' + hashlib.sha256(old_target.encode()).hexdigest()[:12]] = self.password()
-                encrypted = {name:vault.encrypt(name,value) for name,value in values.items()}
-                previous['version'] += 1
-                previous['values']['backup'].update(target=str(directory), enabled=True)
-                with self.db.transaction() as cx:
-                    records = {'system/settings':previous, **{vault.name(k):v for k,v in encrypted.items()}}
-                    state = self.db.get('control/state.json')['value']
-                    if state:
-                        state['secrets'] = [v for v in state.get('secrets',[]) if v['id'] not in encrypted] + [
-                            {'id':name,'name':'System · Sicherung' if name=='system-backup' else 'Sicherung · vorheriges Ziel','system':True} for name in encrypted]
-                        records['control/state.json'] = state
-                    for key,value in records.items():
-                        cx.execute('INSERT INTO records VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at', (key,dump(value),time()))
+                with vault.updating(values) as encrypted:
+                    previous['version'] += 1
+                    previous['values']['backup'].update(target=str(directory), enabled=True)
+                    with self.db.transaction() as cx:
+                        records = {'system/settings':previous, **{vault.name(k):v for k,v in encrypted.items()}}
+                        state = self.db.get('control/state.json')['value']
+                        if state:
+                            state['secrets'] = [v for v in state.get('secrets',[]) if v['id'] not in encrypted] + [
+                                {'id':name,'name':'System · Sicherung' if name=='system-backup' else 'Sicherung · vorheriges Ziel','system':True} for name in encrypted]
+                            records['control/state.json'] = state
+                        for key,value in records.items():
+                            cx.execute('INSERT INTO records VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at', (key,dump(value),time()))
             return {"ok": True, "target": str(directory)}
 
     def discard_staging(self):
@@ -178,11 +178,10 @@ class Backups:
                     (stage/name).mkdir(mode=0o700)
                     if name == 'provider-vault':
                         from .provider_vault import ProviderVault
-                        vault = ProviderVault(source, self.db)
-                        if vault.records():
-                            # Only the private staging directory of an encrypted
-                            # restic snapshot may contain the recovery key.
-                            atomic_write(stage/name/'provider.key', vault.key().decode('ascii'))
+                        vault = ProviderVault(source, self.db, self.config.root)
+                        if vault._old_records():
+                            raise ValueError('Vor der Sicherung vorhandene Zugänge in .env übernehmen.')
+                        atomic_write(stage/name/'credentials.env', vault.env.text())
                     elif source.exists(): copy_stable(source,stage/name)
                     elif name=='company' and os.environ.get('COMPANY_BASE'):
                         raise ValueError('Die konfigurierte Firmenbasis fehlt; Sicherung wurde nicht erstellt.')
@@ -207,7 +206,7 @@ class Backups:
                 cx.commit()
                 cx.execute("VACUUM")
             files = {p.relative_to(stage).as_posix(): sha256(p) for p in sorted(stage.rglob("*")) if p.is_file()}
-            manifest = {"format": "agent-backup-v1", "created_at": time(), "schema": 4, "files": files, "models": "rebuild", "secrets": "installation-vault; native worker login reconnect", "roots":[name for name,_ in snapshot_paths(self.config)]+["adapter-state"]}
+            manifest = {"format": "agent-backup-v1", "created_at": time(), "schema": 5, "files": files, "models": "rebuild", "secrets": "installation .env; native worker login reconnect", "roots":[name for name,_ in snapshot_paths(self.config)]+["adapter-state"]}
             atomic_write(stage / "manifest.json", json.dumps(manifest, indent=2))
             output = self.command("backup", ".", "--json", "--tag", "agent-core", cwd=stage)
             summaries = [json.loads(line) for line in output.splitlines() if line.startswith("{")]
@@ -264,7 +263,7 @@ def verify_restore(base):
     manifest = json.loads((base / "manifest.json").read_text())
     if manifest.get("format") != "agent-backup-v1":
         raise ValueError("Unbekanntes Sicherungsformat.")
-    if manifest.get('schema',2) not in {2,3,4}:
+    if manifest.get('schema',2) not in {2,3,4,5}:
         raise ValueError('Unbekannte Sicherungsversion.')
     if manifest.get('schema',2)>=3:
         if not (base/'host.json').is_file() or not (base/'workspace').is_dir() or not (base/'company').is_dir():
@@ -297,7 +296,17 @@ def verify_restore(base):
         if cx.execute("PRAGMA quick_check").fetchone()[0] != "ok":
             raise ValueError("Gesicherte Datenbank ist nicht intakt.")
         encrypted=cx.execute("SELECT key,value FROM records WHERE key LIKE 'provider-vault/%'").fetchall()
-        if encrypted:
+        if manifest.get('schema',2)>=5:
+            from .env_secrets import parse, variable
+            try:
+                values=parse((base/'provider-vault/credentials.env').read_text())
+                for name,value in encrypted:
+                    key=variable(name.split('/',1)[1])
+                    if json.loads(value)!={'storage':'env','key':key} or not values.get(key):
+                        raise ValueError()
+            except (OSError,ValueError):
+                raise ValueError('Gesicherte .env und Zugänge passen nicht zusammen.') from None
+        elif encrypted:
             from cryptography.fernet import Fernet, InvalidToken
             try:
                 cipher=Fernet((base/'provider-vault/provider.key').read_bytes())

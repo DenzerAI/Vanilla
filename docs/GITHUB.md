@@ -74,3 +74,5 @@ wird daraus öffentlicher Vanilla-Code. Die laufende Installation bleibt erhalte
 Bereits geteilter Code bleibt im privaten Repository. Rollenvereinbarung und
 Quellstände sind kein Lizenzersatz; öffentliche Downloads werden durch den
 betreuten Updateablauf technisch nicht eingeschränkt.
+
+Die gemeinsame Zugangsablage verwendet die lokale .env im Installationsordner. Bestehende Secret-Referenzen und Verbindungsabläufe bleiben erhalten; gespeicherte Werte werden nicht in die Oberfläche zurückgegeben. Übernahme, Sicherung und Rückweg führt docs/VAULT.md.

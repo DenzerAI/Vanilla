@@ -8,7 +8,7 @@ from .provider_vault import ProviderVault
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Vorhandenen Vanilla-Tresor in die geschützte Schlüsselverwaltung übernehmen; Kern vorher stoppen.')
+    parser = argparse.ArgumentParser(description='Vorhandene Vanilla-Zugänge in die lokale .env übernehmen; Kern vorher stoppen.')
     parser.add_argument('--data', type=Path)
     args = parser.parse_args()
     config = Config.environment(load_credentials=False)
@@ -17,7 +17,7 @@ def main():
         config.data = inside(config.root, args.data)
     db = Database(config.data / 'agent.sqlite3')
     try:
-        result = ProviderVault(config.data / 'provider-vault', db).migrate()
+        result = ProviderVault(config.data / 'provider-vault', db, config.root).migrate()
         print(json.dumps(result))
     finally:
         db.close()

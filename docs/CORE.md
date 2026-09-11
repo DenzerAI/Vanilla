@@ -12,7 +12,7 @@ Kontextnachweise und Anmeldesitzungen. Der Python-Kern besitzt eine exklusive
 Prozesssperre pro Datenbank; SQLite verwendet WAL und kurze Schreibtransaktionen.
 
 Der Node-Prozess auf Port 1990 ist ein interner Adapter für die bestehenden
-Codex-/ACP-Protokolle, Dienstanschlüsse, macOS-Schlüsselbund und Sprachfunktionen.
+Codex-/ACP-Protokolle, Dienstanschlüsse, lokale Zugangsverwaltung und Sprachfunktionen.
 Er akzeptiert im Kernbetrieb nur ein beim Start übergebenes internes Geheimnis.
 Dieses Geheimnis geht niemals an den Browser. Der Kern leitet API-Anfragen und
 Live-Ereignisse weiter; native Modellgespräche bleiben beim jeweiligen Worker.
@@ -35,7 +35,7 @@ Order-Dienstes werden nicht still mit den Wrapper-Daten vermischt.
 | Jobbeschreibung und Zeitplan | jobs/*/SKILL.md und job.yaml; SQLite jobs ist deren Abfrageindex |
 | Reservierung, Laufstatus und Abschluss | SQLite executions und events |
 | Werkzeuge, native Sessions, Audio, Anhänge | bestehende Dateiformate und Adapter |
-| Zugangsschlüssel | vorhandener Schlüsselbund, keine neue Klartextkopie |
+| Zugangsschlüssel | lokale .env im Installationsordner, außerhalb von Git |
 
 Beim ersten Start übernimmt der Kern die bekannten bisherigen JSON-Datensätze.
 Jeder Datensatz wird nur importiert, solange er noch nicht in SQLite existiert.

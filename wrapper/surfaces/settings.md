@@ -436,3 +436,5 @@ Datenmigration.
 ### Gespeicherte Stimmen
 
 Unter Sprachchat bei ElevenLabs folgt auf die Stimmenauswahl die schlichte Zeile „Gespeicherte Stimmen“ mit Plus. Der gemeinsame Modal zeigt Voice-ID und optionalen Namen; ohne Namen wird der Anbietername übernommen. Speichern einer neuen Stimme wählt sie aus. Gespeicherte Profile erscheinen als SettingRows mit Namen, ID und den Aktionen Auswählen, Bearbeiten, Profil entfernen. Bearbeiten erhält die ID. Entfernen löscht nur das lokale Profil, keine Stimme beim Anbieter. Anbieterzugänge bleiben in Verbindungen. Eigene Profile stehen in der Stimmenauswahl vor den deduplizierten Kontostimmen. Die Bausteinreferenz verwendet VoiceProfiles mit isolierten Beispieldaten.
+
+Hinweise zur Zugangsspeicherung benennen jetzt die lokale .env im Vanilla-Ordner. Die bestehenden Verbindungsdialoge, Secret-Zeilen und der Status der Schlüsselablage bleiben die gemeinsamen Bausteine; es gibt keine zusätzlichen Mac-Passwortfelder.

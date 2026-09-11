@@ -123,7 +123,7 @@ class Operations:
         fresh = bool(heartbeat and 0 <= time()-heartbeat.get('checked_at',0) < 150)
         heartbeat = {**(heartbeat or {}),'ok':bool(enabled and fresh and heartbeat.get('ok')),'state':'disabled' if not enabled else 'unconfigured' if not heartbeat else 'stale' if not fresh else 'ready' if heartbeat.get('ok') else 'error'}
         recovery = {'paused':bool(self.runtime and self.runtime.restore_hold),'last':read_json(self.config.data/'restore-last.json',None)}
-        return {"sourceWork": SourceWork(self.config.data).status(), "backup":self.backup_status(), "recovery":recovery, "settings": self.settings.read(), "checks": self.checks(), "heartbeat": heartbeat, "service": service_status(self.config), "embeddings": self.knowledge.embeddings.status(), "maintenance": self.db.rows("SELECT * FROM maintenance ORDER BY name"), "memory": {"sources": self.db.rows("SELECT count(*) n FROM memory_sources WHERE forgotten=0")[0]["n"], "pending": len(self.memory.pending), "mode": "local-extractive", "changes": self.db.rows("SELECT * FROM memory_changes ORDER BY created_at DESC LIMIT 20")}, "storage": {"free_mb": shutil.disk_usage(self.config.data).free // 1024**2, "database_bytes": (self.config.data / "agent.sqlite3").stat().st_size}, "backup_installed": bool(self.backups.binary), "vault": ProviderVault(self.config.data / "provider-vault", self.db).status(), "access": {"enabled": self.config.login_required, "origin": self.config.public_origin}, "stream": {"connected": bool(self.runtime and self.runtime.stream.connected), "clients": len(self.runtime.stream.clients) if self.runtime else 0}}
+        return {"sourceWork": SourceWork(self.config.data).status(), "backup":self.backup_status(), "recovery":recovery, "settings": self.settings.read(), "checks": self.checks(), "heartbeat": heartbeat, "service": service_status(self.config), "embeddings": self.knowledge.embeddings.status(), "maintenance": self.db.rows("SELECT * FROM maintenance ORDER BY name"), "memory": {"sources": self.db.rows("SELECT count(*) n FROM memory_sources WHERE forgotten=0")[0]["n"], "pending": len(self.memory.pending), "mode": "local-extractive", "changes": self.db.rows("SELECT * FROM memory_changes ORDER BY created_at DESC LIMIT 20")}, "storage": {"free_mb": shutil.disk_usage(self.config.data).free // 1024**2, "database_bytes": (self.config.data / "agent.sqlite3").stat().st_size}, "backup_installed": bool(self.backups.binary), "vault": ProviderVault(self.config.data / "provider-vault", self.db, self.config.root).status(), "access": {"enabled": self.config.login_required, "origin": self.config.public_origin}, "stream": {"connected": bool(self.runtime and self.runtime.stream.connected), "clients": len(self.runtime.stream.clients) if self.runtime else 0}}
 
     def run(self, handler):
         try:
@@ -194,35 +194,33 @@ class Operations:
         if len(password) < 8:
             raise ValueError("Bitte mindestens acht Zeichen verwenden.")
         api_token = secrets.token_urlsafe(48)
-        vault = ProviderVault(self.config.data / 'provider-vault', self.db)
+        vault = ProviderVault(self.config.data / 'provider-vault', self.db, self.config.root)
         host_path = self.config.data / 'host.json'
         with self.db.lock:
             old_host = host_path.read_text() if host_path.exists() else None
             host = json.loads(old_host) if old_host else {}
-            encrypted = {name: vault.encrypt(name, value) for name, value in
-                         [('system-access', password), ('system-api', api_token)]}
-            # Both credentials and their metadata commit together. A failed
-            # host-file write leaves the previous login and browser sessions valid.
-            wrote_host = False
-            try:
-                with self.db.transaction() as cx:
-                    for name, value in encrypted.items():
-                        cx.execute('INSERT INTO records VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at',
-                                   (vault.name(name), dump(value), time()))
-                    state = self.db.get('control/state.json')['value']
-                    if state:
-                        state['secrets'] = [s for s in state.get('secrets', []) if s['id'] not in encrypted] + [
-                            {'id': 'system-access', 'name': 'System · Anmeldung', 'system': True},
-                            {'id': 'system-api', 'name': 'System · Lokale Werkzeuge', 'system': True}]
-                        cx.execute('UPDATE records SET value=?,updated_at=? WHERE key=?', (dump(state), time(), 'control/state.json'))
-                    cx.execute('DELETE FROM sessions')
-                    atomic_write(host_path, dump({**host, 'access_enabled': True}))
-                    wrote_host = True
-            except BaseException:
-                if wrote_host:
-                    if old_host is None: host_path.unlink(missing_ok=True)
-                    else: atomic_write(host_path, old_host)
-                raise
+            with vault.updating({'system-access':password, 'system-api':api_token}) as encrypted:
+                # Restore the previous .env if host or database changes fail.
+                wrote_host = False
+                try:
+                    with self.db.transaction() as cx:
+                        for name, value in encrypted.items():
+                            cx.execute('INSERT INTO records VALUES(?,?,?) ON CONFLICT(key) DO UPDATE SET value=excluded.value,updated_at=excluded.updated_at',
+                                       (vault.name(name), dump(value), time()))
+                        state = self.db.get('control/state.json')['value']
+                        if state:
+                            state['secrets'] = [s for s in state.get('secrets', []) if s['id'] not in encrypted] + [
+                                {'id': 'system-access', 'name': 'System · Anmeldung', 'system': True},
+                                {'id': 'system-api', 'name': 'System · Lokale Werkzeuge', 'system': True}]
+                            cx.execute('UPDATE records SET value=?,updated_at=? WHERE key=?', (dump(state), time(), 'control/state.json'))
+                        cx.execute('DELETE FROM sessions')
+                        atomic_write(host_path, dump({**host, 'access_enabled': True}))
+                        wrote_host = True
+                except BaseException:
+                    if wrote_host:
+                        if old_host is None: host_path.unlink(missing_ok=True)
+                        else: atomic_write(host_path, old_host)
+                    raise
             self.config.login_password, self.config.access_token = password, api_token
         return {"ok": True, "loginRequired": True}
 

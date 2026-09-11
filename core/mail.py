@@ -145,7 +145,7 @@ class Send(ThreadAction):
 class Mail:
     def __init__(self, db, config, client=None):
         self.db, self.config = db, config
-        self.vault = ProviderVault(config.data / "provider-vault", db)
+        self.vault = ProviderVault(config.data / "provider-vault", db, config.root)
         self.client = client or httpx.AsyncClient(
             timeout=30, follow_redirects=False, trust_env=False
         )

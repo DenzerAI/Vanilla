@@ -202,7 +202,7 @@ def test_archive_commit_failure_preserves_old_target_and_ciphertext(config,db,mo
     from core.provider_vault import ProviderVault
     settings,_,_,o,*rest=services(config,db)
     target=str(config.root/'old-archive');settings.set_group('backup',target=target,enabled=True)
-    vault=ProviderVault(config.data/'provider-vault',db);vault.save('system-backup','old-synthetic-passphrase')
+    vault=ProviderVault(config.data/'provider-vault',db,config.root);vault.save('system-backup','old-synthetic-passphrase')
     before=settings.read();ciphertext=db.get(vault.name('system-backup'))
     monkeypatch.setattr(o.backups,'command',lambda *a,**kw:'[]')
     original=db.transaction
@@ -268,3 +268,14 @@ def test_maintenance_hold_resumes_in_place_for_the_matching_operator(config,monk
         assert app.state.mail.task is not None
         assert not (config.data/'updates/maintenance.json').exists()
         assert client.post('/internal/maintenance/resume',json={'id':'release-1'},headers=headers).status_code==403
+
+
+def test_restore_journal_rolls_back_env_with_other_files(config,db):
+    original=config.root/'.agent-restore-test-.env'
+    original.write_text('ORIGINAL="private-value"\n')
+    env=config.root/'.env';env.write_text('REPLACEMENT="different-value"\n')
+    journal=config.data/'restore-journal.json'
+    atomic_write(journal,json.dumps({'steps':[{'target':str(env),'old':str(original),'prepared':None,'existed':True,'started':True}]}))
+    recover(config,journal)
+    assert env.read_text()=='ORIGINAL="private-value"\n'
+    assert not original.exists() and not journal.exists()

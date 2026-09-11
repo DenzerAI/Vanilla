@@ -49,7 +49,7 @@ def recover(config, journal):
         journal.unlink()
         sync_directory(config.data)
         return
-    allowed = {*(target for _,target in snapshot_paths(config)), config.data/'host.json',config.data/'restore-hold.json',*(config.data/name for name in ADAPTER_FILES),config.data/'agent.sqlite3', *[Path(str(config.data/'agent.sqlite3')+s) for s in ('-wal','-shm')]}
+    allowed = {*(target for _,target in snapshot_paths(config)), config.root/'.env',config.data/'host.json',config.data/'restore-hold.json',*(config.data/name for name in ADAPTER_FILES),config.data/'agent.sqlite3', *[Path(str(config.data/'agent.sqlite3')+s) for s in ('-wal','-shm')]}
     for step in reversed(state['steps']):
         target, old, prepared = (Path(step[k]) if step.get(k) else None for k in ('target','old','prepared'))
         if target not in allowed or old.parent != target.parent or not old.name.startswith('.agent-restore-'):
@@ -126,7 +126,8 @@ def apply_pending(config):
         steps=[]
         sources=[(None,Path(str(config.data/'agent.sqlite3')+suffix)) for suffix in ('-wal','-shm')]
         sources += [(base/'database.sqlite3',config.data/'agent.sqlite3')]
-        sources += [(base/name,target) for name,target in snapshot_paths(config) if manifest.get('schema',2)>=3 or name not in {'company','dictations'}]
+        sources += [(None if name=='provider-vault' else base/name,target) for name,target in snapshot_paths(config) if manifest.get('schema',2)>=3 or name not in {'company','dictations'}]
+        sources.append(('env',config.root/'.env'))
         if manifest.get('schema',2)>=3:
             sources.append((base/'host.json',config.data/'host.json'))
         for name in ADAPTER_FILES:
@@ -143,7 +144,12 @@ def apply_pending(config):
             atomic_write(journal,json.dumps(record))
             if prepared:
                 target.parent.mkdir(parents=True,exist_ok=True)
-                if source == 'hold': atomic_write(prepared,json.dumps({'snapshot':state['snapshot'],'created_at':time()}))
+                if source == 'env':
+                    from .env_secrets import EnvSecrets
+                    EnvSecrets(config.root).check()
+                    database=next(Path(s['prepared']) for s in steps if s['target']==str(config.data/'agent.sqlite3'))
+                    atomic_write(prepared, restored_env(base,manifest,database,config))
+                elif source == 'hold': atomic_write(prepared,json.dumps({'snapshot':state['snapshot'],'created_at':time()}))
                 elif source.is_dir():shutil.copytree(source,prepared)
                 elif source.is_file():shutil.copy2(source,prepared)
                 else:prepared.mkdir()  # An absent old memory history must not leak into this snapshot.
@@ -162,12 +168,6 @@ def apply_pending(config):
             target,old=Path(step['target']),Path(step['old'])
             if target.exists():durable_replace(target,old)
             if step['prepared']:durable_replace(step['prepared'],target)
-        # Import the verified recovery key into a NEW scoped OS entry before
-        # committing the swap. Failure rolls back files and leaves old OS keys.
-        from .secrets import vault_database
-        from .provider_vault import ProviderVault
-        with vault_database(config) as db:
-            ProviderVault(config.data/'provider-vault', db).migrate()
         record['committed']=True
         record['committed_at']=time()
         atomic_write(journal,json.dumps(record))
@@ -184,3 +184,25 @@ def apply_pending(config):
         raise
     finally:
         owner.close()
+
+
+def restored_env(base, manifest, database, config):
+    from .env_secrets import EnvSecrets, parse, variable, PREFIX, ALIASES
+    if manifest.get('schema',2)>=5:
+        text=(base/'provider-vault/credentials.env').read_text()
+        parse(text)
+        return text
+    # Convert old encrypted backups before swapping any live files. No native
+    # keychain access is needed: the encrypted backup carries its recovery key.
+    values={k:v for k,v in EnvSecrets(config.root).values().items() if not k.startswith(PREFIX) and k not in ALIASES.values()}
+    from cryptography.fernet import Fernet
+    with closing(sqlite3.connect(database)) as cx:
+        rows=cx.execute("SELECT key,value FROM records WHERE key LIKE 'provider-vault/%'").fetchall()
+        if rows:
+            cipher=Fernet((base/'provider-vault/provider.key').read_bytes())
+            for name,value in rows:
+                key=variable(name.split('/',1)[1])
+                values[key]=cipher.decrypt(json.loads(value).encode()).decode()
+                cx.execute('UPDATE records SET value=? WHERE key=?',(json.dumps({'storage':'env','key':key}),name))
+            cx.commit()
+    return ''.join(k+'='+json.dumps(v,ensure_ascii=False)+'\n' for k,v in values.items())

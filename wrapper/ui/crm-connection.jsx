@@ -20,7 +20,7 @@ export function CrmConnectionForm({connection, api, notify, Field, onSaved, onCh
     const form = new FormData(event.currentTarget), config = {method}, credentials = {};
     for (const field of fields) (field.secret ? credentials : config)[field.key] = form.get(field.key) || '';
     await api('/connections/save', {id:connection.id, revision:connection.revision, kind:'crm', provider:provider.id, name:form.get('name'), config, credentials});
-    await onSaved('Zugangsdaten im Schlüsselbund gespeichert.');
+    await onSaved('Zugangsdaten in der lokalen .env gespeichert.');
   });
   return <form onSubmit={save} onChange={() => setDirty(true)}>
     <div className="connection-brand"><BrandIcon name={provider.name}/><strong>{provider.name}</strong></div>
@@ -42,14 +42,14 @@ export function CrmConnectionForm({connection, api, notify, Field, onSaved, onCh
       </Field>)}
     </div>
     <p className="form-help">{method === 'login'
-      ? 'Benutzername und Passwort liegen im macOS-Schlüsselbund. Die Anmeldung und eine mögliche Zwei-Faktor-Freigabe erfolgen separat; es ist kein automatischer Login aktiv.'
-      : provider.api.check ? 'Der Schlüssel liegt im macOS-Schlüsselbund. Nach dem Speichern kannst du den API-Zugang prüfen. Eine Synchronisierung wird separat eingerichtet.'
-      : 'Die Zugangsdaten liegen im macOS-Schlüsselbund. Die API ist damit vorbereitet; Zugangsprüfung und Datenaustausch müssen noch eingerichtet werden.'}</p>
+      ? 'Benutzername und Passwort liegen in der lokalen .env. Die Anmeldung und eine mögliche Zwei-Faktor-Freigabe erfolgen separat; es ist kein automatischer Login aktiv.'
+      : provider.api.check ? 'Der Schlüssel liegt in der lokalen .env. Nach dem Speichern kannst du den API-Zugang prüfen. Eine Synchronisierung wird separat eingerichtet.'
+      : 'Die Zugangsdaten liegen in der lokalen .env. Die API ist damit vorbereitet; Zugangsprüfung und Datenaustausch müssen noch eingerichtet werden.'}</p>
     {connection.id && <p className="form-help" role="status">{crmStatus({...connection, check})}</p>}
     <div className="crm-connection-actions">
       {connection.id && <button type="button" disabled={busy} onClick={run(async () => {
         await api('/connections/delete', {id:connection.id});
-        await onSaved('Verbindung entfernt. Das Secret bleibt im Schlüsselbund.');
+        await onSaved('Verbindung entfernt. Das Secret bleibt in der lokalen .env.');
       })}>Verbindung entfernen</button>}
       {connection.id && method === 'api' && provider.api.check && <button type="button" disabled={busy || dirty}
         title={dirty ? 'Änderungen zuerst speichern' : undefined} onClick={run(async () => {

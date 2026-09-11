@@ -23,7 +23,7 @@ Plus auf dem Diensteeintrag öffnet `Modal` mit „Verbindung hinzufügen“. De
 - ElevenLabs: echter API-Zugang zur Sprachausgabe, lokalen Tresor; Stimmen werden danach unter **Stimme** ausgewählt.
 - Anbieter verbinden wählt ihn nicht automatisch als Standard. Anbieterwahl gehört zur jeweiligen Funktionseinstellung.
 
-Alle gespeicherten Zugangsschlüssel verwenden denselben installationsgebundenen verschlüsselten Tresor und denselben Metadatenindex unter **Einstellungen → Secrets**. Sprachdienste registrieren ihren Schlüssel automatisch; frühere Sprachschlüssel werden ohne Auslesen des Werts in die Liste übernommen. Im Webhook-Dialog kann ein vorhandenes Secret gewählt oder ein neuer Bearer-Token eingegeben werden. Neue Tokens erhalten eine eigene Referenz und überschreiben keine von anderen Verbindungen verwendeten Schlüssel. Entfernen einer Verbindung behält ihren Schlüssel; das Löschen eines noch verwendeten Secrets wird verhindert.
+Alle gespeicherten Zugangsschlüssel verwenden denselben installationsgebundenen Zugangsspeicher in .env und denselben Metadatenindex unter **Einstellungen → Secrets**. Sprachdienste registrieren ihren Schlüssel automatisch; frühere Sprachschlüssel werden ohne Auslesen des Werts in die Liste übernommen. Im Webhook-Dialog kann ein vorhandenes Secret gewählt oder ein neuer Bearer-Token eingegeben werden. Neue Tokens erhalten eine eigene Referenz und überschreiben keine von anderen Verbindungen verwendeten Schlüssel. Entfernen einer Verbindung behält ihren Schlüssel; das Löschen eines noch verwendeten Secrets wird verhindert.
 
 ## Erweiterungsregel
 
@@ -43,7 +43,7 @@ Jeder weitere Anbieter folgt diesem Aufbau. Anbieterbezogene Einstellungen dürf
 
 Das Plus öffnet denselben `Modal` mit `CrmConnectionForm`; Bearbeiten verwendet denselben Inhalt. Vorbelegt werden Anbieter, belegte Zugangsmethode und bekannte Adressen. API-Freigaben und Beta-Status stehen mit Anbieterquelle im Dialog. Ein Browserlogin ist kein Ersatz für eine dokumentierte API; bei Desktop-Installationen darf die Anmeldeadresse leer bleiben. Es gibt keinen automatischen Browserlogin und keinen automatischen Datenabgleich.
 
-API-Schlüssel sowie Benutzername und Passwort liegen als zusammengehöriger Zugang im bestehenden installationsgebundenen verschlüsselten Tresor. Der Zustand enthält nur Metadaten und die Secret-Referenz. Beim Bearbeiten bleiben leere Geheimnisfelder unverändert; neue Werte erhalten eine eigene Referenz. Die Zugangsmethode wechseln erfordert passende neue Zugangsdaten. Die Oberfläche liest gespeicherte Werte nicht aus. Bündel von CRM-Zugangsdaten sind im Webhook-Dialog nicht als Bearer-Token auswählbar. „Ersetzen“ in Secrets öffnet die zugehörige CRM-Verbindung.
+API-Schlüssel sowie Benutzername und Passwort liegen als zusammengehöriger Zugang im bestehenden installationsgebundenen Zugangsspeicher in .env. Der Zustand enthält nur Metadaten und die Secret-Referenz. Beim Bearbeiten bleiben leere Geheimnisfelder unverändert; neue Werte erhalten eine eigene Referenz. Die Zugangsmethode wechseln erfordert passende neue Zugangsdaten. Die Oberfläche liest gespeicherte Werte nicht aus. Bündel von CRM-Zugangsdaten sind im Webhook-Dialog nicht als Bearer-Token auswählbar. „Ersetzen“ in Secrets öffnet die zugehörige CRM-Verbindung.
 
 „Sicher speichern“ bedeutet **Login hinterlegt · nicht angemeldet** oder **API-Zugang hinterlegt · ungeprüft**. Für HERO, weclapp und CentralStationCRM kann nach dem Speichern ein API-Zugang separat geprüft werden. Eine fehlgeschlagene Prüfung bleibt sichtbar. Eine erfolgreiche Prüfung meldet **API-Zugang geprüft · kein Sync aktiv**. Bei Anbietern ohne implementierte Prüfung wird kein Prüfbutton angeboten. Änderungen an Zugang oder Adresse verwerfen die alte Prüfung; ein während einer Prüfung geänderter oder entfernter Anschluss kann nicht nachträglich als geprüft erscheinen. Speichern aus einem veralteten Dialog wird zurückgewiesen.
 
@@ -125,3 +125,5 @@ Tailscale zeigt Installation, Kontoanmeldung und Serve im normalen Dialog.
 Funnel liegt unter Öffentlicher Zugriff und benötigt App-Anmeldung und ausdrücklichen
 Schalter. Zentral verwaltete Installationen zeigen ihren Host-Betriebsweg.
 Technischer Vertrag, Modellgrenzen und Migration: [Geräte](../../docs/DEVICES.md).
+
+Die gemeinsame Zugangsablage verwendet die lokale .env im Installationsordner. Bestehende Secret-Referenzen und Verbindungsabläufe bleiben erhalten; gespeicherte Werte werden nicht in die Oberfläche zurückgegeben. Übernahme, Sicherung und Rückweg führt docs/VAULT.md.

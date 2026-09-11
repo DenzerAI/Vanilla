@@ -175,3 +175,5 @@ Echter erster CRM-Sync mit Rechten, Feldführungsregeln, Paging, Delta-/Löschsi
 Der gemeinsame MCP-Einstieg bietet zusätzlich registrierte Gerätewerkzeuge an.
 CRM-Werkzeuge und ihre Daten bleiben über dieselben bestehenden Schnittstellen
 erreichbar; eine Gerätefreigabe verleiht keine zusätzlichen CRM-Rechte.
+
+Die gemeinsame Zugangsablage verwendet die lokale .env im Installationsordner. Bestehende Secret-Referenzen und Verbindungsabläufe bleiben erhalten; gespeicherte Werte werden nicht in die Oberfläche zurückgegeben. Übernahme, Sicherung und Rückweg führt docs/VAULT.md.

@@ -60,9 +60,9 @@ Benachrichtigungs- und Berichtsliste. Eine Folgeaufgabe erteilt keine Versandfre
 
 ## Tresor und Wiederherstellung
 
-ProviderVault verschlüsselt Anbieterwerte mit Fernet aus cryptography in SQLite. Der Schutzschlüssel liegt in einem eigenen installationsgebundenen Eintrag der Betriebssystem-Schlüsselverwaltung. Die lokale Datei vault.json enthält nur Format und zufällige Zuordnung. Es werden keine fremden Konten gesucht oder übernommen. Node-Verbindungen verwenden denselben Tresor über den geschützten internen Kernanschluss. Systemzugänge teilen die Ablage, sind für Anbieteraktionen aber gesperrt. Migration, Grenzen und Wiederherstellung: [VAULT](VAULT.md).
+ProviderVault speichert Anbieterwerte in der lokalen .env im Installationsordner. SQLite enthält nur Referenzen auf diese Variablen. Es werden keine fremden Konten gesucht oder übernommen. Node-Verbindungen verwenden denselben Tresor über den geschützten internen Kernanschluss. Systemzugänge teilen die Ablage, sind für Anbieteraktionen aber gesperrt. Migration, Grenzen und Wiederherstellung: [VAULT](VAULT.md).
 
-Verschlüsselte Backups nehmen SQLite und eine Wiederherstellungskopie des Tresorschlüssels gemeinsam auf. Wiederherstellung ersetzt beide zusammen; reine Datenbankkopien genügen nicht. Der lokale Schlüssel schützt vor Klartext in Datenbank/Export, nicht vor einem Angreifer mit vollständigem Zugriff auf den Betriebssystembenutzer. Nach Anbieter-App-Rotation bestehende Konten erneut verbinden. Trennen löscht den lokal gespeicherten Kontozugang und beendet den Abruf, widerruft aber nicht automatisch die Anbieterfreigabe. Diese lässt sich im Google-/Microsoft-Konto entfernen.
+Verschlüsselte Backups nehmen SQLite und .env gemeinsam auf. Wiederherstellung ersetzt beide zusammen; reine Datenbankkopien genügen nicht. .env enthält lesbare Zugänge und bleibt außerhalb normaler Exporte. Nach Anbieter-App-Rotation bestehende Konten erneut verbinden. Trennen löscht den lokal gespeicherten Kontozugang und beendet den Abruf, widerruft aber nicht automatisch die Anbieterfreigabe. Diese lässt sich im Google-/Microsoft-Konto entfernen.
 
 ## Belege und Abnahme
 
@@ -76,3 +76,5 @@ Offizielle Quellen:
 - https://learn.microsoft.com/en-us/entra/identity-platform/v2-oauth2-auth-code-flow
 - https://learn.microsoft.com/en-us/exchange/permissions-exo/application-rbac
 - https://learn.microsoft.com/en-us/graph/delta-query-messages
+
+Die gemeinsame Zugangsablage verwendet die lokale .env im Installationsordner. Bestehende Secret-Referenzen und Verbindungsabläufe bleiben erhalten; gespeicherte Werte werden nicht in die Oberfläche zurückgegeben. Übernahme, Sicherung und Rückweg führt docs/VAULT.md.

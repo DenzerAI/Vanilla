@@ -130,7 +130,7 @@ export function SystemSettings({api, section, chats, onJobs, onLibrary, onConnec
     {section==='access'&&<>
       <Group title="Zugang">
         <SettingRow title="Schlüsselablage" description={status.vault?.message || 'Status wird geprüft.'}/>
-        <SettingRow title="Anmeldung" description={status.access.enabled?'Der Zugang liegt verschlüsselt im eigenen Tresor.':'Auf diesem Gerät ist noch keine Anmeldung eingerichtet.'}><button onClick={()=>setAccess(true)}>{status.access.enabled?'Schlüssel ändern':'Schlüssel setzen'}</button></SettingRow>
+        <SettingRow title="Anmeldung" description={status.access.enabled?'Der Zugang liegt in der lokalen .env.':'Auf diesem Gerät ist noch keine Anmeldung eingerichtet.'}><button onClick={()=>setAccess(true)}>{status.access.enabled?'Schlüssel ändern':'Schlüssel setzen'}</button></SettingRow>
         <SettingRow title="Mobil mit Tailscale" description="Private HTTPS-Verbindung zwischen deinen angemeldeten Geräten. Die App bleibt an localhost gebunden."><button onClick={onConnections}>Verbindung einrichten</button></SettingRow>
         {status.access.origin&&<SettingRow title="Mobile Adresse" description={status.access.origin}><a href={status.access.origin} target="_blank" rel="noreferrer">Öffnen</a></SettingRow>}
       </Group>

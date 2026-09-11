@@ -3026,7 +3026,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                     <SettingRow
                       key={s.id}
                       title={s.name}
-                      description="•••••••• · Im Schlüsselbund gespeichert"
+                      description="•••••••• · In der lokalen .env gespeichert"
                       action={
                         <div className="row">
                           <button
@@ -3376,7 +3376,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               });
               setIntegrations(await api("/integrations?view=settings"));
               setModal(null);
-              notify("Im macOS-Schlüsselbund gespeichert.");
+              notify("In der lokalen .env gespeichert.");
             })}
           >
             <Field label="Bezeichnung">
@@ -3479,7 +3479,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
             <Field label="Neuen Bearer-Token speichern (optional)">
               <input name="secretValue" type="password" autoComplete="new-password" />
             </Field>
-            <p className="page-note">Ein neuer Token wird im macOS-Schlüsselbund gespeichert und unter Secrets angelegt. Er ersetzt für diese Verbindung die Auswahl oben.</p>
+            <p className="page-note">Ein neuer Token wird in der lokalen .env gespeichert und unter Secrets angelegt. Er ersetzt für diese Verbindung die Auswahl oben.</p>
             <div className="row between">
               {modal.connection?.id ? (
                 <>

@@ -8,9 +8,9 @@ def read_secret(id, config=None, db=None):
     if config is None:
         raise ValueError("Ein installationsgebundener Tresor ist erforderlich.")
     if db is not None:
-        return ProviderVault(config.data / 'provider-vault', db).read(id)
+        return ProviderVault(config.data / 'provider-vault', db, config.root).read(id)
     with vault_database(config) as db:
-        return ProviderVault(config.data / 'provider-vault', db).read(id)
+        return ProviderVault(config.data / 'provider-vault', db, config.root).read(id)
 
 
 @contextmanager
@@ -30,7 +30,7 @@ def vault_database(config):
 def save_secret(id, value, config=None, db=None):
     if config is None or db is None:
         raise ValueError("Ein installationsgebundener Tresor ist erforderlich.")
-    ProviderVault(config.data / 'provider-vault', db).save(id, value)
+    ProviderVault(config.data / 'provider-vault', db, config.root).save(id, value)
 
 
 def register_secret(db, id, name):

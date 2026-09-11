@@ -40,6 +40,7 @@ def fixture_install(tmp_path,monkeypatch):
     (job/'SKILL.md').write_text('Synthetic private workflow.\n')
     (root/'firmenbasis').mkdir();(root/'firmenbasis/FIRMA.md').write_text('Synthetic local company.\n')
     secret=data/'provider-vault';secret.mkdir();(secret/'fixture.key').write_bytes(b'fixture-private-value')
+    (root/'.env').write_text('ELEVENLABS_API_KEY=synthetic-local-value\n')
     before={'core/demo.py':{'sha256':operator.hash_file(root/'core/demo.py'),'mode':'100644'}}
     after={name:{'sha256':operator.hash_file(candidate/name),'mode':'100644'} for name in ['core/demo.py','core/addition.py']}
     build=operator.tree_files(candidate/'wrapper/dist')
@@ -74,6 +75,7 @@ def fixture_install(tmp_path,monkeypatch):
 
 
 def assert_private_preserved(root,data):
+    assert (root/'.env').read_text()=='ELEVENLABS_API_KEY=synthetic-local-value\n'
     assert (root/'workspaces/default/jobs/local-job/SKILL.md').read_text()=='Synthetic private workflow.\n'
     assert '09:00' in (root/'workspaces/default/jobs/local-job/job.yaml').read_text()
     assert (data/'provider-vault/fixture.key').read_bytes()==b'fixture-private-value'

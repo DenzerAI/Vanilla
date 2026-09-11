@@ -184,6 +184,7 @@ Die automatische Prüfung verhindert unregistrierte Dateien und Routen.
 
 
 Für Schlüsselablage, Neustart und Migration gilt [VAULT.md](VAULT.md).
-macOS benötigt einen zugänglichen Schlüsselbund, Linux eine entsperrbare
-Secret-Service-Sitzung. Ohne diese Voraussetzung schlägt Speichern sichtbar
-fehl; ein Prozessstart allein bestätigt noch keine nutzbare Schlüsselablage.
+Zugänge werden in der lokalen .env im Vanilla-Ordner gespeichert. Die Datei
+bleibt außerhalb von Git und reist bei einer vollständigen Ordnerkopie mit.
+Ein Betriebssystem-Schlüsselbund ist nur zur Übernahme alter OS-gebundener
+Zugänge nötig. Laufzeiten, Modelle und native Worker-Anmeldungen am Ziel prüfen.

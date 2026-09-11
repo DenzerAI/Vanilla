@@ -86,8 +86,8 @@
         "meaning": "Schema und lokal eingerichtete Vorlagen sind lesbar; produktive CRM-Masken und externe Synchronisation bleiben separat auszubauen."
       },
       "limits": "Neutrale People-/Firmenlisten und Deal-Listen-/Boarddefinitionen sind explizit einrichtbar. Noch keine produktiven CRM-Bearbeitungsmasken, kein Ablauf-Builder und kein externer Sync.",
-      "version": 3,
-      "migration": "Version 3 ergänzt crm_template_installations additiv und idempotent. Keine automatische Einrichtung oder Änderung vorhandener Fakten, Felder, Abläufe und Ansichten. Installationen speichern Vorlagenversion und Snapshot; Wiederholung ist ohne Schreibwirkung, Versions- oder Kennungskonflikte brechen atomar ab. Alter Code kann bestehende CRM-Daten lesen und ignoriert die neue Tabelle; keine Tabellen beim Rückwechsel löschen. Rückkehrregeln: docs/CRM.md."
+      "version": 4,
+      "migration": "Version 3 ergänzt crm_template_installations additiv und idempotent. Keine automatische Einrichtung oder Änderung vorhandener Fakten, Felder, Abläufe und Ansichten. Installationen speichern Vorlagenversion und Snapshot; Wiederholung ist ohne Schreibwirkung, Versions- oder Kennungskonflikte brechen atomar ab. Alter Code kann bestehende CRM-Daten lesen und ignoriert die neue Tabelle; keine Tabellen beim Rückwechsel löschen. Rückkehrregeln: docs/CRM.md. Zugangsformat ENV: vorhandene verschlüsselte Zugänge vor neuen Schreibvorgängen offline mit core.vault_migrate übernehmen. .env bleibt privat und wird mit Daten kopiert. Rückweg benötigt vorherigen vollständigen Datenstand. Sicherungsschema 5 mit .env; Schema 2–4 werden bei Restore lokal konvertiert. Details docs/VAULT.md."
     },
     {
       "id": "planner",
@@ -247,8 +247,8 @@
         "meaning": "OAuth-App bereit ist noch kein verbundenes Postfach. Zusätzlich /api/mail/accounts und letzten Sync prüfen."
       },
       "limits": "Gmail und Outlook: Lesen, Entwürfe und expliziter Versand. CRM-Übergabe erzeugt Belege und Vorschläge; Entscheidungen bleiben separat. Kalender nutzt den eigenen Microsoft-Serviceanschluss. Weitere Messenger sind keine Mailpostfächer. Schlüsselablage setzt eine erreichbare native OS-Schlüsselverwaltung voraus; siehe docs/VAULT.md.",
-      "version": 2,
-      "migration": "Tresorformat 2: OS-geschützter installationsbezogener Schlüssel. Vor Quellaktivierung alten Bestand offline mit core.vault_migrate prüfen und übernehmen. Rückweg benötigt vollständige Datenwiederherstellung; Details docs/VAULT.md. Bestehende Ciphertexte und übrige Daten bleiben erhalten."
+      "version": 3,
+      "migration": "Alte Tresorformate 1/2 werden ausdrücklich nach .env migriert; vollständigen vorherigen Datenstand für den Rückweg erhalten. Details docs/VAULT.md. Zugangsformat ENV: vorhandene verschlüsselte Zugänge vor neuen Schreibvorgängen offline mit core.vault_migrate übernehmen. .env bleibt privat und wird mit Daten kopiert. Rückweg benötigt vorherigen vollständigen Datenstand. Sicherungsschema 5 mit .env; Schema 2–4 werden bei Restore lokal konvertiert. Details docs/VAULT.md."
     },
     {
       "id": "chat",
@@ -367,8 +367,8 @@
         "meaning": "Eingerichtet, verbunden und authentifiziert getrennt auswerten."
       },
       "limits": "Eingerichtet, verbunden und authentifiziert getrennt auswerten.",
-      "version": 15,
-      "migration": "Bestehende Chat-IDs, Entwürfe und native Sitzungen erhalten. Forkfamilie und Statistikfelder sind additiv; Fork-Zähler bei Rückkehr nicht aus alten Kopien erraten. Nachrichtenkennungen und persistente Übergabebelege bleiben führend. Native Rückfragen vor Adapterwechsel beantworten oder stoppen; UI-Präferenzen sind browserlokal. workspaceOnboarding ist ein optionaler Verweis auf den einzigen Einrichtungschat je Workspace; Forks übernehmen ihn nicht. Einrichtung verwendet die bestehende Nachrichtenübergabe. Der separate Adapter liefert gebaute Assets direkt aus dist aus und meldet fehlende Dateien mit 404 statt HTML. Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Restore markiert offene Nachrichtenübergaben als unknown. Die gemeinsame Betriebspause blockiert neue Übergaben bis zur ausdrücklichen Fortsetzung; unbestätigte alte Nachrichten bleiben einzeln prüfpflichtig. Vertrag docs/OPERATIONS.md. Hintergrundabgleiche erhalten bereits gestreamte Inhalte; Zustellstatus kopiert nur betroffene Nutzerbeiträge. Keine Datenmigration oder neue Speicherung. Pane-Kürzel bedienen vorhandenes Diktat mit explizitem Direktsenden und Escape-Abbruch; keine Datenmigration. Ältere UI verwendet wieder reine Fokusaktionen. Diktatkürzel und Chatbeschriftungen folgen der geöffneten Ansichtsreihenfolge, unabhängig von internen Pane-IDs. Einzelfeld ist immer Chat 1. Keine Datenmigration; Rückkehr verwendet interne Nummern."
+      "version": 16,
+      "migration": "Bestehende Chat-IDs, Entwürfe und native Sitzungen erhalten. Forkfamilie und Statistikfelder sind additiv; Fork-Zähler bei Rückkehr nicht aus alten Kopien erraten. Nachrichtenkennungen und persistente Übergabebelege bleiben führend. Native Rückfragen vor Adapterwechsel beantworten oder stoppen; UI-Präferenzen sind browserlokal. workspaceOnboarding ist ein optionaler Verweis auf den einzigen Einrichtungschat je Workspace; Forks übernehmen ihn nicht. Einrichtung verwendet die bestehende Nachrichtenübergabe. Der separate Adapter liefert gebaute Assets direkt aus dist aus und meldet fehlende Dateien mit 404 statt HTML. Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Restore markiert offene Nachrichtenübergaben als unknown. Die gemeinsame Betriebspause blockiert neue Übergaben bis zur ausdrücklichen Fortsetzung; unbestätigte alte Nachrichten bleiben einzeln prüfpflichtig. Vertrag docs/OPERATIONS.md. Hintergrundabgleiche erhalten bereits gestreamte Inhalte; Zustellstatus kopiert nur betroffene Nutzerbeiträge. Keine Datenmigration oder neue Speicherung. Pane-Kürzel bedienen vorhandenes Diktat mit explizitem Direktsenden und Escape-Abbruch; keine Datenmigration. Ältere UI verwendet wieder reine Fokusaktionen. Diktatkürzel und Chatbeschriftungen folgen der geöffneten Ansichtsreihenfolge, unabhängig von internen Pane-IDs. Einzelfeld ist immer Chat 1. Keine Datenmigration; Rückkehr verwendet interne Nummern. Zugangsformat ENV: vorhandene verschlüsselte Zugänge vor neuen Schreibvorgängen offline mit core.vault_migrate übernehmen. .env bleibt privat und wird mit Daten kopiert. Rückweg benötigt vorherigen vollständigen Datenstand. Sicherungsschema 5 mit .env; Schema 2–4 werden bei Restore lokal konvertiert. Details docs/VAULT.md."
     },
     {
       "id": "speech",
@@ -502,7 +502,7 @@
       },
       "limits": "Gespeichert, getestet, verbunden und ausführbar getrennt behandeln; reine Links versprechen kein Werkzeug.",
       "version": 2,
-      "migration": "Tresorformat 2: OS-geschützter installationsbezogener Schlüssel. Vor Quellaktivierung alten Bestand offline mit core.vault_migrate prüfen und übernehmen. Rückweg benötigt vollständige Datenwiederherstellung; Details docs/VAULT.md. Bestehende Ciphertexte und übrige Daten bleiben erhalten."
+      "migration": "Alte Tresorformate 1/2 werden ausdrücklich nach .env migriert; vollständigen vorherigen Datenstand für den Rückweg erhalten. Details docs/VAULT.md."
     },
     {
       "id": "workers",
@@ -825,8 +825,8 @@
         "meaning": "Persistierte Konfiguration dieser Installation."
       },
       "limits": "Persistierte Konfiguration dieser Installation.",
-      "version": 6,
-      "migration": "Vorhandene Einstellungen und Markdown-Abschnitte erhalten. Optionale Wetterkoordinaten ergänzen USER.md; alte Ortsnamen bleiben lesbar und werden bei Mehrdeutigkeit erst nach Auswahl verwendet. Pane-Tastenkürzel liegen ausschließlich browserlokal; ungültige Werte verwenden den Standard, ohne Chatentwürfe zu ändern. Pane-Kürzel starten nun Diktat und senden bei erneutem Drücken, Escape bricht ohne Senden ab. Bestehende Belegungen bleiben erhalten; keine Audio-/Serverdatenmigration. Rückkehr stellt reine Fokusaktionen wieder her. Diktatkürzel und Chatbeschriftungen folgen der geöffneten Ansichtsreihenfolge, unabhängig von internen Pane-IDs. Einzelfeld ist immer Chat 1. Keine Datenmigration; Rückkehr verwendet interne Nummern."
+      "version": 7,
+      "migration": "Vorhandene Einstellungen und Markdown-Abschnitte erhalten. Optionale Wetterkoordinaten ergänzen USER.md; alte Ortsnamen bleiben lesbar und werden bei Mehrdeutigkeit erst nach Auswahl verwendet. Pane-Tastenkürzel liegen ausschließlich browserlokal; ungültige Werte verwenden den Standard, ohne Chatentwürfe zu ändern. Pane-Kürzel starten nun Diktat und senden bei erneutem Drücken, Escape bricht ohne Senden ab. Bestehende Belegungen bleiben erhalten; keine Audio-/Serverdatenmigration. Rückkehr stellt reine Fokusaktionen wieder her. Diktatkürzel und Chatbeschriftungen folgen der geöffneten Ansichtsreihenfolge, unabhängig von internen Pane-IDs. Einzelfeld ist immer Chat 1. Keine Datenmigration; Rückkehr verwendet interne Nummern. Zugangsformat ENV: vorhandene verschlüsselte Zugänge vor neuen Schreibvorgängen offline mit core.vault_migrate übernehmen. .env bleibt privat und wird mit Daten kopiert. Rückweg benötigt vorherigen vollständigen Datenstand. Sicherungsschema 5 mit .env; Schema 2–4 werden bei Restore lokal konvertiert. Details docs/VAULT.md."
     },
     {
       "id": "operations",
@@ -852,7 +852,9 @@
         "core/vault_keys.py",
         "core/vault_migrate.py",
         "core/frontend_check.py",
-        "core/tests/test_frontend_check.py"
+        "core/tests/test_frontend_check.py",
+        "core/env_secrets.py",
+        "core/legacy_vault.py"
       ],
       "entrypoints": [
         "GET /api/auth/session",
@@ -895,8 +897,8 @@
         "meaning": "Prozess, vollständige lokale Basis und tatsächliche Worker-Ausführbarkeit getrennt prüfen; Kundenanschlüsse werden nicht pauschal als bereit erklärt."
       },
       "limits": "Betriebszustand, Login, Backup und Restore-Nachweis separat prüfen.",
-      "version": 5,
-      "migration": "Tresorformat 2: OS-geschützter installationsbezogener Schlüssel. Vor Quellaktivierung alten Bestand offline mit core.vault_migrate prüfen und übernehmen. Rückweg benötigt vollständige Datenwiederherstellung; Details docs/VAULT.md. Bestehende Ciphertexte und übrige Daten bleiben erhalten. Fehlende oder fehlerhafte Suchberechnung bleibt als Einschränkung sichtbar; der Volltextindex bleibt nutzbar. Sicherungsschema 4; Schema 2/3 weiter lesbar. Restore setzt eine dauerhafte Betriebspause, quarantänisiert offene Übergaben und verhindert alte Zeitpläne. Details docs/OPERATIONS.md."
+      "version": 6,
+      "migration": "Alte Tresorformate 1/2 werden ausdrücklich nach .env migriert; vollständigen vorherigen Datenstand für den Rückweg erhalten. Details docs/VAULT.md. Fehlende oder fehlerhafte Suchberechnung bleibt als Einschränkung sichtbar; der Volltextindex bleibt nutzbar. Sicherungsschema 4; Schema 2/3 weiter lesbar. Restore setzt eine dauerhafte Betriebspause, quarantänisiert offene Übergaben und verhindert alte Zeitpläne. Details docs/OPERATIONS.md. Zugangsformat ENV: vorhandene verschlüsselte Zugänge vor neuen Schreibvorgängen offline mit core.vault_migrate übernehmen. .env bleibt privat und wird mit Daten kopiert. Rückweg benötigt vorherigen vollständigen Datenstand. Sicherungsschema 5 mit .env; Schema 2–4 werden bei Restore lokal konvertiert. Details docs/VAULT.md."
     },
     {
       "id": "platform",
@@ -1058,8 +1060,8 @@
         "meaning": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen."
       },
       "limits": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen.",
-      "version": 20,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der bestehende Projektindex erhält abgeleitete Workspace-Metadaten. Jobkategorien werden aus dem optionalen Manifestfeld gelesen; keine Verschiebung von Dateien. Tresorformat 2: OS-geschützter installationsbezogener Schlüssel. Vor Quellaktivierung alten Bestand offline mit core.vault_migrate prüfen und übernehmen. Rückweg benötigt vollständige Datenwiederherstellung; Details docs/VAULT.md. Bestehende Ciphertexte und übrige Daten bleiben erhalten. Lokales MiniLM wird anhand der festgelegten Dateiprüfsummen geprüft und repariert; source.json allein bestätigt keine Bereitschaft. Bestehende Modellordner bleiben erhalten. Nach Restore gilt recovery/not-before als Zeitplangrenze. Normale Neustarts erhalten bestehende Wiederholungsregeln. Keine Tabellen entfernt. Gemeinsame Modellwahl und anbieterbezogene Profilprüfung ohne Datenmigration; vorhandene native Einstellungen und Übergabeverläufe bleiben erhalten. Streaming-Abgleiche erhalten sichtbare Inhalte und projizieren große Abschlussereignisse. Keine Datenmigration; ursprüngliche Worker-Verläufe bleiben erhalten. Modellwahl ohne Default-Rücksetzaktion; expliziter Denkaufwand bleibt pro Chat soweit unterstützt. Keine Datenmigration. Bestätigte konkrete Claude-Anfangsstufe pro nativer Sitzung, bestehende explizite Werte erhalten. Default-Modellalias wird nur bei exakter resolvedModel-Übereinstimmung visuell zugeordnet. Keine Datenmigration; ältere Stände lesen die native Einstellung."
+      "version": 21,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der bestehende Projektindex erhält abgeleitete Workspace-Metadaten. Jobkategorien werden aus dem optionalen Manifestfeld gelesen; keine Verschiebung von Dateien. Alte Tresorformate 1/2 werden ausdrücklich nach .env migriert; vollständigen vorherigen Datenstand für den Rückweg erhalten. Details docs/VAULT.md. Lokales MiniLM wird anhand der festgelegten Dateiprüfsummen geprüft und repariert; source.json allein bestätigt keine Bereitschaft. Bestehende Modellordner bleiben erhalten. Nach Restore gilt recovery/not-before als Zeitplangrenze. Normale Neustarts erhalten bestehende Wiederholungsregeln. Keine Tabellen entfernt. Gemeinsame Modellwahl und anbieterbezogene Profilprüfung ohne Datenmigration; vorhandene native Einstellungen und Übergabeverläufe bleiben erhalten. Streaming-Abgleiche erhalten sichtbare Inhalte und projizieren große Abschlussereignisse. Keine Datenmigration; ursprüngliche Worker-Verläufe bleiben erhalten. Modellwahl ohne Default-Rücksetzaktion; expliziter Denkaufwand bleibt pro Chat soweit unterstützt. Keine Datenmigration. Bestätigte konkrete Claude-Anfangsstufe pro nativer Sitzung, bestehende explizite Werte erhalten. Default-Modellalias wird nur bei exakter resolvedModel-Übereinstimmung visuell zugeordnet. Keine Datenmigration; ältere Stände lesen die native Einstellung. Zugangsformat ENV: vorhandene verschlüsselte Zugänge vor neuen Schreibvorgängen offline mit core.vault_migrate übernehmen. .env bleibt privat und wird mit Daten kopiert. Rückweg benötigt vorherigen vollständigen Datenstand. Sicherungsschema 5 mit .env; Schema 2–4 werden bei Restore lokal konvertiert. Details docs/VAULT.md."
     },
     {
       "id": "weather",
@@ -1318,8 +1320,8 @@
         "meaning": "Eigene GitHub App mit Device Flow und installationsgebundenem Konto nötig. App-Installation, Repositoryrechte und Betreuerzugriff separat prüfen."
       },
       "limits": "Eigene GitHub App mit Device Flow und installationsgebundenem Konto nötig. App-Installation, Repositoryrechte und Betreuerzugriff separat prüfen.",
-      "version": 1,
-      "migration": "Additive lokale records; Benachrichtigungen erhalten optionale kind/subject_id-Felder. Bestehende Jobs, Firmenbasis, Verbindungen und Lesestatus erhalten. Keine automatische Migration unbekannter Datenformate."
+      "version": 2,
+      "migration": "Additive lokale records; Benachrichtigungen erhalten optionale kind/subject_id-Felder. Bestehende Jobs, Firmenbasis, Verbindungen und Lesestatus erhalten. Keine automatische Migration unbekannter Datenformate. Zugangsformat ENV: vorhandene verschlüsselte Zugänge vor neuen Schreibvorgängen offline mit core.vault_migrate übernehmen. .env bleibt privat und wird mit Daten kopiert. Rückweg benötigt vorherigen vollständigen Datenstand. Sicherungsschema 5 mit .env; Schema 2–4 werden bei Restore lokal konvertiert. Details docs/VAULT.md."
     },
     {
       "id": "updates",

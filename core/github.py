@@ -30,7 +30,7 @@ class GitHubError(ValueError):
 class GitHub:
     def __init__(self, db, config, client=None, clock=time):
         self.db, self.config, self.clock = db, config, clock
-        self.vault = ProviderVault(config.data / "provider-vault", db)
+        self.vault = ProviderVault(config.data / "provider-vault", db, config.root)
         self.client = client or httpx.AsyncClient(timeout=30, trust_env=False, follow_redirects=False)
         self.lock = asyncio.Lock()
         self.oauth_lock = asyncio.Lock()

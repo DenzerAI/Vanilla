@@ -91,7 +91,7 @@ die Aktivierung der laufenden Anwendung bleibt ein eigener Schritt.
 
 Die folgenden `host-service.py`-Befehle beschreiben den launchd-Installationsweg auf einem entsprechend berechtigten Zielhost. Sie setzen freie Ports 1989/1990 und die funktionierende native Tailscale-CLI voraus.
 
-Dieser Abschnitt ist ein Operator-Ablauf für einen regulär berechtigten Host-Prozess. Er ist keine Umgehung einer Worker-Sandbox. Die App verwendet ausschließlich ihren eigenen installationsbezogenen Tresoreintrag; fremde Schlüsselbund-Einträge bleiben unberührt. Dienst- und Netzwerkaktivierung folgen dem gesonderten Betriebsweg.
+Dieser Abschnitt ist ein Operator-Ablauf für einen regulär berechtigten Host-Prozess. Er ist keine Umgehung einer Worker-Sandbox. Die App speichert Zugänge in ihrer eigenen lokalen .env; fremde Schlüsselbund-Einträge bleiben unberührt. Dienst- und Netzwerkaktivierung folgen dem gesonderten Betriebsweg.
 
 Einmalig einen **stabilen eigenen Clone außerhalb der Werkbank und temporärer Verzeichnisse** anlegen:
 
@@ -226,3 +226,12 @@ die offiziellen Einstiege. Private Serve-Freigaben und expliziter, durch eine
 App-Anmeldung geschützter Funnel verwenden nur eigene Regeln. Zentral verwaltetes
 HTTPS bleibt beim Host-Betriebsweg. Keine automatische Geräte- oder Netzwerkfreigabe.
 Modellgrenzen, Rechte, Migration und Prüfwege: [Gerätevertrag](docs/DEVICES.md).
+
+## Portable Zugänge
+
+Verbindungen speichern ihre Zugangswerte in der versteckten `.env` direkt im
+Vanilla-Ordner. Sie enthält lesbare Geheimnisse, hat Dateirechte 0600 und bleibt
+aus Git und Codeupdates ausgeschlossen. Eine konsistente Kopie des gesamten
+Ordners einschließlich .env und Daten nimmt diese Zugänge mit. Laufzeiten,
+Modelle, Dienststart und native Worker-Anmeldungen bleiben auf dem Zielrechner
+zu prüfen. Einrichtung, Übernahme alter Tresore und Sicherungen: [VAULT.md](docs/VAULT.md).

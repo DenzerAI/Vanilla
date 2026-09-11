@@ -89,14 +89,14 @@ def test_clean_install_and_encrypted_vault(mail):
         == "synthetic-secret"
     )
     assert (
-        mail.config.data / "provider-vault/vault.json"
+        mail.config.root / ".env"
     ).stat().st_mode & 0o777 == 0o600
 
 
 def test_missing_key_does_not_create_replacement(mail):
     mail.vault.save("test", "synthetic")
-    (mail.config.data / "provider-vault/vault.json").unlink()
-    with pytest.raises(ValueError, match="Tresorschlüssel"):
+    (mail.config.root / ".env").unlink()
+    with pytest.raises(ValueError, match=".env"):
         mail.vault.read("test")
     assert not (mail.config.data / "provider-vault/provider.key").exists()
 

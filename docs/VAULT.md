@@ -1,96 +1,78 @@
-# Installationsbezogene Schlüsselablage
+# Lokale Zugangsverwaltung in .env
 
 ## Vertrag und Einrichtung
 
-ProviderVault führt die bestehenden Anbieter-, App-Zugangs- und Backupwerte
-zusammen. SQLite enthält Fernet-verschlüsselte Werte unter provider-vault/.
-Node verwendet ausschließlich den authentisierten internen Kernanschluss;
-öffentliche APIs, Metadatenlisten, Ereignisse und normale Datei-/Memoryexporte
-geben weder Schutzschlüssel noch entschlüsselte Zugänge aus.
+Vanilla speichert Anbieterzugänge, eigene App-Anmeldung und Backup-Passwörter in
+`.env` direkt im Installationsordner. Bestehende Verbindungsformulare und die
+Secret-Liste bleiben der Eingabeweg. Die Datei wird erst beim Speichern angelegt,
+atomar ersetzt und erhält Rechte 0600. Ein OS-Schlüsselbund ist für neue Zugänge
+nicht nötig. Die Datei enthält lesbare Zugangswerte; ein versteckter Dateiname
+ist keine Verschlüsselung. Wer den Ordner lesen kann, kann diese Zugänge lesen.
 
-Beim ersten Speichern erzeugt Vanilla einen zufälligen Schutzschlüssel. Ein eigener
-Eintrag in macOS Keychain beziehungsweise Linux Secret Service hält diesen Wert.
-Sein Namensraum ist an den absoluten Tresorpfad und eine zufällige Kennung gebunden.
-Es gibt keine Suche nach vorhandenen Konten, keinen globalen Profilimport und
-keinen Klartext-Fallback. Die vorhandene native Worker-Anmeldung bleibt getrennt:
-Ein frischer Kunde meldet Codex/Claude für diese Installation selbst an.
+`ELEVENLABS_API_KEY` und `GROQ_API_KEY` sind benannte Variablen. Weitere Secret-IDs
+werden verlustfrei als `VANILLA_SECRET_` plus großgeschriebene UTF-8-Hexkennung
+abgebildet. Werte werden als JSON-quotierte Strings in einer Zeile gespeichert,
+auch bei JSON-Bündeln oder mehrzeiligen Werten. Der Parser unterstützt außerdem
+unquotierte Werte, einfache Quotes, Kommentare und export-Präfixe. Doppelte
+Variablen, ungültige Zeilen und Symlinks werden abgewiesen; bestehende fremde
+Variablen und Kommentare bleiben beim Bearbeiten erhalten. Dollarzeichen und
+Shell-Ausdrücke werden nie ausgeführt oder expandiert.
 
-Die Abhängigkeit keyring wird vom bestehenden Systeminstaller mitinstalliert.
-Vanilla instanziiert nur den zum Betriebssystem passenden nativen Backendtyp;
-benutzerdefinierte Keyring-Plugins und Konfigurationsimporte werden nicht geladen.
-Linux braucht einen verfügbaren Secret-Service-Dienst samt D-Bus-Sitzung. Die
-Einrichtung dieses Betriebssystemdienstes ist eine Installationsvoraussetzung,
-kein heimlicher App-Hintergrundprozess. Nicht unterstützte Plattformen oder
-verweigerte OS-Zugriffe bleiben sichtbar nicht verfügbar.
+SQLite hält nur Secret-Referenzen `{storage:"env",key:...}`. Die interne Kern-API
+liefert Werte ausschließlich an den authentisierten Adapter. Öffentliche APIs,
+Browserzustand, Ereignisse und normale Datei-/Memoryexporte geben keine Zugänge
+aus. `.env` wird nicht global in Prozessumgebungen geladen und nicht automatisch
+an Worker weitergereicht. Änderungen sind über die bestehende Installationssperre
+serialisiert. Fehler beim Schreiben von Datenbank oder App-Anmeldung stellen den
+vorherigen Dateiinhalt wieder her.
 
-Beim Neustart wird derselbe eigene Eintrag verwendet. Der Betriebssystembenutzer
-muss angemeldet und sein Schlüsselspeicher erreichbar/entsperrt sein. Eine bereits
-aktivierte App-Anmeldung startet bei fehlendem Schutzschlüssel nicht ungeschützt.
-Ohne App-Anmeldung bleiben andere lokale Funktionen verfügbar, Schlüsselaktionen
-melden den Fehler. Lesen, Ersetzen und Entfernen erzeugen bei fehlender Zuordnung
-keinen Ersatzschlüssel. Statusabfragen lesen nur Metadaten und öffnen keine
-Betriebssystemdialoge; configured bedeutet nicht aktuell entsperrt.
+Die Datei bleibt durch .gitignore und die Quellprüfung ausgeschlossen. Codeupdates
+dürfen sie nicht ersetzen. Die neutrale `.env.example` enthält nur leere Felder.
 
-## Migration
+## Migration und Rückweg
 
-Format 1 hatte provider.key als lokale Datei. Format 2 verwendet vault.json mit
-Version und Kennung; der Schutzschlüssel liegt ausschließlich im eigenen OS-Eintrag.
-SQLite-Ciphertexte behalten ihr Format. Es gibt keine stille Migration beim Lesen.
-
-Vor der Quellaktivierung den bestehenden gesicherten Betriebsweg verwenden,
-Kern und Adapter geordnet stoppen und in der betreffenden Installation ausführen:
+Alte verschlüsselte SQLite-Einträge bleiben bis zur Migration mit ihrem bisherigen
+lokalen Schlüssel beziehungsweise eigenen OS-Eintrag lesbar. Neue Schreibvorgänge
+verlangen zuerst die vollständige Migration, damit keine gemischten Bestände
+entstehen. Im geordnet gestoppten Installationsordner ausführen:
 
 ```sh
 .venv/bin/python -m core.vault_migrate
 ```
 
-Der Befehl verwendet die konfigurierte Datenablage; `--data` erlaubt eine andere
-Ablage innerhalb derselben Installation. Die bestehende Datenbanksperre verhindert
-Migration bei aktivem Kern. Alle vorhandenen Ciphertexte werden zuerst gegen den
-alten Schlüssel geprüft. Erst nach erfolgreichem Schreiben und Rücklesen im
-OS-Speicher wird die neue Zuordnung atomar geschrieben und die alte Datei entfernt.
-Ein Abbruch davor erhält den alten Schlüssel. Ein wiederholter Aufruf beendet eine
-bereits begonnene Migration, ohne bestehende OS-Einträge zu überschreiben.
-Ein beschädigter Bestand wird nicht neu initialisiert.
-
-Nach erfolgreicher Migration kann alter Code nicht direkt mit dem neuen
-Schlüsselformat starten. Ein Rückwechsel erfordert den vollständigen vorherigen
-Datenstand oder eine geprüfte Wiederherstellung; kein isoliertes Code-Downgrade.
-Ältere Backups und lokale Sicherheitskopien können noch die alte Schlüsseldatei
-enthalten. Entfernen der aktiven Datei behauptet keine physische Datenlöschung.
+Alle alten Zugänge werden vor der ersten Änderung entschlüsselt und geprüft.
+Widersprüche mit bereits vorhandenen .env-Werten brechen unverändert ab. Erst
+danach werden .env und Datenbankreferenzen geschrieben. Wiederholung ist ohne
+weitere Änderung möglich. Der OS-Zugriff ist nur für diese einmalige Übernahme
+alter OS-verschlüsselter Werte nötig. Fehlende alte Schlüssel werden nicht ersetzt.
+Alte Tresordateien und OS-Einträge bleiben für einen bewussten Rückweg erhalten.
+Eine Rückkehr zu altem Code braucht den vollständigen vorherigen Datenstand;
+ENV-Referenzen sind für alte Versionen nicht lesbar.
 
 ## Sicherung und Gerätewechsel
 
-Das bestehende verschlüsselte restic-Archiv enthält eine Wiederherstellungskopie
-des Schutzschlüssels zusammen mit den passenden SQLite-Werten. Dazu wird der
-Schlüssel ausschließlich im privaten Backup-Staging als provider.key abgelegt,
-nach dem Sicherungslauf wird dieses Staging auch bei Fehlern entfernt. Ein
-Prozessabbruch kann Staging zurücklassen; dieses liegt in der privaten Datenablage
-und muss beim Wiederanlauf/bewussten Bereinigen beachtet werden. Keine Schlüssel
-in Kommandozeilen, normalen Logs oder unverschlüsselten Quellarchiven ablegen.
-Der restic-Wiederherstellungsschlüssel muss separat vom Gerät verwahrt werden.
+Sicherungsschema 5 nimmt die gesamte .env als `provider-vault/credentials.env`
+in das private Staging des verschlüsselten restic-Archivs auf. Normaler Export
+und Quellveröffentlichung enthalten sie weiterhin nicht. Restore prüft alle
+Referenzen gegen diese Datei und tauscht .env gemeinsam mit Datenbank und anderen
+Daten über das bestehende Rückkehrjournal. Ältere Sicherungsschemata 2 bis 4 werden
+vor dem Austausch anhand ihres mitgesicherten Schlüssels umgewandelt, ohne einen
+neuen OS-Eintrag anzulegen. Fehler rollen auch die bisherige .env zurück.
+Staging und bewusste Rückkehrkopien enthalten Geheimnisse und bleiben privat.
 
-Ein entpackter, geprüfter Restore enthält ebenfalls den Wiederherstellungsschlüssel
-und ist daher sensibel. Vor dem Commit des bestehenden Restore-Journals übernimmt
-Vanilla ihn in einen neuen eigenen OS-Eintrag am Ziel und entfernt die aktive
-Klartextkopie. Schlägt die Übernahme fehl, erfolgt der bisherige Dateirückweg.
-Vorherige OS-Einträge bleiben für den Rückweg bestehen. Verwaiste eigene Einträge
-nach abgebrochener Einrichtung werden nicht durch eine globale Suche gelöscht.
-Die geprüfte Restore-Vorbereitung und alte Sicherheitskopien folgen der bestehenden
-Aufbewahrung; sie werden nicht als gewöhnliche Arbeitsdateien exportiert.
-
-Ein bloß kopierter Datenordner oder Git-Clone übernimmt keine nutzbaren Konten.
-Bei bewusstem Umzug ist der Restoreweg zu verwenden. Diese Trennung ist keine
-Mandanten- oder Betriebssystem-Sandbox gegen andere Prozesse desselben berechtigten
-Benutzers. Native Worker können weitergehende Dateirechte besitzen.
+Eine vollständige, konsistente Kopie des gestoppten Vanilla-Ordners einschließlich
+versteckter .env, data und workspaces nimmt die gespeicherten Anbieterzugänge mit.
+Für laufende Installationen ist der Sicherungsweg zu verwenden. Auf dem Zielhost
+bleiben Einrichtung der Laufzeiten/Modelle, passende Betriebssystemversion,
+Dienststart und Prüfung der Pfade erforderlich. Native Codex-/Claude-Anmeldungen,
+Gerätefreigaben und außerhalb dieses Ordners liegende Dateien sind kein Bestandteil
+dieser Zusage und können eine neue Anmeldung verlangen. .env ist keine Garantie,
+dass eine komplette Anwendung ohne Einrichtung auf jeder Plattform startet.
 
 ## Prüfung
 
-core/tests/test_provider_vault.py prüft Persistenz, Installationsgrenzen,
-fehlende/gesperrte Schlüssel, paralleles erstmaliges Speichern, Migration und
-atomare Änderung der App-Anmeldung. Die bestehende restic-Prüfung in
-test_operations.py stellt die Daten auf einem anderen Installationspfad wieder
-her. test_mail.py prüft interne/öffentliche API-Grenzen, Verbindungstests prüfen
-Ersetzen, Entfernen und Rücknahme bei Fehlern. Automatische Tests verwenden eine
-explizite synthetische OS-Ablage; sie greifen nie auf Hostkonten zu. Eine echte
-OS-Schreib-/Neustartprüfung ist zusätzlich pro Zielinstallation erforderlich.
+Die Tests prüfen Dateirechte, Persistenz, Kopieren auf einen anderen Pfad ohne
+OS-Speicher, Sonderzeichen, Kommentare, Aliasvariablen, Schreibfehler, Parallelität,
+Symlinks, vollständige Migration, Konflikte und atomare Rücknahme der App-Anmeldung.
+Sicherungsprüfungen decken ENV-Referenzen und Wiederherstellung ab; Updateprüfungen
+erhalten eine vorhandene .env unverändert. Fremde Hostkonten werden nicht gelesen.

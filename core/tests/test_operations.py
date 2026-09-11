@@ -172,11 +172,6 @@ def test_real_encrypted_backup_restore_and_corruption(config, db, monkeypatch, n
     moved_stage=moved.data/'restores/checked';shutil.copytree(base,moved_stage)
     (moved.data/'restore-pending.json').write_text(json.dumps({'path':str(moved_stage),'snapshot':result['snapshot']}))
     native_keys.locked=True
-    with pytest.raises(ValueError,match='Tresorschlüssel'): apply_pending(moved)
-    assert not (moved.data/'agent.sqlite3').exists()
-    assert json.loads((moved.data/'restore-last.json').read_text())['rolled_back']
-    native_keys.locked=False
-    (moved.data/'restore-pending.json').write_text(json.dumps({'path':str(moved_stage),'snapshot':result['snapshot']}))
     apply_pending(moved)
     assert not (moved.data/'provider-vault/provider.key').exists()
     restored_db=Database(moved.data/'agent.sqlite3')
@@ -186,15 +181,38 @@ def test_real_encrypted_backup_restore_and_corruption(config, db, monkeypatch, n
     assert (moved.data/'restore-hold.json').is_file()
     assert restored_db.get('control/message-delivery.json')['value']['messages'][0]['status']=='unknown'
     restored_db.close()
+    # Older backups convert locally with their bundled recovery key, even
+    # when the operating system key store is unavailable.
     from core.files import sha256
     from cryptography.fernet import Fernet
-    original_key=(base/'provider-vault/provider.key').read_bytes()
-    (base/'provider-vault/provider.key').write_bytes(Fernet.generate_key())
-    manifest=json.loads((base/'manifest.json').read_text());manifest['files']['provider-vault/provider.key']=sha256(base/'provider-vault/provider.key')
+    from core.env_secrets import parse
+    from core.database import dump
+    import sqlite3
+    legacy=Config(root=config.root.parent/'legacy-customer',start_adapter=False)
+    legacy_stage=legacy.data/'restores/checked';shutil.copytree(base,legacy_stage)
+    values=parse((legacy_stage/'provider-vault/credentials.env').read_text())
+    recovery_key=Fernet.generate_key();cipher=Fernet(recovery_key)
+    with sqlite3.connect(legacy_stage/'database.sqlite3') as cx:
+        for name,value in cx.execute("SELECT key,value FROM records WHERE key LIKE 'provider-vault/%'").fetchall():
+            reference=json.loads(value)
+            cx.execute('UPDATE records SET value=? WHERE key=?',(dump(cipher.encrypt(values[reference['key']].encode()).decode()),name))
+    (legacy_stage/'provider-vault/credentials.env').unlink()
+    (legacy_stage/'provider-vault/provider.key').write_bytes(recovery_key)
+    manifest=json.loads((legacy_stage/'manifest.json').read_text());manifest['schema']=4
+    manifest['files']={p.relative_to(legacy_stage).as_posix():sha256(p) for p in legacy_stage.rglob('*') if p.is_file() and p.name!='manifest.json'}
+    (legacy_stage/'manifest.json').write_text(json.dumps(manifest))
+    verify_restore(legacy_stage)
+    (legacy.data/'restore-pending.json').write_text(json.dumps({'path':str(legacy_stage),'snapshot':'legacy'}))
+    apply_pending(legacy)
+    assert read_secret('system-access',legacy)=='synthetic-installation-password'
+    envfile=base/'provider-vault/credentials.env'
+    original=envfile.read_text()
+    envfile.write_text('')
+    manifest=json.loads((base/'manifest.json').read_text());manifest['files']['provider-vault/credentials.env']=sha256(envfile)
     (base/'manifest.json').write_text(json.dumps(manifest))
-    with pytest.raises(ValueError,match='Tresorschlüssel'):verify_restore(base)
-    (base/'provider-vault/provider.key').write_bytes(original_key)
-    manifest['files']['provider-vault/provider.key']=sha256(base/'provider-vault/provider.key');(base/'manifest.json').write_text(json.dumps(manifest))
+    with pytest.raises(ValueError,match='.env'):verify_restore(base)
+    envfile.write_text(original)
+    manifest['files']['provider-vault/credentials.env']=sha256(envfile);(base/'manifest.json').write_text(json.dumps(manifest))
     (base/'workspace/notes/Backup.md').write_text('manipuliert')
     with pytest.raises(ValueError): verify_restore(base)
     # The encrypted repository never stores the known note in plaintext.
