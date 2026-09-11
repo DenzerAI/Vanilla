@@ -316,3 +316,30 @@ test('native token probe forwards only to the configured adapter and requires a 
     assert.equal(await readClaudeServiceAuthentication(request,async()=>({stdout})),false);
   assert.equal(await readClaudeServiceAuthentication(request,async()=>{throw Error('private');}),false);
 });
+test('full access selects the native bypass mode and answers permission prompts itself', async()=>{
+  const {worker,thread,calls,rpc,events}=fixture();
+  delete thread.workerSession.configOptions;
+  thread.workerSession.modes={currentModeId:'default',availableModes:[{id:'default',name:'Default'},{id:'bypassPermissions',name:'Bypass Permissions'}]};
+  rpc.call=async(method,params)=>{calls.push({method,params}); return method==='session/prompt'?new Promise(()=>{}):{};};
+  await worker.call('turn/start',{threadId:'chat',input:[{type:'text',text:'los'}],sandboxPolicy:{type:'dangerFullAccess'}});
+  assert.deepEqual(calls.find(c=>c.method==='session/set_mode')?.params,{sessionId:'native',modeId:'bypassPermissions'});
+  assert.equal(thread.workerSession.modes.currentModeId,'bypassPermissions');
+  await new Promise(resolve=>setImmediate(resolve));
+  worker.receive({id:7,method:'session/request_permission',params:{sessionId:'native',toolCall:{title:'ls'},options:[{optionId:'once',kind:'allow_once'},{optionId:'always',kind:'allow_always'},{optionId:'no',kind:'reject_once'}]}});
+  assert.deepEqual(calls.at(-1),{id:7,result:{outcome:{outcome:'selected',optionId:'always'}}});
+  assert.equal(worker.requests.size,0);
+  assert.ok(!events.some(e=>e.method==='item/commandExecution/requestApproval'));
+});
+test('workspace access keeps native permission prompts for the user', async()=>{
+  const {worker,thread,calls,rpc}=fixture();
+  delete thread.workerSession.configOptions;
+  thread.workerSession.modes={currentModeId:'default',availableModes:[{id:'default',name:'Default'},{id:'bypassPermissions',name:'Bypass Permissions'}]};
+  const requests=[]; worker.on('request',r=>requests.push(r));
+  rpc.call=async(method,params)=>{calls.push({method,params}); return method==='session/prompt'?new Promise(()=>{}):{};};
+  await worker.call('turn/start',{threadId:'chat',input:[{type:'text',text:'los'}],sandboxPolicy:{type:'workspaceWrite'}});
+  assert.ok(!calls.some(c=>c.method==='session/set_mode'));
+  await new Promise(resolve=>setImmediate(resolve));
+  worker.receive({id:8,method:'session/request_permission',params:{sessionId:'native',toolCall:{title:'rm'},options:[{optionId:'once',kind:'allow_once'},{optionId:'no',kind:'reject_once'}]}});
+  assert.equal(requests.length,1);
+  assert.equal(worker.requests.size,1);
+});

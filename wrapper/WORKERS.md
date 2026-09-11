@@ -426,3 +426,12 @@ Additive _meta-Felder benötigen keine Migration und werden bei Rückkehr ignori
 Prüfung: worker-models.test.mjs und workers.test.mjs sowie die gemeinsame UI-Abnahme.
 
 Version 8 benötigt keine Datenmigration. Die Anfangsstufe ist eine native Sitzungseinstellung, keine globale Profiländerung. Ältere Versionen können sie weiter lesen. Default-Modellaliase erhalten bei exakter resolvedModel-Übereinstimmung den Auswahlhaken der konkreten Zeile; native IDs werden nicht geändert.
+
+## Volle Freigabe für native CLIs
+
+Läuft ein Chat mit voller Freigabe (Arbeitsmodus „Umsetzen“, Sandbox `dangerFullAccess`), arbeitet
+auch ein ACP-Worker wie Claude Code ohne Rückfragen: Der Wrapper wählt beim Start der Antwort den
+nativen Modus, der Freigaben überspringt (`bypassPermissions` oder die entsprechende
+Sitzungsoption), und beantwortet verbleibende `session/request_permission`-Anfragen selbst mit der
+dauerhaften, sonst der einmaligen Erlaubnis. Bei Arbeitsbereichs- oder Lesezugriff bleiben die
+nativen Rückfragen wie bisher beim Nutzer. Prüfungen: `acp-session.test.mjs`.

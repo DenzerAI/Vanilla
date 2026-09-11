@@ -19,6 +19,12 @@ export async function readClaudeServiceAuthentication({command, args = [], cwd, 
   } catch { return false; }
 }
 
+// Full-access chats answer native permission prompts themselves; a lasting grant beats a single one.
+function autoApproval(options) {
+  const list = Array.isArray(options) ? options : [];
+  return list.find(o => o.kind === "allow_always") || list.find(o => o.kind === "allow_once") || null;
+}
+
 export class ACPWorker extends EventEmitter {
   constructor({ id, name, command, args, cwd, contextEnv, readThread, persist, rpc, mcpServers = () => [], probeAuthentication }) {
     super(); Object.assign(this, { id, name, readThread, persist, mcpServers });
@@ -212,6 +218,9 @@ export class ACPWorker extends EventEmitter {
       if (this.running.has(thread.id)) throw new Error("Bitte die laufende Antwort abwarten oder stoppen.");
       if (p.collaborationMode?.mode === "plan" || p.sandboxPolicy?.type === "readOnly") throw new Error(`${this.name} bietet hier keinen geschützten Planmodus.`);
       await this.checkAuthentication();
+      // Full access is the same policy Codex runs under in "Umsetzen": the native CLI works without asking.
+      thread.workerSession.autoApprove = p.sandboxPolicy?.type === "dangerFullAccess";
+      if (thread.workerSession.autoApprove) await this.enableBypass(thread);
       const context = p.collaborationMode?.settings?.developer_instructions;
       const nativeCommand = p.input[0]?.type === "text" && p.input[0].text.startsWith("/");
       // Some native adapters concatenate text blocks without a separator. End
@@ -290,6 +299,8 @@ export class ACPWorker extends EventEmitter {
         this.requests.set(key, request);
         this.emit("request", {id:key, method:request.method, params:request.params});
       } else if (msg.method === "session/request_permission" && turn) {
+        const granted = this.threads.get(id)?.workerSession?.autoApprove ? autoApproval(msg.params.options) : null;
+        if (granted) { this.rpc.write({ id: msg.id, result: { outcome: { outcome: "selected", optionId: granted.optionId } } }); return; }
         const key = `${this.id}:${msg.id}`;
         const request = { id: key, method: "item/commandExecution/requestApproval", params: { threadId: id, turnId: turn.id, reason: msg.params.toolCall?.title || "Worker bittet um Freigabe.", workerId: this.id }, native: msg };
         this.requests.set(key, request); this.emit("request", { id: key, method: request.method, params: request.params });
@@ -353,6 +364,28 @@ export class ACPWorker extends EventEmitter {
       this.event(item.status === "inProgress" && fresh ? "item/started" : "item/completed", id, { turnId: turn.id, item: structuredClone(item) });
     }
     if (u.sessionUpdate === "plan") this.event("turn/plan/updated", id, { turnId: turn.id, plan: (u.entries || []).map(e => ({ step: e.content, status: e.status })) });
+  }
+  // Select the native "bypass permissions" mode when the CLI advertises one, through modes or config options.
+  async enableBypass(thread) {
+    const session = thread.workerSession, sessionId = session.sessionId;
+    const bypass = value => /bypass/i.test(String(value || ""));
+    if (Array.isArray(session.configOptions)) {
+      for (const option of session.configOptions) {
+        if (option.type !== "select") continue;
+        const target = optionValues(option).find(o => bypass(o.value) || bypass(o.name));
+        if (!target || option.currentValue === target.value) continue;
+        const result = await this.rpc.call("session/set_config_option", { sessionId, configId: option.id, value: target.value });
+        if (Array.isArray(result?.configOptions)) session.configOptions = result.configOptions;
+        else option.currentValue = target.value;
+        return;
+      }
+      return;
+    }
+    const mode = session.modes?.availableModes?.find(m => bypass(m.id) || bypass(m.name));
+    if (mode && session.modes.currentModeId !== mode.id) {
+      await this.rpc.call("session/set_mode", { sessionId, modeId: mode.id });
+      session.modes.currentModeId = mode.id;
+    }
   }
   respond(id, result) {
     const request = this.requests.get(String(id));
