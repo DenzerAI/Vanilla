@@ -108,3 +108,22 @@ test('one tab saving cannot erase another tab pending message',async t=>{
  a.enqueue(input());b.enqueue(input('22345678-1234-1234-1234-123456789012'));
  assert.equal(values.size,2);
 });
+
+
+test('delivery rendering preserves history references and memoizes acknowledged turns',()=>{
+  const history={id:'old',items:[{id:'large',type:'tool',output:'x'.repeat(1000000)}]};
+  const user={id:'user',type:'userMessage',content:[{type:'text',text:'Hello'}]};
+  const answer={id:'answer',type:'agentMessage',text:'Streaming'};
+  const turn={id:'turn',items:[user,answer]};
+  const thread={turns:[history,turn]};
+  const receipt={clientMessageId:'receipt',turnId:'turn',status:'accepted',text:'Hello'};
+  const first=deliveryView(thread,[receipt]);
+  const second=deliveryView(thread,[receipt]);
+  assert.equal(first[0],history);assert.equal(second[1],first[1]);
+  assert.equal(first[1].items[1],answer);assert.equal(user.delivery,undefined);
+  receipt.status='started';
+  const third=deliveryView(thread,[receipt]);
+  assert.notEqual(third[1],first[1]);assert.equal(third[1].items[0].delivery.status,'started');
+  assert.equal(first[1].items[0].delivery.status,'accepted');
+  assert.equal(deliveryView(thread,[])[0],history);
+});

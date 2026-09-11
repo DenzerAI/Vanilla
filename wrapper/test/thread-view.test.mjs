@@ -49,3 +49,18 @@ test('optional startup results arrive independently and a failure preserves succ
   resolveProfile({text:''});await loading;
   assert.ok(received.some(r=>r.key==='profile'));
 });
+
+
+test('thread snapshots project large tools before streaming and oversized images request resync',async()=>{
+ const {threadEventFrame}=await import('../thread-view.mjs');
+ const large={id:'tool',type:'commandExecution',status:'completed',aggregatedOutput:'x'.repeat(2200000)};
+ const thread={id:'chat',turns:[{id:'turn',items:[large]}]};
+ const frame=threadEventFrame({method:'wrapper/thread',params:{thread}});
+ assert.ok(frame.length<4096);
+ assert.equal(JSON.parse(frame.slice(6)).params.thread.turns[0].items[0].detailsDeferred,true);
+ assert.equal(thread.turns[0].items[0],large);
+ const visual={id:'chat',turns:[{id:'turn',items:[{id:'answer',type:'agentMessage',text:'x'.repeat(2000000)}]}]};
+ assert.equal(JSON.parse(threadEventFrame({method:'wrapper/thread',params:{thread:visual}}).slice(6)).method,'wrapper/resync');
+ const delta={method:'item/agentMessage/delta',params:{delta:'Hi'}};
+ assert.deepEqual(JSON.parse(threadEventFrame(delta).slice(6)),delta);
+});

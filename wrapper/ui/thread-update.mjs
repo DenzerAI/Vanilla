@@ -11,3 +11,30 @@ export function copyThreadForEvent(previous, params) {
   }
   return {...previous,turns};
 }
+
+// Background snapshots may predate streamed items or fall back to a saved transcript.
+// Explicit history edits still replace the thread directly at their action handler.
+export function reconcileThreadSnapshot(current, incoming) {
+  if (!current || current.id !== incoming?.id) return incoming;
+  const previous = new Map((current.turns || []).map(turn => [turn.id, turn]));
+  const turns = (incoming.turns || []).map(turn => {
+    const old = previous.get(turn.id);
+    previous.delete(turn.id);
+    if (!old) return turn;
+    const items = new Map((old.items || []).map(item => [item.id, item]));
+    const merged = (turn.items || []).map(item => {
+      const live = items.get(item.id);
+      items.delete(item.id);
+      // A late read must not truncate an answer already shown by the event stream.
+      return live && typeof live.text === 'string' && typeof item.text === 'string'
+        && live.text.length > item.text.length && live.text.startsWith(item.text) ? live : item;
+    });
+    merged.push(...[...items.values()].filter(item => !item.clientPending));
+    return {...old, ...turn, items:merged,
+      status:old.status && old.status !== 'inProgress' && turn.status === 'inProgress' ? old.status : turn.status};
+  });
+  // Missing turns in a cached response are not a deletion instruction.
+  const missing = [...previous.values()].filter(turn => !turn.clientPending);
+  const order = new Map((current.turns || []).map((turn,index) => [turn.id,index]));
+  return {...current, ...incoming, turns:[...turns,...missing].sort((a,b)=>(order.get(a.id) ?? Infinity)-(order.get(b.id) ?? Infinity))};
+}

@@ -1332,3 +1332,18 @@ Keine zusätzliche Daueranimation.
 Die Kalenderkachel folgt Fächerbewegung, Reduced Motion und Kontrastvorgaben.
 CalendarPreview zeigt denselben Produktionsbaustein mit markierten Beispieldaten in
 Unser Design und damit im gemeinsamen UI-Bauplan. Verhalten: surfaces/chat.md.
+
+
+### Stabiler Verlauf während der Nachrichtenübergabe
+
+Beim Absenden bleiben vorhandene Antworten sichtbar. Sending und Accepted lösen
+keinen zusätzlichen nativen Verlaufsabruf aus. Nach bestätigtem Start oder einem
+Übergabefehler gleicht der bestehende Abruf den Verlauf ab, ohne bereits sichtbare
+Textstücke, Arbeitsschritte oder neuere Turns durch einen verspäteten oder leeren
+Zwischenstand zu entfernen. Wiederverbindungen verwenden denselben Abgleich;
+explizite Bearbeitung und Löschung behalten ihre eigenen Ersetzungswege.
+Privat gesperrte Chats dürfen verspätete Antworten nicht übernehmen.
+DeliveryView erhält Referenzen unveränderter Turns und Werkzeugausgaben; nur die
+zugehörige Nutzerblase bekommt den Zustellbeleg. Identische Belege verwenden die
+vorhandene Darstellung weiter. Keine neuen Komponenten, Tokens oder Animationen.
+Keine Datenmigration; native Sitzungen und gespeicherte Verläufe bleiben unverändert.
