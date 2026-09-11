@@ -466,10 +466,11 @@ function DeliveryMark({receipt}) {
   const labels={sending:"Wird übertragen",offline:"Wartet auf Verbindung",accepted:"Sicher angekommen",started:"Verarbeitung begonnen",failed:"Übertragung fehlgeschlagen. Erneut versuchen",unknown:"Übergabestatus unklar. Status prüfen"};
   const failed=["failed","unknown"].includes(status);
   const glyph=status==="started"?<DeliveryChecks double/>:status==="accepted"?<DeliveryChecks/>:failed?icon(AlertCircle,12):icon(Clock,12);
-  return <div className="message-delivery">{failed?<button type="button" title={receipt.error || labels[status]} aria-label={labels[status]} onClick={()=>messageOutbox.retry(receipt.clientMessageId)}>{glyph}</button>:<span role="status" aria-label={labels[status]} title={labels[status]}>{glyph}</span>}</div>;
+  return <span className="message-delivery">{failed?<button type="button" title={receipt.error || labels[status]} aria-label={labels[status]} onClick={()=>messageOutbox.retry(receipt.clientMessageId)}>{glyph}</button>:<span role="status" aria-label={labels[status]} title={labels[status]}>{glyph}</span>}</span>;
 }
 function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, agentProfile, workerId, onFork, onEdit, onRetry, onDelete, onFile, running, sentAt, completedAt, workspace, directory, toolOpen, onToolToggle }) {
   const i = item;
+  const UserActions = i.delivery && !i.delivery.turnId ? "div" : MessageActions;
   const disclosure = {open:!!toolOpen?.[i.id], onToggle:event=>{if(event.target === event.currentTarget) onToolToggle?.(i.id,event.currentTarget.open);}};
   if (i.type === "userMessage")
     return (
@@ -490,8 +491,8 @@ function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, 
           ),
         )}
         </div>}
-        <DeliveryMark receipt={i.delivery}/>
-        {!i.delivery?.turnId && i.delivery ? null : <MessageActions className="user-actions">
+        <UserActions className={UserActions === "div" ? "message-actions user-actions" : "user-actions"}>
+          {!i.delivery?.turnId && i.delivery ? null : <>
           <IconButton label="Nachricht erneut ausführen" disabled={running} onClick={onRetry}>{icon(RotateCcw, 14)}</IconButton>
 
           <IconButton
@@ -503,8 +504,9 @@ function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, 
           </IconButton>
           <CopyButton label="Nachricht kopieren" size={14} text={(i.content || []).filter(c => c.type === "text").map(c => c.text).join("\n")} />
           <IconButton label="Nachricht löschen" disabled={running} onClick={onDelete}>{icon(Trash2,14)}</IconButton>
-          <MessageTime value={sentAt} />
-        </MessageActions>}
+          </>}
+          <span className="message-meta"><MessageTime value={sentAt} /><DeliveryMark receipt={i.delivery}/></span>
+        </UserActions>
       </div>
     );
   if (i.type === "agentMessage" || i.type === "plan")

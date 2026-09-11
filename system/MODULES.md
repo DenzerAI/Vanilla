@@ -77,6 +77,12 @@ Eine Wartungspause (`data/control/updates/maintenance.json`) kann der zugehörig
 
 Der Kern beobachtet die Bau-Kette (`core/stall_watch.py`): Steht ein Bauauftrag oder eine Veröffentlichung länger als 15 Minuten in derselben Phase (Warteschlange, Prüfung, GitHub-Prüfungen, Vorbereitung, Installation), erscheint einmal die Benachrichtigung „Bauauftrag hängt“. Das Warten auf eine Pause des Nutzers vor der Aktivierung gilt nicht als Hänger. Ein begonnener Bauauftrag, der nach 30 Minuten noch nicht mit „ready“ übergeben ist, wird einmal als „Bauauftrag nicht bereitgemeldet“ gemeldet.
 
+Die gemeinsame Bausteinreferenz zeigt Nachrichtenbestätigungen direkt hinter der
+Uhrzeit als nicht umbrechende, vertikal zentrierte Gruppe mit 4 px Abstand.
+DeliveryChecks verwendet 10 × 10 px für einzelne und 15 × 10 px für doppelte
+Haken mit feiner gerundeter Kontur. Keine Datenmigration; Statusbedeutung und
+Fehleraktionen bleiben erhalten. Führend: wrapper/surfaces/chat.md.
+
 ## Gemeinsamer Entwicklungsstand
 
 Die Chat-Erweiterungen verwenden weiterhin dieselben Kernspeicher, nativen
