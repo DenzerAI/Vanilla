@@ -1055,7 +1055,7 @@
         "meaning": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen."
       },
       "limits": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen.",
-      "version": 18,
+      "version": 19,
       "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der bestehende Projektindex erhält abgeleitete Workspace-Metadaten. Jobkategorien werden aus dem optionalen Manifestfeld gelesen; keine Verschiebung von Dateien. Tresorformat 2: OS-geschützter installationsbezogener Schlüssel. Vor Quellaktivierung alten Bestand offline mit core.vault_migrate prüfen und übernehmen. Rückweg benötigt vollständige Datenwiederherstellung; Details docs/VAULT.md. Bestehende Ciphertexte und übrige Daten bleiben erhalten. Lokales MiniLM wird anhand der festgelegten Dateiprüfsummen geprüft und repariert; source.json allein bestätigt keine Bereitschaft. Bestehende Modellordner bleiben erhalten. Nach Restore gilt recovery/not-before als Zeitplangrenze. Normale Neustarts erhalten bestehende Wiederholungsregeln. Keine Tabellen entfernt. Gemeinsame Modellwahl und anbieterbezogene Profilprüfung ohne Datenmigration; vorhandene native Einstellungen und Übergabeverläufe bleiben erhalten. Streaming-Abgleiche erhalten sichtbare Inhalte und projizieren große Abschlussereignisse. Keine Datenmigration; ursprüngliche Worker-Verläufe bleiben erhalten. Modellwahl ohne Default-Rücksetzaktion; expliziter Denkaufwand bleibt pro Chat soweit unterstützt. Keine Datenmigration. Bestätigte konkrete Claude-Anfangsstufe pro nativer Sitzung, bestehende explizite Werte erhalten. Default-Modellalias wird nur bei exakter resolvedModel-Übereinstimmung visuell zugeordnet. Keine Datenmigration; ältere Stände lesen die native Einstellung."
     },
     {
@@ -1353,7 +1353,8 @@
         "POST /api/system/updates/prepare",
         "POST /api/system/updates/publish",
         "POST /api/system/updates/settings",
-        "POST /internal/update-operator"
+        "POST /internal/update-operator",
+        "POST /internal/maintenance/resume"
       ],
       "dependencies": [
         "platform",

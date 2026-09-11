@@ -73,6 +73,8 @@ Schnappschüsse des Verlaufs werden im Browser mit dem gestreamten Stand abgegli
 
 Aktionsleisten an Nachrichten erscheinen bei Zeigerkontakt oder sichtbarem Tastaturfokus (`:has(:focus-visible)`), nie durch einen bloßen Mausklick; der Kopierknopf gibt den Mausfokus nach dem Kopieren frei, damit die Leiste wieder verschwindet.
 
+Eine Wartungspause (`data/control/updates/maintenance.json`) kann der zugehörige Operator über `POST /internal/maintenance/resume` (Kopfzeile `x-agent-update` mit der Nonce der Pause, Body mit derselben `id`) im laufenden Betrieb beenden: Wrapper-Pause aufheben, Auftragswarteschlange und Suchindex nachholen, Mail- und Kalenderschleifen starten. Damit braucht eine Live-Aktivierung nur einen Neustart. Ohne aktive Pause antwortet die Route mit `resumed: false`.
+
 ## Gemeinsamer Entwicklungsstand
 
 Die Chat-Erweiterungen verwenden weiterhin dieselben Kernspeicher, nativen

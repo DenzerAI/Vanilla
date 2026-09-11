@@ -182,7 +182,7 @@ def create_app(config=None):
         }
         if origin and origin not in origins:
             return JSONResponse({"error": "Fremder Ursprung."}, status_code=403)
-        if request.url.path == "/internal/update-operator":
+        if request.url.path in {"/internal/update-operator", "/internal/maintenance/resume"}:
             from .files import read_json
             hold = read_json(config.data / "updates/maintenance.json", {})
             if not hold.get("nonce") or not hmac.compare_digest(request.headers.get("x-agent-update", ""), hold["nonce"]):
@@ -400,6 +400,32 @@ def create_app(config=None):
             updates.notice(state + "-" + run["id"], "Aktualisiert" if action == "commit" else "Wiederhergestellt", "Die Installation ist wieder verfügbar.", subject=run["id"])
             return {"ok": True, "state": state}
         raise ValueError("Unbekannte Operatoraktion.")
+
+    @app.post("/internal/maintenance/resume")
+    async def resume_maintenance(request: Request):
+        # A local release operator starts the new version under the maintenance hold, verifies it,
+        # and then lifts the hold in place instead of restarting a second time.
+        from .files import read_json
+        body = await request.json()
+        hold = read_json(config.data / "updates/maintenance.json", {})
+        if not hold or body.get("id") != hold.get("id"):
+            raise ValueError("Auftrag passt nicht zur Wartungspause.")
+        if not runtime.update_hold:
+            return {"resumed": False, "reason": "Keine Wartungspause aktiv."}
+        if config.start_adapter:
+            channels = body.get("channels", [])
+            if not isinstance(channels, list):
+                raise ValueError("Anschlussliste ungültig.")
+            await runtime.request("POST", "/api/system/update-hold", json={"hold": False, "channels": channels})
+        runtime.update_hold = runtime.frozen = False
+        queue.recover()
+        await asyncio.to_thread(knowledge.scan)
+        if mail.task is None or mail.task.done():
+            mail.task = asyncio.create_task(mail.loop())
+        if calendar.task is None or calendar.task.done():
+            calendar.task = asyncio.create_task(calendar.loop())
+        (config.data / "updates/maintenance.json").unlink(missing_ok=True)
+        return {"resumed": True}
     app.include_router(module_routes(Modules(config), runtime, mail))
 
     app.include_router(device_routes(devices, network))
