@@ -165,7 +165,7 @@ export function ChatMenu({
               </button>
               </React.Fragment>
             ))}
-            {footer && <p className="dropdown-note">{footer}</p>}
+            {footer && <p className="dropdown-note">{typeof footer === "function" ? footer(close) : footer}</p>}
           </div>,
           document.body,
         )}

@@ -611,7 +611,7 @@ Unser Design zeigt beide gemeinsamen Bausteine ohne echten Mikrofonzugriff.
 
 Der gemeinsame `ThemeToggle` unter `ui/components/ui/theme-toggle.tsx` zeigt Mond
 und Sonne in einer kompakten Pille mit gleitendem Auswahlkreis. Er ersetzt
-Hell/Dunkel unter Aussehen und steht ohne zusätzliche sichtbare Beschriftung neben dem kompakten Neustart-Button
+Hell/Dunkel unter Aussehen und steht ohne zusätzliche sichtbare Beschriftung neben dem randlosen Neustart-IconButton
 im Agent-Menü. Beide verwenden dieselbe bestätigte, serverseitig gespeicherte
 Theme-Einstellung. Während der Speicherung ist der Schalter gesperrt; Fehler
 lassen die bisherige Auswahl bestehen und werden direkt angezeigt. Native
@@ -1534,3 +1534,6 @@ Archivieren und Sperren beenden die Quelle. Fehler stehen an der globalen Steuer
 Gemeinsame IconButton-Bausteine und vorhandene Tokens, keine Animation oder weitere
 Einstellungsseite. Unser Design enthält eine isolierte Play/Pause/Stop-Vorschau.
 Nur flüchtiger Browserzustand, keine Migration gespeicherter Chats oder Stimmen.
+
+
+Der kompakte Agentenmenükopf zeigt Vanilla mit Version und Denzer AI. Verbindung, Engine und Antwortzeit teilen eine dezente Zeile. Commitkennung und Zeitpunkt stehen in einer Zeile; Push, Neustart und Laufzeit folgen ohne Leerzeilen. Zeitpunkte zeigen Tag, Monat und Uhrzeit, das vollständige Datum einschließlich Jahr bleibt im Tooltip. Die Serveradresse schließt den Statusblock ab. Der gemeinsame randlose IconButton für Neustart und ThemeToggle teilen den Menüfuß; Fokus und Touchfläche bleiben erhalten.

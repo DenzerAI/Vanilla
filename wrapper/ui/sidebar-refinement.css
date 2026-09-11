@@ -238,7 +238,12 @@
 .agent-server-details dl { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: var(--space-4) var(--space-12); margin: var(--space-8) 0 0; font-size: var(--text-caption); }
 .agent-server-details dt { color: var(--muted); }
 .agent-server-details dd { margin: 0; text-align: right; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
-.agent-theme-row .agent-restart-button { display: inline-flex; align-items: center; gap: var(--space-8); min-height: var(--control-touch); padding: 0 var(--space-8); border: 1px solid var(--border); border-radius: var(--radius-control); background: transparent; color: var(--muted); font-size: var(--text-caption); }
+.agent-server-details .agent-product { display: flex; justify-content: space-between; align-items: baseline; gap: var(--space-8); font-size: var(--text-control); }
+.agent-product-version, .agent-product-maker { color: var(--muted); font-size: var(--text-caption); font-weight: var(--weight-regular); }
+.agent-server-details .agent-connection { margin-top: var(--space-4); color: var(--muted); font-size: var(--text-caption); font-weight: var(--weight-regular); }
+.agent-server-details .agent-server-host { margin-top: var(--space-8); color: var(--muted); font-size: var(--text-caption); font-weight: var(--weight-regular); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.agent-commit { font-family: var(--font-mono); }
+.agent-theme-row .agent-restart-button { width: var(--control-touch); height: var(--control-touch); border: 0; border-radius: var(--radius-pill); background: transparent; color: var(--muted); }
 .agent-theme-row .agent-restart-button:hover { background: var(--hover); color: var(--text); }
 .agent-theme-row .agent-restart-button:disabled { opacity: .6; cursor: wait; }
 .agent-menu-preview { max-width: 268px; display: flex; }

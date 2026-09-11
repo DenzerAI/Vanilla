@@ -3,6 +3,7 @@ import { ChatMenu } from "./chat-controls.jsx";
 import { Avatar } from "./avatar.jsx";
 import { Activity, RotateCcw, Settings } from "./icons.jsx";
 
+import { IconButton } from "./icon-button";
 import { ThemeToggle } from "./components/ui/theme-toggle";
 
 type Props = {
@@ -59,8 +60,8 @@ function AgentName({ name }: { name: string }) {
 }
 
 function timestamp(value?: string) {
-  if (!value || !Number.isFinite(Date.parse(value))) return "Nicht erfasst";
-  return new Date(value).toLocaleString("de-DE", {day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit"});
+  if (!value || !Number.isFinite(Date.parse(value))) return "—";
+  return new Date(value).toLocaleString("de-DE", {day:"2-digit", month:"2-digit", hour:"2-digit", minute:"2-digit"});
 }
 
 function ServerDetails({ connectionState, preview }: Pick<Props, "connectionState" | "preview">) {
@@ -89,19 +90,19 @@ function ServerDetails({ connectionState, preview }: Pick<Props, "connectionStat
     const interval = setInterval(measure, 30000);
     return () => { disposed = true; controller?.abort(); clearInterval(interval); };
   }, [preview]);
-  const label = preview ? "Lokale Designvorschau" : status?.online === false ? "Server nicht erreichbar" : ["connecting", "reconnecting"].includes(connectionState) ? "Verbindung wird hergestellt …" : connectionState !== "online" ? "Verbindung unterbrochen" : status ? "Server verbunden" : "Server wird geprüft …";
+  const label = preview ? "Lokale Designvorschau" : status?.online === false ? "Server nicht erreichbar" : ["connecting", "reconnecting"].includes(connectionState) ? "Verbindung wird hergestellt …" : connectionState !== "online" ? "Verbindung unterbrochen" : status ? "Verbunden" : "Server wird geprüft …";
   return <div className="agent-server-details">
-    <p role="status">{label}</p>
-    {!preview && <dl>
-      <dt>Version</dt><dd>{status?.installation?.version ? `Vanilla ${status.installation.version}` : "Nicht verfügbar"}</dd>
-      <dt>Letzter Commit</dt><dd>{status?.installation?.commit || "Nicht verfügbar"}<br/>{timestamp(status?.installation?.committedAt)}</dd>
-      <dt>Letzter Push</dt><dd title="Letzter lokal belegter Git-Push. Fetch und Commit zählen nicht als Push.">{timestamp(status?.installation?.pushedAt)}</dd>
-      <dt>Letzter Neustart</dt><dd>{timestamp(status?.startedAt)}</dd>
-      <dt>Laufzeit</dt><dd>{status?.uptimeSeconds == null ? "Nicht verfügbar" : `${Math.floor(status.uptimeSeconds / 86400)} T ${Math.floor(status.uptimeSeconds / 3600) % 24} Std ${Math.floor(status.uptimeSeconds / 60) % 60} Min`}</dd>
-      <dt>Server</dt><dd>{window.location.host}</dd>
-      <dt>Engine</dt><dd>{status?.engine?.name || "Nicht verfügbar"}{status?.engine?.connected === false ? " · getrennt" : ""}</dd>
-      <dt>Antwortzeit</dt><dd>{status?.online ? `${status.latency} ms` : "Nicht verfügbar"}</dd>
-    </dl>}
+    <p className="agent-product"><span>Vanilla <span className="agent-product-version">{status?.installation?.version || "—"}</span></span><span className="agent-product-maker">Denzer AI</span></p>
+    <p className="agent-connection" role="status">{label}{status?.online && <> · {status.engine?.name || "Engine unbekannt"}{status.engine?.connected === false ? " getrennt" : ""} · {status.latency} ms</>}</p>
+    {!preview && <>
+      <dl>
+        <dt>Commit</dt><dd title={status?.installation?.committedAt ? new Date(status.installation.committedAt).toLocaleString("de-DE") : "Nicht erfasst"}><span className="agent-commit">{status?.installation?.commit || "—"}</span>{status?.installation?.committedAt && <> · {timestamp(status.installation.committedAt)}</>}</dd>
+        <dt>Push</dt><dd title={status?.installation?.pushedAt ? `Letzter lokal belegter Git-Push: ${new Date(status.installation.pushedAt).toLocaleString("de-DE")}` : "Kein lokaler Push-Zeitpunkt erfasst"}>{timestamp(status?.installation?.pushedAt)}</dd>
+        <dt>Neustart</dt><dd title={status?.startedAt ? new Date(status.startedAt).toLocaleString("de-DE") : "Nicht erfasst"}>{timestamp(status?.startedAt)}</dd>
+        <dt>Laufzeit</dt><dd>{status?.uptimeSeconds == null ? "—" : [status.uptimeSeconds >= 86400 ? `${Math.floor(status.uptimeSeconds / 86400)} T` : "", status.uptimeSeconds >= 3600 ? `${Math.floor(status.uptimeSeconds / 3600) % 24} Std` : "", `${Math.floor(status.uptimeSeconds / 60) % 60} Min`].filter(Boolean).join(" ")}</dd>
+      </dl>
+      <p className="agent-server-host" title={window.location.host}>{window.location.host}</p>
+    </>}
   </div>;
 }
 
@@ -112,7 +113,7 @@ export function AgentMenu({ theme, onThemeChange, name, avatar, avatarColor, con
     className="profile-button agent-menu-trigger"
     menuClassName="agent-menu"
     selected={undefined}
-    footer={<span className="agent-theme-row"><button type="button" role="menuitem" className="agent-restart-button" disabled={restartBusy} onClick={onRestart}><RotateCcw size={14} strokeWidth={1.55}/>{restartBusy ? "Startet neu …" : "Neu starten"}</button><ThemeToggle theme={theme} onThemeChange={onThemeChange} menuItem /></span>}
+    footer={(close: () => void) => <span className="agent-theme-row"><IconButton role="menuitem" label={restartBusy ? "Server startet neu …" : "Server neu starten"} className="agent-restart-button" disabled={restartBusy} onClick={() => { close(); onRestart(); }}><RotateCcw size={18} strokeWidth={1.55}/></IconButton><ThemeToggle theme={theme} onThemeChange={onThemeChange} menuItem /></span>}
     header={<ServerDetails connectionState={connectionState} preview={preview} />}
     items={[
       { id: "usage", label: "Nutzung", icon: <Activity size={18} strokeWidth={1.55} />, action: () => onNavigate("usage") },

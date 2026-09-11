@@ -57,7 +57,7 @@ export function AttentionFan({items,onOpen,onActiveChange,reduceMotion=false,dis
   const count=Math.min(items.length,veryWide?7:wide?5:3),left=Math.floor((count-1)/2);
   const visible=Array.from({length:count},(_,n)=>({i:(index+n-left+items.length)%items.length,side:n-left}));
   const spread=compact?attentionFanMotion.compactSpread:veryWide?attentionFanMotion.veryWideSpread:wide?attentionFanMotion.wideSpread:attentionFanMotion.spread;
-  return <section ref={track} onPointerLeave={()=>setHovered(null)} data-autoplay={autoplay&&!reduced&&!disabled&&!hovered&&items.length>1?"on":"off"} data-dbg={`a${+autoplay}r${+reduced}d${+disabled}h${+!!hovered}`} className="attention-fan" aria-label="Anknüpfungspunkte für dein Gespräch" aria-roledescription="Karussell"
+  return <section ref={track} onPointerLeave={()=>setHovered(null)} data-autoplay={autoplay&&!reduced&&!disabled&&!hovered&&items.length>1?"on":"off"} className="attention-fan" aria-label="Anknüpfungspunkte für dein Gespräch" aria-roledescription="Karussell"
     onWheel={e=>{const delta=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.shiftKey?e.deltaY:0;if(!delta)return;const now=Date.now(),state=wheel.current;if(now-state.at>180||Math.sign(delta)!==Math.sign(state.sum))state.sum=0;state.at=now;state.sum+=delta*(e.deltaMode===1?16:1);if(Math.abs(state.sum)>=attentionFanMotion.wheelThreshold&&now-state.last>=attentionFanMotion.wheelCooldown){select(index+(state.sum>0?1:-1));state.sum=0;state.last=now;}}}
     onKeyDown={e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();select(index+(e.key==='ArrowRight'?1:-1));}}}
     onTouchStart={e=>{touch.current={x:e.touches[0].clientX,y:e.touches[0].clientY};ignoreClick.current=0;}}
