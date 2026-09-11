@@ -123,14 +123,6 @@ den App-Einstieg index.html ausdrücklich, auch bei zusätzlichem Design-Build.
 Bestehende Nutzerdaten und Aufträge bleiben erhalten; vor Rückkehr zu einem
 älteren Handlerbestand die Ladeprüfung deaktivieren. Ablauf: docs/OPERATIONS.md.
 
-Die Plattform wartet für ausdrücklich fertige Quellübergaben nicht auf fremde
-laufende Chats. Nur Betriebspausen sperren diese Wartung. Live-Aktivierungen
-behalten ihr eigenes Neustarttor. Der Quellstatus enthält optional den
-Veröffentlichungsstatus; Fehler und bestätigte Live-Stände erscheinen über
-die vorhandenen Systemmitteilungen. Einstellungen → System zeigt Arbeitsstände,
-Veröffentlichungen und den zuletzt aktivierten Stand als Gruppe Bauaufträge
-(wrapper/surfaces/settings.md). Vertrag: docs/CODE-SYNC.md.
-
 Die gemeinsame Bausteinreferenz ergänzt VoiceProfilesPreview aus dem Sprachmodul. Plus, Eingabe, Auswahl und Bearbeiten verwenden denselben Produktionsbaustein mit ausschließlich lokalen Beispieldaten; echte Stimmenprofile und Schlüssel werden dadurch nicht verändert. Bedienvertrag: wrapper/surfaces/settings.md, Datenvertrag: wrapper/VOICE.md.
 
 Die gemeinsame Zugangsverwaltung speichert Werte in der lokalen .env und SQLite-Referenzen. Neue Installationen benötigen keinen OS-Schlüsselbund. .env bleibt außerhalb von Quellupdates; Betriebs- und Migrationsvertrag: docs/VAULT.md. Gemeinsame Einstellungsdialoge nennen die tatsächliche lokale Ablage.

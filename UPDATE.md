@@ -172,7 +172,3 @@ Diese Datei ist ein verbindlicher Ablauf für den beauftragten Agenten, kein
 automatischer Fern-Updater und keine Garantie für beliebige fremde Änderungen.
 Die Werkzeuge prüfen Code, Module und Build; fachliche Konflikte und tatsächliche
 Wiederherstellbarkeit benötigen weiterhin Prüfung am Ziel.
-
-Lokale parallele Bauaufträge können vor diesem Aktivierungsablauf die in
-docs/CODE-SYNC.md beschriebene Quellübergabewarteschlange verwenden. Deren
-Integrationsbeleg ersetzt weder die Zielabnahme noch die Live-Versionsprüfung.

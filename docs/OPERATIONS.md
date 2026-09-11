@@ -265,18 +265,6 @@ nicht abschalten; alte Stände werden dafür in einer neuen lokalen Installation
 geöffnet. Scheitert die Offline-Prüfung vor dem Austausch, bleibt der aktuelle
 Bestand erhalten und die fehlgeschlagene Anfrage wird nicht bei jedem Start wiederholt.
 
-## Quellübergaben
-
-Ältere Installationen können den CLI-Watcher aus docs/CODE-SYNC.md über ihren
-bereits vorhandenen Prozessmanager verwenden. Er aktiviert keine App-Version.
-
-Der vorhandene Runtime-Wartungszyklus verarbeitet bei ruhender Arbeit die lokal
-aktivierte Quellübergabe aus docs/CODE-SYNC.md. Status steht unter
-/api/system/source-work und in der bestehenden maintenance-Zeile source-work.
-Lange Prüfungen laufen außerhalb des Ereignisloops und werden beim geregelten
-Herunterfahren abgewartet. Ein gespeicherter Commit ist keine Live-Aktivierung.
-
-
 ## Lokale Schlüsselablage in .env
 
 [VAULT.md](VAULT.md) führt Einrichtung, Offline-Migration, Neustartverhalten
@@ -422,7 +410,7 @@ Ein regulär berechtigter Hostprozess richtet den unabhängigen Updateoperator e
 
 Bei gemeinsamer Installation bleiben Updatepause und Wiederherstellungspause
 unabhängig wirksam. Das Ende einer temporären Wartung hebt keinen dieser Gründe
-auf. Während einer Pause bleiben auch Indexierung und Quellübergaben angehalten.
+auf. Während einer Pause bleibt auch die Indexierung angehalten.
 
 Die Registrierung der Systemaufträge enthält die Updateprüfung einschließlich
 Beschreibung und verwendet weiterhin denselben Scheduler. Geräteanschlüsse

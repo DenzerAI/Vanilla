@@ -69,24 +69,20 @@ freigegebenen Bereiche beschränkt. Native Bilderzeugung kann öffentliche
 typisierte Bilddaten direkt als Ergebnis zeigen; eine Werkzeugmeldung allein
 belegt jedoch nicht, dass die lokale Oberfläche sie sichtbar dargestellt hat.
 
-## Quellcode im eingerichteten Entwicklungsablauf
+## Quellcode dieser Installation
 
-Bei Bauaufträgen zuerst `npm run source:work -- status` am zuständigen
-Installationsanschluss lesen. Ist die Quellübergabe eingerichtet, über `begin`
-eine isolierte Arbeitskopie anlegen und ausschließlich dort entwickeln. Nach
-der beauftragten Umsetzung mit `ready` zur automatischen Speicherung und Prüfung
-anmelden. Anschließend dort nicht weiter schreiben. Reine Pläne, Vorschauen ohne
-Umsetzungsauftrag und abgebrochene Arbeiten nicht als bereit melden.
-Den zurückgegebenen Status ausdrücklich unterscheiden: gespeichert, geprüft und
-zusammengeführt sind noch nicht live. Ablauf und Fehler führen docs/CODE-SYNC.md.
+Bauarbeiten passieren direkt im Installationsordner, der ein normaler
+Git-Arbeitsbaum ist: Dateien ändern, bauen, prüfen, fertig melden. Es gibt
+keine Warteschlange, keine Übergabe und keinen Kandidatenstand. Frontend-
+Änderungen wirken nach `npm run control:build` beim nächsten Laden; Backend-,
+Core- oder Wrapper-Änderungen brauchen einen Neustart über
+`POST /api/system/restart`, den der Kern bei laufender Arbeit selbst ablehnt.
+Der Betreiber sichert den Arbeitsbaum automatisch per Commit; ein Push nach
+GitHub ist ein bewusster Schritt nach UPDATE.md, keine Bedingung.
+Reine Pläne und abgebrochene Arbeiten nicht als fertig melden.
 
 Steuerbare HTML-Präsentationen verwenden eigenständige responsive Dokumente mit
 `data-presentation-slide` auf den äußeren Folienelementen. Die gemeinsame
 Vorschau ergänzt Vor/Zurück, Folienstand und Tastatursteuerung beim Präsentieren.
 Normale HTML-Ergebnisse benötigen keine Folienmarker. Format und Grenzen führt
 `wrapper/surfaces/library.md`, Abschnitt HTML-Präsentation.
-
-Ist der lokale Veröffentlichungsdienst eingerichtet, folgt nach erfolgreicher
-Quellübergabe automatisch Push, CI-Prüfung und Aktivierung über den Hostoperator.
-Laufende Sessions verhindern keine Commits oder Pushes; nur der Live-Neustart wartet.
-Vor einer Fertigmeldung den tatsächlichen Übergabe- und Veröffentlichungsstatus lesen.
