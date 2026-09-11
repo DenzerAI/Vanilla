@@ -112,7 +112,10 @@ export class Workers extends EventEmitter {
     if (!command) throw new Error(`${entry.name}: Programm nicht gefunden. Zuerst installieren oder den Programmpfad hinterlegen.`);
     if (entry.adapter !== "acp") throw new Error("Worker-Adapter fehlt.");
     const contextEnv = { ...await installationEnvironment(this.store.dataRoot, id), AGENT_INTERNAL_TOKEN: process.env.AGENT_INTERNAL_TOKEN || "", COMPANY_BASE: companyRoot(this.root), SYSTEM_BASE: systemRoot(), UWE_WORKSPACE: this.store.root };
-    const created = this.makeACP({ id, name: entry.name, command, args: entry.args, cwd: this.store.root,
+    const bundledClaude = id === "claw-code" && command === fileURLToPath(new URL("./node_modules/.bin/claude-agent-acp", import.meta.url));
+    const created = this.makeACP({ id, name: entry.name,
+      command: bundledClaude ? process.execPath : command,
+      args: bundledClaude ? [fileURLToPath(new URL("./claude-acp.mjs", import.meta.url)), ...entry.args] : entry.args, cwd: this.store.root,
       contextEnv,
       readThread: async threadId => await jsonFile(path.join(this.store.root, "chats", safeName(threadId), "native-session.json"), null)
         || await jsonFile(path.join(this.store.root, "chats", safeName(threadId), "transcript.json"), null),

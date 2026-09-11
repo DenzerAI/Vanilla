@@ -130,12 +130,13 @@ export function AmountSlider({ value, onValueChange, onValueCommit, min = 0, max
 }
 
 export function reasoningLabel(label: string) {
+  if (/^(default|auto)$/i.test(label)) return "Stufe wählen";
   if (/^x[ -]?high$/i.test(label)) return "X-High";
   return label ? label[0].toUpperCase() + label.slice(1) : label;
 }
 
 export type ReasoningOption = { value: string; label: string; description?: string };
-type ReasoningHeading = { current: ReasoningOption; reset?: ReasoningOption; automatic: boolean; onReset: () => void };
+type ReasoningHeading = { current: ReasoningOption };
 export function ReasoningSlider({ options, value, onChange, disabled = false, reduceMotion = false, renderHeading }: {
   options: ReasoningOption[]; value: string; onChange: (value: string) => Promise<unknown> | unknown; disabled?: boolean; reduceMotion?: boolean; renderHeading?: (state: ReasoningHeading) => React.ReactNode;
 }) {
@@ -156,9 +157,8 @@ export function ReasoningSlider({ options, value, onChange, disabled = false, re
   const activityFor = (i: number) => reasoningAnimationLevels[levels[i]?.value as keyof typeof reasoningAnimationLevels] ?? i / Math.max(1, levels.length - 1);
   const lower = Math.floor(index), upper = Math.ceil(index);
   const energy = activityFor(lower) + (activityFor(upper) - activityFor(lower)) * (index - lower);
-  const onReset = () => { if (!disabled && reset) void onChange(reset.value); };
   return <div className="reasoning-slider" onPointerCancel={() => setPreview(null)} onKeyDown={event => { if (event.key === "Escape") setPreview(null); }}>
-    {renderHeading ? renderHeading({current, reset, automatic, onReset}) : <div className="reasoning-slider-heading"><span>Denkaufwand</span>{reset && !automatic && <button className="reasoning-reset" type="button" disabled={disabled} title="Auf native Voreinstellung zurücksetzen" onClick={() => void onChange(reset.value)}>{reset.label}</button>}<output aria-live="off" title={current.description}><span key={current.value}>{reasoningLabel(current.label)}</span></output></div>}
+    {renderHeading ? renderHeading({current}) : <div className="reasoning-slider-heading"><span>Denkaufwand</span><output aria-live="off" title={current.description}><span key={current.value}>{reasoningLabel(current.label)}</span></output></div>}
     {levels.length > 1 && <>
       <AmountSlider min={0} max={levels.length - 1} stops={levels.map((_, i) => i)} value={index} energy={energy} unset={automatic} boost={!automatic && levels.some(option => option.value === "ultra") ? Math.max(0, Math.min(1, index - levels.findIndex(option => option.value === "ultra") + 1)) : 0} label="Denkaufwand" valueText={reasoningLabel(current.label)}
         disabled={disabled} reduceMotion={reduceMotion} onValueChange={setPreview} onValueCommit={next => void commit(next)}/>

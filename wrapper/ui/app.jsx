@@ -1560,9 +1560,21 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     if (!change) return;
     setBusy(true);
     try {
-      const result = await api("/worker-session", {id, ...change});
+      let result = await api("/worker-session", {id, ...change});
+      let selection = sessionModelSelection(result.thread.workerSession);
+      // A model change may reset effort in the native adapter. Keep this chat's
+      // explicit choice when the newly acknowledged model supports it.
+      const nextOption = effortConfig(result.thread.workerSession);
+      if (nextModel !== pickerModel && pickerEffort && !["default", "auto"].includes(pickerEffort)
+          && selection.effort !== pickerEffort
+          && selection.models.find(m => m.model === selection.model)?.supportedReasoningEfforts.some(e => e.reasoningEffort === pickerEffort)) {
+        // Reflect the confirmed model even if the following effort request fails.
+        setChats(old => old.map(c => c.id === id ? {...c, model:selection.model, models:selection.models, effort:selection.effort} : c));
+        if (chatRef.current === id) setThread(old => old ? {...old, workerSession:result.thread.workerSession} : old);
+        result = await api("/worker-session", {id, configId:nextOption.id, value:pickerEffort});
+        selection = sessionModelSelection(result.thread.workerSession);
+      }
       if (chatRef.current !== id) return;
-      const selection = sessionModelSelection(result.thread.workerSession);
       setThread(old => old ? {...old, workerSession: result.thread.workerSession} : old);
       setModel(selection.model); setEffort(selection.effort);
       setChats(old => old.map(c => c.id === id ? {...c, model: selection.model, models: selection.models, effort: selection.effort} : c));

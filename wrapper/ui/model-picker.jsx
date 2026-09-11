@@ -1,6 +1,6 @@
 import React, { useEffect, useId, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, Check, ChevronDown, RotateCcw, SquarePen, Wrench, Zap } from "./icons.jsx";
+import { ArrowLeft, Check, ChevronDown, SquarePen, Wrench, Zap } from "./icons.jsx";
 import { ChatMenu } from "./chat-controls.jsx";
 import { BrandIcon } from "./brand-icon.jsx";
 import { AppLoader } from "./app-loader";
@@ -21,6 +21,10 @@ export function ModelPicker({ workerSession, onSessionChange, models = [], model
   const id = useId();
   const choices = visibleModels(models, workerId);
   const selected = models.find(m => m.model === model);
+  const optionName = item => {
+    const name = modelName(item);
+    return choices.some(other => other.model !== item.model && modelName(other) === name) ? `${name} · ${item.model}` : name;
+  };
   const speed = workerId === "codex" ? fastTier(selected) : null;
   const nativeFast = sessionFast(workerSession);
   const fastAvailable = speed && onSpeedChange || nativeFast && onSessionChange;
@@ -69,7 +73,7 @@ export function ModelPicker({ workerSession, onSessionChange, models = [], model
   const showCompact = () => { setProvider(workerId); setDetails(false); setError(""); };
   const modeLabel = mode === "plan" ? "Planen" : "Umsetzen";
   const ModeIcon = mode === "plan" ? SquarePen : Wrench;
-  const heading = ({ current, reset, automatic, onReset } = {}) => <div className="model-compact-heading">
+  const heading = ({ current } = {}) => <div className="model-compact-heading">
     <div className="model-header-side">{fastAvailable && <button type="button" className="icon-button model-fast"
       disabled={disabled || pending || !!nativeFast && running} aria-label="Fast" aria-pressed={!!fastActive}
       title="Fast · höherer Verbrauch. Gilt ab der nächsten Nachricht."
@@ -88,8 +92,7 @@ export function ModelPicker({ workerSession, onSessionChange, models = [], model
       ]}>
       <ModeIcon size={16}/><ChevronDown size={10}/>
     </ChatMenu>}</div>
-    {reset && <div className="model-heading-status"><button type="button" className="model-reset" disabled={disabled || pending || automatic}
-      title="Auf native Voreinstellung zurücksetzen" onClick={onReset}><RotateCcw size={14}/>{reasoningLabel(reset.label)} wiederherstellen</button></div>}
+
   </div>;
   useEffect(() => { setProvider(workerId); setError(""); }, [workerId]);
   useEffect(() => {
@@ -157,7 +160,7 @@ export function ModelPicker({ workerSession, onSessionChange, models = [], model
             <input type="radio" name={id + "-model"} value={m.model} checked={model === m.model}
               onClick={() => { if (model === m.model) setDetails(false); }}
               onChange={() => void act(async () => { await onChange(m.model, supportedEffort(m, effort)); setDetails(false); })}/>
-            <span>{modelName(m)}</span><Check size={14}/>
+            <span>{optionName(m)}</span><Check size={14}/>
           </label>)}
         </fieldset>}
       </>}
