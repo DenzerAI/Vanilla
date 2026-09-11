@@ -322,6 +322,10 @@ class Runtime:
                                     ('Der geprüfte Stand ' + row['target'][:8] + ' läuft jetzt.' if live else
                                      row.get('reason') or 'Die Versionsprüfung ist fehlgeschlagen. Änderungen bleiben gespeichert.'),
                                     'completed' if live else 'failed')
+                        from .stall_watch import stalled
+                        self.stall_memory = getattr(self, 'stall_memory', {})
+                        for key, title, body in stalled(time(), result.get('entries', []), result.get('release', {}).get('releases', []), self.stall_memory):
+                            self.notifications.system('source-stall-' + key, 'update', 'source-work', title, body, 'failed')
                         if result.get('release', {}).get('error'):
                             import hashlib
                             error = result['release']['error']
