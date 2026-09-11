@@ -35,6 +35,8 @@ import { ChapterScrubber } from "./components/ui/chapter-scrubber";
 import { PanelLight } from "./panel-light";
 import {Skeleton} from './skeleton.tsx';
 import { MessageSpeech } from "./message-speech";
+import {chatAudio} from "./chat-audio.mjs";
+import {ChatAudioControls, ChatAudioButton, useChatAudio} from "./chat-audio";
 import { ScrollEdgeFade } from "./scroll-edge-fade.tsx";
 import { designVariables, identity as designIdentity } from "./design-system.mjs";
 import { SettingsNavigationRow } from "./settings-patterns.jsx";
@@ -503,7 +505,7 @@ function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, 
         {/* Only the finished answer of a turn carries the action row. A streaming
             or intermediate message is not a closed message and gets none. */}
         {showActions && <MessageActions className="agent-actions">
-          {i.type === "agentMessage" && i.phase !== "commentary" && <MessageSpeech text={i.text} disabled={running} api={api} Button={IconButton} />}
+          {i.type === "agentMessage" && i.phase !== "commentary" && <MessageSpeech chatId={chatId} messageId={i.id} text={i.text} disabled={running} api={api} Button={IconButton} />}
           <CopyButton label="Antwort kopieren" size={15} text={i.text} />
           <IconButton label="Ab dieser Antwort verzweigen" disabled={running} onClick={onFork}>
             {icon(GitBranch, 15)}
@@ -588,7 +590,7 @@ function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, 
   );
 }
 const projectGlyphs = { folder: Folder, code: Braces, briefcase: Briefcase, globe: Globe, idea: BrainCircuit, calendar: Calendar, message: MessageCircle, files: FileText };
-function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNumber = 0, panePosition = 0, showPaneHeader = false, isMaximized = false, onMaximize, onClosePane, onOpenFile, onOpenCalendar, paneVisible = true, paneActive = false, initialProject = "default" }) {
+function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNumber = 0, panePosition = 0, showPaneHeader = false, isMaximized = false, onMaximize, onClosePane, onOpenFile, onOpenCalendar, onOpenSettings, paneVisible = true, paneActive = false, initialProject = "default" }) {
   const [libraryRevision,setLibraryRevision]=useState(0);
   const [libraryJob,setLibraryJob]=useState(null);
   const historyReads=useRef(null);
@@ -736,6 +738,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     if (window.matchMedia("(max-width: 650px)").matches) setSidebar(false);
   }
   function openSettings(section) {
+    if (embedded && onOpenSettings) { onOpenSettings(section); return; }
     closeMobileNavigation();
     setSettingsTab(section);
     setView("settings");
@@ -1745,6 +1748,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       const updated = await api("/chat/update", { id: c.id, ...change });
       setChats(old => old.map(chat => chat.id === c.id ? {...chat, ...updated} : chat));
       setChatMenu(null);
+      if (change.archived && chatAudio.snapshot().chatId===c.id) chatAudio.stop();
       if (change.archived && chatId === c.id) newDraft();
       await refreshChats();
     } finally {
@@ -1915,6 +1919,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     setTimeout(()=>URL.revokeObjectURL(url),1000);
   };
   const copyConversation = guard(async () => { await navigator.clipboard.writeText(conversationText(thread, chatTitle)); notify("Gespräch kopiert."); });
+  const audioState=useChatAudio();
   const localSession = {
     welcome: !chatId && !loading && !thread?.turns?.length,
     private:current?.private, locked:chatLocked, lock:guard(()=>changeChatPrivacy(api,"lock",chatId)),
@@ -1927,6 +1932,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     items:chatLocked ? [{id:'open',label:'PIN eingeben',icon:icon(Lock),action:()=>document.querySelector(`#chat-pane-${paneNumber} input`)?.focus()}, {id:'new',label:'Neuer Chat',icon:icon(Plus),disabled:busy,action:()=>newDraft(projectId)}] : [
       ...(boot?.features?.chatPrivacy ? [{id:'privacy',label:current?.private ? 'Jetzt sperren' : 'Chat sperren …',icon:icon(Lock),disabled:!current || busy,action:current?.private ? guard(()=>changeChatPrivacy(api,'lock',chatId)) : ()=>setModal({type:'chat-privacy',action:'setup'})},
         ...(current?.private ? [{id:'privacy-remove',label:'Schutz entfernen …',icon:icon(Lock),action:()=>setModal({type:'chat-privacy',action:'remove'})}] : [])] : []),
+      {id:"audio",label:audioState.chatId===chatId && audioState.mode==='follow' ? "Chat vorlesen ausschalten" : "Chat vorlesen",icon:icon(Volume2),disabled:!current,action:guard(()=>audioState.chatId===chatId && audioState.mode==='follow' ? chatAudio.stop() : chatAudio.start(api,{chatId,title:chatTitle,mode:'follow'}))},
       {id:"rename",label:"Umbenennen",icon:icon(SquarePen),action:()=>setModal({type:"rename",chat:current || null})},
       {id:"pin",label:current?.pinned ? "Nicht mehr anpinnen" : "Anpinnen",icon:icon(Pin),disabled:!current || !!updatingChats[current?.id],action:guard(()=>updateChat(current,{pinned:!current.pinned}))},
       {id:"share",label:"Teilen und exportieren …",icon:icon(ArrowUpRight),disabled:!current,action:()=>setModal("shareChat")},
@@ -1937,7 +1943,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     ],
   };
   (sessionRef || sessions.current[0]).current = localSession;
-  useEffect(() => { onSessionChange?.(); }, [loading, chatId, chatTitle, chatLocked, current?.private, project, running, busy, current?.pinned, current?.lastTurnStatus, current?.readTurnId, !!thread?.turns?.length]);
+  useEffect(() => { onSessionChange?.(); }, [loading, chatId, chatTitle, chatLocked, current?.private, project, running, busy, current?.pinned, current?.lastTurnStatus, current?.readTurnId, !!thread?.turns?.length, audioState]);
   const activeSession = !embedded && activePane !== 0 ? sessions.current[activePane].current : localSession;
   const headerSession = activeSession && {...activeSession, items:activeSession.items.map(item => ({...item, action:()=> (embedded ? sessionRef : sessions.current[activePane]).current?.items.find(current=>current.id===item.id)?.action()}))};
   const workspaceProject = boot?.projects?.find(p=>p.id === (headerSession?.projectId || projectId));
@@ -2049,7 +2055,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     return (
       <div className={embedded ? "app embedded-chat" : undefined}>
         {bootError || toast ? <div className="boot-screen"><p role="alert">{bootError || toast}</p><button onClick={guard(refresh)}>Erneut versuchen</button></div> : <Skeleton variant={embedded ? "chat-panel" : "shell"} label={embedded ? "Gespräch wird geladen …" : "Schaltzentrale wird geöffnet …"}/>}
-        {!embedded && <SystemNotice ref={systemNoticeRef} onBusyChange={setServerRestartBusy} api={api} message={toast} onDismiss={()=>setToast("")} />}
+        {!embedded && <ChatAudioControls Button={IconButton}/>}
+      {!embedded && <SystemNotice ref={systemNoticeRef} onBusyChange={setServerRestartBusy} api={api} message={toast} onDismiss={()=>setToast("")} />}
       </div>
     );
   return (
@@ -2175,6 +2182,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                               {active[c.id] ? <AppLoader /> : c.lastTurnStatus === "completed" ? <span className="chat-complete" data-unread={hasUnreadReply(c)} aria-hidden="true">{icon(Check, 15)}</span> : c.lastTurnStatus === "failed" ? icon(AlertCircle, 15) : c.lastTurnStatus === "interrupted" ? icon(Pause, 14) : null}
                             </span>
                           </button>
+                          {audioState.chatId===c.id && <span className="chat-audio-indicator"><ChatAudioButton Button={IconButton} chatId={c.id}/></span>}
                           <IconButton
                             label={"Chat-Aktionen: " + c.title}
                             disabled={c.locked}
@@ -2477,7 +2485,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               </>}
             </section>
             {!embedded && mountedPanes.filter(id=>id!==0).map(id=><div key={id} data-pane={id} data-trailing-pane={visible.at(-1) === id ? "true" : undefined} hidden={!visible.includes(id)} className={"pane-slot secondary-pane " + (activePane===id ? "active-pane" : "")} style={{order:paneOrder.indexOf(id)*2, flexGrow:paneWeights[id] || 1}}>
-              <App embedded onOpenCalendar={()=>setView('calendar')} paneVisible={view === "chat" && visible.includes(id)} paneActive={activePane===id} paneNumber={id} panePosition={paneOrder.indexOf(id)} sessionRef={sessions.current[id]} onSessionChange={sessionChanged} initialProject={projectId} isMaximized={maximizedPane} showPaneHeader={paneOrder.length>1} onActivate={()=>activatePane(id)} onMaximize={()=>{activatePane(id);setMaximizedPane(v=>!v)}} onClosePane={()=>closePane(id)} onOpenFile={path=>{activatePane(id);requestAnimationFrame(()=>guard(openFile)(path))}}/>
+              <App embedded onOpenSettings={openSettings} onOpenCalendar={()=>setView('calendar')} paneVisible={view === "chat" && visible.includes(id)} paneActive={activePane===id} paneNumber={id} panePosition={paneOrder.indexOf(id)} sessionRef={sessions.current[id]} onSessionChange={sessionChanged} initialProject={projectId} isMaximized={maximizedPane} showPaneHeader={paneOrder.length>1} onActivate={()=>activatePane(id)} onMaximize={()=>{activatePane(id);setMaximizedPane(v=>!v)}} onClosePane={()=>closePane(id)} onOpenFile={path=>{activatePane(id);requestAnimationFrame(()=>guard(openFile)(path))}}/>
             </div>)}
             {!embedded && visible.slice(0,-1).map((id,index)=><div className="pane-divider-slot" key={`divider-${id}`} style={{order:paneOrder.indexOf(id)*2+1}}><PaneDivider value={Math.round(100*(paneWeights[id] || 1)/((paneWeights[id] || 1)+(paneWeights[visible[index+1]] || 1)))} onResize={delta=>resizePanes(id,visible[index+1],delta)}/></div>)}
             </div>
@@ -3107,6 +3115,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
           </div>
         )}
       </MainSurface>
+      {!embedded && <ChatAudioControls Button={IconButton}/>}
       {!embedded && <SystemNotice ref={systemNoticeRef} onBusyChange={setServerRestartBusy} api={api} message={toast} onDismiss={()=>setToast("")} />}
       {welcome && !embedded && <AgentWelcome api={api} initialName={boot.settings.name} onClose={() => setWelcome(false)} onSaved={profile => {
         setBoot(old => ({...old, settings: {...old.settings, name:profile.name, avatar:profile.avatar, avatarColor:profile.avatarColor, avatarConfigured:true}}));

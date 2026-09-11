@@ -1,0 +1,4 @@
+.chat-audio-controls { position: fixed; top: max(var(--space-2), env(safe-area-inset-top)); left: 50%; transform: translateX(-50%); z-index: 50; display: flex; align-items: center; max-width: calc(100% - var(--space-8)); border-radius: var(--radius-control); background: var(--surface); padding: var(--space-2); }
+.chat-row > .chat-audio-indicator { position: absolute; right: var(--space-2); top: 50%; transform: translateY(-50%); }
+.chat-row:has(.chat-audio-indicator) .chat-pin { visibility: hidden; }
+.chat-row:has(.chat-audio-indicator) .chat-row-title { padding-right: var(--space-8); }

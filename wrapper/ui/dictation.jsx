@@ -4,7 +4,7 @@ import React, {useState,useRef,useEffect,useImperativeHandle} from 'react';
 import {Mic,ArrowUp,Pause,Play,Trash2,Check,X,Square,Volume2,Download} from './icons.jsx';
 import {write,sync,all,downloadLocal,subscribeSync} from './dictation-storage.mjs';
 import {microphone,microphoneError} from './dictation-audio.mjs';
-import {SpeechPlayback} from './speech-playback.mjs';
+import {SpeechPlayback,holdMicrophone} from './speech-playback.mjs';
 import {VoiceWave,VoiceStatus} from './voice-visual';
 import {voiceWaveGeometry} from './design-system.mjs';
 import './dictation.css';
@@ -16,6 +16,7 @@ export function Dictation({api,notify,onText,onVoiceText,onSendText,chatId,reply
   const [phase,setPhase]=useState('idle'),[seconds,setSeconds]=useState(0),[levels,setLevels]=useState(Array(voiceWaveGeometry.samples).fill(0)),[sessionActive,setSessionActive]=useState(false),[output,setOutput]=useState('idle'),[issue,setIssue]=useState('');
   const current=useRef(null),mounted=useRef(true),stopRef=useRef(null),startRef=useRef(null),generation=useRef(0),session=useRef(null),playback=useRef(null),latest=useRef({reply,chatId});latest.current={reply,chatId,onSendText,onText,running};
   if(!playback.current)playback.current=new SpeechPlayback(api,s=>{if(mounted.current)setOutput(s);});
+  const micRelease=useRef(null);
   const phaseRef=useRef(phase);phaseRef.current=phase;
   function report(e){if(mounted.current){setIssue(e.message);notify(e.message);}}
   useEffect(()=>{
@@ -53,6 +54,7 @@ export function Dictation({api,notify,onText,onVoiceText,onSendText,chatId,reply
   }
   async function start(){
     if(current.current || phaseRef.current==='starting')return;
+    micRelease.current?.();micRelease.current=holdMicrophone(playback.current);
     const g=++generation.current;phaseRef.current='starting';setPhase('starting');setIssue('');playback.current.cancel();
     let stream,context;
     try{
@@ -86,6 +88,7 @@ export function Dictation({api,notify,onText,onVoiceText,onSendText,chatId,reply
       context.onstatechange=()=>{if(context.state==='suspended' && current.current===s && !s.stopping){node.port.postMessage('pause');setPhase('paused');}};
       setSeconds(0);setLevels(Array(voiceWaveGeometry.samples).fill(0));phaseRef.current='recording';setPhase('recording');
     }catch(e){stream?.getTracks().forEach(t=>t.stop());await context?.close();if(mounted.current && g===generation.current){phaseRef.current='idle';setPhase('idle');report(new Error(microphoneError(e)));}}
+    finally {if(!current.current){micRelease.current?.();micRelease.current=null;}}
   }
   startRef.current=start;
   shortcutState.current={
@@ -178,7 +181,7 @@ export function Dictation({api,notify,onText,onVoiceText,onSendText,chatId,reply
       await Promise.race([new Promise(resolve=>{s.stopped=resolve;s.node.port.postMessage('stop');}),delay(1500)]);await s.pending;
       for(const chunk of s.unsaved)await write('chunks',chunk);s.unsaved=[];s.failed=false;
       if(s.seq)await write('recordings',{...s.r,finished:true,count:s.seq,trash});secured=true;
-      s.stream.getTracks().forEach(t=>t.stop());await s.context.close();current.current=null;
+      s.stream.getTracks().forEach(t=>t.stop());await s.context.close();current.current=null;micRelease.current?.();micRelease.current=null;
       if(!s.seq){if(mounted.current && g===generation.current)setPhase('idle');return;}
       await sync(api);
       if(mounted.current && g===generation.current && !trash && recognize)await transcribe(s.r.id,g,conversation,direct);
