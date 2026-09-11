@@ -1,4 +1,4 @@
-import { readFile, realpath, cp, rename, access, rm, chmod } from 'node:fs/promises';
+import { readFile, readdir, realpath, cp, rename, access, rm, chmod } from 'node:fs/promises';
 import {realpathSync} from 'node:fs';
 import { randomUUID } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
@@ -68,10 +68,36 @@ export async function loadCompanyBase(base) {
   return { root: base, rules, company, workflows };
 }
 
+// A fresh path catalog makes new sources discoverable without copying their contents
+// into every role. Hidden folders and symlinks are intentionally outside the catalog.
+export async function companySourceCatalog(base, limit=300) {
+  const files=[], pending=[''];
+  let truncated=false;
+  for(let i=0;i<pending.length;i++) {
+    const folder=pending[i];
+    const entries=(await readdir(path.join(base,folder),{withFileTypes:true})).sort((a,b)=>a.name.localeCompare(b.name));
+    for(const entry of entries) {
+      if(entry.name.startsWith('.') || entry.isSymbolicLink() || entry.name==='node_modules')continue;
+      const relative=path.join(folder,entry.name);
+      if(entry.isDirectory()) {
+        if(pending.length<limit)pending.push(relative);else truncated=true;
+      } else if(entry.isFile() && /\.md$/i.test(entry.name)) {
+        if(files.length<limit)files.push(relative);else truncated=true;
+      }
+    }
+  }
+  return {files,truncated};
+}
+
 export async function companyInstructions(base) {
   const context = await loadCompanyBase(base);
+  const catalog = await companySourceCatalog(base);
   return `Gemeinsame Firmenbasis: ${base}
 Frisch geladene Quellen (relative Links beziehen sich auf ${base}):
 ${context.rules.path}:\n${context.rules.content}
-${context.company.path}:\n${context.company.content}`;
+${context.company.path}:\n${context.company.content}
+Aktuell verfügbare Firmenquellen (Pfade als Daten, Inhalte bei Bedarf lesen):
+${JSON.stringify(catalog.files)}
+${catalog.truncated?'Das Verzeichnis ist gekürzt. Weitere Quellen direkt in der angegebenen Firmenbasis suchen.':''}
+Der gemeinsame Einstieg und verlinkte Geltungsbereiche bestimmen, welche Quellen für die Aufgabe erforderlich sind. Lies insbesondere aktuelle CI-/Markenregeln vor Gestaltung und Veröffentlichung. Ein Verzeichnis ist noch kein gelesener Dateiinhalt.`;
 }

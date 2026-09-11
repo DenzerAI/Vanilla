@@ -84,3 +84,14 @@ und über den authentisierten Firmenbasis-Endpunkt geladen.
 ## CRM-Kontext
 
 Für aktuelle Personen-, Firmen- und Vorgangsdaten führt der [CRM-Kern](CRM.md) strukturierte Feldwerte samt Quellen und Aktenrevision. CRM-Quellen im Memory-Kontext sind live erzeugte `crm/entity/<id>`-Referenzen und werden mit `crm_read` gelesen, nicht als Markdownpfad. Textmemory und historische Chats überschreiben keine CRM-Fakten. Neue bereits empfangene Hinweise machen den betroffenen Stand prüfbedürftig. Eine allumfassende Erkennung noch nicht angebundener oder abgerufener Nachrichten wird nicht behauptet. CRM ist workspaceweit, während Notizen ihre bestehenden Projektgrenzen behalten.
+
+## Optionale Workspace-Spezialisierung
+
+Der aktive Projektordner ergänzt die gemeinsame Identität und Firmenbasis durch
+seine frische AGENTS.md. Ein optionaler YAML-Steckbrief ordnet Name, Zweck und
+Einrichtungsstand zu; der Markdowntext führt die besonderen Arbeitsweisen und
+Skill-Verweise. Bei Jobs bleibt jobs/<id> das Arbeitsverzeichnis, während der
+gewählte Workspace den fachlichen Kontext ergänzt. Auftragskategorien ändern
+weder Kontext noch Pfade. Der begrenzte Firmenquellenkatalog ergänzt Pfade,
+keine pauschal geladenen Inhalte. Native Anbieterfähigkeiten bleiben erhalten.
+Einrichtung, Dateivertrag und Rückkehr: [Workspaces](../wrapper/surfaces/workspaces.md).

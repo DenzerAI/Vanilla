@@ -305,3 +305,11 @@ Speichern übernommen, Fehler bleiben sichtbar. Browserlokaler Schlüssel
 agent-pane-shortcuts-v1, validiert und zwischen Tabs synchronisiert. Keine
 Migration von Serverdaten oder Chatentwürfen; fehlende/ungültige Werte verwenden
 den Standard. System- und Browserbelegungen haben gegebenenfalls Vorrang.
+
+## Workspace-Beschreibungen
+
+Workspace-Namen gehören zum jeweiligen Thema und ändern nicht die zentrale
+Assistentenidentität. Einrichtung und Bearbeitung verwenden den bestehenden
+Workspace-Einstieg der Seitenleiste und die gemeinsamen Settings-Zeilen im
+Modal; siehe [Workspace-Vertrag](workspaces.md). Es gibt dafür kein zweites
+Identitätsprofil und keine zusätzlichen Anbieterzugänge.

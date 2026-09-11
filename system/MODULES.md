@@ -86,6 +86,8 @@ darf den Schutz nicht unbemerkt aufheben. Native Rückfragen sind vor einem
 Adapterwechsel zu beantworten oder zu stoppen. Der zusätzliche Claude-
 Kontrollabruf verwendet dieselbe Installation wie der reguläre Worker.
 
-Das spätere Bereichskonzept ist damit noch nicht umgesetzt. Die bestehenden
-Projektkennungen und die zentrale Assistentenidentität bilden dessen Grundlage;
-dieser Stand führt keine zusätzlichen Bereichspersönlichkeiten ein.
+Das Modul `workspaces` ergänzt die bestehenden Projektkennungen um freiwillige
+Spezialisierungen. AGENTS.md führt den Steckbrief und die Arbeitsweise; die
+Assistentenidentität und die Firmenbasis bleiben gemeinsam. Der bestehende
+Jobpfad erhält unabhängig davon optionale Kategorien. Einrichtung und
+Rückkehrregeln stehen im [Workspace-Vertrag](../wrapper/surfaces/workspaces.md).

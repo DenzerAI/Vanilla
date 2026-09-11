@@ -957,3 +957,14 @@ in blueprint.html. Er verwendet ChatStart und dessen Scrollsteuerung direkt.
 Umschaltbare Lade- und Anhangszustände lassen Avatarposition und erreichbare
 Eingabe vergleichen; Vorschauaktionen zeigen nur ihr Ziel. Die Anhangsfläche
 ist ein Layoutbeispiel und führt keinen Upload aus.
+
+## Workspace-Spezialisierung
+
+Das Plus neben Workspace eröffnet die kurze native Einrichtung. Die anklickbare
+Überschrift erklärt den Begriff; das bestehende Projektmenü bearbeitet oder
+setzt die Einrichtung fort. Name und Spezialisierung stehen in AGENTS.md,
+Assistentenname und Firmenbasis bleiben gemeinsam. Wiederholte Startanfragen
+öffnen denselben Chat; Forks sind normale Gespräche ohne Einrichtungszuordnung.
+Quelle, Revisionsschutz, Fehler und Migration führt
+[workspaces.md](workspaces.md). Bestehende Scroll- und native Sitzungsregeln
+bleiben eigenständig und sind durch diese Erweiterung nicht neu abgenommen.

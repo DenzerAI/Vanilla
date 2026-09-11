@@ -27,6 +27,7 @@ export function registerFork(chats, source, threadId, now = Date.now()) {
   for (const member of members) member.forkSequence = index;
   const fork = {
     ...source,
+    workspaceOnboarding: null,
     firmaItemId: null,
     firmaReview: null,
     id: threadId,

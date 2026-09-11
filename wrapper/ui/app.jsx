@@ -1,3 +1,5 @@
+import {WorkspaceInfo,WorkspaceDefinitionEditor,JobCategoryField,JobCategoryFilter} from './workspace-settings';
+import {jobCategoryLabel} from './job-categories.mjs';
 import {PageHeading} from './page-heading';
 import {submitMessage} from "./message-submit.mjs";
 import {MailConnectionForm} from "./mail-connection";
@@ -964,6 +966,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
             setBoot((old) => ({
               ...old,
               projects: b.projects,
+              workspaceWarnings: b.workspaceWarnings,
               settings: b.settings,
             })),
           )
@@ -1687,6 +1690,23 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     if (change.theme) document.documentElement.dataset.theme = change.theme;
 
   }
+  const [workspaceOpening,setWorkspaceOpening]=useState(false);
+  const workspaceRequest=useRef(null);
+  const workspaceOpenLock=useRef(false);
+  const [jobCategory,setJobCategory]=useState(null);
+  async function configureWorkspace(targetId) {
+    if(workspaceOpenLock.current)return;
+    workspaceOpenLock.current=true;setWorkspaceOpening(true);
+    try {
+      if(!targetId)workspaceRequest.current ||= crypto.randomUUID();
+      const result=await api('/workspaces/chat',{...(targetId?{projectId:targetId}:{requestId:workspaceRequest.current}),worker:draftWorker,model});
+      workspaceRequest.current=null;
+      const fresh=await api('/bootstrap');
+      setBoot(old=>({...old,projects:fresh.projects,workspaceWarnings:fresh.workspaceWarnings}));
+      await refreshChats();setModal(null);chooseProject(result.project.id);await openChat(result.thread.id);
+      if(result.startError)notify(result.startError);
+    } finally {workspaceOpenLock.current=false;setWorkspaceOpening(false);}
+  }
   async function saveProject(change) {
     const result = await api("/projects/save", change);
     setBoot((b) => ({
@@ -1800,13 +1820,13 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     document.addEventListener('keydown', close);
     return () => { cancelAnimationFrame(frame); document.removeEventListener('keydown', close); };
   }, [view, modal?.type, modal?.job?.id, modal?.template?.id]);
-  const visibleJobs = filterJobs(jobs, jobFilter, search);
+  const visibleJobs = filterJobs(jobs, jobFilter, search, jobCategory);
   const jobEditor = modal?.type === 'job' && !modal.job?.managed ? <JobForm
     key={modal.job?.id || modal.template?.id || 'new'}
     routines={!!boot.features?.routines} configurationReady={!!boot.features?.jobConfiguration} initialTemplate={modal.template}
     workers={boot.workers || []} projects={boot.projects || []}
     modelsByWorker={boot.modelsByWorker || {}} defaultProjectId={projectId}
-    job={modal.job} connections={integrations.connections}
+    job={modal.job} jobs={jobs} connections={integrations.connections}
     onSave={guard(async job => {
       await api('/jobs/save', job);
       setJobs(await api('/jobs'));
@@ -1953,13 +1973,14 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
             </nav>
             {boot.features?.firma&&<><div className="sidebar-section-label">Wissen und Abläufe</div><nav><button className={"nav-item "+(view==="firma"?"selected":"")} onClick={()=>setView("firma")}>{icon(Briefcase)}Firma</button></nav></>}
             <div className="workspace-projects">
-              <div className="sidebar-section-label projects-heading"><span>Workspace</span><IconButton label="Neuer Workspace" onClick={()=>setModal({type:"project"})}>{icon(Plus,16)}</IconButton></div>
+              <div className="sidebar-section-label projects-heading"><button className="workspace-info-button" type="button" aria-label="Was ist ein Workspace?" onClick={()=>setModal({type:"workspace-info"})}>Workspace</button><IconButton label="Neuer Workspace" disabled={workspaceOpening} onClick={boot.features?.workspaceSpecialization?guard(()=>configureWorkspace()):()=>setModal({type:"project"})}>{icon(Plus,16)}</IconButton></div>
+              {(boot.workspaceWarnings||[]).map((warning,index)=><p className="page-note" role="status" key={index}>{warning}</p>)}
               {(boot.projects || []).map((space) => (
                 <section className={"workspace-group" + (expandedProject === space.id ? " expanded" : "")} key={space.id}>
                   <div className="workspace-heading">
                     <button
                       className="workspace-select"
-                      title={space.name}
+                      title={space.workspaceError || space.workspaceDescription || space.name}
                       aria-expanded={expandedProject === space.id}
                       onClick={() => {
                         if (projectId !== space.id) {
@@ -1977,10 +1998,13 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                     </button>
                     <ChatMenu label={"Workspace verwalten: " + space.name} className="icon-button" items={[
                       {id:"edit", label:"Workspace bearbeiten …", icon:icon(SquarePen,16), action:()=>setModal({type:"project",project:space})},
+                      ...(boot.features?.workspaceSpecialization?[{id:"setup",label:"Im Chat einrichten …",icon:icon(MessageCircle,16),action:guard(()=>configureWorkspace(space.id))}]:[]),
                       {id:"files", label:"Dateien öffnen", icon:icon(FolderOpen,16), action:()=>{if(projectId !== space.id) newDraft(space.id); chooseProject(space.id); setView("chat"); setPanel("files");}}
                     ]}>{icon(MoreHorizontal,17)}</ChatMenu>
                     <IconButton label={`Neuer Chat in ${space.name}`} onClick={()=>newDraft(space.id)}>{icon(Plus,16)}</IconButton>
                   </div>
+                  {space.workspaceError&&<p className="page-note workspace-status" role="alert">{space.workspaceError}</p>}
+                  {!space.workspaceError&&space.workspaceStatus==="draft"&&<p className="page-note workspace-status">In Einrichtung</p>}
                   {expandedProject === space.id && (
                     <ScrollEdgeFade className="workspace-chats chats-scroll" tabIndex={0} role="region" aria-label={`Chats in ${space.name}`}>
                       {projectChatList(chats, space.id, expandedLists[space.id] !== false).visible.map((c, index, visible) => (
@@ -2455,6 +2479,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 </button>
               ))}
             </div>
+            {boot.features?.jobCategories&&!["system","templates"].includes(jobFilter)&&<JobCategoryFilter jobs={jobs} value={jobCategory} onChange={setJobCategory}/>}
             {jobFilter === "templates" && <JobTemplateList query={search} onChoose={template => setModal({type: "job", template})} />}
             {jobFilter !== "templates" && jobsLoading && !jobs.length && !jobsError && <Skeleton layout="jobs" label="Aufträge werden geladen …"/>}
             {jobFilter !== "templates" && jobsError && <p role="alert">{jobsError} <button onClick={loadJobs}>Erneut laden</button></p>}
@@ -2489,7 +2514,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                             : "Täglich") +
                           " um " +
                           j.schedule?.time}{" "}
-                    · {j.managed ? 'System' : (boot.projects.find(p=>p.id === (j.projectId || 'default'))?.name || 'Workspace')} · {jobStateLabel(j)}
+                    · {j.managed ? 'System' : (boot.projects.find(p=>p.id === (j.projectId || 'default'))?.name || 'Workspace')} · {jobStateLabel(j)}{!j.managed && j.status!=='invalid' && ' · '+jobCategoryLabel(j)}
                     {j.lastRun &&
                       " · " +
                         {
@@ -3093,13 +3118,14 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
           {typeof navigator.share === "function" && <button disabled={!thread?.turns?.length} onClick={guard(async()=>{try {await navigator.share({title:chatTitle,text:conversationText(thread,chatTitle)});} catch(error){if(error.name!=="AbortError")throw error;}})}>{icon(ArrowUpRight)}Über System teilen …</button>}
         </div>
       </Modal>}
+      {modal?.type === "workspace-info" && <Modal title="Was ist ein Workspace?" onClose={()=>setModal(null)}><WorkspaceInfo onCreate={boot.features?.workspaceSpecialization?guard(()=>configureWorkspace()):undefined} busy={workspaceOpening}/></Modal>}
       {modal?.type === "project" && (
         <Modal
           title={modal.project ? "Workspace bearbeiten" : "Neuer Workspace"}
           className="project-dialog"
           onClose={() => setModal(null)}
         >
-          <form className="project-editor"
+          {boot.features?.workspaceSpecialization&&modal.project ? <WorkspaceDefinitionEditor key={modal.project.id} api={api} projectId={modal.project.id} onCancel={()=>setModal(null)} onConfigure={guard(()=>configureWorkspace(modal.project.id))} onSaved={result=>{setBoot(old=>({...old,projects:result.projects,settings:result.settings}));setModal(null);notify("Workspace gespeichert.");}}/> : <form className="project-editor"
             onSubmit={guard(async (e) => {
               e.preventDefault();
               const name = new FormData(e.currentTarget).get("name");
@@ -3137,7 +3163,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 {modal.project ? "Speichern" : "Anlegen"}
               </button>
             </div>
-          </form>
+          </form>}
         </Modal>
       )}
       {modal?.type === "rename" && (
@@ -3447,7 +3473,7 @@ function SearchBox({ value, onChange, placeholder, autoFocus }) {
     </div>
   );
 }
-function JobForm({ job, initialTemplate, connections, workers, projects, modelsByWorker, defaultProjectId, onSave, routines, configurationReady }) {
+function JobForm({ job, jobs=[], initialTemplate, connections, workers, projects, modelsByWorker, defaultProjectId, onSave, routines, configurationReady }) {
   const [templateId, setTemplateId] = useState(initialTemplate?.id || "");
   const template = jobTemplates.find(t => t.id === templateId);
   const [draft, setDraft] = useState(() => job || (initialTemplate ? jobFromTemplate(initialTemplate.id) : {}));
@@ -3470,6 +3496,7 @@ function JobForm({ job, initialTemplate, connections, workers, projects, modelsB
           worker,
           connectionId: f.get("connectionId"),
           projectId: f.get('projectId'),
+          category: f.get('category')||'',
           model: worker === 'auto' || ['python','n8n'].includes(worker) ? '' : model,
           effort: model && worker !== 'auto' && !['python','n8n'].includes(worker) ? effort : '',
           ...(worker==='python'?{python:{handler:'script',script:f.get('script'),timeout:Number(f.get('timeout')),input:JSON.parse(String(f.get('pythonInput')||'{}'))},retry:{count:Number(f.get('retries')||0),idempotent:f.get('idempotent')==='on'}}:{}),
@@ -3526,6 +3553,7 @@ function JobForm({ job, initialTemplate, connections, workers, projects, modelsB
           required
         />
       </Field>
+      <JobCategoryField Field={Field} jobs={jobs} value={draft.category||''} onChange={category=>setDraft(d=>({...d,category}))}/>
       <Field label="Workspace" hint="Jeder Lauf erstellt einen eigenen Chat in diesem Workspace.">
         <select name="projectId" defaultValue={job?.projectId || defaultProjectId || 'default'}>{projects.map(p=><option key={p.id} value={p.id}>{p.name}</option>)}</select>
       </Field>

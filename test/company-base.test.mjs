@@ -42,3 +42,12 @@ test('fresh shared context, selective loading and extension without code changes
   await rm(path.join(base, 'FIRMA.md'));
   await assert.rejects(() => companyInstructions(base));
 });
+
+test('company source catalog is fresh, bounded and lists references without copying documents',async t=>{
+  const root=await mkdtemp(path.join(os.tmpdir(),'vanilla-source-catalog-'));t.after(()=>rm(root,{recursive:true,force:true}));
+  await cp(new URL('../templates/firmenbasis',import.meta.url),root,{recursive:true});
+  await mkdir(path.join(root,'ci'));await writeFile(path.join(root,'ci/style.md'),'CONTENT_NOT_PRELOADED');
+  await writeFile(path.join(root,'.private.md'),'private');await symlink(path.join(root,'ci/style.md'),path.join(root,'linked.md'));
+  let instructions=await companyInstructions(root);assert.match(instructions,/ci\/style.md/);assert.doesNotMatch(instructions,/CONTENT_NOT_PRELOADED|\.private.md|linked.md/);
+  await writeFile(path.join(root,'ci/new.md'),'Another body');instructions=await companyInstructions(root);assert.match(instructions,/ci\/new.md/);assert.doesNotMatch(instructions,/Another body/);
+});

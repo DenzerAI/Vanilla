@@ -2,6 +2,8 @@ import {installWeatherRoutes} from './weather.mjs';
 import {installationEnvironment} from './worker-environment.mjs';
 import {allowanceReader,recordUsage,tokenFields} from './usage.mjs';
 import {readClaudeUsage} from './claude-usage.mjs';
+import {workspaceInstructions} from './workspace-directory.mjs';
+import {workspaceOnboardingOpener,workspaceOnboardingInstructions} from './workspace-onboarding.mjs';
 import {Firma} from './firma.mjs';
 import {collectStatistics,statisticsChatOpener} from './statistics.mjs';
 import {questionReceipt} from './worker-questions.mjs';
@@ -382,6 +384,7 @@ async function finishThread(id, turn) {
   const artifacts=await library.registerThread(r.thread,c);
   const completedTurn=r.thread.turns?.find(t=>t.id===turn.id);
   await firma.capture(c, completedTurn);
+  await refreshWorkspaceDirectory();
   await channels.complete(id,turn,(completedTurn?.items||[]).filter(i=>i.type==='agentMessage'&&i.phase!=='commentary').map(i=>i.text||'').join('\n\n'),artifacts.filter(a=>a.turnId===turn.id&&a.scope==='workspace'));
   emit({method:'wrapper/library'});
   emit({ method: "wrapper/thread", params: { thread: r.thread } });
@@ -492,7 +495,10 @@ async function sendTurnUnlocked(id, b, delivery) {
     }
   }
   await firma.confirmFromMessage(c,b.text,b.attachments);
+  const workspaceContext = await store.workspaces.context(c.projectId || "default");
   const companyContext = await workerInstructions({ root, workspace, cwd: c.cwd })
+    + workspaceInstructions(workspaceContext)
+    + (c.workspaceOnboarding ? workspaceOnboardingInstructions(workspaceContext.active,workspace) : "")
     + await handoffInstructions(store, c)
     + await firma.context(c)
     + await routedContext({query:b.text || "",projectId:c.projectId || "default",chatId:id})
@@ -657,6 +663,7 @@ route("GET", "/api/status", async () => ({
 }));
 route("GET", "/api/bootstrap", async () => {
   await store.readIdentity();
+  await store.workspaces.refresh();
   const modelsByWorker = await workers.modelLists();
   modelCache = modelsByWorker.codex || [];
   const account = workers.connected ? await workers.call("account/read", {}).catch(() => ({})) : {};
@@ -665,9 +672,10 @@ route("GET", "/api/bootstrap", async () => {
     token,
     identitySource: "soul/IDENTITY.md",
     workspaceToolsVersion: 1,
-    features: { firma:true, serviceConnections:true, crmConnections:true, skillLibrary:true, library:true },
+    features: { workspaceSpecialization:true, jobCategories:true, firma:true, serviceConnections:true, crmConnections:true, skillLibrary:true, library:true },
     workspace,
     projects: store.state.projects,
+    workspaceWarnings: store.workspaces.warnings,
     settings: store.state.settings,
     chats: store.state.chats.filter(c=>!c.channelOnly),
     models: modelCache,
@@ -688,6 +696,38 @@ route("GET", "/api/bootstrap", async () => {
   };
 });
 const updateChat = chatArchiveUpdater({store, workers, active, turnLocks, voiceSessions, loaded, restartGate, emit});
+const openWorkspace=workspaceOnboardingOpener({store,newChat,sendTurn,emit,updateChat,canUseChat:async chat=>{
+  if(chat.private)return false;
+  if(!coreEnabled)return true;
+  const {ids}=await coreRequest('chat-privacy/ids');
+  if(!Array.isArray(ids))throw Error('Privatsperren konnten nicht geprüft werden.');
+  return !ids.includes(chat.id);
+}});
+route('GET','/api/workspaces',async()=>({projects:await store.workspaces.refresh(),warnings:store.workspaces.warnings}));
+route('GET','/api/workspaces/definition',async(_b,u)=>{
+  await store.workspaces.refresh();
+  const project=store.project(u.searchParams.get('id')||'default');
+  return {project,...await store.workspaces.read(project)};
+});
+route('POST','/api/workspaces/save',async b=>{
+  if(restartGate.restarting)throw Error('Der Server wird neu gestartet.');
+  const project=await store.workspaces.update(b);
+  emit({method:'wrapper/projects'});
+  return {project,projects:store.state.projects,settings:store.state.settings};
+});
+route('POST','/api/workspaces/chat',b=>{
+  if(restartGate.restarting)throw Error('Der Server wird neu gestartet.');
+  return openWorkspace(b);
+});
+async function refreshWorkspaceDirectory(){
+  const before=JSON.stringify([store.state.projects,store.workspaces.warnings]);
+  try{
+    await store.workspaces.refresh();
+    if(before!==JSON.stringify([store.state.projects,store.workspaces.warnings]))emit({method:'wrapper/projects'});
+  }catch(error){console.error('Workspace-Verzeichnis konnte nicht aktualisiert werden:',error.message);}
+}
+setInterval(refreshWorkspaceDirectory,5000).unref();
+
 const firma = await new Firma({store,companyRoot:companyRoot(root),newChat,sendTurn,emit,updateChat,isBusy:id=>active.has(id)}).init();
 route('GET', '/api/firma', () => firma.state());
 route('GET', '/api/firma/review', (_b,u) => firma.review(store.chat(u.searchParams.get('id'))));
@@ -740,7 +780,7 @@ route("POST", "/api/chats", async (b) => {
   });
 });
 route("POST", "/api/projects/save", async (b) => {
-  const project = await store.saveProject({ id: b.id, name: b.name, icon: b.icon, color: b.color });
+  const project = await store.saveProject({ id: b.id, name: b.name, icon: b.icon, color: b.color, revision:b.revision });
   emit({ method: "wrapper/projects" });
   return {
     project,

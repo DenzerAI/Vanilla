@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from .routines import validate_category
+
 import json
 import re
 from pathlib import Path
@@ -134,6 +136,7 @@ class Storage:
                     .as_posix(),
                 ).read_text()
                 value.update(id=p.parent.name, instructions=instructions)
+                value["category"] = validate_category(value.get("category"))
                 schedule = value.get("schedule", {})
                 validate_schedule(schedule or {'type': 'manual'})
                 if 'notification' in value:

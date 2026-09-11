@@ -1,0 +1,31 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {mkdtemp,rm,readFile,writeFile} from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import {Storage} from '../storage.mjs';
+import {filterJobs} from '../ui/jobs-view.mjs';
+import {normalizeJobCategory,jobCategoryLabel,jobCategoryOptions} from '../ui/job-categories.mjs';
+test('categories sort independently from workspaces, status and system routines',()=>{
+  const jobs=[{id:'a',projectId:'default',category:'Marketing',name:'Report',status:'active'}, {id:'b',projectId:'special',category:'Marketing',name:'Review',status:'paused'},{id:'c',name:'General',status:'active'},{id:'s',name:'System',managed:true,category:'Internal'}];
+  assert.deepEqual(filterJobs(jobs,'all','','Marketing').map(j=>j.id),['a','b']);
+  assert.deepEqual(filterJobs(jobs,'active','','Marketing').map(j=>j.id),['a']);
+  assert.deepEqual(filterJobs(jobs,'all','','').map(j=>j.id),['c']);
+  assert.deepEqual(filterJobs(jobs,'system','','Marketing').map(j=>j.id),['s']);
+  assert.deepEqual(jobCategoryOptions(jobs),['Marketing']);assert.equal(jobCategoryLabel(jobs[2]),'Allgemein');
+  assert.equal(normalizeJobCategory(' ALLGEMEIN '),'');assert.equal(normalizeJobCategory('Eigener Bereich'),'Eigener Bereich');
+  for(const value of [[],{},'a\nb','x'.repeat(81)])assert.throws(()=>normalizeJobCategory(value));
+});
+test('category survives saves, run updates, restart and direct manifest edits without moving outputs',async t=>{
+  const dir=await mkdtemp(path.join(os.tmpdir(),'vanilla-categories-'));t.after(()=>rm(dir,{recursive:true,force:true}));
+  const store=new Storage(path.join(dir,'workspace'),path.join(dir,'state'));await store.init();
+  await store.saveJob({id:'report',name:'Report',category:'Marketing',instructions:'Read input and report.',projectId:'default'});
+  const output=path.join(store.root,'jobs/report/output/result.md');await writeFile(output,'Preserved');
+  await store.saveJobRun('report',{lastRun:{status:'completed'}});
+  const again=new Storage(store.root,store.dataRoot);await again.init();assert.equal((await again.jobs())[0].category,'Marketing');assert.equal((await again.jobs())[0].projectId,'default');
+  const file=path.join(store.root,'jobs/report/job.yaml');const before=await readFile(file,'utf8');
+  await writeFile(file,before.replace('category: Marketing','category: Immobilien'));
+  assert.equal((await again.jobs())[0].category,'Immobilien');assert.equal(await readFile(output,'utf8'),'Preserved');
+  await writeFile(file,before.replace('category: Marketing','category: [invalid]'));
+  assert.equal((await again.jobs())[0].status,'invalid');
+});

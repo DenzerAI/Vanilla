@@ -192,3 +192,24 @@ def test_planner_results_keep_latest_five_completed_even_beyond_notification_pag
     results = notifications.results()['items']
     assert [row['id'] for row in results] == ['report-09', 'report-08', 'report-07', 'report-06', 'report-05']
     assert all(row['read_at'] is None for row in results)
+
+
+def test_categories_remain_independent_from_project_and_persist_through_native_tools(config, db):
+    storage = Storage(db, config)
+    adapter = FakeAdapter(config)
+    routines = Routines(storage, adapter, SimpleNamespace(project_prefix=lambda project: project))
+    async def scenario():
+        result = await routines.tool('routine_create', {'projectId': 'default', 'requestKey': 'category-create', 'name': 'Report', 'instructions': 'Prepare the requested report.', 'category': 'Marketing', 'schedule': {'type': 'daily', 'time': '08:00'}})
+        job = result['job']
+        assert job['category'] == 'Marketing'
+        assert job['projectId'] == 'default'
+        updated = await routines.tool('routine_update', {'projectId': 'default', 'id': job['id'], 'revision': job['revision'], 'category': 'Immobilien'})
+        assert updated['job']['category'] == 'Immobilien'
+        assert updated['job']['projectId'] == 'default'
+        restarted = Storage(db, config)
+        restarted.sync_jobs()
+        assert restarted.job(job['id'])['category'] == 'Immobilien'
+        with pytest.raises(ValueError):
+            await routines.tool('routine_update', {'projectId': 'default', 'id': job['id'], 'revision': updated['job']['revision'], 'category': ['bad']})
+        assert restarted.job(job['id'])['category'] == 'Immobilien'
+    asyncio.run(scenario())

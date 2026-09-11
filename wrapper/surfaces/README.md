@@ -158,3 +158,6 @@ PNG-Varianten ergänzen das SVG. Die Identität im AgentMenu bleibt konfigurierb
 | Firma | [firma.md](firma.md) | firma.tsx, firma.css, firma.mjs |
 
 Firma ist ein eigener fachlicher Einstieg im Hauptmenü. Eine schlichte aufklappbare Arbeitsliste führt in bestehende Chats; keine weitere Modulübersicht. Siehe firma.md.
+
+- [Optionale Workspaces](workspaces.md): kurze Einrichtung im Chat, gemeinsame
+  Identität, eigene Arbeitsweise/Skill-Verweise und beständige Projektpfade.

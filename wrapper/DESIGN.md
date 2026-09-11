@@ -1191,3 +1191,15 @@ Farben, Schrift und Abstände verwenden weiter die zentrale Designquelle.
 Build-Herkunft und Datei-Hashes machen veraltete Ausgaben erkennbar; die visuelle
 Abnahme bleibt notwendig. Eine lokale Erweiterung übernimmt die gemeinsamen
 Bausteine und dokumentiert fachlich notwendige Abweichungen im Bereichsvertrag.
+
+### Workspace-Einrichtung und Kategorien
+
+Die Workspace-Überschrift ist als beschrifteter Button auch per Touch und
+Tastatur erklärbar. Plus und bestehendes Kontextmenü führen zur nativen
+Chat-Einrichtung. Der Beschreibungseditor verwendet Modal, SettingRow,
+Settings-Skeleton und vorhandene Formfelder; auf schmalen Fenstern umbrechen
+Felder und Aktionen. Speichern zeigt Fehler am erhaltenen Entwurf.
+Auftragskategorien verwenden eine native Combobox aus Input/Datalist im JobForm
+und einen separaten Select-Filter. Gemeinsame Abstände und Schriftrollen gelten.
+Die identischen Komponenten stehen unter Unser Design; den fachlichen Ablauf,
+Bestandsregeln und Grenzen führen surfaces/workspaces.md und surfaces/jobs.md.

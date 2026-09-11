@@ -1,3 +1,5 @@
+import {WorkspaceDirectory} from "./workspace-directory.mjs";
+import {normalizeJobCategory} from "./ui/job-categories.mjs";
 import { validJobWorker } from "../system/worker-catalog.mjs";
 import { projectIcons, projectColors } from "./ui/appearance.mjs";
 import { DEFAULT_AGENT_AVATAR, validAgentAvatar } from "./ui/agent-avatars.mjs";
@@ -142,6 +144,8 @@ export class Storage {
     for (const chat of this.state.chats) chat.projectId ||= "default";
     await this.readIdentity();
     await this.save();
+    this.workspaces = new WorkspaceDirectory({store:this,inside,atomic});
+    await this.workspaces.refresh();
   }
   async readIdentity() {
     const text = await readFile(path.join(this.root, "soul/IDENTITY.md"), "utf8");
@@ -196,7 +200,8 @@ export class Storage {
   projectRoot(id = "default") {
     return inside(this.root, this.project(id).path);
   }
-  async saveProject({ id, name, icon, color }) {
+  async saveProject({ id, name, icon, color, revision }) {
+    if (id && this.project(id).workspaceConfigured) return this.workspaces.update({id,name,icon,color,revision});
     if (color !== undefined && !projectColors.some(([key]) => key === color)) throw new Error("Unbekannte Projektfarbe.");
     if (icon !== undefined && !projectIcons.some(([key]) => key === icon)) throw new Error("Unbekanntes Projektsymbol.");
     name = String(name || "").trim();
@@ -272,6 +277,7 @@ export class Storage {
         if (job)
           jobs.push({
             ...job,
+            category: normalizeJobCategory(job.category),
             id: d.name,
             instructions: await readFile(
               path.join(this.root, "jobs", d.name, "SKILL.md"),
@@ -326,6 +332,7 @@ export class Storage {
       worker: job.worker || "auto",
       connectionId: job.connectionId || null,
       projectId: job.projectId || 'default',
+      category: normalizeJobCategory(job.category),
       model: typeof job.model === 'string' ? job.model : '',
       effort: typeof job.effort === 'string' ? job.effort : '',
       ...(job.requestKey ? {requestKey:job.requestKey} : {}),

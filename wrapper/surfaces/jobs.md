@@ -128,3 +128,24 @@ Liste-/Detailaufbau mit vorhandenen Tokens. Der Suchindex läuft bereits alle
 Uhrzeiten bleiben beim YAML-Austausch zwischen Oberfläche und Kern Zeichenketten,
 auch unquoted 10:30, 16:00 und 23:59. Speichern und erneutes Einlesen dürfen
 keinen gültigen Tagesplan in einen ungültigen Auftrag verwandeln.
+
+## Optionale Auftragskategorien
+
+`category` ist ein optionaler kurzer eigener Name im bestehenden job.yaml.
+Leer oder „Allgemein“ bedeutet Allgemein. JobForm bietet vorhandene Kategorien
+und die Vorschläge Marketing, Immobilien, Angebote und Vertrieb; freie Namen
+sind erlaubt. Die Liste zeigt Kategorie und Workspace getrennt und bietet einen
+zusätzlichen Filter neben den bestehenden Statusfiltern. Systemaufträge und
+Vorlagen behalten ihre eigene Einteilung.
+
+Kategorien ändern keine Workspace-Zuordnung, Arbeitsweise, Zeitplanung oder
+Ablage. Sie erfordern keinen spezialisierten Workspace. Dieselbe Angabe ist
+über routine_create/routine_update im Chat verfügbar. Direkte Manifeständerungen
+werden frisch gelesen, ungültige Werte sichtbar als Dateifehler behandelt.
+Alte Manifeste bleiben ohne Migration Allgemein; alte Leser ignorieren das
+Zusatzfeld. Kategorie leeren hebt die Sortierung auf. Bestehende Job-/Laufdaten
+bleiben beim Auftrag und im vorhandenen Backup.
+
+JobCategoryField und JobCategoryFilter verwenden native Eingaben im vorhandenen
+Formular, gemeinsame Abstände und eine lokale Referenz unter Unser Design.
+Prüfungen: job-categories.test.mjs und core/tests/test_routines.py.

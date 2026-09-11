@@ -1,0 +1,19 @@
+.workspace-explanation,.workspace-definition-editor { display:grid;gap:var(--space-16);min-width:0; }
+.workspace-explanation p { margin:0; }
+.workspace-definition-editor fieldset { border:0;padding:0;margin:0;min-width:0;display:grid;gap:var(--space-16); }
+.workspace-definition-editor .setting-row > :last-child { min-width:0; }
+.workspace-definition-body { display:grid;gap:var(--space-8); }
+.workspace-definition-body textarea { width:100%;resize:vertical; }
+.workspace-definition-editor .row { flex-wrap:wrap; }
+.workspace-explanation button { justify-self:start; }
+.job-category-filter { display:flex;align-items:center;gap:var(--space-12);margin-block:var(--space-12);font-size:var(--text-control); }
+.job-category-filter select { min-width:0;max-width:100%; }
+@media(max-width:600px) {
+ .workspace-definition-editor .setting-row { flex-wrap:wrap; }
+ .workspace-definition-editor .setting-row > :last-child { flex:1 1 100%; }
+ .workspace-definition-editor .setting-row > input { width:100%; }
+}
+
+.projects-heading > .workspace-info-button { border:0;background:transparent;padding:0;min-height:var(--control-height);color:inherit;font:inherit;text-align:left; }
+
+.workspace-status { padding-inline:var(--space-16);margin-block:var(--space-4);overflow-wrap:anywhere; }

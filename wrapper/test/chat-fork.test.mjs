@@ -92,3 +92,9 @@ test('overlapping native forks allocate distinct numbers, save titles and notify
   assert.equal(h.saves.at(-1).length,3);
   assert.equal(h.events.filter(e=>e.method==='wrapper/chats').length,2);
 });
+
+test('a fork retains its workspace but does not take over workspace onboarding',()=>{
+  const original={...source(),workspaceOnboarding:'default'},chats=[original];
+  const fork=registerFork(chats,original,'branch');
+  assert.equal(fork.workspaceOnboarding,null);assert.equal(fork.projectId,'default');assert.equal(original.workspaceOnboarding,'default');
+});

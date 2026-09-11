@@ -82,8 +82,8 @@
         "meaning": "Schema ist verfügbar; externe CRM-Synchronisation separat prüfen."
       },
       "limits": "Schema ist verfügbar; externe CRM-Synchronisation separat prüfen.",
-      "version": 1,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 2,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der gemeinsam genutzte MCP-Katalog ergänzt optionale Routine-Kategorien; bestehende CRM-/Memory-Werkzeugfelder bleiben kompatibel."
     },
     {
       "id": "planner",
@@ -156,7 +156,8 @@
         "platform"
       ],
       "verification": [
-        "core/tests/test_source_privacy.py"
+        "core/tests/test_source_privacy.py",
+        "test/company-base.test.mjs"
       ],
       "status": {
         "endpoint": "GET /api/system/modules",
@@ -164,8 +165,8 @@
       },
       "limits": "Lokales Prüfergebnis über npm run source:check; HTTP bestätigt nur den Katalog.",
       "command": "node system/capabilities.mjs",
-      "version": 2,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 3,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der Firmenquellenkatalog ergänzt nur frische Markdown-Referenzen; keine Firmeninhalte werden kopiert."
     },
     {
       "id": "inbox",
@@ -327,8 +328,8 @@
         "meaning": "Eingerichtet, verbunden und authentifiziert getrennt auswerten."
       },
       "limits": "Eingerichtet, verbunden und authentifiziert getrennt auswerten.",
-      "version": 3,
-      "migration": "Bestehende Chat-IDs, Entwürfe und native Sitzungen erhalten. Forkfamilie und Statistikfelder sind additiv; Fork-Zähler bei Rückkehr nicht aus alten Kopien erraten. Nachrichtenkennungen und persistente Übergabebelege bleiben führend. Native Rückfragen vor Adapterwechsel beantworten oder stoppen; UI-Präferenzen sind browserlokal."
+      "version": 4,
+      "migration": "Bestehende Chat-IDs, Entwürfe und native Sitzungen erhalten. Forkfamilie und Statistikfelder sind additiv; Fork-Zähler bei Rückkehr nicht aus alten Kopien erraten. Nachrichtenkennungen und persistente Übergabebelege bleiben führend. Native Rückfragen vor Adapterwechsel beantworten oder stoppen; UI-Präferenzen sind browserlokal. workspaceOnboarding ist ein optionaler Verweis auf den einzigen Einrichtungschat je Workspace; Forks übernehmen ihn nicht. Einrichtung verwendet die bestehende Nachrichtenübergabe."
     },
     {
       "id": "speech",
@@ -541,7 +542,8 @@
         "wrapper/ui/job-notifications.jsx",
         "wrapper/ui/job-template-list.jsx",
         "wrapper/ui/notification-bell.tsx",
-        "wrapper/ui/jobs-view.mjs"
+        "wrapper/ui/jobs-view.mjs",
+        "wrapper/ui/job-categories.mjs"
       ],
       "entrypoints": [
         "GET /api/core/executions",
@@ -567,15 +569,16 @@
       "verification": [
         "core/tests/test_routines.py",
         "wrapper/test/jobs-view.test.mjs",
-        "core/tests/test_job_manifest_clock.py"
+        "core/tests/test_job_manifest_clock.py",
+        "wrapper/test/job-categories.test.mjs"
       ],
       "status": {
         "endpoint": "GET /api/notifications",
         "meaning": "Ausführung über Scheduler; Abschluss und Zustellbeleg prüfen."
       },
       "limits": "Ausführung über Scheduler; Abschluss und Zustellbeleg prüfen.",
-      "version": 2,
-      "migration": "Bestehende zentrale Jobordner, Kennungen und Laufbelege erhalten. Optionale Modell-/Effortfelder ergänzen das Manifest; vorhandene Zeitwerte werden weiterhin eindeutig eingelesen. Backup-Zeitplan erst nach erfolgreicher Prüfung des vorhandenen Archivs aktivieren. Keine Verschiebung in Bereichsordner."
+      "version": 3,
+      "migration": "Bestehende zentrale Jobordner, Kennungen und Laufbelege erhalten. Optionale Modell-/Effortfelder ergänzen das Manifest; vorhandene Zeitwerte werden weiterhin eindeutig eingelesen. Backup-Zeitplan erst nach erfolgreicher Prüfung des vorhandenen Archivs aktivieren. Keine Verschiebung in Bereichsordner. category ist optional und rein organisatorisch; fehlend oder leer heißt Allgemein. Alte Leser ignorieren die Zusatzangabe. Workspace, Zeitplan und Ablage bleiben unverändert."
     },
     {
       "id": "library",
@@ -694,8 +697,8 @@
         "meaning": "FTS ist unabhängig von optionalen Embeddings; noch nicht indexierte Formate kennzeichnen."
       },
       "limits": "FTS ist unabhängig von optionalen Embeddings; noch nicht indexierte Formate kennzeichnen.",
-      "version": 2,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 3,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der gemeinsam genutzte MCP-Katalog ergänzt optionale Routine-Kategorien; bestehende CRM-/Memory-Werkzeugfelder bleiben kompatibel."
     },
     {
       "id": "channels",
@@ -974,8 +977,8 @@
         "meaning": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen."
       },
       "limits": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen.",
-      "version": 2,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
+      "version": 3,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der bestehende Projektindex erhält abgeleitete Workspace-Metadaten. Jobkategorien werden aus dem optionalen Manifestfeld gelesen; keine Verschiebung von Dateien."
     },
     {
       "id": "weather",
@@ -1158,6 +1161,44 @@
       },
       "limits": "Private Chats, Jobs, Messenger- und Berichtschats sind ausgeschlossen. Keine Produktivitätsmessung oder erfundene historische Tokenverteilung. Kontoweite Anbieterlimits bleiben davon getrennt.",
       "migration": "Nur additive Chat-/Turnfelder und Snapshot Version 1; keine Massenmigration. Bestehende Berichte bleiben unverändert lesbar. Alte Leser zeigen den Berichtstext, ohne neue Details darzustellen."
+    },
+    {
+      "id": "workspaces",
+      "title": "Optionale Workspaces",
+      "purpose": "Themenbezogene Gespräche, Dateien und Arbeitsweisen mit demselben Assistenten und gemeinsamer Firmenbasis organisieren.",
+      "stage": "implemented",
+      "version": 1,
+      "contract": "wrapper/surfaces/workspaces.md",
+      "setup": "wrapper/surfaces/workspaces.md#einrichtung",
+      "data": "Bestehende Projekte und Pfade; AGENTS.md mit optionalem YAML-Steckbrief Version 1. SQLite/State führt abgeleitete Metadaten und workspaceOnboarding am Chat. WORKSPACES.md ist ein erzeugtes Verzeichnis. Skills bleiben Dateien.",
+      "sources": [
+        "wrapper/workspace-directory.mjs",
+        "wrapper/workspace-onboarding.mjs",
+        "wrapper/ui/workspace-settings.tsx",
+        "wrapper/ui/workspace-settings.css"
+      ],
+      "entrypoints": [
+        "GET /api/workspaces",
+        "GET /api/workspaces/definition",
+        "POST /api/workspaces/save",
+        "POST /api/workspaces/chat"
+      ],
+      "dependencies": [
+        "platform",
+        "chat",
+        "knowledge"
+      ],
+      "verification": [
+        "wrapper/test/workspace-directory.test.mjs",
+        "wrapper/test/workspaces-http.test.mjs",
+        "wrapper/test/job-categories.test.mjs"
+      ],
+      "status": {
+        "endpoint": "GET /api/workspaces",
+        "meaning": "Gespeicherte und frisch gelesene Beschreibungen, Einrichtungsstatus und konkrete Dateifehler. Kein Nachweis einer Worker-Anmeldung."
+      },
+      "limits": "Freiwillige Spezialisierungen im gemeinsamen Arbeitsbereich, keine Benutzer-/Mandantensandbox. Keine Hierarchie oder Hintergrundaufträge. Native Anbieterfähigkeiten und Memory bleiben erhalten.",
+      "migration": "Opt-in YAML-Kopf, unveränderte IDs/Pfade und bestehender Markdown-Text. Neue Ordner nur unter projects/. Unbekannte oder beschädigte Steckbriefe werden nicht überschrieben. Alte Leser behalten Dateien, erzwingen aber keine neuen Revisions-/Einrichtungsregeln. Rückkehr erfordert beendete aktive Einrichtung und Sicherung von Beschreibungen, State und Chats."
     }
   ]
 }

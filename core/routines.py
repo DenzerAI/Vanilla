@@ -7,6 +7,14 @@ from datetime import datetime, timezone, timedelta
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 
+def validate_category(value):
+    if value is None:
+        return ''
+    if not isinstance(value, str) or len(value) > 80 or re.search(r'[\x00-\x1f\x7f]', value):
+        raise ValueError('Kategorie muss ein kurzer Name mit höchstens 80 Zeichen sein.')
+    return '' if value.strip().lower() == 'allgemein' else value.strip()
+
+
 def instant(value):
     try:
         result = datetime.fromisoformat(value.replace('Z', '+00:00'))
@@ -126,9 +134,10 @@ class Routines:
                     raise FileExistsError('Routine wurde geändert. Erst erneut lesen, dann ändern.')
             else:
                 raise ValueError('Unbekanntes Routine-Werkzeug.')
-            for key in ['name', 'instructions', 'schedule', 'notification', 'status']:
+            for key in ['name', 'instructions', 'schedule', 'notification', 'status', 'category']:
                 if key in a:
                     job[key] = a[key]
+            job['category'] = validate_category(job.get('category'))
             for key in ['name', 'instructions']:
                 if not isinstance(job.get(key), str) or not job[key].strip() or len(job[key]) > (200 if key == 'name' else 30000):
                     raise ValueError('Name und ausführbare Arbeitsanweisung angeben.')

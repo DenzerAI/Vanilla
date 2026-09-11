@@ -1,3 +1,4 @@
+import {WorkspaceSettingsPreview} from './workspace-settings';
 import {ChatStartPreview} from './chat-start-preview';
 import {FirmaPreview} from './firma';
 import {StatisticsPreview} from './statistics-preview';
@@ -66,7 +67,7 @@ export function DesignReference({ theme, tone, accent }) {
       {section === 'icons' && <><h3 className="section-heading">Systemicons</h3><IconMotionPreview/></>}
       {section === 'components' && <>
       <h3 className="section-heading">Bedienelemente & Seitenaufbau</h3>
-      <section><h2>Firma</h2><FirmaPreview/></section>
+      <section><h2>Firma</h2><FirmaPreview/><h3>Workspace und Auftragskategorien</h3><WorkspaceSettingsPreview/></section>
       <SettingsPatterns/>
       <h3 className="section-heading">Chat-Sperre · Beispiel</h3>
       <ChatPrivacyPreview/>
