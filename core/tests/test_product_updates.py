@@ -205,9 +205,10 @@ async def test_lost_refresh_response_requires_reconnect_without_token_replay(con
 @pytest.mark.asyncio
 async def test_release_requires_matching_modules_and_both_platform_checks():
     import base64
-    m=manifest();state={'modules':m['modules'],'mac':True}
+    m=manifest();state={'modules':m['modules'],'mac':True,'version':m['version']}
     async def request(method,path,**kwargs):
         if '/git/ref/' in path:return {'object':{'sha':m['commit'],'type':'commit'}}
+        if '/contents/system/version.json' in path:return {'encoding':'base64','content':base64.b64encode(json.dumps({'version':state['version']}).encode()).decode()}
         if '/contents/' in path:return {'encoding':'base64','content':base64.b64encode(json.dumps({'modules':state['modules']}).encode()).decode()}
         if '/jobs?' in path:
             names=['customer-base (ubuntu-latest)','update-sandbox']+(['customer-base (macos-latest)'] if state['mac'] else [])
@@ -219,3 +220,30 @@ async def test_release_requires_matching_modules_and_both_platform_checks():
     with pytest.raises(ValueError,match='Linux und macOS'):await releases.verify(m)
     state['modules']=[]
     with pytest.raises(ValueError,match='Modulregister'):await releases.verify(m)
+    state.update(modules=m['modules'],mac=True,version='0.1.0')
+    with pytest.raises(ValueError,match='Produktversion'):await releases.verify(m)
+
+
+def test_product_version_is_bound_to_running_code_and_does_not_invent_a_release(context, monkeypatch):
+    import core.product_updates as coordinator
+    config, db = context
+    file = config.root / 'system/version.json'; file.parent.mkdir()
+    file.write_text(json.dumps({'version':'0.1.0'}))
+    monkeypatch.setattr(coordinator, 'git', lambda root, *args: b'a'*40 if args[0]=='rev-parse' else b'')
+    github = SimpleNamespace(status=lambda:{'connected':False})
+    contributions = SimpleNamespace(settings=lambda:{'role':'customer'})
+    updates = Updates(db, config, SimpleNamespace(), github, contributions)
+    assert updates.status()['product'] == {'version':'0.1.0','revision':'a'*40,'modified':False,'development':True}
+    updates.save(installed={'version':'1.0.0','commit':'b'*40})
+    assert updates.status()['product']['version']=='0.1.0'
+    assert updates.status()['product']['development']
+    updates.save(installed={'version':'0.1.0','commit':'a'*40})
+    assert not updates.status()['product']['development']
+    file.write_text(json.dumps({'version':'0.1.1'}))
+    assert updates.status()['product']['version']=='0.1.0'
+    restarted = Updates(db, config, SimpleNamespace(), github, contributions)
+    assert restarted.status()['product']['version']=='0.1.1'
+    assert restarted.status()['product']['development']
+    file.write_text(json.dumps({'version':'0.1.0'}))
+    monkeypatch.setattr(coordinator, 'git', lambda root, *args: b'a'*40 if args[0]=='rev-parse' else b' M core/demo.py')
+    assert Updates(db, config, SimpleNamespace(), github, contributions).status()['product']['development']

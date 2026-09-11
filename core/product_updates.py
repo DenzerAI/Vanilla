@@ -5,6 +5,7 @@ import asyncio
 import json
 import secrets
 import subprocess
+import re
 from time import time
 from uuid import uuid4
 
@@ -19,6 +20,19 @@ class Updates:
         self.releases = Releases(github)
         self.lock = asyncio.Lock()
         self.tasks = set()
+        # Capture the running process, not a checkout edited after startup.
+        try:
+            version = json.loads((config.root / "system/version.json").read_text())["version"]
+            if not isinstance(version, str) or len(version) > 60 or not re.fullmatch(r"(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)", version):
+                raise ValueError()
+        except (OSError, ValueError, KeyError, TypeError):
+            version = None
+        try:
+            revision = git(config.root, "rev-parse", "HEAD").decode().strip()
+            modified = bool(git(config.root, "status", "--porcelain"))
+        except ValueError:
+            revision, modified = None, True
+        self.product = {"version": version, "revision": revision, "modified": modified}
 
     def settings(self):
         return self.db.get("updates/settings")["value"] or {"revision": 0, "automatic": True, "notifications": True, "worker": "", "model": "", "budgetMinutes": 30}
@@ -43,7 +57,8 @@ class Updates:
         installed = value["installed"]
         release = value["release"]
         available = bool(release and (not installed or tuple(map(int, release["manifest"]["version"].split("."))) > tuple(map(int, installed["version"].split(".")))))
-        return {**value, "settings": self.settings(), "run": current, "available": available,
+        released = any(recorded and self.product["revision"] and recorded.get("commit") == self.product["revision"] and not self.product["modified"] and recorded.get("version") == self.product["version"] for recorded in (installed, (release or {}).get("manifest")))
+        return {**value, "product": {**self.product, "development": not released}, "settings": self.settings(), "run": current, "available": available,
                 "checking": bool(self.db.rows("SELECT id FROM executions WHERE job_id='system-update-check' AND status IN ('queued','dispatching','running')")),
                 "role": self.contributions.settings()["role"], "github": self.github.status(),
                 "source": "https://github.com/DenzerAI/Vanilla/blob/main/UPDATE.md"}

@@ -120,7 +120,7 @@ def create_app(config=None):
 
     app = FastAPI(
         title="Agent Core",
-        version="0.3.0",
+        version=updates.product["version"] or "unknown",
         lifespan=lifespan,
         docs_url=None,
         redoc_url=None,

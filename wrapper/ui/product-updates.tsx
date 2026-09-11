@@ -34,10 +34,12 @@ export function ProductUpdates({
   api,
   initialTab = "version",
   onGitHub,
+  onTabChange,
 }: {
   api: any;
   initialTab?: string;
   onGitHub: () => void;
+  onTabChange?: (tab: string) => void;
 }) {
   const [tab, setTab] = useState(initialTab),
     [data, setData] = useState<any>(null),
@@ -135,7 +137,10 @@ export function ProductUpdates({
             key={id}
             className={tab === id ? "selected" : ""}
             aria-pressed={tab === id}
-            onClick={() => setTab(id)}
+            onClick={() => {
+              setTab(id);
+              onTabChange?.(id);
+            }}
           >
             {title}
           </button>
@@ -153,9 +158,9 @@ export function ProductUpdates({
           <div className="settings-group">
             <SettingRow
               title={
-                data.installed
-                  ? `Installiert · ${data.installed.version}`
-                  : "Installiert · Entwicklungsstand"
+                data.product?.version
+                  ? `Vanilla ${data.product.version}${data.product.development ? " · Entwicklung" : ""}`
+                  : "Versionsstand nicht bestimmt"
               }
               description={`Letzte Prüfung: ${when(data.checkedAt)}`}
             >
@@ -276,6 +281,7 @@ export function ProductUpdates({
                 title="Version freigeben"
                 description="Geprüften Vanilla-Stand veröffentlichen"
                 onClick={() => {
+                  setVersion(data.product?.version || "");
                   setFromVersions(
                     data.release?.manifest.version || "development",
                   );
@@ -456,7 +462,7 @@ export function ProductUpdates({
             Version
             <input
               value={version}
-              placeholder="1.0.0"
+              placeholder="0.1.0"
               maxLength={60}
               onChange={(e) => setVersion(e.target.value)}
             />

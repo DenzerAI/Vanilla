@@ -10,6 +10,7 @@ async function fixture(t) {
   t.after(()=>rm(root,{recursive:true,force:true}));
   for(const directory of ['wrapper/ui','wrapper/public','wrapper/dist/assets','system','scripts']) await mkdir(path.join(root,directory),{recursive:true});
   const put=(file,text)=>writeFile(path.join(root,file),text);
+  await put('system/version.json', JSON.stringify({version:'0.1.0'}));
   for(const file of ['wrapper/ui/start.tsx','wrapper/public/login.css','wrapper/build.mjs','wrapper/vite.config.ts','wrapper/package-lock.json','scripts/ui-build.mjs','system/shared.mjs'])await put(file,'initial');
   for(const file of ['index.html','app.js','app.css','blueprint.html','blueprint.js','assets/shared.js'])await put('wrapper/dist/'+file,'built '+file);
   await put('wrapper/dist/index.html', '<script src="/app.js"></script><link href="/app.css" rel="stylesheet">');
@@ -20,6 +21,7 @@ test('UI verification requires a build tied to current sources and all shipped f
   const {root,put}=await fixture(t);
   await assert.rejects(verifyUiBuild(root),/Build fehlt/);
   const manifest=await recordUiBuild(root);
+  assert.equal(manifest.productVersion,'0.1.0');
   assert.equal((await verifyUiBuild(root)).uiVersion,manifest.uiVersion);
   await put('wrapper/dist/assets/shared.js','changed');
   await assert.rejects(verifyUiBuild(root),/wurde verändert/);
@@ -57,4 +59,16 @@ test('the built reference and application share a verified production build',asy
   const html=await readFile(path.join(root,'wrapper/dist/blueprint.html'),'utf8');
   assert.match(html,/blueprint-[\w-]+\.js/);
   assert.doesNotMatch(html,/main\.tsx|app\.js/);
+});
+
+test('product version changes require a matching build and metadata cannot invent a release',async t=>{
+  const {root,put}=await fixture(t);
+  const manifest=await recordUiBuild(root);
+  await put('wrapper/dist/version.json',JSON.stringify({...manifest,productVersion:'1.0.0'}));
+  await assert.rejects(verifyUiBuild(root),/abweichende Produktversion/);
+  await put('wrapper/dist/version.json',JSON.stringify(manifest));
+  await put('system/version.json',JSON.stringify({version:'0.1.1'}));
+  await assert.rejects(verifyUiBuild(root),/passt nicht/);
+  await recordUiBuild(root);
+  assert.equal((await verifyUiBuild(root)).productVersion,'0.1.1');
 });
