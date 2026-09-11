@@ -68,3 +68,22 @@ test('OAuth service bindings reject malformed selectors and external binding fil
  await symlink(path.join(foreign,'auth.json'),file);
  await assert.rejects(installationEnvironment(root,'claw-code',environment),/außerhalb/);
 });
+
+test('native Codex executable aliases survive a subsequent startup without admitting profile links', async t => {
+ const root=await mkdtemp(path.join(os.tmpdir(),'native-shim-'));
+ const foreign=await mkdtemp(path.join(os.tmpdir(),'native-binary-'));
+ t.after(()=>Promise.all([rm(root,{recursive:true,force:true}),rm(foreign,{recursive:true,force:true})]));
+ await installationEnvironment(root,'codex');
+ const dir=path.join(root,'codex/tmp/arg0/codex-argFixture'),binary=path.join(foreign,'codex');
+ await mkdir(dir,{recursive:true}); await writeFile(binary,'synthetic executable',{mode:0o700});
+ for(const name of ['applypatch','apply_patch','codex-execve-wrapper'])await symlink(binary,path.join(dir,name));
+ await installationEnvironment(root,'codex');
+ await symlink(binary,path.join(root,'codex/auth.json'));
+ await assert.rejects(installationEnvironment(root,'codex'),/fremden Anschluss/);
+ await rm(path.join(root,'codex/auth.json'));
+ await symlink(foreign,path.join(dir,'profile'));
+ await assert.rejects(installationEnvironment(root,'codex'),/fremden Anschluss/);
+ await rm(path.join(dir,'profile'));await rm(path.join(dir,'apply_patch'));
+ await writeFile(path.join(foreign,'auth.json'),'synthetic');await symlink(path.join(foreign,'auth.json'),path.join(dir,'apply_patch'));
+ await assert.rejects(installationEnvironment(root,'codex'),/fremden Anschluss/);
+});

@@ -1,5 +1,5 @@
 import path from 'node:path';
-import {mkdir, readdir, realpath, readFile} from 'node:fs/promises';
+import {mkdir, readdir, realpath, readFile, stat} from 'node:fs/promises';
 
 // Only operating-system plumbing crosses from the launcher to an agent.
 // Provider keys, proxy credentials and host profile variables are not plumbing.
@@ -15,11 +15,23 @@ export async function installationEnvironment(dataRoot, workerId, environment = 
     XDG_CONFIG_HOME:'worker-home/.config',XDG_DATA_HOME:'worker-home/.local/share',
     XDG_CACHE_HOME:'worker-home/.cache',TMPDIR:'worker-home/tmp',TEMP:'worker-home/tmp',TMP:'worker-home/tmp'};
   const inside = file => file === root || file.startsWith(root + path.sep);
+  async function nativeShim(file, target) {
+    // Codex creates executable aliases itself on every startup. These are
+    // temporary tool entrypoints, never account, plugin or configuration links.
+    const relative = path.relative(path.join(root, 'codex', 'tmp', 'arg0'), file).split(path.sep).join('/');
+    if (!/^codex-arg[^/]+\/(applypatch|apply_patch|codex-execve-wrapper)$/.test(relative)
+      || !['codex', 'codex.exe'].includes(path.basename(target))) return false;
+    const info = await stat(target);
+    return info.isFile() && Boolean(info.mode & 0o111);
+  }
   async function verify(dir) {
     if (!inside(await realpath(dir))) throw Error('Worker-Profil verweist außerhalb dieser Installation. Bitte ein eigenes Profil einrichten.');
     for (const e of await readdir(dir, {withFileTypes:true})) {
       const file = path.join(dir,e.name);
-      if (e.isSymbolicLink() && !inside(await realpath(file))) throw Error('Worker-Profil enthält einen fremden Anschluss. Bitte ein eigenes Profil einrichten.');
+      if (e.isSymbolicLink()) {
+        const target = await realpath(file);
+        if (!inside(target) && !await nativeShim(file, target)) throw Error('Worker-Profil enthält einen fremden Anschluss. Bitte ein eigenes Profil einrichten.');
+      }
       if (e.isDirectory()) await verify(file);
     }
   }

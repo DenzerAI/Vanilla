@@ -560,8 +560,8 @@
         "meaning": "Programmfund ist kein Login. Nur eigene Profile und bestätigte Sitzung verwenden."
       },
       "limits": "Programmfund ist kein Login. Nur eigene Profile und bestätigte Sitzung verwenden. Automatische Installation nur für installierte Codex/Gemini ohne festen Programmpfad. Modellkatalog ist kein Zugangsnachweis.",
-      "version": 4,
-      "migration": "Bestehende eigene Anbieterprofile und natives Memory unverändert erhalten. Ergänzende nicht vertrauliche Fragequittungen verwenden tools.json, Verbrauchswerte additive Turn-/Chatfelder. Vor Rückkehr offene native Requests beenden. Kontingentabfrage nutzt denselben eigenen Profilweg, übernimmt keine Host-Anmeldungen und startet keine Modellantwort. Gemeinsame Modellwahl und anbieterbezogene Profilprüfung ohne Datenmigration; vorhandene native Einstellungen und Übergabeverläufe bleiben erhalten. Optionale installationslokale worker-auth.json Version 1 bindet ausdrücklich einen vorhandenen Claude-Dienstzugang; keine automatische Übernahme und keine Änderung von Zugangsdaten oder Chats. Ohne Bindung bleibt der Profilstart unverändert."
+      "version": 5,
+      "migration": "Bestehende eigene Anbieterprofile und natives Memory unverändert erhalten. Ergänzende nicht vertrauliche Fragequittungen verwenden tools.json, Verbrauchswerte additive Turn-/Chatfelder. Vor Rückkehr offene native Requests beenden. Kontingentabfrage nutzt denselben eigenen Profilweg, übernimmt keine Host-Anmeldungen und startet keine Modellantwort. Gemeinsame Modellwahl und anbieterbezogene Profilprüfung ohne Datenmigration; vorhandene native Einstellungen und Übergabeverläufe bleiben erhalten. Optionale installationslokale worker-auth.json Version 1 bindet ausdrücklich einen vorhandenen Claude-Dienstzugang; keine automatische Übernahme und keine Änderung von Zugangsdaten oder Chats. Ohne Bindung bleibt der Profilstart unverändert. Native temporäre Codex-Programmverknüpfungen bleiben beim erneuten Start zulässig; übrige Profilgrenzen unverändert. Keine Datenmigration."
     },
     {
       "id": "jobs",
