@@ -328,8 +328,8 @@
         "meaning": "Eingerichtet, verbunden und authentifiziert getrennt auswerten."
       },
       "limits": "Eingerichtet, verbunden und authentifiziert getrennt auswerten.",
-      "version": 4,
-      "migration": "Bestehende Chat-IDs, Entwürfe und native Sitzungen erhalten. Forkfamilie und Statistikfelder sind additiv; Fork-Zähler bei Rückkehr nicht aus alten Kopien erraten. Nachrichtenkennungen und persistente Übergabebelege bleiben führend. Native Rückfragen vor Adapterwechsel beantworten oder stoppen; UI-Präferenzen sind browserlokal. workspaceOnboarding ist ein optionaler Verweis auf den einzigen Einrichtungschat je Workspace; Forks übernehmen ihn nicht. Einrichtung verwendet die bestehende Nachrichtenübergabe."
+      "version": 5,
+      "migration": "Bestehende Chat-IDs, Entwürfe und native Sitzungen erhalten. Forkfamilie und Statistikfelder sind additiv; Fork-Zähler bei Rückkehr nicht aus alten Kopien erraten. Nachrichtenkennungen und persistente Übergabebelege bleiben führend. Native Rückfragen vor Adapterwechsel beantworten oder stoppen; UI-Präferenzen sind browserlokal. workspaceOnboarding ist ein optionaler Verweis auf den einzigen Einrichtungschat je Workspace; Forks übernehmen ihn nicht. Einrichtung verwendet die bestehende Nachrichtenübergabe. Der separate Adapter liefert gebaute Assets direkt aus dist aus und meldet fehlende Dateien mit 404 statt HTML."
     },
     {
       "id": "speech",
@@ -1037,15 +1037,16 @@
         "chat"
       ],
       "verification": [
-        "wrapper/test/ui-build.test.mjs"
+        "wrapper/test/ui-build.test.mjs",
+        "wrapper/test/workspaces-http.test.mjs"
       ],
       "status": {
         "endpoint": "GET /api/updates",
         "meaning": "Version der ausgelieferten Buildmetadaten. Die lokale Aktualität und Dateiintegrität werden zusätzlich mit npm run ui:verify geprüft."
       },
       "limits": "Lokale Hashprüfung ersetzt keine visuelle Prüfung oder Kontrolle des tatsächlich bedienten Ursprungs. Kein automatisches Git-Update oder Deployment.",
-      "version": 1,
-      "migration": "Vorhandene Daten und eigene Funktionen erhalten. Alte Builds ohne Integritätsmetadaten einmal mit npm run ui:prepare neu erzeugen."
+      "version": 2,
+      "migration": "Vorhandene Daten und eigene Funktionen erhalten. Alte Builds ohne Integritätsmetadaten einmal mit npm run ui:prepare neu erzeugen. Auch die separate Adapter-Vorschau bedient die tatsächlichen Builddateien einschließlich JS-Teildateien mit passenden MIME-Typen; keine Nutzerdatenänderung."
     },
     {
       "id": "firma",

@@ -24,6 +24,15 @@ test('Workspace HTTP preserves native chats and reads the latest specialization 
   const stop=async()=>{child.kill();await exit;};
   t.after(async()=>{if(child?.exitCode===null)await stop();await rm(dir,{recursive:true,force:true});});
   await start();await post('/workers/connect',{id:'codex'});
+  const origin=base.slice(0,-4),html=await(await fetch(origin+'/')).text();
+  const assets=[...new Set([...html.matchAll(/(?:src|href)="(\/[^"?#]+)"/g)].map(match=>match[1]))];
+  assert.ok(assets.some(asset=>asset.startsWith('/assets/')&&asset.endsWith('.js')),'production chunks must be included');
+  for(const asset of assets){
+    const response=await fetch(origin+asset);assert.equal(response.status,200,asset);
+    if(asset.endsWith('.js'))assert.match(response.headers.get('content-type'),/javascript/);
+    assert.deepEqual(Buffer.from(await response.arrayBuffer()),await readFile(path.join(root,'wrapper/dist',asset.slice(1))),asset);
+  }
+  for(const missing of ['/assets/missing.js','/%2e%2e/package.json','/assets/%2e%2e/%2e%2e/package.json'])assert.equal((await fetch(origin+missing)).status,404,missing);
   assert.equal((await get('/bootstrap')).features.workspaceSpecialization,true);
   const [one,two]=await Promise.all([post('/workspaces/chat',{requestId:'http-onboarding'}),post('/workspaces/chat',{requestId:'http-onboarding'})]);
   assert.equal(one.thread.id,two.thread.id);const id=one.thread.id,project=one.project;

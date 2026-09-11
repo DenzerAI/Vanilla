@@ -600,6 +600,10 @@ const mime = {
   ".mjs": "text/javascript; charset=utf-8",
   ".css": "text/css; charset=utf-8",
   ".woff2": "font/woff2",
+  ".ttf": "font/ttf",
+  ".webmanifest": "application/manifest+json",
+  ".ico": "image/vnd.microsoft.icon",
+  ".wasm": "application/wasm",
   ".json": "application/json",
   ".png": "image/png",
   ".jpg": "image/jpeg",
@@ -1436,13 +1440,14 @@ const server = http.createServer(async (req, res) => {
     }
     if (u.pathname.startsWith("/api/"))
       return send(res, 404, { error: "Schnittstelle nicht gefunden." });
-    const file = /^\/fonts\/(?:InterVariable|InterVariable-Italic|IBMPlexMono-Regular)\.woff2$/.test(u.pathname) || /^\/skill-icons\/[a-z-]+\.png$/.test(u.pathname)
-      ? u.pathname.slice(1)
-      : ["/app.js", "/app.css", "/avatar.png", "/dictation-worklet.js", "/dictation-audio.mjs"].includes(u.pathname)
-        ? u.pathname.slice(1)
-        : "index.html";
-    res.setHeader("Content-Type", mime[path.extname(file)] || "text/plain");
-    res.end(await readFile(path.join(here, "dist", file)));
+    if(!['GET','HEAD'].includes(req.method))return send(res,405,{error:'Methode nicht erlaubt.'});
+    let file;
+    try {
+      file=await inside(path.join(here,'dist'),decodeURIComponent(u.pathname.slice(1))||'index.html');
+      if(!(await stat(file)).isFile())throw Error('Keine Datei.');
+    } catch {return send(res,404,{error:'Datei nicht gefunden.'});}
+    res.setHeader("Content-Type", mime[path.extname(file).toLowerCase()] || "application/octet-stream");
+    res.end(req.method==='HEAD'?undefined:await readFile(file));
   } catch (e) {
     send(res, 400, { error: readableCodexError(e) });
   }

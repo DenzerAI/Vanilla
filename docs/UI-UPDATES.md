@@ -104,3 +104,14 @@ Quellcode neu. Ein automatischer Git-Download oder Deployment erfolgt hier nicht
 > Überschneidungen fachlich, baue und prüfe die neue Oberfläche. Vergleiche die
 > tatsächlich laufende Ansicht mit dem Bauplan und bestätige erst danach den
 > geladenen UI-Stand. Melde konkret, falls die Zielinstallation nicht prüfbar ist.
+
+## Auslieferung der Builddateien
+
+Auch der separat gestartete Adapter liefert Dateien aus wrapper/dist mit ihren
+wirklichen MIME-Typen aus, einschließlich JavaScript-Teildateien unter assets/,
+Schriften, Icons und UI-Bauplan. Ein fehlendes Asset liefert 404 und niemals die
+HTML-Startseite. Pfadauflösung und Verknüpfungen bleiben auf dist begrenzt;
+GET/HEAD sind die einzigen statischen Zugriffsmethoden. Der HTTP-Vertragstest
+vergleicht die im gebauten HTML referenzierten Dateien mit den tatsächlich
+ausgelieferten Bytes. Der normale Python-Kern behält seinen vorhandenen
+Dateiauslieferungsweg. Diese Korrektur verändert keine Arbeitsdaten.
