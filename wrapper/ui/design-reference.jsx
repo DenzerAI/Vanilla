@@ -15,7 +15,7 @@ import {ActivityPreview} from './chat-activity.jsx';
 import {ChatPrivacyPreview} from './chat-privacy';
 import {ComposerFocus} from './composer-focus';
 import {WeatherPreview} from './weather-preview';
-import { PaneDivider, ChatMenuPreview } from "./chat-controls.jsx";
+import { PaneDivider, ChatMenuPreview, MessageActions } from "./chat-controls.jsx";
 import { jobFilters } from './jobs-view.mjs';
 import { IconMotionPreview } from './icon-motion-preview';
 import {VoiceWave,VoiceStatus} from "./voice-visual";
@@ -104,6 +104,8 @@ export function DesignReference({ theme, tone, accent }) {
       </div>)}
       <h3 className="section-heading">Chat-Menü · Beispiel</h3>
       <ChatMenuPreview/>
+      <h3 className="section-heading">Nachrichtenaktionen · Mobil</h3>
+      <div className="agent-message"><p>Auf dem Handy öffnet das Mehr-Symbol die Aktionen.</p><MessageActions className="agent-actions"><button type="button">Beispielaktion</button><button type="button" disabled>Nicht verfügbar</button></MessageActions></div>
       <h3 className="section-heading">Arbeitsverlauf · Schritte und Änderungen</h3>
       <ActivityPreview/>
       <h3 className="section-heading">Agent-Gesichter · Beispiel</h3>

@@ -132,7 +132,7 @@ import "./styles.css";
 import "./chat.css";
 import "./multi-chat.css";
 import { createEventSubscription } from "./chat-events.mjs";
-import { ChatMenu, ChatTitle, LayoutPicker, PaneDivider } from "./chat-controls.jsx";
+import { ChatMenu, ChatTitle, LayoutPicker, PaneDivider, MessageActions } from "./chat-controls.jsx";
 import { readPaneLayout, readPaneSession, writePaneState } from "./pane-persistence.mjs";
 import { MIN_CHAT_WIDTH, visiblePanes, selectPaneCount, conversationText } from "./chat-layout.mjs";
 import { AgentWelcome } from "./avatar-picker.jsx";
@@ -445,7 +445,7 @@ const ChatTurn = React.memo(function ChatTurn({ onForkTurn, onEditTurn, onRetryT
     </div>
   </div>;
   const artifacts = <ChatArtifacts items={turn.items} workspace={actions.workspace} directory={actions.directory} onFile={actions.onFile} api={api} />;
-  const progress = <div className="turn-response-progress">
+  const progress = <div className="turn-response-progress" data-mobile-complete={!running && turn.status === "completed" && !activity.some(item=>["failed", "inProgress"].includes(item.status))}>
     {(activity.length || collapseCommentary && history.length) ? <ActivityGroup items={activity} running={running} turn={turn} waiting={waiting} visible={visible} open={activityOpen} onOpenChange={setActivityOpen} seenSteps={seenSteps.current}>
       {(collapseCommentary ? history : activity).map(item => { const View=item.detailsDeferred?DeferredItem:Item; return <View key={item.id} {...(item.detailsDeferred?{api,chatId,turnId:turn.id,Item}:{})} item={item} workerId={workerId} {...actions} running={running} toolOpen={toolOpen} onToolToggle={onToolToggle} />; })}
     </ActivityGroup> : <TurnStatus turn={turn} running={running} waiting={waiting} visible={visible} />}
@@ -491,7 +491,7 @@ function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, 
         )}
         </div>}
         <DeliveryMark receipt={i.delivery}/>
-        {!i.delivery?.turnId && i.delivery ? null : <div className="message-actions user-actions">
+        {!i.delivery?.turnId && i.delivery ? null : <MessageActions className="user-actions">
           <IconButton label="Nachricht erneut ausführen" disabled={running} onClick={onRetry}>{icon(RotateCcw, 14)}</IconButton>
 
           <IconButton
@@ -504,7 +504,7 @@ function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, 
           <CopyButton label="Nachricht kopieren" size={14} text={(i.content || []).filter(c => c.type === "text").map(c => c.text).join("\n")} />
           <IconButton label="Nachricht löschen" disabled={running} onClick={onDelete}>{icon(Trash2,14)}</IconButton>
           <MessageTime value={sentAt} />
-        </div>}
+        </MessageActions>}
       </div>
     );
   if (i.type === "agentMessage" || i.type === "plan")
@@ -518,7 +518,7 @@ function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, 
         {i.type === "plan" && <span className="eyebrow">Plan</span>}
         <Markdown text={i.text} onFile={onFile} workspace={workspace} directory={directory} />
         {beforeActions}
-        <div className="message-actions agent-actions">
+        <MessageActions className="agent-actions">
           {i.type === "agentMessage" && i.phase !== "commentary" && <MessageSpeech text={i.text} disabled={running} api={api} Button={IconButton} />}
           <CopyButton label="Antwort kopieren" size={15} text={i.text} />
           <IconButton label="Ab dieser Antwort verzweigen" disabled={running} onClick={onFork}>
@@ -531,7 +531,7 @@ function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, 
           >
             {icon(RotateCcw, 15)}
           </IconButton>
-        </div>
+        </MessageActions>
       </div>
     );
   if (i.type === "reasoning")
@@ -741,7 +741,11 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const [updatesTab, setUpdatesTab] = useState("version");
   const connectionsActive = view === "settings" && settingsTab === "connections";
   const skillsActive = view === "settings" && settingsTab === "skills";
+  function closeMobileNavigation() {
+    if (window.matchMedia("(max-width: 650px)").matches) setSidebar(false);
+  }
   function openSettings(section) {
+    closeMobileNavigation();
     setSettingsTab(section);
     setView("settings");
   }
@@ -1357,6 +1361,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     draftCache.current.set(chatRef.current || `new:${projectRef.current}`, {text, attachments, title:draftTitle, scroll:scrollRef.current?.scrollTop || 0, following:followScroll.current});
   }
   function newDraft(targetProjectId) {
+    closeMobileNavigation();
     if (!embedded && activePaneRef.current !== 0 && sessions.current[activePaneRef.current].current) {
       setView("chat");
       return sessions.current[activePaneRef.current].current.newDraft(targetProjectId);
@@ -1422,6 +1427,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     if(result.summaryError)notify(result.summaryError);
   }
   async function openChat(id, restoredMetadata, targetTurnId) {
+    closeMobileNavigation();
     if (!embedded) {
       const existing = paneOrder.find(slot => sessions.current[slot].current?.id === id);
       if (existing != null && existing !== activePaneRef.current) { activatePane(existing); setView("chat"); if(targetTurnId)return sessions.current[existing].current.openChat(id, restoredMetadata, targetTurnId); return; }
@@ -2054,7 +2060,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         <PanelLight mode={boot.settings.panelLight || "animated"} active={sidebar} />
         <div className="sidebar-resizer"><PaneDivider label="Seitenleistenbreite ändern" value={sidebarWidth} min={220} max={400} onReset={()=>setSidebarWidth(268)} onResize={delta=>setSidebarWidth(width=>Math.max(220,Math.min(400,width+delta)))}/></div>
         <div className="sidebar-topbar">
-          <AgentMenu theme={boot.settings.theme} onThemeChange={theme=>saveSettings({theme})} name={boot.settings.name} avatar={boot.settings.avatar} avatarColor={boot.settings.avatarColor} connectionState={connectionState} restartBusy={serverRestartBusy} onNavigate={tab=>{if(tab==="updates")setUpdatesTab("version");setSettingsTab(tab);setView("settings");}} onRestart={()=>systemNoticeRef.current?.restart()} />
+          <AgentMenu theme={boot.settings.theme} onThemeChange={theme=>saveSettings({theme})} name={boot.settings.name} avatar={boot.settings.avatar} avatarColor={boot.settings.avatarColor} connectionState={connectionState} restartBusy={serverRestartBusy} onNavigate={tab=>{closeMobileNavigation();if(tab==="updates")setUpdatesTab("version");setSettingsTab(tab);setView("settings");}} onRestart={()=>systemNoticeRef.current?.restart()} />
           <IconButton label="System durchsuchen (⌘/Strg K)" aria-keyshortcuts="Meta+K Control+K" aria-haspopup="dialog" aria-expanded={modal === "search"} onClick={()=>{setSearch("");setModal("search");}}>{icon(Search,18)}</IconButton>
           {boot.features?.routines ? <IconButton label={`Benachrichtigungen${notificationState.data?.unread ? ` · ${notificationState.data.unread} ungelesen` : ''}${requests.length ? ` · ${requests.length} Rückfragen` : ''}`} aria-haspopup="dialog" aria-expanded={modal === "notifications" || modal?.type === "notifications"} onClick={()=>setModal("notifications")}><NotificationBell signal={bellSignal} />{(notificationState.data?.unread>0||requests.length>0)&&<i className="notification-dot"/>}</IconButton> : requests.length > 0 && <IconButton label="Offene Rückfragen" aria-haspopup="dialog" aria-expanded={modal === "activity"} onClick={()=>setModal("activity")}><NotificationBell signal={bellSignal} /><i className="notification-dot"/></IconButton>}
           <IconButton
@@ -2068,7 +2074,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
           <div className="inbox-sidebar-slot" ref={setInboxSidebarHost}/>
         ) : view === "settings" ? (
           <>
-            <button className="back-to-app" onClick={() => setView("chat")}>
+            <button className="back-to-app" onClick={() => { closeMobileNavigation(); setView("chat"); }}>
               {icon(ArrowLeft)}Zurück zur App
             </button>
             <div className="sidebar-section-label">Einstellungen</div>
@@ -2097,7 +2103,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                     "nav-item " +
                     ((view === id || (id === "today" && view === "calendar")) && id !== "chat" ? "selected" : "")
                   }
-                  onClick={() => (id === "chat" ? newDraft() : setView(id))}
+                  onClick={() => { closeMobileNavigation(); id === "chat" ? newDraft() : setView(id); }}
                 >
                   {icon(I)}
                   {label}

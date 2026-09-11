@@ -382,3 +382,23 @@
 .message-delivery > button { min-width: var(--control-target); min-height: var(--control-target); padding: var(--space-4); }
 .delivery-checks { display: block; overflow: visible; }
 @media (pointer: coarse) { .message-delivery > button { min-width: var(--control-touch); min-height: var(--control-touch); } }
+
+/* Phone conversations prioritize text; the existing actions stay discoverable. */
+.message-actions > .message-actions-toggle { display: none; }
+@media (max-width: 650px) {
+  .chat-main, .message-column, .composer-area { --chat-gutter: var(--space-16); }
+  .chapter-scrubber.message-index { display: none; }
+  .message-actions > .message-actions-toggle {
+    display: inline-flex; opacity: 1; pointer-events: auto;
+  }
+  .message-actions[data-actions-open="false"] > :is(button, .copy-feedback):not(.message-actions-toggle):not([aria-pressed="true"]) { display: none; }
+  .message-actions[data-actions-open="true"] > :is(button, .copy-feedback) { opacity: 1; pointer-events: auto; }
+  .message-actions .icon-button { min-width: var(--control-touch); min-height: var(--control-touch); }
+  .user-message-row { margin-block: var(--space-8); }
+  .turn-response-header, .turn-response-progress { margin-block: var(--space-4); }
+  .turn-author-meta > time { display: none; }
+  .turn-author .agent-signature { margin-right: 0; }
+  .turn-response-progress[data-mobile-complete="true"] { display: none; }
+  .turn-activity-status > :is(.turn-step-count, .turn-duration) { display: none; }
+  .activity-group { margin-block: 0; }
+}

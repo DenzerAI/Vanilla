@@ -1291,3 +1291,28 @@ keine Übernahme globaler Einstellungen. Vor Rückkehr auf ältere Versionen off
 Nachrichten mit Engine-Vormerkung abarbeiten, da diese Versionen das Zusatzfeld
 nicht ausführen. Prüfungen: workers, message-delivery und message-outbox sowie
 Desktop und mobile Browseremulation mit verzögerter Präferenzspeicherung.
+
+
+## Vereinfachter mobiler Chat · Version 1.1.0
+
+Bis 650 CSS-Pixel schließen Chatwahl (auch derselbe Chat oder ein anderes Panel),
+neuer Chat und die Auswahl eines Hauptmenü- oder Einstellungseintrags die linke
+Navigation. Die Inbox behält ihren eigenen Wechsel zwischen Liste und Gespräch.
+Die seitliche Nachrichtennavigation entfällt auf dem Handy. Nachrichten selbst
+bleiben vollständig erhalten; die Inhaltsränder nutzen space-16.
+
+MessageActions aus chat-controls.jsx bündelt mobile Aktionen hinter einem
+beschrifteten Mehr-Icon mit aria-expanded. Erneutes Tippen oder Escape schließt
+sie, Escape stellt den Fokus wieder her. CopyButton, Bearbeiten, Verzweigen,
+Wiederholen, Löschen und Vorlesen verwenden ihre bisherigen Anschlüsse.
+Aktive Sprachwiedergabe und deren Fehler bleiben auch bei geschlossenen Aktionen
+sichtbar. Touchziele behalten control-touch. Auf Desktop bleibt die vorhandene
+Hover-/Tastaturdarstellung bestehen; Unser Design zeigt denselben Baustein.
+
+Abgeschlossene erfolgreiche Werkzeugverläufe sind mobil ausgeblendet; laufende
+Arbeit, Rückfragen, Fehler und unvollständige Schritte bleiben erreichbar.
+Die laufende Statuszeile zeigt mobil keine Schrittzahl oder Laufzeit.
+Die Autorenzeile behält Avatar und Namen, verzichtet mobil auf das relative Alter.
+Nachrichtenabstände verwenden space-8, Status-/Kopfabstände space-4.
+Keine Datenmigration: Originalverlauf, Geräte, Einstellungen und Exporte bleiben
+unverändert. Ein älterer UI-Stand zeigt wieder die ausführliche Darstellung.
