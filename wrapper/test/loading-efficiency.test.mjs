@@ -92,3 +92,30 @@ test('fresh snapshots still add final text, tool output and a new turn',()=>{
   assert.equal(result.turns[0].items[1].output,'Done');
   assert.equal(result.turns[1].id,'new');
 });
+
+
+test('panel boot reserves one conversation and composer without a second sidebar',async()=>{
+  const {build}=await import('esbuild');
+  const {mkdtemp,writeFile,rm}=await import('node:fs/promises');
+  const {fileURLToPath,pathToFileURL}=await import('node:url');
+  const {default:React}=await import('react');
+  const {renderToStaticMarkup}=await import('react-dom/server');
+  const root=fileURLToPath(new URL('../',import.meta.url));
+  const dir=await mkdtemp(root+'.verify-skeleton-');
+  try {
+    const result=await build({entryPoints:[root+'ui/skeleton.tsx'],bundle:true,write:false,platform:'node',format:'esm',packages:'external',loader:{'.css':'empty'}});
+    const file=dir+'/skeleton.mjs';await writeFile(file,result.outputFiles[0].contents);
+    const {Skeleton}=await import(pathToFileURL(file));
+    const render=variant=>renderToStaticMarkup(React.createElement(Skeleton,{variant}));
+    for(const variant of ['shell','chat-panel']) {
+      const html=render(variant);
+      assert.equal((html.match(/class="skeleton-sidebar"/g)||[]).length,variant==='shell'?1:0);
+      assert.equal((html.match(/class="message-column"/g)||[]).length,1);
+      assert.equal((html.match(/class="skeleton-composer"/g)||[]).length,1);
+      assert.equal((html.match(/role="status"/g)||[]).length,1);
+    }
+    for(const variant of ['list','settings','chat','document','media','attention']) {
+      assert.doesNotMatch(render(variant),/skeleton-sidebar|skeleton-composer/);
+    }
+  } finally {await rm(dir,{recursive:true,force:true});}
+});

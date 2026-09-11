@@ -1438,3 +1438,6 @@ Seitenleistenplatzhalter und ohne volle Fensterhöhe. Beim späteren Verlaufsabr
 bleibt `chat` innerhalb der vorhandenen Nachrichtenspalte. Datei- und
 Änderungsansichten behalten ihre lokalen Listen-/Dokumentplatzhalter.
 Die Bausteinreferenz zeigt auch den Panelstart. Keine Datenmigration.
+Der Modulplatzhalter der Ordneransicht verwendet ebenfalls die kompakte Dateiliste.
+Slash-Befehle blenden beim Modulimport keine zusätzliche Liste im Composer ein;
+der geladene Befehlsbaustein zeigt seinen eigenen Abrufstatus.

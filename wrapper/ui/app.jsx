@@ -170,7 +170,7 @@ const StatisticsDashboard = lazySurface(() => import('./statistics'), 'Statistic
 const WeatherPreview = lazySurface(() => import('./weather-preview'), 'WeatherPreview', 'list');
 const WeatherMotionSetting = lazySurface(() => import('./weather-motion'), 'WeatherMotionSetting', 'list');
 const ServiceSettings = lazySurface(() => import('./work-evidence.tsx'), 'ServiceSettings', 'list');
-const ComposerCommandController = lazySurface(() => import('./composer-commands'), 'ComposerCommandController', 'list');
+const ComposerCommandController = lazySurface(() => import('./composer-commands'), 'ComposerCommandController', null);
 const PlannerPage = lazySurface(() => import('./planner'), 'PlannerPage', 'list');
 const InboxPage = lazySurface(() => import('./inbox'), 'InboxPage', 'list');
 const ChatStart = lazySurface(() => import('./chat-start'), 'ChatStart', 'attention');
@@ -183,7 +183,7 @@ const ConnectionsContent = lazySurface(() => import('./connections-page.jsx'), '
 const SystemSettings = lazySurface(() => import('./system-settings'), 'SystemSettings', 'list');
 const TailscaleConnection = lazySurface(() => import('./system-settings'), 'TailscaleConnection', 'list');
 const CoreRunDetails = lazySurface(() => import('./system-settings'), 'CoreRunDetails', 'list');
-const AgentFiles = lazySurface(() => import('./agent-files.jsx'), 'AgentFiles', 'list');
+const AgentFiles = lazySurface(() => import('./agent-files.jsx'), 'AgentFiles', {compact:true, label:'Ordner wird geladen …'});
 const ReviewPanel = lazySurface(() => import('./workspace-review.jsx'), 'ReviewPanel', 'document');
 const CrmConnectionForm = lazySurface(() => import('./crm-connection.jsx'), 'CrmConnectionForm', 'list');
 const ServiceConnectionForm = lazySurface(() => import('./service-connection.jsx'), 'ServiceConnectionForm', 'list');
