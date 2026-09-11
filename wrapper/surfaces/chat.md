@@ -1133,6 +1133,20 @@ Hauptmenüpunkt. Eigene und angebundene Termine teilen dieselbe Projektion, blei
 nach Herkunft unterscheidbar. Kalenderdaten und Migrationsvertrag: docs/PLANNER.md.
 
 
+### Gemeinsamer Workerwechsel · Version 2
+
+Der bestehende Chat wechselt über einen einzigen Übergabeaufruf. Eine zusätzliche
+Aktivierungsanfrage entfällt. Verlauf und Entwurf bleiben sichtbar; ausschließlich
+die Auswahl zeigt die tatsächliche ausstehende Bestätigung. Der vollständige
+unveränderliche Verlauf bleibt erhalten. Der begrenzte Kontextblock enthält bei
+langen Chats sowohl den ursprünglichen Auftrag als auch den jüngsten Stand,
+mit Verweis auf die vollständige Datei, ohne zusätzlichen Zusammenfassungsaufruf.
+Bei ausgefallener Quellverbindung verwendet die Übergabe den vorhandenen lokalen
+Verlauf über denselben Leseanschluss wie der Chat. Aktive Arbeit muss weiterhin
+bestätigt beendet sein. Kein automatisches Wiederholen von Nachrichten.
+Keine Datenmigration; bestehende Übergabedateien und Modellwerte bleiben lesbar.
+Ein älterer UI-Stand zeigt wieder die separaten ACP-Menüs.
+
 ### Stabiler Verlauf während der Nachrichtenübergabe
 
 Beim Absenden bleiben vorhandene Antworten sichtbar. Sending und Accepted lösen
@@ -1155,17 +1169,3 @@ Originalverlauf, native Worker-Daten und Export werden nicht verändert.
 
 Zustellabfragen warten auf den laufenden Speichervorgang, bevor sie den
 bestätigten Workerstart anzeigen; ein vorzeitig sichtbarer Haken ist kein Beleg.
-
-### Gemeinsamer Workerwechsel · Version 2
-
-Der bestehende Chat wechselt über einen einzigen Übergabeaufruf. Eine zusätzliche
-Aktivierungsanfrage entfällt. Verlauf und Entwurf bleiben sichtbar; ausschließlich
-die Auswahl zeigt die tatsächliche ausstehende Bestätigung. Der vollständige
-unveränderliche Verlauf bleibt erhalten. Der begrenzte Kontextblock enthält bei
-langen Chats sowohl den ursprünglichen Auftrag als auch den jüngsten Stand,
-mit Verweis auf die vollständige Datei, ohne zusätzlichen Zusammenfassungsaufruf.
-Bei ausgefallener Quellverbindung verwendet die Übergabe den vorhandenen lokalen
-Verlauf über denselben Leseanschluss wie der Chat. Aktive Arbeit muss weiterhin
-bestätigt beendet sein. Kein automatisches Wiederholen von Nachrichten.
-Keine Datenmigration; bestehende Übergabedateien und Modellwerte bleiben lesbar.
-Ein älterer UI-Stand zeigt wieder die separaten ACP-Menüs.
