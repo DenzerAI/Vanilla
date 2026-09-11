@@ -1101,6 +1101,7 @@
       "data": "Neutrale Beispieldaten im Quellcode; Build-Fingerabdruck und Datei-Hashes in wrapper/dist/version.json. Keine Kundeninhalte.",
       "sources": [
         "scripts/ui-build.mjs",
+        "scripts/ui-check.mjs",
         "wrapper/ui/blueprint.tsx",
         "wrapper/ui/chat-start-preview.tsx"
       ],
@@ -1112,6 +1113,7 @@
       ],
       "verification": [
         "wrapper/test/ui-build.test.mjs",
+        "wrapper/test/ui-check.test.mjs",
         "wrapper/test/workspaces-http.test.mjs"
       ],
       "status": {
@@ -1119,7 +1121,7 @@
         "meaning": "Version der ausgelieferten Buildmetadaten. Die lokale Aktualität und Dateiintegrität werden zusätzlich mit npm run ui:verify geprüft."
       },
       "limits": "Lokale Hashprüfung ersetzt keine visuelle Prüfung oder Kontrolle des tatsächlich bedienten Ursprungs. Kein automatisches Git-Update oder Deployment.",
-      "version": 2,
+      "version": 3,
       "migration": "Vorhandene Daten und eigene Funktionen erhalten. Alte Builds ohne Integritätsmetadaten einmal mit npm run ui:prepare neu erzeugen. Auch die separate Adapter-Vorschau bedient die tatsächlichen Builddateien einschließlich JS-Teildateien mit passenden MIME-Typen; keine Nutzerdatenänderung."
     },
     {

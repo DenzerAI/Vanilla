@@ -29,7 +29,10 @@
    auch für den Weiterbau hier. Ein Push ist keine Aktivierung und ein erfolgreicher
    Quellmerge noch kein geprüftes Produktupdate.
    Für Arbeiten am Frontend erst dessen AGENTS.md und Bereichsvertrag lesen,
-   dann ändern, bauen und in der verfügbaren Browserumgebung prüfen.
+   dann ändern, bauen und mit `node scripts/ui-check.mjs` kopflos prüfen
+   (Desktop und `--viewport mobile`, Screenshot ansehen, Konsolenfehler lesen).
+   Die Bildschirmsteuerung des Hosts ist kein Prüfweg. Scheitert das Werkzeug,
+   benenne das als Restunsicherheit und halte geprüfte Arbeit nicht zurück.
 5. Melde Arbeitsfortschritt, Rückfragen, Ergebnisse und Fehler über deinen
    Anschluss. Verlinke Ergebnisdateien. Behaupte Erfolg erst nach Prüfung.
    Fehlt ein Browser, ein Schlüssel oder eine andere Fähigkeit, benenne das.

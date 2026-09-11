@@ -121,3 +121,16 @@ App und Bauplan sind getrennte HTML-Einstiege desselben Builds. JavaScript und
 CSS verwenden Inhaltsnamen und werden komprimiert bereitgestellt. Die Prüfung
 verfolgt die tatsächlichen Einstiegspfade statt feste app.js-Dateinamen zu
 verlangen; Quellenfingerprint und Dateiprüfsummen bleiben bindend.
+
+## Sichtprüfung ohne Host-Bildschirmsteuerung
+
+Die Sichtprüfung der laufenden Oberfläche läuft kopflos über `node scripts/ui-check.mjs`
+(Chrome und DevTools-Protokoll, keine Abhängigkeiten). Das Werkzeug öffnet die Adresse der
+Installation, wartet auf Elemente (`text=`, `css=`, `label=`), klickt, tippt, drückt Tasten,
+wertet JavaScript aus, liest den Seitentext und schreibt Screenshots für Desktop (1440×900)
+oder Handy (390×844) in den Ausgabeordner des Arbeitsbereichs. Ergebnis ist eine JSON-Zeile
+mit Schritten, Screenshots, Konsolenfehlern und Auswertungen. Die Bildschirmsteuerung des
+Hosts wird für Prüfungen nicht verwendet. Scheitert das Werkzeug selbst, ist das eine
+benannte Restunsicherheit im Bericht, kein Grund, geprüfte Arbeit zurückzuhalten.
+Prüfungen: `wrapper/test/ui-check.test.mjs`.
+
