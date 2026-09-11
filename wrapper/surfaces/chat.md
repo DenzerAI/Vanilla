@@ -1146,3 +1146,26 @@ Verlauf über denselben Leseanschluss wie der Chat. Aktive Arbeit muss weiterhin
 bestätigt beendet sein. Kein automatisches Wiederholen von Nachrichten.
 Keine Datenmigration; bestehende Übergabedateien und Modellwerte bleiben lesbar.
 Ein älterer UI-Stand zeigt wieder die separaten ACP-Menüs.
+
+### Stabiler Verlauf während der Nachrichtenübergabe
+
+Beim Absenden bleiben vorhandene Antworten sichtbar. Sending und Accepted lösen
+keinen zusätzlichen nativen Verlaufsabruf aus. Nach bestätigtem Start oder einem
+Übergabefehler gleicht der bestehende Abruf den Verlauf ab, ohne bereits sichtbare
+Textstücke, Arbeitsschritte oder neuere Turns durch einen verspäteten oder leeren
+Zwischenstand zu entfernen. Wiederverbindungen verwenden denselben Abgleich;
+explizite Bearbeitung und Löschung behalten ihre eigenen Ersetzungswege.
+Privat gesperrte Chats dürfen verspätete Antworten nicht übernehmen.
+DeliveryView erhält Referenzen unveränderter Turns und Werkzeugausgaben; nur die
+zugehörige Nutzerblase bekommt den Zustellbeleg. Identische Belege verwenden die
+vorhandene Darstellung weiter. Keine neuen Komponenten, Tokens oder Animationen.
+Keine Datenmigration; native Sitzungen und gespeicherte Verläufe bleiben unverändert.
+
+Abschlussereignisse übertragen dieselbe Browserprojektion wie der Verlaufsabruf.
+Große gespeicherte Werkzeugausgaben bleiben über den einzelnen Arbeitsschritt
+abrufbar. Übersteigt auch die Projektion die Ereignisgrenze, fordert der bestehende
+Resync den Verlauf per HTTP an, statt den gemeinsamen Stream abzubrechen.
+Originalverlauf, native Worker-Daten und Export werden nicht verändert.
+
+Zustellabfragen warten auf den laufenden Speichervorgang, bevor sie den
+bestätigten Workerstart anzeigen; ein vorzeitig sichtbarer Haken ist kein Beleg.

@@ -81,8 +81,10 @@ export function createMessageOutbox({storage, api, changed = () => {}, now = Dat
 }
 
 // Match each receipt once, within the acknowledged turn, including repeated identical messages.
+const deliveryTurns = new WeakMap();
 export function deliveryView(thread, receipts) {
-  const turns = structuredClone(thread?.turns || []);
+  const turns = [...(thread?.turns || [])];
+  const annotations = new Map();
   const used = new Set();
   for (const receipt of receipts) {
     if(receipt.mappingOnly)continue;
@@ -97,11 +99,22 @@ export function deliveryView(thread, receipts) {
       if (!receipt.turnId || turn.id !== receipt.turnId) continue;
       match = turn.items?.find(item=>item.type==='userMessage' && !used.has(item)
         && matches(item));
-      if(match){used.add(match);match.delivery=receipt;break;}
+      if(match){used.add(match);
+        if(!annotations.has(turn))annotations.set(turn,new Map());
+        annotations.get(turn).set(match,receipt);break;}
     }
     if (!match) turns.push({id:'delivery-'+receipt.clientMessageId,deliveryOnly:true,
       startedAt:receipt.createdAt,status:'pending',items:[{id:receipt.clientMessageId,type:'userMessage',delivery:receipt,
         content:[...(receipt.text?[{type:'text',text:receipt.text}]:[]),...(receipt.attachments || []).map(f=>({type:'attachment',path:f.path}))]}]});
   }
-  return turns;
+  return turns.map(turn=>{
+    const matches=annotations.get(turn);
+    if(!matches)return turn;
+    const signature=JSON.stringify([...matches].map(([item,receipt])=>[item.id,receipt]));
+    const cached=deliveryTurns.get(turn);
+    if(cached?.signature===signature)return cached.turn;
+    const annotated={...turn,items:turn.items.map(item=>matches.has(item)?{...item,delivery:{...matches.get(item)}}:item)};
+    deliveryTurns.set(turn,{signature,turn:annotated});
+    return annotated;
+  });
 }

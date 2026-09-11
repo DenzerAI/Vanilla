@@ -12,7 +12,7 @@ import {DeliveryChecks} from './delivery-checks';
 import {useLiveAction} from './live-action';
 import {lazySurface} from './lazy-surface';
 import {createSharedApi} from './shared-reads.mjs';
-import {copyThreadForEvent} from './thread-update.mjs';
+import {copyThreadForEvent,reconcileThreadSnapshot} from './thread-update.mjs';
 import { createMessageOutbox, deliveryView } from './message-outbox.mjs';
 import {PaneShortcutSettings,usePaneShortcuts} from './pane-shortcut-settings.jsx';
 import {matchPaneShortcut} from './pane-shortcuts.mjs';
@@ -987,7 +987,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       if (reopening)
         api("/thread?view=chat&id=" + reopening)
           .then((r) => {
-            if (chatRef.current === reopening) setThread(r.thread);
+            if (chatRef.current === reopening && !locallyLocked(reopening)) setThread(old=>reconcileThreadSnapshot(old,r.thread));
           })
           .catch(() => {});
       refreshChats().catch(() => {});
@@ -1032,7 +1032,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         return;
       }
       if (e.method === "wrapper/thread") {
-        if (p.thread?.id === chatRef.current) setThread(p.thread);
+        if (p.thread?.id === chatRef.current && !locallyLocked(p.thread.id)) setThread(old=>reconcileThreadSnapshot(old,p.thread));
         return;
       }
       if (e.method === "wrapper/jobs") {
@@ -1314,11 +1314,11 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       void refreshChats().catch(()=>{});
     }
     const id=chatRef.current;
-    const signature=outboxEntries.filter(e=>e.chatId===id).map(e=>e.clientMessageId+":"+e.status).join("|");
+    const signature=outboxEntries.filter(e=>e.chatId===id && ["started","unknown","failed"].includes(e.status)).map(e=>e.clientMessageId+":"+e.status).join("|");
     if(id && !id.startsWith("outbox-") && signature && deliveryRefresh.current!==id+signature){
       deliveryRefresh.current=id+signature;
       void refreshChats().catch(()=>{});
-      void api("/thread?view=chat&id="+encodeURIComponent(id)).then(r=>{if(chatRef.current===id)setThread(r.thread);}).catch(()=>{});
+      void api("/thread?view=chat&id="+encodeURIComponent(id)).then(r=>{if(chatRef.current===id && !locallyLocked(id))setThread(old=>reconcileThreadSnapshot(old,r.thread));}).catch(()=>{});
     }
   },[outboxEntries]);
   useEffect(()=>{

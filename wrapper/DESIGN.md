@@ -1345,3 +1345,17 @@ Im ruhenden Chat startet der Anbieterbutton den Wechsel unmittelbar; eine
 laufende Antwort verwendet weiterhin „Stoppen und wechseln“. Kein zusätzlicher
 Ladeschritt oder neues Dialogmuster. Gemeinsame Fehlermeldung, Fokusführung,
 Touchziele und reduzierte Bewegung bleiben wirksam.
+
+### Stabiler Verlauf während der Nachrichtenübergabe
+
+Beim Absenden bleiben vorhandene Antworten sichtbar. Sending und Accepted lösen
+keinen zusätzlichen nativen Verlaufsabruf aus. Nach bestätigtem Start oder einem
+Übergabefehler gleicht der bestehende Abruf den Verlauf ab, ohne bereits sichtbare
+Textstücke, Arbeitsschritte oder neuere Turns durch einen verspäteten oder leeren
+Zwischenstand zu entfernen. Wiederverbindungen verwenden denselben Abgleich;
+explizite Bearbeitung und Löschung behalten ihre eigenen Ersetzungswege.
+Privat gesperrte Chats dürfen verspätete Antworten nicht übernehmen.
+DeliveryView erhält Referenzen unveränderter Turns und Werkzeugausgaben; nur die
+zugehörige Nutzerblase bekommt den Zustellbeleg. Identische Belege verwenden die
+vorhandene Darstellung weiter. Keine neuen Komponenten, Tokens oder Animationen.
+Keine Datenmigration; native Sitzungen und gespeicherte Verläufe bleiben unverändert.

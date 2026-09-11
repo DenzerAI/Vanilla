@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createSharedReads,createSharedApi} from '../ui/shared-reads.mjs';
-import {copyThreadForEvent} from '../ui/thread-update.mjs';
+import {copyThreadForEvent,reconcileThreadSnapshot} from '../ui/thread-update.mjs';
 import {browserChat} from '../chat-summary.mjs';
 
 test('API shares only concurrent uncancelled reads and preserves mutation deadlines',async()=>{
@@ -64,4 +64,31 @@ test('compact sidebar omits counters while keeping all controls and report snaps
   assert.equal(summary.statisticsSnapshot,chat.statisticsSnapshot);
   assert.equal(summary.capabilities,chat.capabilities);assert.equal(summary.private,true);
   assert.ok(chat.tokenUsage);
+});
+
+
+test('late snapshots cannot erase streamed answers, completed work or newer turns',()=>{
+  const current={id:'chat',turns:[{id:'old',status:'completed',items:[{id:'old-answer',text:'Saved answer'}]},
+    {id:'live',status:'completed',items:[{id:'answer',text:'Hello world'},{id:'tool',type:'tool',output:'Finished'}]},
+    {id:'next',status:'inProgress',items:[{id:'new-answer',text:'Next answer'}]}]};
+  const stale={id:'chat',turns:[{id:'live',status:'inProgress',items:[{id:'answer',text:'Hello'}]}]};
+  const result=reconcileThreadSnapshot(current,stale);
+  assert.deepEqual(result.turns.map(t=>t.id),['old','live','next']);
+  assert.equal(result.turns[1].items[0].text,'Hello world');
+  assert.equal(result.turns[1].items[1].output,'Finished');
+  assert.equal(result.turns[1].status,'completed');
+  assert.equal(reconcileThreadSnapshot(current,{id:'chat',turns:[]}).turns.length,3);
+  assert.deepEqual(stale.turns[0].items,[{id:'answer',text:'Hello'}]);
+  const other={id:'other',turns:[]};
+  assert.equal(reconcileThreadSnapshot(current,other),other);
+});
+
+test('fresh snapshots still add final text, tool output and a new turn',()=>{
+  const current={id:'chat',turns:[{id:'turn',status:'inProgress',items:[{id:'answer',text:'Hello'}]}]};
+  const incoming={id:'chat',turns:[{id:'turn',status:'completed',items:[{id:'answer',text:'Hello world'},{id:'tool',output:'Done'}]}, {id:'new',items:[]}]};
+  const result=reconcileThreadSnapshot(current,incoming);
+  assert.equal(result.turns[0].status,'completed');
+  assert.equal(result.turns[0].items[0].text,'Hello world');
+  assert.equal(result.turns[0].items[1].output,'Done');
+  assert.equal(result.turns[1].id,'new');
 });

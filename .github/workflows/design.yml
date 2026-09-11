@@ -2,7 +2,7 @@ name: Design gate
 on:
   pull_request:
   push:
-    branches: [main]
+    branches: [main, 'integration/**']
 jobs:
   design:
     runs-on: ubuntu-latest

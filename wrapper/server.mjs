@@ -3,7 +3,7 @@ import {installUpdateReviewRoutes} from "./update-review.mjs";
 import {calendarChatOpener} from './calendar-chat.mjs';
 import {installWeatherRoutes} from './weather.mjs';
 import {installationEnvironment} from './worker-environment.mjs';
-import {browserThread, threadItem} from './thread-view.mjs';
+import {browserThread, threadItem, threadEventFrame} from './thread-view.mjs';
 import {settingsIntegrations} from './connection-summary.mjs';
 import {browserChat} from './chat-summary.mjs';
 import { MessageDelivery as BrowserMessageDelivery } from './message-outbox-server.mjs';
@@ -114,7 +114,7 @@ const toolsByThread = new Map(),
 let modelCache = [],
   engineError = null;
 const emit = (event) => {
-  const line = `data: ${JSON.stringify(event)}\n\n`;
+  const line = threadEventFrame(event);
   for (const client of clients) client.write(line);
 };
 const own = (id) => store.state.chats.some((c) => c.id === id);
@@ -1019,8 +1019,8 @@ messageDelivery = await new BrowserMessageDelivery({
   paused:()=>restartGate.restarting, locked:id=>turnLocks.has(id),
 }).init();
 route("POST", "/api/delivery", b => messageDelivery.accept(b));
-route("GET", "/api/delivery", (b,u) => messageDelivery.get(u.searchParams.get("clientMessageId")));
-route("GET", "/api/deliveries", (b,u) => ({entries:messageDelivery.list(u.searchParams.get("id"))}));
+route("GET", "/api/delivery", (b,u) => messageDelivery.transaction(() => messageDelivery.get(u.searchParams.get("clientMessageId"))));
+route("GET", "/api/deliveries", (b,u) => messageDelivery.transaction(() => ({entries:messageDelivery.list(u.searchParams.get("id"))})));
 setInterval(()=>messageDelivery.kick(),500).unref();
 
 route("POST", "/api/stop", async (b) => {
