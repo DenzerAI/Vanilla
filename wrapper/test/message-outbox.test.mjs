@@ -142,3 +142,26 @@ test('selected next engine is durably queued without blocking a different chat',
   assert.equal(calls[1].id,'chat');assert.deepEqual(calls[1].payload.nextSelection,selection);
   f.queue.kick();await flush();assert.equal(calls.length,2);
 });
+
+test('stale entries from an older page get their workspace back and phantom chats can be discarded',async t=>{
+ const memory=new Map();
+ const storage={getItem:k=>memory.get(k),setItem:(k,v)=>memory.set(k,v),removeItem:k=>memory.delete(k),keys:()=>[...memory.keys()]};
+ memory.set('agent-message-outbox-v1:workspace:abc',JSON.stringify({version:1,entry:{clientMessageId:'abc',localId:'outbox-abc',chatId:null,projectId:'default',
+  text:'Hallo',attachments:[],status:'failed',error:'Arbeitsbereich fehlt.',payload:{clientMessageId:'abc',localId:'outbox-abc',id:null,text:'Hallo',attachments:[]}}}));
+ const seen=[];
+ const sender=createMessageOutbox({storage,api:async(url,payload)=>{seen.push(payload);return {...payload,clientMessageId:'abc',chatId:'chat',status:'accepted'};}});
+ t.after(()=>sender.stop());sender.start('workspace');await flush();
+ assert.equal(sender.snapshot()[0].payload.chat.projectId,'default');
+ assert.equal(seen.length,0);
+ sender.retry('abc');await flush();
+ assert.equal(seen[0].chat.projectId,'default');
+ sender.stop();
+ memory.clear();
+ memory.set('agent-message-outbox-v1:workspace:xyz',JSON.stringify({version:1,entry:{clientMessageId:'xyz',localId:'outbox-xyz',chatId:null,projectId:'default',text:'Weg',attachments:[],status:'failed',payload:{}}}));
+ let published;
+ const second=createMessageOutbox({storage,api:async()=>{throw Error('nie');},changed:e=>{published=e;}});
+ t.after(()=>second.stop());second.start('workspace');
+ assert.equal(second.discard('outbox-xyz'),true);
+ assert.equal(memory.size,0);assert.deepEqual(published,[]);
+ assert.equal(second.discard('outbox-xyz'),false);
+});

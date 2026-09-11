@@ -1737,6 +1737,14 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     (c.title || "Neuer Chat").toLocaleLowerCase("de").includes(search.trim().toLocaleLowerCase("de")),
   ).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
   async function updateChat(c, change) {
+    if (c.id.startsWith("outbox-")) {
+      // Only in this browser, never on the server: drop it locally instead of asking the server.
+      messageOutbox.discard(c.id);
+      setChats(old => old.filter(chat => chat.id !== c.id));
+      setChatMenu(null);
+      if (chatId === c.id) newDraft();
+      return;
+    }
     if (chatUpdateLocks.current.has(c.id)) return;
     chatUpdateLocks.current.add(c.id);
     setUpdatingChats(old => ({...old, [c.id]:true}));

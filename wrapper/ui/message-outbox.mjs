@@ -14,6 +14,22 @@ export function createMessageOutbox({storage, api, changed = () => {}, now = Dat
     }
   };
   const publish = () => changed([...entries]);
+  // Entries saved by an older page version lack the workspace in their payload; the server rejects
+  // them forever ("Arbeitsbereich fehlt"). Restore it from the entry so a retry can succeed.
+  const heal = entry => {
+    if (entry.payload && !entry.payload.id && !entry.payload.chat?.projectId && entry.projectId)
+      entry.payload = {...entry.payload, chat:{...(entry.payload.chat || {}), projectId:entry.projectId}};
+    return entry;
+  };
+  // A pending chat that only exists in this browser can be dropped without asking the server.
+  function discard(id) {
+    const dropped = entries.filter(e=>e.localId===id || e.clientMessageId===id);
+    if (!dropped.length) return false;
+    entries = entries.filter(e=>!dropped.includes(e));
+    for(const entry of dropped) storage.removeItem(key+":"+entry.clientMessageId);
+    publish();
+    return true;
+  }
   function start(scope) {
     const next = 'agent-message-outbox-v1:' + scope;
     if (key === next) return;
@@ -21,7 +37,7 @@ export function createMessageOutbox({storage, api, changed = () => {}, now = Dat
     entries = storage.keys().filter(name=>name.startsWith(key+":")).map(name=>{
       const saved=JSON.parse(storage.getItem(name));
       if(saved.version!==1 || !saved.entry?.clientMessageId)throw Error("Postausgang kann nicht gelesen werden.");
-      return saved.entry;
+      return heal(saved.entry);
     });
     active = true;
     publish();
@@ -77,7 +93,7 @@ export function createMessageOutbox({storage, api, changed = () => {}, now = Dat
     }
     publish();
   }
-  return {start,enqueue,retry,merge,pump,snapshot:()=>entries, stop:()=>{active=false;clearInterval(timer);}};
+  return {start,enqueue,retry,discard,merge,pump,snapshot:()=>entries, stop:()=>{active=false;clearInterval(timer);}};
 }
 
 // Match each receipt once, within the acknowledged turn, including repeated identical messages.
