@@ -3,7 +3,7 @@
 // Keine Abhängigkeiten: Node 22+ (globales WebSocket) und ein installierter Chrome.
 //
 //   node scripts/ui-check.mjs [--base http://127.0.0.1:21989] [--path /] [--viewport desktop|mobile|WxH]
-//                             [--theme dark|light] [--out output/ui-check] [--timeout 15000]
+//                             [--theme dark|light] [--out output/ui-check] [--timeout 15000] [--launch-timeout 60000]
 //                             Schritte in Reihenfolge, beliebig oft:
 //                             --wait "text=System" | --wait "css=.chat-turn" | --wait "label=Nachricht senden"
 //                             --click <ziel> | --type "Text" | --press Enter | --sleep 800
@@ -13,16 +13,17 @@
 // Ergebnis ist eine JSON-Zeile mit Screenshots, Konsolenfehlern und Auswertungen. Exit 2, wenn ein
 // Schritt scheitert; ein Konsolenfehler allein bricht nicht ab, er steht im Bericht.
 import { spawn } from "node:child_process";
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, rm, writeFile } from "node:fs/promises";
 import { existsSync } from "node:fs";
 import path from "node:path";
 import os from "node:os";
 
 const STEP_FLAGS = new Set(["--wait", "--click", "--type", "--press", "--sleep", "--eval", "--text", "--shot"]);
-const OPTION_FLAGS = new Set(["--base", "--path", "--viewport", "--theme", "--out", "--timeout", "--chrome"]);
+const OPTION_FLAGS = new Set(["--base", "--path", "--viewport", "--theme", "--out", "--timeout", "--launch-timeout", "--chrome"]);
 
 export function parseArgs(argv) {
-  const options = { base: "http://127.0.0.1:" + (process.env.UWE_PORT || "21989"), path: "/", viewport: "desktop", theme: "", out: "output/ui-check", timeout: 15000, chrome: "" };
+  const options = { base: "http://127.0.0.1:" + (process.env.UWE_PORT || "21989"), path: "/", viewport: "desktop", theme: "", out: "output/ui-check", timeout: 15000,
+    "launch-timeout": process.env.UI_CHECK_LAUNCH_TIMEOUT || 60000, chrome: "" };
   const steps = [];
   for (let i = 0; i < argv.length; i++) {
     const flag = argv[i];
@@ -32,6 +33,8 @@ export function parseArgs(argv) {
     throw new Error("Unbekanntes Argument: " + flag);
   }
   options.timeout = Number(options.timeout) || 15000;
+  options.launchTimeout = Number(options["launch-timeout"]) || 60000;
+  delete options["launch-timeout"];
   return { options, steps };
 }
 
@@ -103,23 +106,38 @@ class Session {
   }
 }
 
-async function launch(chrome, viewport) {
+// Like Puppeteer's defaults: no keychain, no background services, no crash reporter. Without these, Chrome
+// started from a worker process sometimes needs minutes before DevTools answers; with them it takes seconds.
+export const LAUNCH_FLAGS = ["--headless=new", "--no-first-run", "--no-default-browser-check", "--hide-scrollbars", "--disable-gpu",
+  "--use-mock-keychain", "--password-store=basic", "--disable-background-networking", "--disable-component-update", "--disable-sync",
+  "--disable-extensions", "--disable-default-apps", "--metrics-recording-only", "--mute-audio", "--no-service-autorun",
+  "--disable-breakpad", "--disable-crash-reporter", "--disable-features=Translate,OptimizationHints,MediaRouter"];
+
+async function launch(chrome, viewport, launchTimeout) {
   const port = 9300 + Math.floor(Math.random() * 600);
   const profile = path.join(os.tmpdir(), "vanilla-ui-check-" + port);
-  const child = spawn(chrome, ["--headless=new", "--remote-debugging-port=" + port, "--no-first-run", "--no-default-browser-check",
-    "--hide-scrollbars", "--disable-gpu", "--window-size=" + viewport.width + "," + viewport.height, "--user-data-dir=" + profile, "about:blank"],
-    { stdio: "ignore" });
-  const deadline = Date.now() + 20000;
+  const child = spawn(chrome, [...LAUNCH_FLAGS, "--remote-debugging-port=" + port, "--window-size=" + viewport.width + "," + viewport.height,
+    "--user-data-dir=" + profile, "about:blank"], { stdio: ["ignore", "ignore", "pipe"] });
+  let stderr = "", exited = null;
+  child.stderr.on("data", chunk => { stderr = (stderr + chunk).slice(-2000); });
+  child.on("exit", (code, signal) => { exited = { code, signal }; });
+  const started = Date.now();
   let targets = [];
-  while (Date.now() < deadline) {
+  while (Date.now() - started < launchTimeout && !exited) {
     try { targets = await (await fetch("http://127.0.0.1:" + port + "/json")).json(); if (targets.some(t => t.type === "page")) break; } catch {}
     await new Promise(r => setTimeout(r, 250));
   }
   const page = targets.find(t => t.type === "page");
-  if (!page) { child.kill(); throw new Error("Chrome hat kein Fenster geöffnet."); }
+  if (!page) {
+    child.kill();
+    await rm(profile, { recursive: true, force: true }).catch(() => {});
+    const seconds = Math.round((Date.now() - started) / 1000);
+    const said = stderr.trim().split("\n").filter(Boolean).slice(-3).join(" | ").slice(0, 600);
+    throw new Error("Chrome hat nach " + seconds + " s kein Fenster geöffnet" + (exited ? " (beendet: " + (exited.code ?? exited.signal) + ")" : "") + (said ? ". Chrome meldet: " + said : "."));
+  }
   const ws = new WebSocket(page.webSocketDebuggerUrl);
   await new Promise((resolve, reject) => { ws.addEventListener("open", resolve, { once: true }); ws.addEventListener("error", () => reject(new Error("DevTools-Verbindung fehlgeschlagen.")), { once: true }); });
-  return { child, session: new Session(ws) };
+  return { child, session: new Session(ws), profile, launchMs: Date.now() - started };
 }
 
 async function waitFor(session, target, timeout) {
@@ -151,8 +169,9 @@ async function press(session, key) {
 export async function run(argv) {
   const { options, steps } = parseArgs(argv);
   const viewport = viewportFor(options.viewport);
-  const report = { base: options.base, path: options.path, viewport: options.viewport, shots: [], evals: [], texts: [], steps: [], console: [], errors: [], ok: true };
-  const { child, session } = await launch(chromePath(options.chrome), viewport);
+  const report = { base: options.base, path: options.path, viewport: options.viewport, launchMs: 0, shots: [], evals: [], texts: [], steps: [], console: [], errors: [], ok: true };
+  const { child, session, profile, launchMs } = await launch(chromePath(options.chrome), viewport, options.launchTimeout);
+  report.launchMs = launchMs;
   try {
     await session.call("Runtime.enable"); await session.call("Page.enable");
     await session.call("Emulation.setDeviceMetricsOverride", viewport);
@@ -189,6 +208,7 @@ export async function run(argv) {
     report.console = session.console; report.errors = session.errors;
     try { session.ws.close(); } catch {}
     child.kill();
+    await rm(profile, { recursive: true, force: true }).catch(() => {});
   }
   return report;
 }
