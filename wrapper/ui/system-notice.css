@@ -1,6 +1,6 @@
 .system-notice {
   position: fixed;
-  inset: calc(var(--space-64) + var(--space-32)) var(--space-16) auto auto;
+  inset: max(var(--space-16), env(safe-area-inset-top)) max(var(--space-16), env(safe-area-inset-right)) auto auto;
   transform: none;
   z-index: 100;
   display: flex;
@@ -42,7 +42,7 @@
 @media (prefers-reduced-transparency: reduce) { .system-notice { background: var(--surface); backdrop-filter: none; -webkit-backdrop-filter: none; } }
 
 /* The shared glass button owns the material; the notice only positions it. */
-.system-notice.system-update { inset: var(--space-8) auto auto 50%; transform: translateX(-50%); padding: 0; background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; border: 0; box-shadow: none; }
+.system-notice.system-update { transform: none; padding: 0; background: transparent; backdrop-filter: none; -webkit-backdrop-filter: none; border: 0; box-shadow: none; }
 .system-update .glass-button-wrap { min-inline-size: 132px; }
 .system-update .glass-button-text { padding: var(--space-8) var(--space-12); }
 .system-notice-icon { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; flex: none; }

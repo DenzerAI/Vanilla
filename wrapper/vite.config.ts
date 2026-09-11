@@ -16,17 +16,19 @@ export default defineConfig({
   define: { __UI_VERSION__: JSON.stringify(process.env.AGENT_UI_VERSION || 'development') },
   build: {
     outDir: new URL('./dist', import.meta.url).pathname,
-    emptyOutDir: true,
+    emptyOutDir: false,
     sourcemap: false,
-    cssCodeSplit: false,
+    cssCodeSplit: true,
+    manifest: true,
+    assetsInlineLimit: 0,
     rollupOptions: { input: {app:new URL('./ui/index.html',import.meta.url).pathname, blueprint:new URL('./ui/blueprint.html',import.meta.url).pathname}, output: {
-      entryFileNames: '[name].js',
+      entryFileNames: 'assets/[name]-[hash].js',
       chunkFileNames: 'assets/[name]-[hash].js',
       manualChunks(id) {
         if (id.includes('/node_modules/react/') || id.includes('/node_modules/react-dom/')) return 'react';
         if (id.includes('/node_modules/motion') || id.includes('/node_modules/framer-motion/')) return 'motion';
       },
-      assetFileNames: asset => asset.names?.some(n => n.endsWith('.css')) ? 'app.css' : 'assets/[name]-[hash][extname]',
+      assetFileNames: 'assets/[name]-[hash][extname]',
     } },
   },
   server: {

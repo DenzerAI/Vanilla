@@ -24,6 +24,7 @@ from pydantic import BaseModel, Field
 from starlette.background import BackgroundTask
 
 from .chat_privacy import ChatPrivacy
+from .frontend import asset_response
 from fastapi import HTTPException
 from .config import Config
 from .database import Database
@@ -249,7 +250,10 @@ def create_app(config=None):
             response = JSONResponse(payload, status_code=response.status_code, headers=headers, background=response.background)
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "no-referrer"
-        response.headers["Cache-Control"] = "no-store"
+        if request.url.path.startswith("/api/"):
+            response.headers["Cache-Control"] = "no-store"
+        else:
+            response.headers.setdefault("Cache-Control", "no-store")
         response.headers.setdefault(
             "Content-Security-Policy",
             "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; connect-src 'self'; media-src 'self' blob:; frame-src 'self'; frame-ancestors 'none'; base-uri 'self'",
@@ -630,14 +634,16 @@ def create_app(config=None):
         )
 
     @app.get("/{path:path}")
-    async def frontend(path: str):
+    async def frontend(path: str, request: Request):
         if path == "login":
             return HTMLResponse(LOGIN_PAGE)
         directory = (config.root / "wrapper/dist").resolve()
         target = (directory / (path or "index.html")).resolve()
         if not target.is_relative_to(directory) or not target.is_file():
             return JSONResponse({"error": "Datei nicht gefunden."}, status_code=404)
-        return FileResponse(target)
+        if target.suffix in {".br", ".gz"}:
+            return JSONResponse({"error": "Datei nicht gefunden."}, status_code=404)
+        return asset_response(request, directory, target)
 
     return app
 

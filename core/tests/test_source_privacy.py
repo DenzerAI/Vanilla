@@ -347,3 +347,14 @@ def test_truetype_fonts_require_an_exact_reviewed_hash(repo):
     assert scanner.findings == []
     scanner.entry(name, raw + b'changed')
     assert scanner.findings[-1]['type'] == 'unreviewed-asset'
+
+
+def test_reviewed_neutral_template_may_share_a_local_instruction(repo):
+    name = 'templates/firmenbasis/AGENTS.md'
+    raw = (repo / name).read_bytes()
+    scanner = guard.Scanner(repo)
+    scanner.private_terms = {raw.splitlines()[5].strip().lower()}
+    scanner.entry(name, raw)
+    assert not scanner.findings
+    scanner.entry(name, raw + b'\nChanged template\n')
+    assert any(x['type'] == 'changed-neutral-template' for x in scanner.findings)

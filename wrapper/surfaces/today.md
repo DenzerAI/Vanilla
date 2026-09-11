@@ -115,3 +115,4 @@ Alte Direkteinstiege mit ?view=today oder ?view=pipeline öffnen den neuen Chats
 ?view=calendar öffnet weiterhin den Kalender.
 
 Kalenderprojektion, Zeitfenster, Fehler und Leserechte führt docs/PLANNER.md. Optik, Navigation und gemeinsame Komponenten bleiben erhalten.
+Die Kalenderkarte zeigt das lokale Datum und öffnet die vorhandene Kalenderansicht.

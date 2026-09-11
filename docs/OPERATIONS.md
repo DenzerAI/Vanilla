@@ -265,3 +265,11 @@ geprüft. Eine Sicherung ohne App-Anmeldung darf einen bereits geschützten Zuga
 nicht abschalten; alte Stände werden dafür in einer neuen lokalen Installation
 geöffnet. Scheitert die Offline-Prüfung vor dem Austausch, bleibt der aktuelle
 Bestand erhalten und die fehlgeschlagene Anfrage wird nicht bei jedem Start wiederholt.
+
+## Quellübergaben
+
+Der vorhandene Runtime-Wartungszyklus verarbeitet bei ruhender Arbeit die lokal
+aktivierte Quellübergabe aus docs/CODE-SYNC.md. Status steht unter
+/api/system/source-work und in der bestehenden maintenance-Zeile source-work.
+Lange Prüfungen laufen außerhalb des Ereignisloops und werden beim geregelten
+Herunterfahren abgewartet. Ein gespeicherter Commit ist keine Live-Aktivierung.

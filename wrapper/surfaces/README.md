@@ -20,7 +20,7 @@ Diese Dateien sind verbindliche Bauanleitungen, keine Ideensammlung. Vor einer E
 
 Der gemeinsame Seitenleistenkopf zeigt AgentMenu mit konfiguriertem Avatar, Namen und integriertem Verbindungspunkt. Daneben stehen Suche als IconButton, Benachrichtigungen und Einklappen. Dies gilt auch für Inbox und Einstellungen. Der bisherige Agentenfuß und der separat bedienbare Serverstatus entfallen; Details und Neustart stehen im Agentenmenü. Aufbau und Tastaturbedienung führt chat.md.
 
-Inbox, Aufträge und die verfügbare Bibliothek bilden das Hauptmenü; Die Gruppe „Workspace“ und ihre Chats folgen darunter. Verbindungen und Skills stehen in der vorhandenen Einstellungsnavigation mit ihren bisherigen Symbolen und Katalogansichten. Globale Suche und Querverweise öffnen den jeweiligen Einstellungsbereich direkt. Keine Modul-Platzhalter, zusätzliche Navigationsebene oder neue Seitengestaltung.
+Inbox, Aufträge, die verfügbare Bibliothek und Firma bilden in dieser Reihenfolge das Hauptmenü, ohne eigene Abschnittsüberschrift für Firma; die Gruppe „Workspace“ und ihre Chats folgen darunter. Verbindungen und Skills stehen in der vorhandenen Einstellungsnavigation mit ihren bisherigen Symbolen und Katalogansichten. Globale Suche und Querverweise öffnen den jeweiligen Einstellungsbereich direkt. Keine Modul-Platzhalter, zusätzliche Navigationsebene oder neue Seitengestaltung.
 
 ## Gemeinsame Popups
 
@@ -71,7 +71,7 @@ Chats erscheinen zuerst, danach Bibliotheksdateien/Artefakte, Wissen und Notizen
 
 Pfeiltasten navigieren, Enter öffnet, Escape schließt. Dateien, Notizen, Skills und Aufträge öffnen ihre vorhandenen Detailansichten, verwaltete Systemaufträge ihre Einstellungen. Eine Auswahl startet keinen Auftrag und führt keinen Skill aus.
 
-Aktualisieren lädt die Oberfläche direkt ohne Bestätigungsdialog neu. HTML und Assets werden mit `Cache-Control: no-store` ausgeliefert; laufende Serverantworten bleiben bestehen. Nur ein tatsächlicher Serverneustart verwendet die bestehende Session-Bestätigung.
+Aktualisieren lädt die Oberfläche direkt ohne Bestätigungsdialog neu. HTML, Versionsdaten und private API-Antworten bleiben `no-store`. Öffentliche, inhaltsversionierte Assets verwenden einen langlebigen Browser-Cache; unversionierte Skripte und Styles werden vor Wiederverwendung validiert. Laufende Serverantworten bleiben bestehen. Nur ein tatsächlicher Serverneustart verwendet die bestehende Session-Bestätigung.
 
 Neustarten und anschließendes frisches Laden gehören zu einer Aktion. Die gemeinsame
 SystemNotice bleibt während Anfrage und Wiederanlauf als dieselbe zentrierte,
@@ -161,3 +161,8 @@ Firma ist ein eigener fachlicher Einstieg im Hauptmenü. Eine schlichte aufklapp
 
 - [Optionale Workspaces](workspaces.md): kurze Einrichtung im Chat, gemeinsame
   Identität, eigene Arbeitsweise/Skill-Verweise und beständige Projektpfade.
+
+Systemhinweise stehen jetzt einheitlich oben rechts am Bildschirm, einschließlich
+Aktualisieren und Neustarten. SystemNotice rendert über ein Body-Portal; sichere
+Displayränder und bestehende Abstandsrollen gelten auf Desktop und Handy.
+Diese Platzierung ersetzt die zuvor beschriebene zentrierte Update-Pille.

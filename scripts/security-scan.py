@@ -145,6 +145,10 @@ class Scanner:
                 if kind == 'credential-literal' and PLACEHOLDER.search(value):
                     continue
                 self.add(kind, name, raw, match.start(), revision)
+        # Exact reviewed neutral templates can share phrases with the local company
+        # instructions. Their hash, path and ordinary secret patterns remain checked.
+        if hashlib.sha256(raw).hexdigest() == self.policy['neutralTemplates'].get(name):
+            return
         lower = raw.lower()
         for value in self.private_terms:
             offset = lower.find(value)

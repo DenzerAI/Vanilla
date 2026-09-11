@@ -78,6 +78,11 @@ def routes(operations, queue):
             return note
         raise ValueError("Unbekanntes Memory-Werkzeug.")
 
+    @router.get("/api/system/source-work")
+    async def source_work_status():
+        from .source_work import SourceWork
+        return SourceWork(o.config.data).status()
+
     @router.get("/api/system/status")
     async def status():
         return await asyncio.to_thread(o.status)

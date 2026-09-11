@@ -75,7 +75,7 @@ class Runtime:
         await self.stream.start()
         if self.operations:
             self.operations.update_monitor()
-        self.tasks = [asyncio.create_task(self.run_jobs()), asyncio.create_task(self.deliver_notifications()), asyncio.create_task(self.index_files()), asyncio.create_task(self.maintain())]
+        self.tasks = [asyncio.create_task(self.run_jobs()), asyncio.create_task(self.deliver_notifications()), asyncio.create_task(self.index_files()), asyncio.create_task(self.maintain()), asyncio.create_task(self.complete_source_work())]
 
     async def deliver_notifications(self):
         while True:
@@ -263,6 +263,29 @@ class Runtime:
             except Exception as error:
                 self.queue.db.event("index.error", None, {"error": str(error)[:200]})
             await asyncio.sleep(30)
+
+    async def complete_source_work(self):
+        from .source_work import SourceWork
+        service = SourceWork(self.config.data)
+        while True:
+            try:
+                if service.file.exists() and not self.frozen and not await self.has_active_work():
+                    task = asyncio.create_task(asyncio.to_thread(service.tick))
+                    self.maintenance_tasks.add(task)
+                    try:
+                        result = await asyncio.shield(task)
+                        if self.operations:
+                            blocked = any(x['status'] == 'blocked' for x in result['entries'])
+                            self.operations.record('source-work', 'error' if blocked else 'ok', result)
+                    finally:
+                        if task.done():
+                            self.maintenance_tasks.discard(task)
+            except asyncio.CancelledError:
+                raise
+            except Exception as error:
+                if self.operations:
+                    self.operations.record('source-work', 'error', {'message': str(error)[:200]})
+            await asyncio.sleep(15)
 
     async def maintain(self):
         while True:

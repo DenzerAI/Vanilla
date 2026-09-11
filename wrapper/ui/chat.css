@@ -374,3 +374,10 @@
 .chapter-description { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; margin-top: var(--space-4); color: var(--muted); }
 @supports not (backdrop-filter: blur(1px)) { .chapter-preview { background: var(--glass); } }
 @media (prefers-reduced-transparency: reduce) { .chapter-preview { background: var(--glass); backdrop-filter: none; } }
+
+/* Delivery receipts share the message edge and remain visible without hovering. */
+.message-delivery { display: flex; justify-content: flex-end; color: var(--muted); margin-top: var(--space-2); padding-inline-end: var(--space-12); }
+.message-delivery > span, .message-delivery > button { display: inline-flex; align-items: center; justify-content: center; }
+.message-delivery > button { min-width: var(--control-target); min-height: var(--control-target); padding: var(--space-4); }
+.delivery-checks { display: block; overflow: visible; }
+@media (pointer: coarse) { .message-delivery > button { min-width: var(--control-touch); min-height: var(--control-touch); } }

@@ -95,9 +95,9 @@ Storage-Import und Wiederherstellung, echte Chat-/Anhängewege plus Sichtprüfun
 auf Desktop und Handy. Ein Build allein bestätigt weder ein Live-Interview noch
 mobile Darstellung.
 
-Der Einstieg Firma steht in der Seitenleiste unter Wissen und Abläufe. Die
-globale Suche findet denselben Einstieg. Es gibt keinen zusätzlichen
-Navigationspunkt Firma oberhalb von Inbox und Aufträgen.
+Der Einstieg Firma steht als gleichwertiger Eintrag direkt nach Bibliothek im
+Hauptmenü, ohne eigene Abschnittsüberschrift. Die Workspace-Gruppe folgt darunter.
+Die globale Suche findet denselben Einstieg. Keine Datenmigration erforderlich.
 
 Firma-Arbeitschats bleiben gemeinschaftliche Aufbaugespräche. Die vorhandene
 PIN-Sperre kann für sie nicht neu eingerichtet werden, weil Ergebnisse bewusst

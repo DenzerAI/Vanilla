@@ -3,7 +3,10 @@
 .chat-row:hover .chat-age, .chat-row:focus-within .chat-age { display: block !important; }
 .chat-state { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; min-width: 16px; color: var(--danger); }
 .chat-state:empty { display: none; }
-.chat-complete { color: var(--chat-complete); display: inline-flex; }
+.chat-complete { color: var(--chat-complete); display: inline-flex; opacity: 1; transition: opacity var(--motion-feedback-duration) ease-out; }
+.chat-complete[data-unread="false"] { opacity: 0; }
+:root[data-reduce-motion="on"] .chat-complete { transition: none; }
+@media (prefers-reduced-motion: reduce) { .chat-complete { transition: none; } }
 /* Read conversations recede; the existing accessible status keeps active/unread/problem rows prominent. */
 .chat-row .chat-row-title { color: var(--muted); }
 .chat-row:has(.chat-state[aria-label]) .chat-row-title { color: var(--text); }

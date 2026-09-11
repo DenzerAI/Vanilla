@@ -3,18 +3,22 @@ import {jobCategoryLabel} from './job-categories.mjs';
 import {PageHeading} from './page-heading';
 import {submitMessage} from "./message-submit.mjs";
 import {MailConnectionForm} from "./mail-connection";
+
+import {DeferredItem} from './deferred-item.jsx';
+import {DeliveryChecks} from './delivery-checks';
+import {useLiveAction} from './live-action';
+import {lazySurface} from './lazy-surface';
+import {createSharedApi} from './shared-reads.mjs';
+import {copyThreadForEvent} from './thread-update.mjs';
+import { createMessageOutbox, deliveryView } from './message-outbox.mjs';
 import {PaneShortcutSettings,usePaneShortcuts} from './pane-shortcut-settings.jsx';
 import {matchPaneShortcut} from './pane-shortcuts.mjs';
-import {FirmaPage,FirmaReview} from './firma';
 import { sharedParticlesEnabled } from "./chat-layout.mjs";
-import {StatisticsDashboard} from './statistics';
 import {statisticsTimeZone} from './statistics-client';
 import {ComposerQuestion, useComposerQuestion} from './composer-question';
 import {questionRequest} from '../worker-questions.mjs';
-import {WeatherPreview} from './weather-preview';
 import {ChatPrivacyDialog, LockedChat} from './chat-privacy';
 import {chatPrivacyClient, privacyEvent, privacyChanged, locallyLocked, changeChatPrivacy, watchChatPrivacy} from './chat-privacy-client.mjs';
-import { WeatherMotionSetting } from './weather-motion';
 import { filterJobs, jobFilters, jobStateLabel } from './jobs-view.mjs';
 import './jobs.css';
 import { StartTextMotionSetting } from './chat-start-preferences';
@@ -22,38 +26,21 @@ import { IconMotionSetting } from './icon-motion-setting';
 import { IconButton } from './icon-button';
 import { CopyButton } from './copy-button';
 import { NotificationBell } from './notification-bell';
-import { ServiceSettings } from "./work-evidence.tsx";
 import {useJobNotifications, JobNotifications, NotificationPreference} from "./job-notifications.jsx";
 import { ChapterScrubber } from "./components/ui/chapter-scrubber";
-import { PlannerPage } from "./planner";
-import { InboxPage } from "./inbox";
-import { ChatStart } from "./chat-start";
 import { PanelLight } from "./panel-light";
 import {Skeleton} from './skeleton.tsx';
 import { MessageSpeech } from "./message-speech";
 import { ScrollEdgeFade } from "./scroll-edge-fade.tsx";
-import { NoteEditor } from "./knowledge.tsx";
-import { SystemSearch } from "./system-search.tsx";
-import { AppearanceDesign } from "./appearance-design.jsx";
 import { designVariables, identity as designIdentity } from "./design-system.mjs";
 import { SettingsNavigationRow } from "./settings-patterns.jsx";
 import { AppLoader, LoaderProvider } from './app-loader';
-import { LoaderSettings } from './loader-settings';
 import { SystemNotice } from "./system-notice.jsx";
-import { JobTemplateList } from "./job-template-list.jsx";
 import { jobTemplates, jobCategories, jobFromTemplate } from "../job-templates.mjs";
-import { ConnectionsContent } from './connections-page.jsx';
-import {SystemSettings, TailscaleConnection, CoreRunDetails} from './system-settings';
 import { uploadAttachmentBatch } from "./attachment-upload.mjs";
-import { AgentFiles } from "./agent-files.jsx";
-import { ReviewPanel } from "./workspace-review.jsx";
 import "./workspace-layout.css";
 import { createChatScroll } from "./chat-scroll.mjs";
 import { connectionCatalog, connectionCategories, connectionCategory } from "./connection-catalog.mjs";
-import { CrmConnectionForm } from './crm-connection.jsx';
-import { ServiceConnectionForm } from './service-connection.jsx';
-import { LibraryPage, LibraryPreview, ImageForm } from './library.jsx';
-import { SkillDetails, SkillHub, CreateSkillForm } from './skill-details.jsx';
 import './library-connections.css';
 import { hasUnreadReply } from "../chat-read-state.mjs";
 import { canReadPaneReply } from "./pane-attention.mjs";
@@ -141,17 +128,12 @@ import { createEventSubscription } from "./chat-events.mjs";
 import { ChatMenu, ChatTitle, LayoutPicker, PaneDivider } from "./chat-controls.jsx";
 import { readPaneLayout, readPaneSession, writePaneState } from "./pane-persistence.mjs";
 import { MIN_CHAT_WIDTH, visiblePanes, selectPaneCount, conversationText } from "./chat-layout.mjs";
-import { UserPreferences } from "./user-preferences";
-import { AgentPreferences } from "./agent-preferences.jsx";
 import { AgentWelcome } from "./avatar-picker.jsx";
 import { Modal } from "./modal.jsx";
 import "./sidebar-refinement.css";
 import { appearanceOptions, projectIcons, projectColors, projectColor, relativeTime, projectChatList, chatDateGroup } from "./appearance.mjs";
 import { fonts, typography } from "./design-system.mjs";
 import { timestamp, relativeTimeLabel, dayLabel, durationLabel, activityLabel, groupItems } from "./chat-presentation.mjs";
-import { DesignReference } from "./design-reference.jsx";
-import { LocalWorkers } from "./local-workers.jsx";
-import { WorkerSettings } from "./worker-settings.jsx";
 import { workerName } from "../../system/worker-catalog.mjs";
 import { AgentMenu } from "./agent-menu";
 import { Avatar } from "./avatar.jsx";
@@ -159,7 +141,6 @@ import { AvatarMotionSetting } from "./avatar-motion-setting.jsx";
 import { WelcomeParticles } from "./welcome-particles";
 import { nextChatGreeting } from "./chat-greetings.mjs";
 import { Dictation } from "./dictation.jsx";
-import { VoiceSettings, AudioConnectionForm } from "./voice-settings.jsx";
 import { SettingRow } from "./settings-row.jsx";
 import { ModelPicker } from "./model-picker.jsx";
 import { effortConfig, modelConfig, preferredModel, sessionModelSelection, supportedEffort } from "../worker-models.mjs";
@@ -172,14 +153,58 @@ import {
   skillName,
   skillDescription,
 } from "./brand-icon.jsx";
+const outboxListeners = new Set();
+const messageOutbox = createMessageOutbox({
+  storage:{getItem:key=>localStorage.getItem(key),setItem:(key,value)=>localStorage.setItem(key,value),removeItem:key=>localStorage.removeItem(key),keys:()=>Object.keys(localStorage)},
+  api:(url,data)=>api(url,data,true,AbortSignal.timeout(15000)),
+  changed:entries=>{for(const listener of outboxListeners)listener(entries);},
+});
+const FirmaPage = lazySurface(() => import('./firma'), 'FirmaPage', 'list');
+const FirmaReview = lazySurface(() => import('./firma'), 'FirmaReview', 'list');
+const StatisticsDashboard = lazySurface(() => import('./statistics'), 'StatisticsDashboard', 'list');
+const WeatherPreview = lazySurface(() => import('./weather-preview'), 'WeatherPreview', 'list');
+const WeatherMotionSetting = lazySurface(() => import('./weather-motion'), 'WeatherMotionSetting', 'list');
+const ServiceSettings = lazySurface(() => import('./work-evidence.tsx'), 'ServiceSettings', 'list');
+const PlannerPage = lazySurface(() => import('./planner'), 'PlannerPage', 'list');
+const InboxPage = lazySurface(() => import('./inbox'), 'InboxPage', 'list');
+const ChatStart = lazySurface(() => import('./chat-start'), 'ChatStart', 'attention');
+const NoteEditor = lazySurface(() => import('./knowledge.tsx'), 'NoteEditor', 'document');
+const SystemSearch = lazySurface(() => import('./system-search.tsx'), 'SystemSearch', 'list');
+const AppearanceDesign = lazySurface(() => import('./appearance-design.jsx'), 'AppearanceDesign', 'list');
+const LoaderSettings = lazySurface(() => import('./loader-settings'), 'LoaderSettings', 'list');
+const JobTemplateList = lazySurface(() => import('./job-template-list.jsx'), 'JobTemplateList', 'list');
+const ConnectionsContent = lazySurface(() => import('./connections-page.jsx'), 'ConnectionsContent', 'list');
+const SystemSettings = lazySurface(() => import('./system-settings'), 'SystemSettings', 'list');
+const TailscaleConnection = lazySurface(() => import('./system-settings'), 'TailscaleConnection', 'list');
+const CoreRunDetails = lazySurface(() => import('./system-settings'), 'CoreRunDetails', 'list');
+const AgentFiles = lazySurface(() => import('./agent-files.jsx'), 'AgentFiles', 'list');
+const ReviewPanel = lazySurface(() => import('./workspace-review.jsx'), 'ReviewPanel', 'document');
+const CrmConnectionForm = lazySurface(() => import('./crm-connection.jsx'), 'CrmConnectionForm', 'list');
+const ServiceConnectionForm = lazySurface(() => import('./service-connection.jsx'), 'ServiceConnectionForm', 'list');
+const LibraryPage = lazySurface(() => import('./library.jsx'), 'LibraryPage', 'list');
+const LibraryPreview = lazySurface(() => import('./library.jsx'), 'LibraryPreview', 'list');
+const ImageForm = lazySurface(() => import('./library.jsx'), 'ImageForm', 'list');
+const SkillDetails = lazySurface(() => import('./skill-details.jsx'), 'SkillDetails', 'list');
+const SkillHub = lazySurface(() => import('./skill-details.jsx'), 'SkillHub', 'list');
+const CreateSkillForm = lazySurface(() => import('./skill-details.jsx'), 'CreateSkillForm', 'list');
+const UserPreferences = lazySurface(() => import('./user-preferences'), 'UserPreferences', 'list');
+const AgentPreferences = lazySurface(() => import('./agent-preferences.jsx'), 'AgentPreferences', 'list');
+const DesignReference = lazySurface(() => import('./design-reference.jsx'), 'DesignReference', 'list');
+const LocalWorkers = lazySurface(() => import('./local-workers.jsx'), 'LocalWorkers', 'list');
+const WorkerSettings = lazySurface(() => import('./worker-settings.jsx'), 'WorkerSettings', 'list');
+const VoiceSettings = lazySurface(() => import('./voice-settings.jsx'), 'VoiceSettings', 'list');
+const AudioConnectionForm = lazySurface(() => import('./voice-settings.jsx'), 'AudioConnectionForm', 'list');
+const api = createSharedApi(requestApi);
 let csrf = "";
 let serverOwnsIdentity = false;
-async function api(url, data, retry = true) {
+async function requestApi(url, data, retry = true, signal) {
+  if (data === undefined && !signal) signal = AbortSignal.timeout(15000);
   const r = await fetch(
     "/api" + url,
     data === undefined
-      ? {headers:{"x-chat-client":chatPrivacyClient}}
+      ? {signal,headers:{"x-chat-client":chatPrivacyClient}}
       : {
+          signal,
           method: "POST",
           headers: { "content-type": "application/json", "x-uwe-token": csrf, "x-chat-client":chatPrivacyClient },
           body: JSON.stringify(data),
@@ -191,18 +216,18 @@ async function api(url, data, retry = true) {
   if (j?.requests) j.requests = j.requests.filter(r=>!locallyLocked(r.params?.threadId));
   const requestedChat = data?.id || new URL('/api'+url, location.origin).searchParams.get('id');
   if (r.status === 423 && requestedChat) privacyChanged(requestedChat);
-  if (url.startsWith('/thread?') && locallyLocked(requestedChat)) throw Object.assign(new Error('Chat gesperrt.'), {status:423});
+  if ((url.startsWith('/thread?') || url.startsWith('/thread/item?')) && locallyLocked(requestedChat)) throw Object.assign(new Error('Chat gesperrt.'), {status:423});
   if (r.status === 403 && data !== undefined && retry) {
     const session = await fetch("/api/bootstrap", {headers:{"x-chat-client":chatPrivacyClient}});
     const b = await session.json();
     if (session.status === 401) throw Object.assign(new Error(b.error || "Bitte anmelden."), {status:401});
     if (b.token && b.token !== csrf) {
       csrf = b.token;
-      return api(url, data, false);
+      return api(url, data, false, signal);
     }
   }
   if (!r.ok) throw Object.assign(new Error(j.error || "Anfrage fehlgeschlagen."), {status:r.status});
-  if (url === "/bootstrap") {
+  if (url.split("?")[0] === "/bootstrap") {
     csrf = j.token;
     serverOwnsIdentity = j.identitySource === "soul/IDENTITY.md";
     // Keep an already running server compatible without interrupting active turns.
@@ -387,9 +412,11 @@ function RelativeMessageTime({value, visible = true}) {
   const ms = timestamp(value);
   return ms == null ? null : <time dateTime={new Date(ms).toISOString()} title={new Date(ms).toLocaleString('de-DE')}>{relativeTimeLabel(value, now)}</time>;
 }
-function ChatTurn({ turn, statisticsSnapshot, statisticsApi, running, waiting, visible, actionsDisabled, paneNumber = 0, workerId, ...actions }) {
+const ChatTurn = React.memo(function ChatTurn({ onForkTurn, onEditTurn, onRetryTurn, onDeleteTurn, turn, statisticsSnapshot, statisticsApi, running, waiting, visible, actionsDisabled, paneNumber = 0, workerId, chatId, ...actions }) {
   // Keep explicit reading choices when the status moves beneath the final answer.
   const [activityOpen, setActivityOpen] = useState(false);
+  actions.onFork=()=>onForkTurn(turn); actions.onEdit=()=>onEditTurn(turn);
+  actions.onRetry=()=>onRetryTurn(turn); actions.onDelete=()=>onDeleteTurn(turn);
   const [toolOpen, setToolOpen] = useState({});
   const seenSteps = useRef(new Set());
   const onToolToggle = (id, open) => setToolOpen(old => old[id] === open ? old : {...old, [id]:open});
@@ -414,7 +441,7 @@ function ChatTurn({ turn, statisticsSnapshot, statisticsApi, running, waiting, v
   const artifacts = <ChatArtifacts items={turn.items} workspace={actions.workspace} directory={actions.directory} onFile={actions.onFile} api={api} />;
   const progress = <div className="turn-response-progress">
     {(activity.length || collapseCommentary && history.length) ? <ActivityGroup items={activity} running={running} turn={turn} waiting={waiting} visible={visible} open={activityOpen} onOpenChange={setActivityOpen} seenSteps={seenSteps.current}>
-      {(collapseCommentary ? history : activity).map(item => <Item key={item.id} item={item} workerId={workerId} {...actions} running={running} toolOpen={toolOpen} onToolToggle={onToolToggle} />)}
+      {(collapseCommentary ? history : activity).map(item => { const View=item.detailsDeferred?DeferredItem:Item; return <View key={item.id} {...(item.detailsDeferred?{api,chatId,turnId:turn.id,Item}:{})} item={item} workerId={workerId} {...actions} running={running} toolOpen={toolOpen} onToolToggle={onToolToggle} />; })}
     </ActivityGroup> : <TurnStatus turn={turn} running={running} waiting={waiting} visible={visible} />}
   </div>;
 
@@ -423,11 +450,19 @@ function ChatTurn({ turn, statisticsSnapshot, statisticsApi, running, waiting, v
       {index === firstReply && header}
       {statisticsSnapshot && turn.id === 'briefing-'+statisticsSnapshot.id && group.item.type==='agentMessage'?<StatisticsDashboard data={statisticsSnapshot} api={statisticsApi} visible={visible} reduceMotion={actions.agentProfile?.reduceMotion==='on'}/>:<Item item={group.item} beforeActions={index === lastReply ? <>{progress}{artifacts}</> : null} workerId={workerId} {...actions} running={actionsDisabled} sentAt={turn.startedAt} completedAt={!running && group.item.id === finalMessage?.id ? turn.completedAt : null} />}
     </React.Fragment>)}
-    {firstReply === -1 && <>{header}{progress}{artifacts}</>}
+    {firstReply === -1 && !turn.deliveryOnly && <>{header}{progress}{artifacts}</>}
     {turn.error && <div className="inline-error">{icon(AlertCircle)}{turn.error.message}</div>}
   </section>;
+});
+function DeliveryMark({receipt}) {
+  if (!receipt) return null;
+  const status=receipt.status;
+  const labels={sending:"Wird übertragen",offline:"Wartet auf Verbindung",accepted:"Sicher angekommen",started:"Verarbeitung begonnen",failed:"Übertragung fehlgeschlagen. Erneut versuchen",unknown:"Übergabestatus unklar. Status prüfen"};
+  const failed=["failed","unknown"].includes(status);
+  const glyph=status==="started"?<DeliveryChecks double/>:status==="accepted"?<DeliveryChecks/>:failed?icon(AlertCircle,12):icon(Clock,12);
+  return <div className="message-delivery">{failed?<button type="button" title={receipt.error || labels[status]} aria-label={labels[status]} onClick={()=>messageOutbox.retry(receipt.clientMessageId)}>{glyph}</button>:<span role="status" aria-label={labels[status]} title={labels[status]}>{glyph}</span>}</div>;
 }
-function Item({ item, beforeActions, agentProfile, workerId, onFork, onEdit, onRetry, onDelete, onFile, running, sentAt, completedAt, workspace, directory, toolOpen, onToolToggle }) {
+function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, agentProfile, workerId, onFork, onEdit, onRetry, onDelete, onFile, running, sentAt, completedAt, workspace, directory, toolOpen, onToolToggle }) {
   const i = item;
   const disclosure = {open:!!toolOpen?.[i.id], onToggle:event=>{if(event.target === event.currentTarget) onToolToggle?.(i.id,event.currentTarget.open);}};
   if (i.type === "userMessage")
@@ -449,7 +484,8 @@ function Item({ item, beforeActions, agentProfile, workerId, onFork, onEdit, onR
           ),
         )}
         </div>}
-        <div className="message-actions user-actions">
+        <DeliveryMark receipt={i.delivery}/>
+        {!i.delivery?.turnId && i.delivery ? null : <div className="message-actions user-actions">
           <IconButton label="Nachricht erneut ausführen" disabled={running} onClick={onRetry}>{icon(RotateCcw, 14)}</IconButton>
 
           <IconButton
@@ -462,7 +498,7 @@ function Item({ item, beforeActions, agentProfile, workerId, onFork, onEdit, onR
           <CopyButton label="Nachricht kopieren" size={14} text={(i.content || []).filter(c => c.type === "text").map(c => c.text).join("\n")} />
           <IconButton label="Nachricht löschen" disabled={running} onClick={onDelete}>{icon(Trash2,14)}</IconButton>
           <MessageTime value={sentAt} />
-        </div>
+        </div>}
       </div>
     );
   if (i.type === "agentMessage" || i.type === "plan")
@@ -498,7 +534,7 @@ function Item({ item, beforeActions, agentProfile, workerId, onFork, onEdit, onR
         <summary>
           {icon(BrainCircuit, 16)}Gedanken{icon(ChevronDown, 14)}
         </summary>
-        <Markdown text={(i.summary || i.content || []).join("\n\n")} />
+        {disclosure.open && <Markdown text={(i.summary || i.content || []).join("\n\n")} />}
       </details>
     ) : null;
   if (i.type === "imageView" || i.type === "imageGeneration") {
@@ -524,7 +560,7 @@ function Item({ item, beforeActions, agentProfile, workerId, onFork, onEdit, onR
     subAgentActivity: "Agentenaktivität",
   };
   const changes = Array.isArray(i.changes) ? i.changes : [];
-  const rawOutput = <>
+  const rawOutput = () => <>
     <ToolImages item={i}/>
     {i.query && <ToolText value={i.query}/>}
     {i.command && <ToolText value={i.command}/>}
@@ -536,15 +572,16 @@ function Item({ item, beforeActions, agentProfile, workerId, onFork, onEdit, onR
     <details className="tool-item" {...disclosure}>
       <summary>
         <ActivityIcon item={i}/>
-        <span className={i.status === "failed" ? "activity-failed" : undefined}>{isComputerTool(i) && i.status !== "failed" ? i.arguments?.title || activityDetailLabel(i, running && i.status === "inProgress") : activityDetailLabel(i, running && i.status === "inProgress")}</span>
-        <DiffStats changes={changes} status={i.status}/>
+        <span className={i.status === "failed" ? "activity-failed" : undefined}>{i.detailsDeferred ? (running && i.status === "inProgress" ? i.displayLiveLabel : i.displayLabel) : isComputerTool(i) && i.status !== "failed" ? i.arguments?.title || activityDetailLabel(i, running && i.status === "inProgress") : activityDetailLabel(i, running && i.status === "inProgress")}</span>
+        <DiffStats changes={changes} status={i.status} stats={i.displayDiffStats}/>
 
 
         {icon(ChevronDown, 14)}
       </summary>
+      {disclosure.open && (detailLoading ? <Skeleton variant="document"/> : detailError ? <div role="alert"><p>{detailError}</p><button onClick={onDetailRetry}>Erneut versuchen</button></div> : <>
       <div className="tool-detail-label">{labels[i.type] || "Werkzeug"}{i.status === "failed" ? " · Fehlgeschlagen" : ""}</div>
       <div className="tool-provenance">{workerName(i.workerId || workerId || "codex")}{isComputerTool(i) ? " · Computer Use" : ""}</div>
-      {!changes.length && rawOutput}
+      {!changes.length && rawOutput()}
       {changes.map((c, n) => (
         <div key={n}>
           <button className="file-link" title={c.path} onClick={() => onFile(localFilePath(c.path, workspace, directory) || c.path)}>
@@ -555,12 +592,13 @@ function Item({ item, beforeActions, agentProfile, workerId, onFork, onEdit, onR
           <DiffView diff={c.diff} />
         </div>
       ))}
-      {!!changes.length && <details className="tool-raw-output" open={!!toolOpen?.[`${i.id}:output`]} onToggle={event=>{if(event.target===event.currentTarget)onToolToggle?.(`${i.id}:output`,event.currentTarget.open);}}><summary>Werkzeugausgabe</summary>{rawOutput}</details>}
+      {!!changes.length && <details className="tool-raw-output" open={!!toolOpen?.[`${i.id}:output`]} onToggle={event=>{if(event.target===event.currentTarget)onToolToggle?.(`${i.id}:output`,event.currentTarget.open);}}><summary>Werkzeugausgabe</summary>{toolOpen?.[`${i.id}:output`] && rawOutput()}</details>}
+      </>)}
     </details>
   );
 }
 const projectGlyphs = { folder: Folder, code: Braces, briefcase: Briefcase, globe: Globe, idea: BrainCircuit, calendar: Calendar, message: MessageCircle, files: FileText };
-function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNumber = 0, showPaneHeader = false, isMaximized = false, onMaximize, onClosePane, onOpenFile, paneVisible = true, paneActive = false, initialProject = "default" }) {
+function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNumber = 0, showPaneHeader = false, isMaximized = false, onMaximize, onClosePane, onOpenFile, onOpenCalendar, paneVisible = true, paneActive = false, initialProject = "default" }) {
   const [libraryRevision,setLibraryRevision]=useState(0);
   const [sidebarWidth, setSidebarWidth] = useState(() => {
     try { return Math.max(220, Math.min(400, Number(localStorage.getItem("sidebar-width")) || 268)); } catch { return 268; }
@@ -641,6 +679,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     [view, setView] = useState(() => !embedded && ["inbox", "today", "calendar", "pipeline", "jobs", "firma", "work-evidence", "service"].includes(new URLSearchParams(window.location.search).get("view")) ? (["work-evidence", "service"].includes(new URLSearchParams(window.location.search).get("view")) ? "settings" : ["today", "pipeline"].includes(new URLSearchParams(window.location.search).get("view")) ? "chat" : new URLSearchParams(window.location.search).get("view")) : "chat"),
     [chatId, setChatId] = useState(null),
     [thread, setThread] = useState(null),
+    [threadError, setThreadError] = useState(""),
+    [bootError, setBootError] = useState(""),
     [privacyLocked, setPrivacyLocked] = useState(false),
     [chats, setChats] = useState([]),
     [active, setActive] = useState({}),
@@ -869,12 +909,12 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     setPrivacyLocked(false);
     await refreshChats();
     const id=chatRef.current;
-    const result=await api('/thread?id='+encodeURIComponent(id));
+    const result=await api('/thread?view=chat&id='+encodeURIComponent(id));
     if(chatRef.current===id) setThread(result.thread);
   }
   async function refreshChats() {
-    const r = await api("/chats");
-    setChats(r.chats);
+    const r = await api("/chats?view=sidebar");
+    setChats([...r.chats,...messageOutbox.snapshot().filter(e=>!e.chatId).map(e=>({id:e.localId,projectId:e.projectId,title:e.text.slice(0,40)||"Neue Nachricht",updatedAt:e.createdAt}))]);
     for (const c of r.chats) if(c.locked && !locallyLocked(c.id)) privacyChanged(c.id);
     setActive(r.active);
   }
@@ -899,10 +939,13 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     try { setJobs(await api("/jobs")); }
     catch (error) { setJobsError(error.message); }
     finally { setJobsLoading(false); }
-    try { setIntegrations(await api("/integrations")); } catch (error) { notify(error.message); }
+    try { setIntegrations(await api("/integrations?view=settings")); } catch (error) { notify(error.message); }
   }
   async function refresh() {
-    const b = await api("/bootstrap");
+    setBootError("");
+    let b;
+    try { b = await api("/bootstrap?view=sidebar"); }
+    catch(error) {setBootError("Die Verbindung braucht zu lange oder ist unterbrochen. Bitte erneut versuchen.");throw error;}
     csrf = b.token;
     setBoot(b);
     if (!embedded && b.settings.avatarConfigured === false && !sessionStorage.getItem(`agent-welcome:${b.workspace}`)) {
@@ -921,8 +964,10 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   useEffect(() => {
     guard(refresh)();
     const es = createEventSubscription();
+    let opened = false;
     es.onopen = () => {
-      api("/bootstrap")
+      if (!opened) { opened = true; return; }
+      api("/bootstrap?view=sidebar")
         .then((b) => {
           csrf = b.token;
           setBoot(old=>old?{...old,features:b.features}:b);
@@ -932,7 +977,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         .catch(() => setConnectionState("offline"));
       const reopening = chatRef.current;
       if (reopening)
-        api("/thread?id=" + reopening)
+        api("/thread?view=chat&id=" + reopening)
           .then((r) => {
             if (chatRef.current === reopening) setThread(r.thread);
           })
@@ -944,9 +989,10 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       const e = JSON.parse(data),
         p = e.params || {};
       if (e.method === 'chat/privacy') { api('/chat/privacy/status?id='+encodeURIComponent(p.id)).then(r=>privacyChanged(p.id,r.locked)).catch(()=>privacyChanged(p.id)); return; }
+      if (e.method === 'wrapper/delivery') { void messageOutbox.pump(); return; }
       if (e.method === 'wrapper/resync') { es.onopen?.(); api('/jobs').then(setJobs).catch(()=>{}); return; }
       if (e.method === 'core/event') {
-        window.dispatchEvent(new CustomEvent('core/event', {detail:p}));
+        if (!embedded) window.dispatchEvent(new CustomEvent('core/event', {detail:p}));
         if(p.kind==='system.health' && p.payload?.status==='error' && p.payload?.notify) notify('Systemprüfung: '+(p.payload.details?.message||p.entity_id||'Bitte Einstellungen prüfen.'));
         return;
       }
@@ -961,7 +1007,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         return;
       }
       if (e.method === "wrapper/projects") {
-        api("/bootstrap")
+        api("/bootstrap?view=sidebar")
           .then((b) =>
             setBoot((old) => ({
               ...old,
@@ -1024,7 +1070,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       setThread((prev) => {
         if (locallyLocked(chatRef.current)) return null;
         if (!prev) return prev;
-        const t = structuredClone(prev);
+        const t = copyThreadForEvent(prev, p);
         t.turns ??= [];
         let turn = t.turns.find(
           (x) => x.id === p.turnId || x.id === p.turn?.id,
@@ -1180,7 +1226,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       (view === "settings" && settingsTab === "engines") ||
       (view === "settings" && settingsTab === "secrets")
     )
-      guard(async () => setIntegrations(await api("/integrations")))();
+      guard(async () => setIntegrations(await api("/integrations?view=settings")))();
     if (skillsActive) void loadSkills();
     if (view === "settings" && settingsTab === "usage")
       void loadUsage();
@@ -1236,6 +1282,44 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     });
     return () => lifecycle.abort();
   }, []);
+  const [outboxEntries,setOutboxEntries]=useState(()=>messageOutbox.snapshot());
+  const deliveryRefresh=useRef("");
+  const deliveryChatList=useRef("");
+  useEffect(()=>{
+    outboxListeners.add(setOutboxEntries);
+    if(boot?.features?.messageDelivery){
+      try{messageOutbox.start(boot.workspace);setOutboxEntries([...messageOutbox.snapshot()]);}
+      catch(error){notify(error.message);}
+    }
+    return()=>outboxListeners.delete(setOutboxEntries);
+  },[boot?.workspace,boot?.features?.messageDelivery]);
+  useEffect(()=>{
+    const mapping=outboxEntries.map(e=>e.clientMessageId+":"+e.chatId).join("|");
+    if(deliveryChatList.current!==mapping){
+      deliveryChatList.current=mapping;
+      void refreshChats().catch(()=>{});
+    }
+    const receipt=outboxEntries.find(e=>e.localId===chatRef.current && e.chatId);
+    if(receipt){
+      chatRef.current=receipt.chatId;setChatId(receipt.chatId);
+      setThread({id:receipt.chatId,turns:[]});
+      void refreshChats().catch(()=>{});
+    }
+    const id=chatRef.current;
+    const signature=outboxEntries.filter(e=>e.chatId===id).map(e=>e.clientMessageId+":"+e.status).join("|");
+    if(id && !id.startsWith("outbox-") && signature && deliveryRefresh.current!==id+signature){
+      deliveryRefresh.current=id+signature;
+      void refreshChats().catch(()=>{});
+      void api("/thread?view=chat&id="+encodeURIComponent(id)).then(r=>{if(chatRef.current===id)setThread(r.thread);}).catch(()=>{});
+    }
+  },[outboxEntries]);
+  useEffect(()=>{
+    if(!chatId || chatId.startsWith("outbox-") || !boot?.features?.messageDelivery || chatLocked)return;
+    let cancelled=false;
+    void api("/deliveries?id="+encodeURIComponent(chatId)).then(r=>{if(!cancelled)messageOutbox.merge(r.entries || []);}).catch(()=>{});
+    return()=>{cancelled=true;};
+  },[chatId,boot?.features?.messageDelivery,chatLocked]);
+  const visibleTurns=deliveryView(thread,chatLocked || !chatId?[]:outboxEntries.filter(e=>e.chatId===chatId || e.localId===chatId));
   function chooseProject(id) {
     projectRef.current = id;
     setProjectId(id);
@@ -1253,7 +1337,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       setView("chat");
       return sessions.current[activePaneRef.current].current.newDraft(targetProjectId);
     }
-    if (busy) { notify("Bitte warten, bis die Nachricht übertragen wurde."); return; }
+    if (busy && !boot?.features?.messageDelivery) { notify("Bitte warten, bis die Nachricht übertragen wurde."); return; }
     saveDraft();
     setGreeting(nextChatGreeting());
     const id =
@@ -1269,6 +1353,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     followScroll.current = true;
     setMode("default");
     setLoading(false);
+    setThreadError("");
     setModal(null);
     setWorkspaceMenu(null);
     setView("chat");
@@ -1316,7 +1401,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     return openChatHere(id, restoredMetadata, targetTurnId);
   }
   async function openChatHere(id, restoredMetadata, targetTurnId) {
-    if (busy) { notify("Bitte warten, bis die Nachricht übertragen wurde."); return; }
+    if (busy && !boot?.features?.messageDelivery) { notify("Bitte warten, bis die Nachricht übertragen wurde."); return; }
     if(targetTurnId){followScroll.current=false;setReplyTarget({chatId:id,turnId:targetTurnId});}
     if (chatRef.current === id) { setView("chat"); setModal(null); return; }
     saveDraft();
@@ -1337,17 +1422,34 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     chatRef.current = id;
     setThread(null);
     setLoading(true);
+    setThreadError("");
     setChatMenu(null);
     followScroll.current = !targetTurnId;
     try {
       if (metadata?.locked) return;
-      const r = await api("/thread?id=" + id);
+      if(id.startsWith("outbox-")){setThread({id,turns:[]});return;}
+      const r = await api("/thread?view=chat&id=" + id);
       if (chatRef.current !== id) return;
       setThread(r.thread);
       if (r.thread.model) setModel(r.thread.model);
       if (!targetTurnId && saved && !saved.following) { followScroll.current = false; requestAnimationFrame(() => { if (chatRef.current === id && scrollRef.current) scrollRef.current.scrollTop = saved.scroll; }); }
+    } catch (error) {
+      if (chatRef.current === id) setThreadError(error.name === "TimeoutError" ? "Der Verlauf braucht zu lange. Du kannst den Abruf erneut versuchen." : error.message);
     } finally {
       if (chatRef.current === id) setLoading(false);
+    }
+  }
+  async function retryChatHistory() {
+    const id=chatRef.current;
+    if(!id)return;
+    setLoading(true);setThreadError("");
+    try {
+      const result=await api('/thread?view=chat&id='+encodeURIComponent(id));
+      if(chatRef.current===id)setThread(result.thread);
+    } catch(error) {
+      if(chatRef.current===id)setThreadError("Der Verlauf konnte nicht geladen werden. Bitte erneut versuchen.");
+    } finally {
+      if(chatRef.current===id)setLoading(false);
     }
   }
   async function refreshAudioConnections() {
@@ -1358,13 +1460,13 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     const cache=connectionsRefresh.current;
     if (cache.pending) return cache.pending;
     if (!force && Date.now()-cache.at<30000) return Promise.resolve();
-    cache.pending=Promise.all([api('/integrations').then(value=>{setIntegrations(value);}),refreshAudioConnections()])
+    cache.pending=Promise.all([api('/integrations?view=settings').then(value=>{setIntegrations(value);}),refreshAudioConnections()])
       .then(()=>{cache.at=Date.now();setConnectionsLoaded(true);setConnectionsError('');})
       .catch(()=>{setConnectionsError('Verbindungen konnten nicht vollständig aktualisiert werden.');})
       .finally(()=>{cache.pending=null;});
     return cache.pending;
   }
-  useEffect(()=>{if(!embedded&&boot&&(connectionsActive||!connectionsRefresh.current.at))void refreshConnections();},[!!boot,connectionsActive]);
+  useEffect(()=>{if(!embedded&&boot&&(connectionsActive||view === "jobs"||["job","image-create","connection","crm-connection","service-connection","audio-connection"].includes(modal?.type)))void refreshConnections();},[!!boot,connectionsActive,view,modal?.type]);
   useEffect(()=>{
     if(!connectionsActive||!integrations.mcpLoading)return;
     const timer=setTimeout(()=>void refreshConnections(true),2000);
@@ -1466,6 +1568,28 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       rejectVoice(message); return;
     }
     if (uploadCounts.current.get(draftKey())) { rejectVoice("Dateien werden noch angeheftet."); return; }
+    if(boot?.features?.messageDelivery){
+      const targetId=chatRef.current;
+      if(targetId && outboxEntries.some(e=>(e.chatId===targetId || e.localId===targetId) && ["sending","offline","accepted"].includes(e.status))){
+        rejectVoice("Diese Nachricht wird noch übergeben. Du kannst währenddessen den Chat wechseln.");return;
+      }
+      const clientMessageId=crypto.randomUUID();
+      const localId=targetId || "outbox-"+clientMessageId;
+      const files=voiceText && !includeDraft?[]:attachments;
+      const payload={clientMessageId,localId,id:targetId && !targetId.startsWith("outbox-")?targetId:null,
+        text:msg,attachments:files,model:pickerModel || model,effort:pickerEffort || undefined,nextSelection,mode,projectId:projectRef.current,
+        ...(!targetId?{chat:{model,worker:draftWorker,serviceTier:draftSpeed,mode,projectId:projectRef.current,title:draftTitle || undefined}}:{})};
+      try{messageOutbox.enqueue(payload);}catch(error){rejectVoice(error.message);return;}
+      if(!voiceText || includeDraft){setText("");setAttachments([]);}
+      draftCache.current.delete(targetId || "new:"+projectRef.current);
+      if(nextSelection)setNextSelections(old=>{const next={...old};delete next[targetId];return next;});
+      followScroll.current=true;
+      if(!targetId){
+        chatRef.current=localId;setChatId(localId);setThread({id:localId,turns:[]});
+        setChats(old=>[{id:localId,projectId:projectRef.current,title:draftTitle || msg.slice(0,40)||"Neue Nachricht",updatedAt:Date.now()},...old]);
+      }
+      return {id:localId};
+    }
     setBusy(true);
     const originalText = text,
       originalAttachments = attachments;
@@ -1529,7 +1653,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         setNextSelections(old => { const next = {...old}; delete next[id]; return next; });
         setModel(selectedModel); setEffort(pickerEffort);
         if (thread?.workerSession) {
-          void api("/thread?id=" + encodeURIComponent(id)).then(updated => {
+          void api("/thread?view=chat&id=" + encodeURIComponent(id)).then(updated => {
             if (chatRef.current === id) setThread(old => old ? {...old, workerSession:updated.thread.workerSession} : old);
           }).catch(() => {});
         }
@@ -1748,9 +1872,15 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     setSelectedFile(null);
     setTerminalOutput("");
   }, [projectId]);
+  const forkTurn=useLiveAction(guard(fork));
+  const editTurn=useLiveAction(guard(revise));
+  const retryTurn=useLiveAction(guard(turn=>revise(turn,true)));
+  const deleteTurn=useLiveAction(turn=>setModal({type:"delete-message",turn}));
+  const openTurnFile=useLiveAction(guard(openFile));
   const linkOpened = useRef(false);
   useEffect(() => {
     if (!boot || linkOpened.current) return;
+    if (!(embedded ? paneVisible : visible.includes(0)) && (embedded || !new URL(window.location.href).searchParams.get("chat"))) return;
     linkOpened.current = true;
     const saved = readPaneSession(paneNumber);
     const linkedId = !embedded && new URL(window.location.href).searchParams.get("chat");
@@ -1763,7 +1893,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     }
     else if (boot.projects.some(project => project.id === saved.projectId)) chooseProject(saved.projectId);
     setPaneRestored(true);
-  }, [!!boot]);
+  }, [!!boot, paneVisible, visible.includes(0)]);
   useEffect(() => {
     if (paneRestored) writePaneState(`session:${paneNumber}`, {chatId, projectId});
   }, [paneRestored, paneNumber, chatId, projectId]);
@@ -1834,10 +1964,10 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     })}
   /> : null;
   const nav = [
-      ...(boot?.features?.firma?[["firma", Briefcase, "Firma"]]:[]),
       ["inbox", Inbox, "Inbox"],
       ["jobs", Clock, "Aufträge"],
       ...(boot?.features?.library?[["library", FileText, "Bibliothek"]]:[]),
+      ...(boot?.features?.firma?[["firma", Briefcase, "Firma"]]:[]),
     ];
   const settingNav = [
     ["general", SlidersHorizontal, "Allgemein"],
@@ -1871,14 +2001,17 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   useEffect(() => {
     const last = thread?.turns?.at(-1);
     if (!canReadPaneReply({foreground, visible:view === "chat" && readablePane, selected:selectedPane,
-      engagedChatId, chatId, away:awayFromBottom, running, completed:last?.status === "completed", unread:hasUnreadReply(current)})) return;
-    const timer = setTimeout(() => {
-      const el = scrollRef.current;
-      if (!el || document.visibilityState !== "visible" || !document.hasFocus() || el.scrollHeight - el.scrollTop - el.clientHeight > 150) return;
-      api("/chat/read", {id:chatId,turnId:last.id}).then(result=>setChats(old=>old.map(c=>c.id===chatId ? {...c,readTurnId:result.readTurnId} : c))).catch(()=>{});
-    }, 700);
-    return () => clearTimeout(timer);
-  }, [foreground, view, readablePane, selectedPane, engagedChatId, awayFromBottom, running, thread, chatId, current?.lastCompletedTurnId, current?.readTurnId]);
+      chatId, loadedChatId:thread?.id, loading, running, completed:last?.status === "completed", unread:hasUnreadReply(current)})) return;
+    // Let React replace the skeleton and the browser paint the completed text first.
+    let frame = requestAnimationFrame(() => {
+      frame = requestAnimationFrame(() => {
+        if (!scrollRef.current || document.visibilityState !== "visible" || !document.hasFocus()) return;
+        api("/chat/read", {id:chatId,turnId:last.id}).then(result=>setChats(old=>old.map(c=>c.id===chatId ? {...c,readTurnId:result.readTurnId} : c))).catch(()=>{});
+      });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [foreground, view, readablePane, selectedPane, loading, running, thread, chatId, current?.lastCompletedTurnId, current?.readTurnId]);
+
   const notificationState = useJobNotifications(api, !!boot?.features?.routines && !embedded, notify);
   const [requestSignal, setRequestSignal] = useState(0);
   const previousRequests = useRef(null);
@@ -1902,7 +2035,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   if (!boot)
     return (
       <div>
-        {toast ? <div className="boot-screen"><p role="alert">{toast}</p><button onClick={guard(refresh)}>Erneut versuchen</button></div> : <Skeleton variant="shell" label="Schaltzentrale wird geöffnet …"/>}
+        {bootError || toast ? <div className="boot-screen"><p role="alert">{bootError || toast}</p><button onClick={guard(refresh)}>Erneut versuchen</button></div> : <Skeleton variant="shell" label="Schaltzentrale wird geöffnet …"/>}
         {!embedded && <SystemNotice ref={systemNoticeRef} onBusyChange={setServerRestartBusy} api={api} message={toast} onDismiss={()=>setToast("")} />}
       </div>
     );
@@ -1956,7 +2089,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         ) : (
           <>
             <nav>
-              {nav.filter(([id])=>id!=="firma").map(([id, I, label]) => (
+              {nav.map(([id, I, label]) => (
                 <button
                   key={id}
                   className={
@@ -1971,7 +2104,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 </button>
               ))}
             </nav>
-            {boot.features?.firma&&<><div className="sidebar-section-label">Wissen und Abläufe</div><nav><button className={"nav-item "+(view==="firma"?"selected":"")} onClick={()=>setView("firma")}>{icon(Briefcase)}Firma</button></nav></>}
             <div className="workspace-projects">
               <div className="sidebar-section-label projects-heading"><button className="workspace-info-button" type="button" aria-label="Was ist ein Workspace?" onClick={()=>setModal({type:"workspace-info"})}>Workspace</button><IconButton label="Neuer Workspace" disabled={workspaceOpening} onClick={boot.features?.workspaceSpecialization?guard(()=>configureWorkspace()):()=>setModal({type:"project"})}>{icon(Plus,16)}</IconButton></div>
               {(boot.workspaceWarnings||[]).map((warning,index)=><p className="page-note" role="status" key={index}>{warning}</p>)}
@@ -2027,7 +2159,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                             <span className="chat-age">{relativeTime(c.updatedAt, listClock)}</span>
                             {c.private && <span className="chat-row-lock" role="img" aria-label={c.locked ? "Gesperrt" : "Privat, entsperrt"}>{icon(Lock,15)}</span>}
                             <span className="chat-state" role="img" aria-label={active[c.id] ? "In Arbeit" : hasUnreadReply(c) ? "Ungelesene Antwort" : c.lastTurnStatus === "failed" ? "Fehlgeschlagen" : c.lastTurnStatus === "interrupted" ? "Gestoppt" : undefined}>
-                              {active[c.id] ? <AppLoader /> : hasUnreadReply(c) ? <span className="chat-complete">{icon(Check, 15)}</span> : c.lastTurnStatus === "failed" ? icon(AlertCircle, 15) : c.lastTurnStatus === "interrupted" ? icon(Pause, 14) : null}
+                              {active[c.id] ? <AppLoader /> : c.lastTurnStatus === "completed" ? <span className="chat-complete" data-unread={hasUnreadReply(c)} aria-hidden="true">{icon(Check, 15)}</span> : c.lastTurnStatus === "failed" ? icon(AlertCircle, 15) : c.lastTurnStatus === "interrupted" ? icon(Pause, 14) : null}
                             </span>
                           </button>
                           <IconButton
@@ -2142,10 +2274,13 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 aria-label="Gesprächsverlauf"
               >
                 {loading ? (
-                  <Skeleton variant="chat" label="Gespräch wird geladen …"/>
-                ) : !thread?.turns?.length ? (
+                  <div className="message-column"><Skeleton variant="chat" label="Gespräch wird geladen …"/></div>
+                ) : threadError ? (
+                  <div className="message-column" role="alert"><p>{threadError}</p><button onClick={retryChatHistory}>Verlauf erneut laden</button></div>
+                ) : !visibleTurns.length ? (
                   <ChatStart visible={foreground && view === "chat" && readablePane} api={api} routines={!!boot.features?.routines} revision={libraryRevision} composing={!!text.trim() || attachments.length>0} greeting={greeting} profile={boot.settings} requests={requests} notifications={notificationState.data?.items || []} chats={chats.filter(c=>!c.private)} projectId={projectId} error={notificationState.error}
                     onOpen={async item=>{
+                      if(item.kind==='calendar'){if(onOpenCalendar)onOpenCalendar();else setView('calendar');return;}
                       if(item.kind==='statistics'){await openStatisticsReport();return;}
                       if(item.kind==='weather'){await openWeatherReport(item);return;}
                       if(item.prompt){setText(item.prompt);inputRef.current?.focus();return;}
@@ -2162,15 +2297,14 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
 
                 ) : (
                   <div className="message-column">
-                    {thread.turns?.map((t, index) => {
+                    {visibleTurns.map((t, index) => {
                       const date = dayLabel(t.startedAt);
-                      const previous = dayLabel(thread.turns[index - 1]?.startedAt);
+                      const previous = dayLabel(visibleTurns[index - 1]?.startedAt);
                       return <React.Fragment key={t.id}>
                         {date && date !== previous && <div className="chat-day-divider"><span>{date}</span></div>}
-                        <ChatTurn statisticsApi={api} statisticsSnapshot={current?.statisticsSnapshot} agentProfile={boot.settings} paneNumber={paneNumber} workerId={current?.workerId || "codex"} workspace={boot.workspace} directory={current?.cwd || boot.workspace} turn={t} running={running && t.id === active[chatId]} onFork={guard(() => fork(t))}
-                          onEdit={guard(() => revise(t))} onRetry={guard(() => revise(t, true))}
-                          onDelete={() => setModal({type: "delete-message", turn: t})}
-                          actionsDisabled={running || busy} waiting={requests.some(r => r.params?.threadId === chatId)} visible={foreground && view === "chat" && readablePane} onFile={guard(openFile)} />
+                        <ChatTurn chatId={chatId} statisticsApi={api} statisticsSnapshot={current?.statisticsSnapshot} agentProfile={boot.settings} paneNumber={paneNumber} workerId={current?.workerId || "codex"} workspace={boot.workspace} directory={current?.cwd || boot.workspace} turn={t} running={running && t.id === active[chatId]} onForkTurn={forkTurn} onEditTurn={editTurn} onRetryTurn={retryTurn}
+                          onDeleteTurn={deleteTurn}
+                          actionsDisabled={running || busy} waiting={requests.some(r => r.params?.threadId === chatId)} visible={foreground && view === "chat" && readablePane} onFile={openTurnFile} />
                       </React.Fragment>;
                     })}
                     {requests
@@ -2331,7 +2465,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               </>}
             </section>
             {!embedded && mountedPanes.filter(id=>id!==0).map(id=><div key={id} data-pane={id} data-trailing-pane={visible.at(-1) === id ? "true" : undefined} hidden={!visible.includes(id)} className={"pane-slot secondary-pane " + (activePane===id ? "active-pane" : "")} style={{order:paneOrder.indexOf(id)*2, flexGrow:paneWeights[id] || 1}}>
-              <App embedded paneVisible={view === "chat" && visible.includes(id)} paneActive={activePane===id} paneNumber={id} sessionRef={sessions.current[id]} onSessionChange={sessionChanged} initialProject={projectId} isMaximized={maximizedPane} showPaneHeader={paneOrder.length>1} onActivate={()=>activatePane(id)} onMaximize={()=>{activatePane(id);setMaximizedPane(v=>!v)}} onClosePane={()=>closePane(id)} onOpenFile={path=>{activatePane(id);requestAnimationFrame(()=>guard(openFile)(path))}}/>
+              <App embedded onOpenCalendar={()=>setView('calendar')} paneVisible={view === "chat" && visible.includes(id)} paneActive={activePane===id} paneNumber={id} sessionRef={sessions.current[id]} onSessionChange={sessionChanged} initialProject={projectId} isMaximized={maximizedPane} showPaneHeader={paneOrder.length>1} onActivate={()=>activatePane(id)} onMaximize={()=>{activatePane(id);setMaximizedPane(v=>!v)}} onClosePane={()=>closePane(id)} onOpenFile={path=>{activatePane(id);requestAnimationFrame(()=>guard(openFile)(path))}}/>
             </div>)}
             {!embedded && visible.slice(0,-1).map((id,index)=><div className="pane-divider-slot" key={`divider-${id}`} style={{order:paneOrder.indexOf(id)*2+1}}><PaneDivider value={Math.round(100*(paneWeights[id] || 1)/((paneWeights[id] || 1)+(paneWeights[visible[index+1]] || 1)))} onResize={delta=>resizePanes(id,visible[index+1],delta)}/></div>)}
             </div>
@@ -2880,7 +3014,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                             disabled={s.system}
                             onClick={guard(async () => {
                               await api("/secrets/delete", { id: s.id });
-                              setIntegrations(await api("/integrations"));
+                              setIntegrations(await api("/integrations?view=settings"));
                             })}
                           >
                             {icon(Trash2, 16)}
@@ -3207,7 +3341,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 name: f.get("name"),
                 value: f.get("value"),
               });
-              setIntegrations(await api("/integrations"));
+              setIntegrations(await api("/integrations?view=settings"));
               setModal(null);
               notify("Im macOS-Schlüsselbund gespeichert.");
             })}
@@ -3236,7 +3370,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       )}
       {modal?.type === "audio-connection" && (
         <Modal title={audioConnections[modal.name] ? "Verbindung bearbeiten" : "Verbindung hinzufügen"} onClose={() => setModal(null)}>
-          <AudioConnectionForm name={modal.name} connected={audioConnections[modal.name]} api={api} notify={notify} onSaved={async () => { await refreshAudioConnections(); setIntegrations(await api("/integrations")); setModal(null);  }} />
+          <AudioConnectionForm name={modal.name} connected={audioConnections[modal.name]} api={api} notify={notify} onSaved={async () => { await refreshAudioConnections(); setIntegrations(await api("/integrations?view=settings")); setModal(null);  }} />
         </Modal>
       )}
       {modal?.type === "connection" && (
@@ -3257,7 +3391,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 provider: modal.connection?.provider,
                 ...Object.fromEntries(f),
               });
-              setIntegrations(await api("/integrations"));
+              setIntegrations(await api("/integrations?view=settings"));
               setModal(null);
 
             })}
@@ -3322,7 +3456,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       await api("/connections/delete", {
                         id: modal.connection.id,
                       });
-                      setIntegrations(await api("/integrations"));
+                      setIntegrations(await api("/integrations?view=settings"));
                       setModal(null);
                     })}
                   >
@@ -3352,13 +3486,13 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         </Modal>
       )}
       {modal?.type==='crm-connection'&&<Modal title={modal.connection.id?'Verbindung bearbeiten':'Verbindung hinzufügen'} onClose={()=>setModal(null)}>
-        <CrmConnectionForm key={modal.connection.id || modal.connection.provider} connection={modal.connection} api={api} notify={notify} Field={Field} onChanged={async()=>setIntegrations(await api('/integrations'))} onSaved={async message=>{setIntegrations(await api('/integrations'));setModal(null);notify(message);}}/>
+        <CrmConnectionForm key={modal.connection.id || modal.connection.provider} connection={modal.connection} api={api} notify={notify} Field={Field} onChanged={async()=>setIntegrations(await api('/integrations?view=settings'))} onSaved={async message=>{setIntegrations(await api('/integrations?view=settings'));setModal(null);notify(message);}}/>
       </Modal>}
       {modal?.type==='mail-connection' && <Modal title={modal.connection.id?'Verbindung bearbeiten':'Verbindung hinzufügen'} onClose={()=>setModal(null)}>
         <MailConnectionForm connection={modal.connection} api={api} projectId={projectId} onSaved={async()=>{await refreshConnections(true);setModal(null);}} onHelp={message=>{setText(previous=>(previous?previous+'\n\n':'')+message);setModal(null);setView('chat');inputRef.current?.focus();}}/>
       </Modal>}
       {modal?.type==='service-connection'&&<Modal title={modal.connection.id?'Verbindung bearbeiten':'Verbindung hinzufügen'} onClose={()=>setModal(null)}>
-        <ServiceConnectionForm key={modal.connection.id||modal.connection.provider} connection={modal.connection} api={api} notify={notify} Field={Field} workers={boot.workers||[]} projects={boot.projects||[]} requests={requests} RequestCard={RequestCard} onReply={guard(async(id,result)=>{await api('/respond',{id,result});setRequests(rs=>rs.filter(r=>r.id!==id));})} onChanged={connections=>setIntegrations(old=>({...old,connections:[...old.connections.filter(c=>c.kind!=='service'),...connections]}))} onSaved={async message=>{setIntegrations(await api('/integrations'));setModal(null);notify(message);}}/>
+        <ServiceConnectionForm key={modal.connection.id||modal.connection.provider} connection={modal.connection} api={api} notify={notify} Field={Field} workers={boot.workers||[]} projects={boot.projects||[]} requests={requests} RequestCard={RequestCard} onReply={guard(async(id,result)=>{await api('/respond',{id,result});setRequests(rs=>rs.filter(r=>r.id!==id));})} onChanged={connections=>setIntegrations(old=>({...old,connections:[...old.connections.filter(c=>c.kind!=='service'),...connections]}))} onSaved={async message=>{setIntegrations(await api('/integrations?view=settings'));setModal(null);notify(message);}}/>
       </Modal>}
       {modal?.type==='library-file'&&<LibraryPreview entry={modal.entry} entries={modal.entries} onNavigate={entry=>setModal(current=>({...current,entry}))} onClose={()=>setModal(null)}>
         <div className="library-preview"><FileContent key={modal.entry.scope+modal.entry.path} path={modal.entry.path} scope={modal.entry.scope} api={api} readOnly reading/></div>

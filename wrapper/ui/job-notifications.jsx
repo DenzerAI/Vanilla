@@ -6,9 +6,10 @@ import {Markdown} from './chat-rich-content.jsx';
 
 export function useJobNotifications(api, enabled, notify) {
   const [data,setData]=useState(null), [error,setError]=useState(''), [signal,setSignal]=useState(0);
+  const lastLoad=useRef(0);
   const refresh=useCallback(async()=>{
     if(!enabled) return;
-    try {setData(await api('/notifications'));setError('');} catch(e) {setError(e.message);}
+    try {setData(await api('/notifications'));setError('');lastLoad.current=Date.now();} catch(e) {setError(e.message);}
   },[api,enabled]);
   const seen=useRef(new Set());
   useEffect(()=>{
@@ -27,12 +28,12 @@ export function useJobNotifications(api, enabled, notify) {
         }
       }
     };
-    const visible=()=>{if(document.visibilityState==='visible')refresh();};
+    const visible=()=>{if(document.visibilityState==='visible'&&Date.now()-lastLoad.current>15000)refresh();};
     window.addEventListener('core/event',event);
-    window.addEventListener('focus',refresh);
+    window.addEventListener('focus',visible);
     document.addEventListener('visibilitychange',visible);
-    const timer=setInterval(refresh,30000);
-    return()=>{window.removeEventListener('core/event',event);window.removeEventListener('focus',refresh);document.removeEventListener('visibilitychange',visible);clearInterval(timer);};
+    const timer=setInterval(visible,30000);
+    return()=>{window.removeEventListener('core/event',event);window.removeEventListener('focus',visible);document.removeEventListener('visibilitychange',visible);clearInterval(timer);};
   },[enabled,refresh,notify]);
   return {data,error,refresh,signal};
 }

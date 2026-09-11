@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import React, { useEffect, useImperativeHandle, useRef, useState } from 'react';
 import { Modal } from './modal.jsx';
 import { X } from './icons.jsx';
@@ -25,6 +26,9 @@ export function SystemNotice({api, message, onDismiss, ref, onBusyChange}) {
   useEffect(() => {
     let disposed = false, timer;
     async function poll() {
+      if (document.hidden && !recovery.current.pending && !document.querySelector('.voice-strip')) {
+        timer = setTimeout(poll,5000); return;
+      }
       let next = null;
       try {
         next = await api('/updates');
@@ -73,19 +77,19 @@ export function SystemNotice({api, message, onDismiss, ref, onBusyChange}) {
     } catch(e) {setError(e.message); setBusy(false); setConfirmation(null); actionInFlight.current = false;}
   }
   function reloadPage() {
-    // HTML and assets are served with no-store. Server turns
+    // HTML is fresh; versioned assets reuse the browser cache. Server turns
     // continue independently while the browser loads the current UI.
     window.location.reload();
   }
-  const updateOnly = !authRequired && !error && (busy || restart || reload);
+  const updateOnly = !authRequired && !error && !message && (busy || restart || reload);
   const visible = authRequired || restart || reload || busy || error || message;
   return <>
-    {visible && <div className={"system-notice" + (updateOnly ? " system-update" : "")} role="status" aria-live="polite">
+    {visible && createPortal(<div className={"system-notice" + (updateOnly ? " system-update" : "")} role="status" aria-live="polite">
       {!updateOnly && <span className="system-notice-text">{authRequired ? 'Bitte erneut anmelden.' : error || message}</span>}
       {authRequired && <button onClick={()=>setLoginOpen(true)}>Anmelden</button>}
       {!authRequired && (busy || restart || reload) && <GlassButton size="sm" disabled={busy} aria-busy={busy} onClick={()=>restart ? restartServer() : reloadPage()}><span className="system-notice-icon" aria-hidden="true">{busy ? <AppLoader size={14} preview /> : <RotateCcw size={14}/>}</span><span>{busy ? 'Neustarten …' : restart ? 'Neustarten' : 'Aktualisieren'}</span></GlassButton>}
-      {!authRequired && !restart && !reload && !busy && <button className="system-notice-close" aria-label="Hinweis schließen" onClick={()=>{setError('');onDismiss();}}><X size={16}/></button>}
-    </div>}
+      {!authRequired && !busy && (message || error || (!restart && !reload)) && <button className="system-notice-close" aria-label="Hinweis schließen" onClick={()=>{setError('');onDismiss();}}><X size={16}/></button>}
+    </div>, document.body)}
     {loginOpen && <SessionLogin api={api} onClose={()=>setLoginOpen(false)} onAuthenticated={()=>{
       wasUnauthorized.current=false; setAuthRequired(false); setLoginOpen(false); setError('');
       onDismiss(); reconnectEventStream();

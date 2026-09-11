@@ -2,7 +2,7 @@ import {useDictationShortcut} from './dictation-shortcut-settings.jsx';
 import {bindDictationShortcut,shortcutCode} from './dictation-shortcut.mjs';
 import React, {useState,useRef,useEffect} from 'react';
 import {Mic,ArrowUp,Pause,Play,Trash2,Check,X,Square,Volume2,Download} from './icons.jsx';
-import {write,sync,all,downloadLocal} from './dictation-storage.mjs';
+import {write,sync,all,downloadLocal,subscribeSync} from './dictation-storage.mjs';
 import {microphone,microphoneError} from './dictation-audio.mjs';
 import {SpeechPlayback} from './speech-playback.mjs';
 import {VoiceWave,VoiceStatus} from './voice-visual';
@@ -20,12 +20,11 @@ export function Dictation({api,notify,onText,onVoiceText,onSendText,chatId,reply
   function report(e){if(mounted.current){setIssue(e.message);notify(e.message);}}
   useEffect(()=>{
     mounted.current=true;
-    const timer=setInterval(()=>sync(api).catch(()=>{}),3000);
-    void sync(api).catch(()=>{});
+    const unsubscribeSync=subscribeSync(api);
     const before=e=>{if(current.current){e.preventDefault();e.returnValue='';}};
     const hidden=()=>{if(document.hidden && current.current){current.current.node.port.postMessage('pause');setPhase('paused');}};
     window.addEventListener('beforeunload',before);document.addEventListener('visibilitychange',hidden);
-    return()=>{mounted.current=false;generation.current++;session.current=null;clearInterval(timer);window.removeEventListener('beforeunload',before);document.removeEventListener('visibilitychange',hidden);void stopRef.current?.(false,false);void playback.current.close();};
+    return()=>{mounted.current=false;generation.current++;session.current=null;unsubscribeSync();window.removeEventListener('beforeunload',before);document.removeEventListener('visibilitychange',hidden);void stopRef.current?.(false,false);void playback.current.close();};
   },[]);
   useEffect(()=>{
     const s=session.current;

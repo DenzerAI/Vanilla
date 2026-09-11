@@ -1,5 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
 import './skeleton.css';
+import './components/ui/attention-fan.css';
 import {SettingRow} from './settings-row.jsx';
 
 type Variant = 'list' | 'settings' | 'chat' | 'document' | 'media' | 'shell' | 'attention';
@@ -25,8 +26,8 @@ export function Skeleton({variant = 'list', rows = 4, label = 'Inhalt wird gelad
   const count = Math.max(1, Math.min(8, Math.floor(rows) || 4));
   const content = variant === 'attention' ? <div className="attention-fan"><div className="attention-fan-track">{[-1,1,0].map(side=><div key={side} className={'attention-fan-card'+(side===0?' is-active':'')} data-side={side}><div className="attention-fan-kind"><Mark/><Bar short/></div><Lines/><span className="attention-fan-action"><Bar short/></span></div>)}</div><div className="attention-fan-navigation"><Bar short/></div></div> :
     variant === 'media' ? <div className="skeleton-media"/> :
-    variant === 'chat' ? <div className="chat-turn"><div className="user-message-row"><div className="user-message skeleton-user"><Bar/><Bar short/></div><div className="user-actions"><Bar short/></div></div><div className="skeleton-author"><Mark/><Bar short/></div><div className="agent-message"><div className="markdown"><p><Bar/><Bar/><Bar short/></p><p><Bar/><Bar short/></p></div></div></div> :
-    variant === 'shell' ? <><div className="skeleton-sidebar"><Bar short/>{Array.from({length:5}, (_, i)=><Lines key={i}/>)}</div><div className="skeleton-main"><Bar short/><div className="skeleton-shell-body"><Lines/><Lines/></div><div className="skeleton-composer"/></div></> :
+    variant === 'chat' ? <div className="chat-turn"><div className="user-message-row"><div className="user-message skeleton-user"><Bar/><Bar short/></div><div className="user-actions"><Bar short/></div></div><div className="turn-author"><span className="agent-signature"><Mark className="avatar"/></span><div className="turn-author-meta"><span className="turn-author-name skeleton-author-name"><Bar/></span><span className="skeleton-author-time"><Bar/></span></div></div><div className="agent-message"><div className="markdown"><p><Bar/><Bar/><Bar short/></p><p><Bar/><Bar short/></p></div></div></div> :
+    variant === 'shell' ? <><div className="skeleton-sidebar"><Bar short/>{Array.from({length:5}, (_, i)=><Lines key={i}/>)}</div><div className="skeleton-main chat-main pane-slot"><div className="conversation"><div className="message-column"><Skeleton variant="chat" announce={false}/></div></div><div className="composer-area"><div className="skeleton-composer"/><div className="composer-options"><Bar short/></div></div></div></> :
     Array.from({length:count}, (_, i) => {
       if (variant === 'settings') return <SettingRow key={i} title={<Bar short/>} description={<Bar/>}><span className="skeleton-control"/></SettingRow>;
       if (layout.startsWith('library-')) return <div className="library-entry skeleton-row" key={i}><span className="library-entry-name"><span className="library-thumbnail skeleton-mark"/><span className="skeleton-filename"><Bar/></span></span><span className="library-entry-kind"><Bar short/></span><span className="library-entry-date"><Bar/></span></div>;

@@ -12,6 +12,8 @@ async function fixture(t) {
   const put=(file,text)=>writeFile(path.join(root,file),text);
   for(const file of ['wrapper/ui/start.tsx','wrapper/public/login.css','wrapper/build.mjs','wrapper/vite.config.ts','wrapper/package-lock.json','scripts/ui-build.mjs','system/shared.mjs'])await put(file,'initial');
   for(const file of ['index.html','app.js','app.css','blueprint.html','blueprint.js','assets/shared.js'])await put('wrapper/dist/'+file,'built '+file);
+  await put('wrapper/dist/index.html', '<script src="/app.js"></script><link href="/app.css" rel="stylesheet">');
+  await put('wrapper/dist/blueprint.html', '<script src="/blueprint.js"></script>');
   return {root,put};
 }
 test('UI verification requires a build tied to current sources and all shipped files',async t=>{
@@ -49,9 +51,10 @@ test('legacy metadata and manifests with missing entrypoints or escaping paths c
 test('the built reference and application share a verified production build',async()=>{
   const root=path.resolve(import.meta.dirname,'../..');
   const manifest=JSON.parse(await readFile(path.join(root,'wrapper/dist/version.json'),'utf8'));
-  const bundle=await readFile(path.join(root,'wrapper/dist/blueprint.js'),'utf8');
+  const vite=JSON.parse(await readFile(path.join(root,'wrapper/dist/.vite/manifest.json'),'utf8'));
+  const bundle=await readFile(path.join(root,'wrapper/dist',vite['blueprint.html'].file),'utf8');
   assert.ok(bundle.includes(manifest.uiVersion));
   const html=await readFile(path.join(root,'wrapper/dist/blueprint.html'),'utf8');
-  assert.match(html,/blueprint\.js/);
+  assert.match(html,/blueprint-[\w-]+\.js/);
   assert.doesNotMatch(html,/main\.tsx|app\.js/);
 });

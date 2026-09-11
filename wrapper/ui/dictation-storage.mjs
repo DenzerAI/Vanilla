@@ -19,20 +19,31 @@ export async function all(store) {
   const d = await db();
   return new Promise((resolve, reject) => { const r = d.transaction(store).objectStore(store).getAll(); r.onsuccess = () => resolve(r.result); r.onerror = () => reject(r.error); });
 }
+export async function recordingChunks(id) {
+  const d = await db();
+  return new Promise((resolve,reject)=>{
+    const range = IDBKeyRange.bound(id + ':', id + ':\uffff');
+    const request = d.transaction('chunks').objectStore('chunks').getAll(range);
+    request.onsuccess = ()=>resolve(request.result);
+    request.onerror = ()=>reject(request.error);
+  });
+}
 export function base64(buffer) {
   const bytes = new Uint8Array(buffer); let str = '';
   for (let i = 0; i < bytes.length; i++) str += String.fromCharCode(bytes[i]);
   return btoa(str);
 }
-let syncing;
+let syncing, syncAgain = false;
 export function sync(api) {
-  if (syncing) return syncing.then(() => sync(api));
+  if (syncing) { syncAgain = true; return syncing; }
   syncing = (async () => {
-    const recordings = await all('recordings');
+    do {
+    syncAgain = false;
+    const recordings = (await all('recordings')).filter(r=>!r.finishedSynced);
     for (const r of recordings) {
       if (!r.finishedSynced) await api('/dictation/create', { id: r.id });
     }
-    const chunks = (await all('chunks')).filter(c => !c.synced).sort((a,b) => a.seq - b.seq);
+    const chunks = (await Promise.all(recordings.map(r=>recordingChunks(r.id)))).flat().filter(c => !c.synced).sort((a,b) => a.seq - b.seq);
     for (const c of chunks) {
       await api('/dictation/chunk', { id: c.id, seq: c.seq, audio: base64(c.pcm) });
       await write('chunks', { ...c, synced: true });
@@ -41,11 +52,31 @@ export function sync(api) {
       await api('/dictation/finish', { id: r.id, count: r.count, trash: r.trash });
       await write('recordings', { ...r, finishedSynced: true });
     }
+    } while (syncAgain);
   })().finally(() => { syncing = null; });
   return syncing;
 }
+let syncTimer, syncListeners = 0;
+const resumeSync = ()=>{if(!document.hidden) void sync(syncApi).catch(()=>{});};
+let syncApi;
+export function subscribeSync(api) {
+  syncApi = api;
+  if (++syncListeners === 1) {
+    resumeSync();
+    syncTimer = setInterval(resumeSync,3000);
+    document.addEventListener('visibilitychange',resumeSync);
+    window.addEventListener('online',resumeSync);
+  }
+  return ()=>{
+    if (--syncListeners === 0) {
+      clearInterval(syncTimer);
+      document.removeEventListener('visibilitychange',resumeSync);
+      window.removeEventListener('online',resumeSync);
+    }
+  };
+}
 export async function downloadLocal(id, extra = []) {
-  const saved = (await all('chunks')).filter(c => c.id === id);
+  const saved = await recordingChunks(id);
   const bySeq = new Map(saved.map(c => [c.seq, c]));
   for (const c of extra) bySeq.set(c.seq, c);
   const chunks = [...bySeq.values()].sort((a,b) => a.seq - b.seq);

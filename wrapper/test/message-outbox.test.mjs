@@ -1,0 +1,110 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createMessageOutbox,deliveryView} from '../ui/message-outbox.mjs';
+import {MessageDelivery} from '../message-outbox-server.mjs';
+const flush=()=>new Promise(r=>setTimeout(r,15));
+const input=(key='12345678-1234-1234-1234-123456789012')=>({clientMessageId:key,id:'chat',localId:'chat',text:'Hallo',attachments:[]});
+const fixture=async(send=async()=>({turn:{id:'turn'}}))=>{
+ let disk, calls=0;
+ const store={state:{},chat:id=>({id}),save:async()=>{disk=structuredClone(store.state);}};
+ const queue=await new MessageDelivery({store,createChat:async()=>({thread:{id:'new-chat'}}),send:async(...args)=>{calls++;return send(...args);}}).init();
+ return {store,queue,disk:()=>disk,calls:()=>calls};
+};
+test('acceptance is durable while slow worker runs independently; duplicate retries dispatch once',async()=>{
+ let finish;const f=await fixture(()=>new Promise(r=>finish=r));
+ const [a,b]=await Promise.all([f.queue.accept(input()),f.queue.accept(input())]);
+ assert.equal(a.status,'accepted');assert.equal(b.clientMessageId,a.clientMessageId);
+ assert.equal(f.disk().messageDelivery.entries.length,1);
+ await flush();assert.equal(f.calls(),1);
+ f.queue.kick();assert.equal(f.calls(),1);
+ finish({turn:{id:'turn'}});await flush();
+ assert.equal(f.queue.get(a.clientMessageId).status,'started');
+ await f.queue.accept(input());assert.equal(f.calls(),1);
+ await assert.rejects(f.queue.accept({...input(),text:'Anderer Inhalt'}),/anderen Inhalt/);
+});
+test('new chat creation is not duplicated when a polling tick occurs during save',async()=>{
+ const f=await fixture();
+ const payload={...input(),id:null,localId:'local',chat:{projectId:'default'}};
+ await f.queue.accept(payload);
+ for(let i=0;i<10;i++){f.queue.kick();await flush();}
+ assert.equal(f.calls(),1);assert.equal(f.queue.get(payload.clientMessageId).chatId,'new-chat');
+});
+test('lost worker acknowledgement and restart never replay an uncertain side effect',async()=>{
+ const f=await fixture(async()=>{throw Error('Verbindung unterbrochen');});
+ await f.queue.accept(input());await flush();
+ assert.equal(f.queue.get(input().clientMessageId).status,'unknown');
+ await f.queue.accept(input());f.queue.kick();await flush();assert.equal(f.calls(),1);
+ f.store.state.messageDelivery.entries[0].phase='dispatching';
+ await new MessageDelivery({store:f.store}).init();
+ assert.equal(f.queue.get(input().clientMessageId).status,'unknown');
+});
+test('storage failure does not acknowledge acceptance or start a worker',async()=>{
+ const f=await fixture();f.store.save=async()=>{throw Error('disk full');};
+ await assert.rejects(f.queue.accept(input()),/disk full/);
+ assert.equal(f.calls(),0);assert.equal(f.queue.entries.length,0);
+});
+test('queued receipts recover, and same-chat messages are serialized',async()=>{
+ const f=await fixture();let finish;
+ f.queue.paused=()=>true;
+ // Simulate a previously saved queued message.
+ f.store.state.messageDelivery.entries.push({clientMessageId:input().clientMessageId,chatId:'chat',status:'accepted',phase:'queued',payload:input()});
+ f.queue.send=()=>new Promise(r=>finish=r);
+ f.queue.paused=()=>false;f.queue.kick();await flush();
+ const two={...input('22345678-1234-1234-1234-123456789012'),text:'Zweite Nachricht'};
+ await f.queue.accept(two);await flush();
+ assert.equal(f.queue.inflight.size,1);
+ finish({turn:{id:'first'}});await flush();
+ f.queue.send=async()=>({turn:{id:'second'}});f.queue.kick();await flush();
+ assert.equal(f.queue.get(two.clientMessageId).turnId,'second');
+});
+test('browser outbox survives a lost HTTP acknowledgement and retries the same identity',async t=>{
+ const memory=new Map();let calls=0;let resolve;
+ const storage={getItem:k=>memory.get(k),setItem:(k,v)=>memory.set(k,v),removeItem:k=>memory.delete(k),keys:()=>[...memory.keys()]};
+ const sender=createMessageOutbox({storage,api:async(url,payload)=>{calls++;if(calls===1)throw Error('offline');return new Promise(r=>resolve=()=>r({...payload,chatId:'chat',status:'accepted'}));}});
+ t.after(()=>sender.stop());sender.start('workspace');sender.enqueue(input());await flush();
+ assert.equal(sender.snapshot()[0].status,'offline');
+ assert.equal(JSON.parse([...memory.values()][0]).entry.text,'Hallo');
+ sender.stop();
+ const second=createMessageOutbox({storage,api:async(url,payload)=>({...payload,chatId:'chat',status:'started',turnId:'turn'})});
+ t.after(()=>second.stop());second.start('workspace');await flush();
+ assert.equal(second.snapshot()[0].clientMessageId,input().clientMessageId);
+ assert.equal(second.snapshot()[0].status,'started');
+});
+test('a quota error preserves the draft and never sends',()=>{
+ let sends=0;const sender=createMessageOutbox({storage:{getItem:()=>null,keys:()=>[],removeItem:()=>{},setItem:()=>{throw Error('quota');}},api:async()=>{sends++;}});
+ sender.start('workspace');
+ assert.throws(()=>sender.enqueue(input()),/lokal nicht gespeichert/);
+ assert.equal(sends,0);assert.equal(sender.snapshot().length,0);sender.stop();
+});
+test('receipts reconcile identical messages once each in the acknowledged turn only',()=>{
+ const item=id=>({id,type:'userMessage',content:[{type:'text',text:'Hallo'}]});
+ const thread={turns:[{id:'old',items:[item('old')]},{id:'turn',items:[item('one'),item('two')]}]};
+ const receipt=id=>({clientMessageId:id,turnId:'turn',status:'started',text:'Hallo'});
+ const turns=deliveryView(thread,[receipt('a'),receipt('b')]);
+ assert.equal(turns.length,2);assert.equal(turns[1].items[0].delivery.clientMessageId,'a');
+ assert.equal(turns[1].items[1].delivery.clientMessageId,'b');assert.equal(turns[0].items[0].delivery,undefined);
+});
+test('native receipt proves dispatch even if the later RPC response is lost',async()=>{
+ let fail;const f=await fixture(()=>new Promise((resolve,reject)=>fail=reject));
+ await f.queue.accept(input());await flush();
+ await f.queue.observe({method:'item/completed',params:{threadId:'chat',turnId:'turn',item:{id:'native',type:'userMessage',content:[{type:'text',text:'Hallo'}]}}});
+ fail(Error('lost response'));await flush();
+ assert.equal(f.queue.get(input().clientMessageId).status,'started');
+ assert.equal(f.queue.get(input().clientMessageId).itemId,'native');
+ await new MessageDelivery({store:f.store}).init();
+ assert.equal(f.queue.get(input().clientMessageId).status,'started');
+});
+test('attachment receipts reconcile with the native attachment text',()=>{
+ const receipt={clientMessageId:'file',turnId:'turn',status:'started',text:'Ansehen',attachments:[{path:'input/file.pdf'}]};
+ const thread={turns:[{id:'turn',items:[{id:'native',type:'userMessage',content:[{type:'text',text:'Ansehen'},{type:'text',text:'Angehängte Datei: /workspace/input/file.pdf\nLies diese Datei für den Auftrag.'}]}]}]};
+ assert.equal(deliveryView(thread,[receipt]).length,1);
+ assert.equal(deliveryView(thread,[receipt])[0].items[0].delivery.clientMessageId,'file');
+});
+test('one tab saving cannot erase another tab pending message',async t=>{
+ const values=new Map(), storage={getItem:k=>values.get(k),setItem:(k,v)=>values.set(k,v),removeItem:k=>values.delete(k),keys:()=>[...values.keys()]};
+ const sender=()=>createMessageOutbox({storage,api:async()=>new Promise(()=>{})});
+ const a=sender(),b=sender();t.after(()=>{a.stop();b.stop();});
+ a.start('workspace');b.start('workspace');
+ a.enqueue(input());b.enqueue(input('22345678-1234-1234-1234-123456789012'));
+ assert.equal(values.size,2);
+});

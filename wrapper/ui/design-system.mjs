@@ -508,7 +508,7 @@ export function renderDesignCSS() {
 export const scrubberSprings = { pointer: { stiffness: 700, damping: 52, mass: .5 }, strength: { stiffness: 260, damping: 30, mass: .6 } };
 
 export const statisticsMotion = {shimmerDuration: 8,duration: .65, stagger: .28, pressDuration: .45, cell: 8, gap: 2, lift: 8};
-export const attentionFanMotion = {blur: 48,wideThreshold: 460, wideSpread: .10, outerRotation: 16, outerDepth: 36, outerScale: .84, wheelThreshold: 48, wheelCooldown: 360, hoverLift: -10, hoverScale: 1.02, rotation: 12, compactRotation: 6, depth: 18, scale: 0.94, spring: {stiffness: 170, damping: 29, mass: 1}, spread: .16, compactSpread: .12, arrivalY: 16, arrivalScale: .90, departureY: -8, departureScale: .96, enterDuration: .28, exitDuration: .18, ease: /** @type {[number, number, number, number]} */ ([.22, 1, .36, 1])};
+export const attentionFanMotion = {blur: 48,wideThreshold: 460, wideSpread: .065, outerRotation: 10, outerDepth: 20, outerScale: .84, wheelThreshold: 48, wheelCooldown: 360, hoverLift: -10, hoverScale: 1.02, rotation: 6, compactRotation: 4, depth: 10, scale: 0.94, spring: {stiffness: 170, damping: 29, mass: 1}, spread: .11, compactSpread: .09, arrivalY: 16, arrivalScale: .90, departureY: -8, departureScale: .96, enterDuration: .28, exitDuration: .18, ease: /** @type {[number, number, number, number]} */ ([.22, 1, .36, 1])};
 
 export const chatHeadingMotion = {character: 90, punctuation: 360, hold: 20000, fade: 900};
 

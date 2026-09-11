@@ -313,3 +313,20 @@ Assistentenidentität. Einrichtung und Bearbeitung verwenden den bestehenden
 Workspace-Einstieg der Seitenleiste und die gemeinsamen Settings-Zeilen im
 Modal; siehe [Workspace-Vertrag](workspaces.md). Es gibt dafür kein zweites
 Identitätsprofil und keine zusätzlichen Anbieterzugänge.
+
+
+## Laden nach Bedarf · Version 1.0.0
+
+Einstellungsinhalte und die Designreferenz werden beim Öffnen geladen. Jede Grenze
+verwendet lazySurface und die vorhandenen Skeletons; Navigation und andere Panels
+bleiben erreichbar. Fehler bieten Wiederholen innerhalb des betroffenen Bereichs.
+Keine neue Einstellung, keine Datenmigration und keine Änderung des Speicherablaufs.
+
+
+## Verbindungsübersicht · Version 1.1.0
+
+Die Oberfläche liest `/integrations?view=settings`: Namen und Werkzeuganzahl bleiben
+erhalten, unbenutzte Eingabeschemas verbleiben beim Worker. Der normale Anschluss
+liefert weiterhin die vollständigen Daten. Der Abruf erfolgt beim Öffnen der
+Verbindungen, Schlüssel oder eines abhängigen Dialogs, nicht beim normalen Chatstart.
+Keine Migration von Zugängen, Werkzeugen oder Einstellungen.

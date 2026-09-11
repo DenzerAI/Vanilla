@@ -115,3 +115,9 @@ GET/HEAD sind die einzigen statischen Zugriffsmethoden. Der HTTP-Vertragstest
 vergleicht die im gebauten HTML referenzierten Dateien mit den tatsächlich
 ausgelieferten Bytes. Der normale Python-Kern behält seinen vorhandenen
 Dateiauslieferungsweg. Diese Korrektur verändert keine Arbeitsdaten.
+
+## Bedarfsgeladene Builds
+App und Bauplan sind getrennte HTML-Einstiege desselben Builds. JavaScript und
+CSS verwenden Inhaltsnamen und werden komprimiert bereitgestellt. Die Prüfung
+verfolgt die tatsächlichen Einstiegspfade statt feste app.js-Dateinamen zu
+verlangen; Quellenfingerprint und Dateiprüfsummen bleiben bindend.

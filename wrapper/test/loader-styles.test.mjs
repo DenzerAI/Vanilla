@@ -4,7 +4,17 @@ import {readFile} from 'node:fs/promises';
 import postcss from 'postcss';
 
 test('built loader utilities paint shapes, lay out particles and hide accessibility labels', async () => {
-  const css = postcss.parse(await readFile(new URL('../dist/app.css', import.meta.url), 'utf8'));
+  const manifest = JSON.parse(await readFile(new URL('../dist/.vite/manifest.json', import.meta.url), 'utf8'));
+  const files = new Set(), visited = new Set();
+  function visit(key) {
+    if (visited.has(key)) return; visited.add(key);
+    const chunk = manifest[key];
+    for (const css of chunk.css || []) files.add(css);
+    for (const dep of chunk.imports || []) visit(dep);
+  }
+  visit('index.html');
+  const entry = {css:[...files]};
+  const css = postcss.parse((await Promise.all(entry.css.map(file => readFile(new URL('../dist/' + file, import.meta.url), 'utf8')))).join('\n'));
   const rules = new Map();
   css.walkRules(rule => {
     for (const selector of rule.selectors) {

@@ -26,6 +26,8 @@ def fixture(tmp_path):
         route = request.url.path
         if route.endswith('/thread'):
             return httpx.Response(200, json={'thread': thread})
+        if route.endswith('/thread/item'):
+            return httpx.Response(200, json={'item': {'id':'tool', 'aggregatedOutput':'Confidential tool result'}})
         if route.endswith('/search'):
             return httpx.Response(200, json={'results': [{**chat, 'snippet': 'Confidential body'}], 'total': 1})
         return httpx.Response(200, json={'chats': [chat, public], 'active': {chat['id']: 'turn-one'}, 'requests': [{'id': 'ask', 'params': {'threadId': chat['id'], 'text': 'Confidential request'}}]})
@@ -40,6 +42,22 @@ def fixture(tmp_path):
 
 def call(client, action, pin=None):
     return client.post('/api/chat/privacy/' + action, json={'id': 'private-example', **({'pin': pin} if pin is not None else {})})
+
+
+def test_deferred_tool_details_keep_chat_privacy_and_never_cache(fixture):
+    app, client, requests = fixture
+    assert call(client, 'setup', '0042').status_code == 200
+    url = '/api/thread/item?id=private-example&turnId=turn-one&itemId=tool'
+    count = len(requests)
+    assert client.get(url).status_code == 423
+    assert len(requests) == count
+    assert call(client, 'unlock', '0042').status_code == 200
+    response = client.get(url)
+    assert response.json()['item']['aggregatedOutput'] == 'Confidential tool result'
+    assert response.headers['cache-control'] == 'no-store'
+    assert client.get(url, headers={'x-chat-client':'b'*64}).status_code == 423
+    assert call(client, 'lock').status_code == 200
+    assert client.get(url).status_code == 423
 
 
 def test_setup_masks_lists_and_enforces_every_chat_route(fixture):

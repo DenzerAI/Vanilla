@@ -7,8 +7,8 @@ import {changeStats} from './activity-detail.mjs';
 import {generatedImageItems} from './tool-content.mjs';
 import {ToolImages, Markdown} from './chat-rich-content.jsx';
 
-export function DiffStats({changes, status}) {
-  const stats = changeStats(changes);
+export function DiffStats({changes, status, stats:providedStats}) {
+  const stats = providedStats || changeStats(changes);
   if (!stats) return null;
   const confirmed = status === 'completed';
   const label = `${confirmed ? 'Änderungsumfang' : 'Übermittelter, nicht bestätigter Änderungsumfang'}: ${stats.added} Zeilen hinzugefügt, ${stats.removed} entfernt${stats.partial ? ', nur vorhandene Diffs' : ''}`;

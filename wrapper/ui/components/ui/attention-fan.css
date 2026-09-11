@@ -1,5 +1,5 @@
 .attention-fan { width: 100%; max-width: 480px; min-width: 0; container-type: inline-size; }
-.attention-fan-track { display: grid; justify-items: center; padding: var(--space-24) 0 var(--space-40); touch-action: pan-y; }
+.attention-fan-track { display: grid; justify-items: center; padding: var(--space-16) 0 var(--space-24); touch-action: pan-y; }
 .attention-fan-card { grid-area: 1 / 1; width: 62%; max-width: 230px; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-8); padding: var(--space-16); box-sizing: border-box; height: 14rem; min-height: 14rem; max-height: 14rem; overflow: hidden; text-align: left; border: 1px solid var(--border); border-radius: var(--radius-panel); background: color-mix(in srgb, var(--surface) 72%, transparent); background-image: var(--popover-glass-sheen); backdrop-filter: blur(var(--fan-blur)) saturate(1.5); -webkit-backdrop-filter: blur(var(--fan-blur)) saturate(1.5); color: var(--text); box-shadow: var(--popover-glass-shadow); position: relative;  transform-origin: center bottom; overflow-wrap: anywhere; }
 .attention-fan-card.is-active { background-color: color-mix(in srgb, var(--surface) 86%, transparent); }
 .attention-fan-kind { display: flex; align-items: center; gap: var(--space-8); font-size: var(--text-caption); color: var(--muted); }
@@ -65,8 +65,8 @@
 /* Loading and loaded cards reserve the same footprint. */
 .attention-fan-navigation { min-height: var(--control-touch); }
 .skeleton-attention { max-width: 480px; }
-.skeleton-attention .attention-fan-card[data-side="-1"] { transform: rotate(-12deg) translateY(12px) scale(.94); }
-.skeleton-attention .attention-fan-card[data-side="1"] { transform: rotate(12deg) translateY(12px) scale(.94); }
+.skeleton-attention .attention-fan-card[data-side="-1"] { transform: rotate(-6deg) translateY(10px) scale(.94); }
+.skeleton-attention .attention-fan-card[data-side="1"] { transform: rotate(6deg) translateY(10px) scale(.94); }
 .skeleton-attention .attention-fan-kind { width: 100%; }
 .skeleton-attention .attention-fan-kind .skeleton-mark { width: 18px; height: 18px; }
 .skeleton-attention .skeleton-lines { width: 100%; }
@@ -76,5 +76,19 @@
 .attention-fan-credit a { color: var(--muted); text-decoration: underline; text-underline-offset: var(--space-2); }
 .skeleton-attention::after { content: ''; display: block; height: var(--space-20); }
 
-.skeleton-attention .attention-fan-card { left: calc(var(--fan-side) * 16cqw); }
+.skeleton-attention .attention-fan-card { left: calc(var(--fan-side) * 11cqw); }
 .attention-fan-navigation > span { min-width: 5ch; text-align: center; font-variant-numeric: tabular-nums; }
+
+/* Reserve the floating controls before laying out the start screen. */
+.chat-workspace .chat-main > .conversation:has(> .chat-start),
+.chat-workspace:has(> .floating-chat-topbar) .chat-main > .conversation:has(> .chat-start) {
+ padding-top: var(--space-64);
+ scroll-padding-top: var(--space-64);
+ mask-image: none;
+ -webkit-mask-image: none;
+}
+@media (max-height: 800px) {
+ .welcome.agent-chat-welcome.chat-start { padding-block: var(--space-8); gap: var(--space-8); }
+ .chat-start-intro { gap: var(--space-8); }
+ .welcome.agent-chat-welcome.chat-start .identity-avatar { width: 56px; height: 56px; }
+}

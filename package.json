@@ -25,7 +25,8 @@
     "worker:login": "node scripts/worker-login.mjs",
     "ui:verify": "node scripts/ui-build.mjs",
     "ui:prepare": "npm --prefix wrapper run design:verify && npm run control:build && npm run ui:verify",
-    "ui:preview": "npm run ui:verify && npm --prefix wrapper run preview:design"
+    "ui:preview": "npm run ui:verify && npm --prefix wrapper run preview:design",
+    "source:work": "python3 scripts/source-work.py"
   },
   "engines": {
     "node": ">=22.12"

@@ -1,5 +1,9 @@
 import {installWeatherRoutes} from './weather.mjs';
 import {installationEnvironment} from './worker-environment.mjs';
+import {browserThread, threadItem} from './thread-view.mjs';
+import {settingsIntegrations} from './connection-summary.mjs';
+import {browserChat} from './chat-summary.mjs';
+import { MessageDelivery as BrowserMessageDelivery } from './message-outbox-server.mjs';
 import {allowanceReader,recordUsage,tokenFields} from './usage.mjs';
 import {readClaudeUsage} from './claude-usage.mjs';
 import {workspaceInstructions} from './workspace-directory.mjs';
@@ -76,6 +80,7 @@ const dataRoot = localPath(process.env.UWE_DATA_ROOT || "data/control");
 const port = localPort(process.env.UWE_PORT || process.env.AGENT_ADAPTER_PORT || 1990);
 const token = process.env.AGENT_INTERNAL_TOKEN || randomBytes(32).toString("hex");
 const store = new Storage(workspace, dataRoot);
+let messageDelivery;
 await store.init();
 const secrets = createSecretStore(store);
 // Profiles belong to this installation. Host accounts and extensions are never adopted.
@@ -165,6 +170,7 @@ const deliveries = await new MessageDelivery({
 }).init();
 
 workers.on("notification", (msg) => {
+  void messageDelivery?.observe(msg).catch(()=>{});
   if (["thread/realtime/closed", "thread/realtime/error"].includes(msg.method)) voiceSessions.delete(msg.params?.threadId);
   eventNames.add(msg.method);
   const p = msg.params || {},
@@ -665,7 +671,7 @@ route("GET", "/api/status", async () => ({
   engine: { name: workers.entry(workers.effectiveWorker).name, connected: workers.connected, version: workers.info?.userAgent || null },
   uptimeSeconds: Math.floor(process.uptime()),
 }));
-route("GET", "/api/bootstrap", async () => {
+route("GET", "/api/bootstrap", async (_body, url) => {
   await store.readIdentity();
   await store.workspaces.refresh();
   const modelsByWorker = await workers.modelLists();
@@ -676,12 +682,12 @@ route("GET", "/api/bootstrap", async () => {
     token,
     identitySource: "soul/IDENTITY.md",
     workspaceToolsVersion: 1,
-    features: { workspaceSpecialization:true, jobCategories:true, firma:true, serviceConnections:true, crmConnections:true, skillLibrary:true, library:true },
+    features: { messageDelivery:true, workspaceSpecialization:true, jobCategories:true, firma:true, serviceConnections:true, crmConnections:true, skillLibrary:true, library:true },
     workspace,
     projects: store.state.projects,
     workspaceWarnings: store.workspaces.warnings,
     settings: store.state.settings,
-    chats: store.state.chats.filter(c=>!c.channelOnly),
+    chats: store.state.chats.filter(c=>!c.channelOnly).map(c=>browserChat(c,url.searchParams.get("view")==="sidebar")),
     models: modelCache,
     modelsByWorker,
     workers: workerState.workers,
@@ -769,7 +775,7 @@ route("POST", "/api/planner/chat", async b => {
   if (!item || item.id !== b.id) throw new Error("Bericht nicht verfügbar.");
   return openBriefingChat(item);
 });
-route("POST", "/api/chats", async (b) => {
+async function createUiChat(b) {
   const policy = runMode(b.mode);
   const projectId = b.projectId || "default";
   return newChat({
@@ -782,7 +788,8 @@ route("POST", "/api/chats", async (b) => {
     projectId,
     cwd: await store.projectRoot(projectId),
   });
-});
+}
+route("POST", "/api/chats", createUiChat);
 route("POST", "/api/projects/save", async (b) => {
   const project = await store.saveProject({ id: b.id, name: b.name, icon: b.icon, color: b.color, revision:b.revision });
   emit({ method: "wrapper/projects" });
@@ -796,8 +803,8 @@ route("GET", "/api/search", async (b, u) => searchConversations({
   workspace, chats:store.state.chats, projects:store.state.projects, threadCache,
   query:u.searchParams.get("q") || "",
 }));
-route("GET", "/api/chats", async () => ({
-  chats: store.state.chats.filter(c=>!c.channelOnly),
+route("GET", "/api/chats", async (_body, url) => ({
+  chats: store.state.chats.filter(c=>!c.channelOnly).map(c=>browserChat(c,url.searchParams.get("view")==="sidebar")),
   active: Object.fromEntries(active),
 }));
 route("GET", "/api/diagnostics", async () => ({
@@ -807,8 +814,7 @@ route("GET", "/api/diagnostics", async () => ({
     method: r.method,
   })),
 }));
-route("GET", "/api/thread", async (b, u) => {
-  const id = u.searchParams.get("id");
+async function readThread(id) {
   store.chat(id);
   try {
     // Viewing history must not acquire a writer or block another window.
@@ -844,6 +850,17 @@ route("GET", "/api/thread", async (b, u) => {
     if (cached) return { thread: cached };
     throw e;
   }
+
+}
+route("GET", "/api/thread", async (b, u) => {
+  const result = await readThread(u.searchParams.get("id"));
+  return u.searchParams.get("view") === "chat" ? {...result,thread:browserThread(result.thread)} : result;
+});
+route("GET", "/api/thread/item", async (b, u) => {
+  const id = u.searchParams.get("id");
+  store.chat(id);
+  const thread = threadCache.get(id) || (await readThread(id)).thread;
+  return threadItem(mergeTools(thread,toolsByThread.get(id)),u.searchParams.get("turnId"),u.searchParams.get("itemId"));
 });
 route("POST", "/api/chat/speed", async b => {
   const c = store.chat(b.id);
@@ -954,6 +971,15 @@ route("POST", "/api/messages/edit", async b => {
   store.chat(b.id);
   return { message: await deliveries.edit(b.id, b.messageId, b.revision, b.text, b.remove === true) };
 });
+messageDelivery = await new BrowserMessageDelivery({
+  store, createChat:createUiChat, send:sendTurn, emit,
+  paused:()=>restartGate.restarting, locked:id=>turnLocks.has(id),
+}).init();
+route("POST", "/api/delivery", b => messageDelivery.accept(b));
+route("GET", "/api/delivery", (b,u) => messageDelivery.get(u.searchParams.get("clientMessageId")));
+route("GET", "/api/deliveries", (b,u) => ({entries:messageDelivery.list(u.searchParams.get("id"))}));
+setInterval(()=>messageDelivery.kick(),500).unref();
+
 route("POST", "/api/stop", async (b) => {
   await ensure(b.id);
   for (let attempt = 0; attempt < 15; attempt++) {
@@ -1160,11 +1186,14 @@ const mcpSnapshot = createMcpSnapshot({load:async workerId=>{
   } while(cursor && data.length<100);
   return data;
 }});
-route("GET", "/api/integrations", async () => ({
+route("GET", "/api/integrations", async (_body, url) => {
+  const result = {
   connections: store.state.connections.filter(c=>c.kind!=='service').concat(services.list()),
   secrets: await secrets.list(),
   ...mcpSnapshot(workers.effectiveWorker),
-}));
+  };
+  return url.searchParams.get('view') === 'settings' ? settingsIntegrations(result) : result;
+});
 route("GET", "/api/computer-use", async (_b, url) => {
   const workerId = url.searchParams.get("worker") || workers.effectiveWorker;
   const entry = workers.entry(workerId);

@@ -265,3 +265,9 @@ Profilweg wie der ACP-Anschluss über `installationEnvironment`. Fremde
 Host-Anmeldungen, Provider-Schlüssel und Proxyzugänge werden auch bei diesem
 separaten SDK-Kontrollprozess nicht vererbt. Vorhandene native Einstellungen und
 Memory-Dateien innerhalb des eigenen Profils bleiben erhalten.
+
+## Geprüfte Übergabe im gemeinsamen Stand
+Der Workerstart bleibt an den bestehenden Turn-Lock gebunden. Die neue
+Browser-Outbox und ältere gespeicherte Nachrichten verwenden denselben
+Workeranschluss; unklare Annahmen werden nicht blind wiederholt.
+Thread-Zusammenfassungen für den Browser kürzen keinen nativen Kontext.

@@ -149,15 +149,20 @@
         "scripts/source-sync.py",
         "scripts/verify-design-adoption.mjs",
         "scripts/verify-source-adoption.mjs",
-        "system/source-policy.json"
+        "system/source-policy.json",
+        "core/source_work.py",
+        "scripts/source-work.py"
       ],
-      "entrypoints": [],
+      "entrypoints": [
+        "GET /api/system/source-work"
+      ],
       "dependencies": [
         "platform"
       ],
       "verification": [
         "core/tests/test_source_privacy.py",
-        "test/company-base.test.mjs"
+        "test/company-base.test.mjs",
+        "core/tests/test_source_work.py"
       ],
       "status": {
         "endpoint": "GET /api/system/modules",
@@ -165,8 +170,8 @@
       },
       "limits": "Lokales Prüfergebnis über npm run source:check; HTTP bestätigt nur den Katalog.",
       "command": "node system/capabilities.mjs",
-      "version": 3,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der Firmenquellenkatalog ergänzt nur frische Markdown-Referenzen; keine Firmeninhalte werden kopiert."
+      "version": 4,
+      "migration": "Additives lokales source-work/state.json mit Format 1. Ohne lokale Einrichtung inaktiv. Arbeitskopien und Commits bleiben bei Abschaltung erhalten; unterbrochene Prüfungen werden blockiert, nicht automatisch wiederholt."
     },
     {
       "id": "inbox",
@@ -239,12 +244,15 @@
       "sources": [
         "wrapper/briefing-chat.mjs",
         "wrapper/chat-archive.mjs",
+        "wrapper/chat-fork.mjs",
         "wrapper/chat-handoff.mjs",
         "wrapper/chat-read-state.mjs",
         "wrapper/chat-style.mjs",
         "wrapper/chat-title.mjs",
         "wrapper/message-delivery.mjs",
+        "wrapper/message-outbox-server.mjs",
         "wrapper/server.mjs",
+        "wrapper/ui/activity-detail.mjs",
         "wrapper/ui/app.jsx",
         "wrapper/ui/chat-activity.jsx",
         "wrapper/ui/chat-artifacts.jsx",
@@ -252,6 +260,7 @@
         "wrapper/ui/chat-events.mjs",
         "wrapper/ui/chat-greetings.mjs",
         "wrapper/ui/chat-layout.mjs",
+        "wrapper/ui/chat-menu.mjs",
         "wrapper/ui/chat-presentation.mjs",
         "wrapper/ui/chat-rich-content.jsx",
         "wrapper/ui/chat-rich-content.mjs",
@@ -261,13 +270,12 @@
         "wrapper/ui/chat-start-heading.tsx",
         "wrapper/ui/chat-start-preferences.tsx",
         "wrapper/ui/chat-start.tsx",
-        "wrapper/ui/message-submit.mjs",
-        "wrapper/chat-fork.mjs",
-        "wrapper/ui/activity-detail.mjs",
-        "wrapper/ui/chat-menu.mjs",
         "wrapper/ui/composer-focus.tsx",
         "wrapper/ui/composer-question.tsx",
+        "wrapper/ui/delivery-checks.tsx",
         "wrapper/ui/live-answer-cards-preview.tsx",
+        "wrapper/ui/message-outbox.mjs",
+        "wrapper/ui/message-submit.mjs",
         "wrapper/ui/pane-attention.mjs",
         "wrapper/ui/pane-persistence.mjs",
         "wrapper/ui/reply-card-preview.tsx",
@@ -279,6 +287,8 @@
         "GET /api/chats",
         "GET /api/computer-use",
         "GET /api/core/context-routes",
+        "GET /api/deliveries",
+        "GET /api/delivery",
         "GET /api/diagnostics",
         "GET /api/events",
         "GET /api/messages",
@@ -286,6 +296,7 @@
         "GET /api/search",
         "GET /api/status",
         "GET /api/thread",
+        "GET /api/thread/item",
         "GET /api/updates",
         "GET /api/usage",
         "POST /api/chat/provider",
@@ -293,6 +304,7 @@
         "POST /api/chat/speed",
         "POST /api/chat/update",
         "POST /api/chats",
+        "POST /api/delivery",
         "POST /api/engine/reconnect",
         "POST /api/fork",
         "POST /api/messages",
@@ -321,14 +333,17 @@
         "wrapper/test/chat-start.test.mjs",
         "wrapper/test/composer-dictation.test.mjs",
         "wrapper/test/pane-persistence.test.mjs",
-        "wrapper/test/artifact-content.test.mjs"
+        "wrapper/test/artifact-content.test.mjs",
+        "wrapper/test/message-outbox-http.test.mjs",
+        "wrapper/test/message-outbox.test.mjs",
+        "wrapper/test/thread-view.test.mjs"
       ],
       "status": {
         "endpoint": "GET /api/workers",
         "meaning": "Eingerichtet, verbunden und authentifiziert getrennt auswerten."
       },
       "limits": "Eingerichtet, verbunden und authentifiziert getrennt auswerten.",
-      "version": 5,
+      "version": 6,
       "migration": "Bestehende Chat-IDs, Entwürfe und native Sitzungen erhalten. Forkfamilie und Statistikfelder sind additiv; Fork-Zähler bei Rückkehr nicht aus alten Kopien erraten. Nachrichtenkennungen und persistente Übergabebelege bleiben führend. Native Rückfragen vor Adapterwechsel beantworten oder stoppen; UI-Präferenzen sind browserlokal. workspaceOnboarding ist ein optionaler Verweis auf den einzigen Einrichtungschat je Workspace; Forks übernehmen ihn nicht. Einrichtung verwendet die bestehende Nachrichtenübergabe. Der separate Adapter liefert gebaute Assets direkt aus dist aus und meldet fehlende Dateien mit 404 statt HTML."
     },
     {
@@ -831,7 +846,7 @@
         "meaning": "Prozess, vollständige lokale Basis und tatsächliche Worker-Ausführbarkeit getrennt prüfen; Kundenanschlüsse werden nicht pauschal als bereit erklärt."
       },
       "limits": "Betriebszustand, Login, Backup und Restore-Nachweis separat prüfen.",
-      "version": 2,
+      "version": 3,
       "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten."
     },
     {
@@ -857,6 +872,7 @@
         "core/config.py",
         "core/database.py",
         "core/events.py",
+        "core/frontend.py",
         "core/heartbeat.py",
         "core/isolation.py",
         "core/models.py",
@@ -870,6 +886,8 @@
         "system/capabilities.mjs",
         "wrapper/agent-files.mjs",
         "wrapper/build.mjs",
+        "wrapper/chat-summary.mjs",
+        "wrapper/connection-summary.mjs",
         "wrapper/core-client.mjs",
         "wrapper/git-review.mjs",
         "wrapper/html-preview.mjs",
@@ -886,6 +904,7 @@
         "wrapper/search.mjs",
         "wrapper/storage.mjs",
         "wrapper/thread-loading.mjs",
+        "wrapper/thread-view.mjs",
         "wrapper/tool-events.mjs",
         "wrapper/ui/agent-avatars.mjs",
         "wrapper/ui/agent-files.jsx",
@@ -909,10 +928,12 @@
         "wrapper/ui/components/ui/glass-button.tsx",
         "wrapper/ui/components/ui/loader-utils/ease.ts",
         "wrapper/ui/components/ui/loader.tsx",
+        "wrapper/ui/components/ui/pixel-field.mjs",
         "wrapper/ui/components/ui/theme-toggle-demo.tsx",
         "wrapper/ui/components/ui/theme-toggle.tsx",
         "wrapper/ui/connections-page.jsx",
         "wrapper/ui/copy-button.tsx",
+        "wrapper/ui/deferred-item.jsx",
         "wrapper/ui/design-reference.jsx",
         "wrapper/ui/design-system.mjs",
         "wrapper/ui/dictation-worklet.js",
@@ -927,13 +948,16 @@
         "wrapper/ui/icon-motion.tsx",
         "wrapper/ui/icon-variants.jsx",
         "wrapper/ui/icons.jsx",
+        "wrapper/ui/lazy-surface.tsx",
         "wrapper/ui/lib/utils.ts",
+        "wrapper/ui/live-action.ts",
         "wrapper/ui/loader-options.mjs",
         "wrapper/ui/loader-settings.tsx",
         "wrapper/ui/main.tsx",
         "wrapper/ui/modal.jsx",
         "wrapper/ui/model-picker.jsx",
         "wrapper/ui/motion-glyph.tsx",
+        "wrapper/ui/page-heading.tsx",
         "wrapper/ui/panel-light.tsx",
         "wrapper/ui/pdf-preview.jsx",
         "wrapper/ui/restart-recovery.mjs",
@@ -941,22 +965,23 @@
         "wrapper/ui/search-match.mjs",
         "wrapper/ui/settings-patterns.jsx",
         "wrapper/ui/settings-row.jsx",
+        "wrapper/ui/shared-reads.mjs",
         "wrapper/ui/skeleton.tsx",
+        "wrapper/ui/start-data-loader.mjs",
         "wrapper/ui/system-notice.jsx",
         "wrapper/ui/system-search-data.mjs",
         "wrapper/ui/system-search.tsx",
         "wrapper/ui/system-settings.tsx",
+        "wrapper/ui/thread-update.mjs",
         "wrapper/ui/tool-content.mjs",
+        "wrapper/ui/vanilla-wordmark.tsx",
         "wrapper/ui/voice-visual.tsx",
         "wrapper/ui/voice.jsx",
         "wrapper/ui/welcome-particles.tsx",
         "wrapper/ui/welcome-suggestions.tsx",
         "wrapper/ui/workspace-review.jsx",
         "wrapper/updates.mjs",
-        "wrapper/vite.config.ts",
-        "wrapper/ui/page-heading.tsx",
-        "wrapper/ui/components/ui/pixel-field.mjs",
-        "wrapper/ui/vanilla-wordmark.tsx"
+        "wrapper/vite.config.ts"
       ],
       "entrypoints": [
         "GET /internal/storage",
@@ -977,7 +1002,7 @@
         "meaning": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen."
       },
       "limits": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen.",
-      "version": 3,
+      "version": 4,
       "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der bestehende Projektindex erhält abgeleitete Workspace-Metadaten. Jobkategorien werden aus dem optionalen Manifestfeld gelesen; keine Verschiebung von Dateien."
     },
     {

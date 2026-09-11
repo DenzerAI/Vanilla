@@ -4,9 +4,9 @@ import {formatStat} from './statistics-data.mjs';
 import './usage.css';
 export function useAllowances(api:any,enabled=true){
  const [data,setData]=useState<any>(null);
- useEffect(()=>{if(!api||!enabled)return;let alive=true,pending=false;
- const load=async()=>{if(pending||document.hidden)return;pending=true;try{const result=await api('/usage/allowances');if(alive)setData(result);}catch{if(alive)setData((old:any)=>({...old,error:true}));}finally{pending=false;}};
- void load();const timer=setInterval(load,60000);const refresh=()=>void load();document.addEventListener('visibilitychange',refresh);window.addEventListener('focus',refresh);
+ useEffect(()=>{if(!api||!enabled)return;let alive=true,pending=false,lastLoad=0;
+ const load=async()=>{if(pending||document.hidden)return;pending=true;try{const result=await api('/usage/allowances');if(alive)setData(result);}catch{if(alive)setData((old:any)=>({...old,error:true}));}finally{pending=false;lastLoad=Date.now();}};
+ void load();const timer=setInterval(load,60000);const refresh=()=>{if(Date.now()-lastLoad>15000)void load();};document.addEventListener('visibilitychange',refresh);window.addEventListener('focus',refresh);
  return()=>{alive=false;clearInterval(timer);document.removeEventListener('visibilitychange',refresh);window.removeEventListener('focus',refresh);};},[api,enabled]);return data;
 }
 function resetLabel(value:number|null,now:number){

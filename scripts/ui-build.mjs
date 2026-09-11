@@ -42,8 +42,16 @@ export async function verifyUiBuild(root = repositoryRoot) {
   catch { throw Error('UI-Build fehlt. npm run control:build ausführen.'); }
   if (manifest.format !== 1 || !manifest.files || manifest.uiVersion !== await uiSourceVersion(root))
     throw Error('UI-Build passt nicht zum aktuellen Quellcode. npm run control:build ausführen.');
-  for (const required of ['index.html', 'app.js', 'app.css', 'blueprint.html', 'blueprint.js'])
+  for (const required of ['index.html', 'blueprint.html'])
     if (!manifest.files[required]) throw Error('UI-Build ist unvollständig: '+required);
+  for (const page of ['index.html', 'blueprint.html']) {
+    let html;
+    try { html = await readFile(path.join(directory, page), 'utf8'); }
+    catch { throw Error('UI-Builddatei fehlt: '+page); }
+    const references = [...html.matchAll(/(?:src|href)="([^"]+)"/g)].map(m => m[1].replace(/^\//, '')).filter(n => /\.(?:js|css)$/.test(n));
+    if (!references.some(n => n.endsWith('.js')) || references.some(n => !manifest.files[n]))
+      throw Error('UI-Build ist unvollständig, Einstieg verweist auf fehlende Assets: '+page);
+  }
   for (const [name, expected] of Object.entries(manifest.files)) {
     if (name.includes('\\') || path.posix.isAbsolute(name) || name.split('/').some(part=>!part || part==='.' || part==='..'))
       throw Error('Ungültiger Dateipfad im UI-Build.');

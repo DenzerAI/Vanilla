@@ -151,3 +151,45 @@ Anwendungsquellcode; lokale Buildausgaben bleiben ausgeschlossen.
 Bereits geprüfte TrueType-Schriften (`.ttf`) verwenden dieselbe bindende
 SHA-256-Prüfung wie WOFF2. Neue oder veränderte Fontdateien ohne passenden
 Eintrag in reviewedBinaryAssets bleiben gesperrt.
+
+## Automatischer Abschluss lokaler Bauaufträge
+
+Version 1. Die vorhandene Kernwartung prüft alle 15 Sekunden eine ausdrücklich
+eingerichtete lokale Übergabewarteschlange. Keine zusätzliche Dienstinstallation.
+Einmalig `npm run source:work -- configure --repository ENTWICKLUNGSORDNER
+--live-root APPORDNER` im zuständigen Installationskontext ausführen. Beide Ordner
+müssen getrennt sein; der Entwicklungszweig muss sauber und vollständig sein.
+Die lokale Konfiguration liegt unter data/control/source-work, niemals in Git.
+
+Vor einem Bauauftrag: `npm run source:work -- begin ARBEITSNAME --session CHAT_ID`.
+Der Rückgabewert enthält Kennung und isolierten Arbeitsordner. Nur dort Quellcode
+bearbeiten. Nach tatsächlichem Abschluss `npm run source:work -- ready KENNUNG`
+ausführen und in dieser Arbeitskopie nicht weiterschreiben. Ein Chatabschluss
+allein beweist keine fertige Umsetzung und reiht keinen beliebigen Ordner ein.
+`--data` vor dem Unterbefehl legt bei Verwendung aus einem anderen Checkout die
+bereits eingerichtete lokale Warteschlange fest.
+
+Die laufende Kernwartung wartet auf ruhende Chats und Aufträge. Sie verarbeitet
+genau einen angemeldeten Stand gleichzeitig: unveränderten Inhalt prüfen, mit
+regulären Datenschutz-/Modul-/Design-Hooks committen, in einer neuen Kandidatenkopie
+mit dem aktuellen Entwicklungsstand zusammenführen, vollständige Node-/Python-
+Tests, Typecheck und UI-Buildprüfung ausführen. Erst dann übernimmt der geschützte
+Quellmerge den exakten Kandidatencommit in den weiterhin unveränderten Zielzweig.
+Abhängigkeiten werden aus Lockdateien installiert; Provider- und Runtime-Variablen
+erreichen weder Installation noch Tests. Private Arbeitsdateien bleiben außerhalb
+der Git-Quellpfade.
+
+Status: working, queued, checking, integrated, blocked. Ein Fehler erhält Grund
+und lokales Protokoll; Änderungen und Kandidaten bleiben erhalten. Konflikte
+werden niemals mit einer pauschalen Seitenwahl übergangen. Ein unterbrochener
+Prüflauf wird als blockiert erkannt. Vor erneuter Bereitmeldung eigene vorgemerkte
+Änderungen prüfen und abschließen. Spätere Dateiänderungen entwerten die Anmeldung.
+GET /api/system/source-work und `npm run source:work -- status` liefern denselben
+Status. Die bestehenden Betriebsanzeigen führen das Wartungsergebnis mit.
+
+`integrated` bedeutet zusammengeführt und automatisch geprüft, ausdrücklich noch
+nicht live. Veröffentlichung, Geräte-/Browserabnahmen und Aktivierung verwenden
+weiter UPDATE.md und den vorhandenen Update-/Hostweg. Dieser Dienst installiert
+keine ungeprüften Änderungen in die laufende App und führt keine Pushes aus.
+Abschalten: bei ruhender Wartung die lokale Konfiguration sichern und entfernen.
+Die Git-Arbeitskopien und die bereits gespeicherten Commits bleiben erhalten.

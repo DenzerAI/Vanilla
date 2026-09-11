@@ -61,3 +61,8 @@ zwischen Tabs synchronisiert; Speicherfehler werden angezeigt. Keine Migration
 bestehender Audio- oder Serverdaten. Entfernen des neuen Schlüssels stellt die
 plattformabhängige Voreinstellung wieder her. Systemtasten können vom Betriebssystem
 abgefangen werden; rechte Strg bleibt als Alternative auswählbar.
+
+## Gemeinsamer integrierter Stand
+Die Browserablage lädt nur offene Diktate und deren Chunks. Geteilte Abrufe und
+Hintergrundversand behalten Wiederherstellung und ursprüngliche Audiosegmente.
+Prüfung: dictation-storage.test.mjs und composer-dictation.test.mjs.

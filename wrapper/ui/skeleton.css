@@ -21,11 +21,11 @@
 .skeleton > .skeleton-shapes.settings-group { display:block; }
 .skeleton-document .skeleton-paragraph { width:100%; font-size:var(--text-control); line-height:var(--leading-normal); }
 .skeleton-chat > .skeleton-shapes { display:block; }
+.skeleton-shell .skeleton-chat > .skeleton-shapes { animation:none; }
 .skeleton-chat .skeleton-user { width:min(70%, 48ch); }
 .skeleton-chat .user-actions > .skeleton-bar { width:64px; font-size:var(--text-caption); }
-.skeleton-author { display:flex; gap:var(--space-8); align-items:center; margin-bottom:var(--space-12); }
-.skeleton-author > .skeleton-mark { width:24px; height:24px; border-radius:var(--radius-pill); }
-.skeleton-author > .skeleton-bar { width:120px; font-size:var(--text-small); }
+.skeleton-author-name { width: 88px; }
+.skeleton-author-time { width: 64px; }
 .skeleton[data-layout="jobs"] > .skeleton-shapes { display:block; }
 .skeleton .job-info .skeleton-bar { font-size:inherit; margin-top:0; }
 .skeleton .job-info .skeleton-lines p { font-size:var(--text-small); }
@@ -49,10 +49,10 @@
 .skeleton-shell > .skeleton-shapes { height:100%; grid-template-columns:268px minmax(0,1fr); gap:0; }
 .skeleton-sidebar { background:var(--surface); padding:var(--space-24); display:flex; flex-direction:column; gap:var(--space-32); }
 .skeleton-sidebar .skeleton-lines { flex:none; }
-.skeleton-main { display:flex; flex-direction:column; min-width:0; padding:var(--space-32); gap:var(--space-32); }
-.skeleton-main > .skeleton-short { max-width:160px; }
-.skeleton-shell-body { width:100%; max-width:760px; margin:auto; display:grid; gap:var(--space-32); }
-.skeleton-composer { height:56px; width:100%; max-width:760px; margin-inline:auto; border-radius:var(--radius-control); }
+/* The shell uses the same panel container, reading column and floating input. */
+.skeleton-main > .conversation { padding-top: calc(var(--space-64) + var(--space-48)); }
+.skeleton-main .composer-options > .skeleton-bar { width:120px; font-size:var(--text-caption); }
+.skeleton-composer { min-height:52px; width:100%; border-radius:var(--radius-pill); }
 .file-media-loading { position:relative; min-width:0; }
 .file-media-loading > .skeleton { position:absolute; inset:0; }
 .file-media-loading[data-pending="true"] { min-height:160px; }
@@ -63,6 +63,5 @@
 @media (max-width:650px) {
   .skeleton-shell > .skeleton-shapes { grid-template-columns:minmax(0,1fr); }
   .skeleton-sidebar { display:none; }
-  .skeleton-main { padding:var(--space-24); }
   .skeleton-control { width:56px; }
 }

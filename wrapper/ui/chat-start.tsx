@@ -1,6 +1,5 @@
 import {useAllowances,AllowanceDashboard} from './usage';
 import {useStatisticsData} from './statistics-client';
-import {Skeleton} from './skeleton';
 import {useChatStartData} from './chat-start-data';
 import {useMemo,useState,useCallback,useRef} from 'react';
 import {AttentionFan,type AttentionItem} from './components/ui/attention-fan';
@@ -10,10 +9,10 @@ import {Avatar} from './avatar.jsx';
 export function ChatStart({greeting,profile,requests,notifications,chats,projectId,onOpen,error,composing=false,api,routines=false,revision=0,visible=true}:{greeting:string;profile:any;requests:any[];notifications:any[];chats:any[];projectId:string;onOpen:(item:AttentionItem)=>Promise<void>|void;error?:string;composing?:boolean;api?:any;routines?:boolean;revision?:number;visible?:boolean}) {
   const allowances=useAllowances(api,visible);
   const [showAllowances,setShowAllowances]=useState(false);
-  const data=useChatStartData(api,routines,revision);
-  const statistics=useStatisticsData(api,projectId,JSON.stringify(chats.map(c=>[c.id,c.updatedAt,c.lastCompletedTurnId])));
+  const data=useChatStartData(api,routines,revision,visible);
+  const statistics=useStatisticsData(api,projectId,JSON.stringify(chats.map(c=>[c.id,c.updatedAt,c.lastCompletedTurnId])),false,visible);
   const firstCard=useRef('');
-  const items=useMemo(()=>chatStartFeed({requests,notifications,chats,projectId,...data,includeWeather:true,includeStatistics:true,statistics,includeAllowances:true,allowances}),[requests,notifications,chats,projectId,data,statistics,allowances]);
+  const items=useMemo(()=>chatStartFeed({requests,notifications,chats,projectId,...data,includeWeather:!data.profileLoading,includeCalendar:true,includeStatistics:true,statistics,includeAllowances:true,allowances}),[requests,notifications,chats,projectId,data,statistics,allowances]);
   const [selected,setSelected]=useState(''),[busy,setBusy]=useState(false),[failure,setFailure]=useState(''),[interacting,setInteracting]=useState(false);
   if(data.loaded&&!firstCard.current)firstCard.current=items[0]?.id||'';
   const choose=useCallback((item:AttentionItem)=>setSelected(item.id),[]);
@@ -24,7 +23,7 @@ export function ChatStart({greeting,profile,requests,notifications,chats,project
     <Avatar avatar={profile.avatar} color={profile.avatarColor} large/>
     <ChatStartHeading paused={composing || busy} pauseAdvance={interacting} texts={headlinesForItem(items.find(item=>item.id===selected) || items[0],greeting,(!selected||selected===firstCard.current)?data.userProfile.name:'')} reduceMotion={profile.reduceMotion==='on'}/>
     </div>
-    {api&&!data.loaded?<Skeleton variant="attention" label="Deine Inhalte werden geladen …"/>:<AttentionFan api={api} items={items} onOpen={open} onActiveChange={choose} reduceMotion={profile.reduceMotion==='on'} disabled={busy}/>}
+    <AttentionFan api={api} items={items} onOpen={open} onActiveChange={choose} reduceMotion={profile.reduceMotion==='on'} disabled={busy}/>
     {(failure || error || data.error)&&<p role="alert" className="chat-start-error">{failure || data.error || 'Neue Hinweise konnten gerade nicht geladen werden. Die Glocke bleibt erreichbar.'}</p>}
   </div>;
 }

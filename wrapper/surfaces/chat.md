@@ -16,12 +16,17 @@ Projekte werden über das Plus an „Workspace“ ergänzt; Chats über das Plus
 
 ## Aufmerksamkeit in der Chatliste
 
-Mehrere sichtbare Chatpanels gelten nicht automatisch als gelesen. Erst eine
-bewusste Aktivierung der gesamten Chat-Pane per Pointer oder Tastaturfokus darin
-wählt die Pane und bestätigt Aufmerksamkeit für deren Chat. Nur diese aktive Pane
-darf die neueste abgeschlossene Antwort am Ende des sichtbaren Verlaufs nach
-der vorhandenen Leseverzögerung bestätigen. Fensterhintergrund, andere aktive
-Pane, Chatwechsel und Wiederherstellung verhindern ungewollte Lesebestätigungen.
+Mehrere sichtbare Chatpanels gelten nicht automatisch als gelesen. Das ausgewählte
+sichtbare Panel im Vordergrund bestätigt seine neueste abgeschlossene Antwort,
+sobald der zugehörige Verlauf geladen und nach dem Skeleton gerendert ist.
+Zwei abbrechbare Animationframes erlauben einen Browser-Paint; die bisherige
+700-ms-Verzögerung, Composeraktivierung und Scrollposition entfallen als Bedingungen.
+Chatwechsel, laufende Antwort, Skeleton, fremde Verlaufs-ID, Fensterhintergrund
+und inaktive Panels verhindern die Bestätigung. Das wiederhergestellte aktive
+Panel folgt derselben Regel. Der vorhandene `/chat/read`-Anschluss speichert weiterhin
+nur die konkrete abgeschlossene Turn-ID. Nach Erfolg blendet `.chat-complete` über
+`motion-feedback-duration` aus; reduzierte Bewegung entfernt den Haken direkt.
+Keine neuen Datenfelder oder Migration; Rückkehr betrifft nur die Leselogik.
 Klicks auf Nachrichten, Freiflächen und Bedienelemente aktivieren die zugehörige
 Pane und deren Composer-Umrandung. Dabei wird das Eingabefeld nicht fokussiert
 und keine Bildschirmtastatur geöffnet; dafür bleibt der direkte Eingabeklick.
@@ -40,8 +45,7 @@ Die Chatliste gewichtet Aufmerksamkeit über die Textfarbe: gelesene, ruhende
 Chats in `muted`, laufende und ungelesene Chats sowie Fehler/Unterbrechungen
 in `text`. Maßgeblich ist der vorhandene beschriftete `.chat-state`, auch wenn
 sein Symbol bei Hover oder Touch dem Aktionsmenü weicht. Die Auswahlfläche
-bleibt unabhängig vom Lesestatus; Sortierung und Lesebestätigung bleiben
-unverändert. Der grüne Ungelesen-Haken behält seine Form und Farbe, ergänzt
+bleibt unabhängig vom Lesestatus; die Sortierung bleibt unverändert. Der grüne Ungelesen-Haken behält seine Form und Farbe, ergänzt
 um 2 SVG-Einheiten Kontur. AppLoader und reduzierte Bewegung bleiben erhalten.
 Keine neuen gespeicherten Zustände und keine Datenmigration.
 
@@ -102,7 +106,7 @@ Computer-Use-Schritte gehören in die bestehende Werkzeuggruppe. Sie zeigen den 
 
 Unter der Eingabe gibt es keinen Computer-Use-Einstieg und keine Werkzeugkatalog-Prüfung. Tatsächliche Computer-Use-Aktivität bleibt in den Werkzeuggruppen sichtbar. Bildschirm-/App-Freigaben bleiben beim ausführenden Worker und dessen Computer-Use-Anschluss.
 
-Das Hauptmenü zeigt Inbox, Aufträge und die verfügbare Bibliothek; darunter bleiben Projekte und Chats. Verbindungen und Skills werden über die Einstellungen im Agentenmenü erreicht. Modul-Platzhalter und reservierte Leerzeilen entfallen. Symbole, Textkanten, Abstände und Flächengestaltung bleiben erhalten.
+Das Hauptmenü zeigt Inbox, Aufträge, die verfügbare Bibliothek und Firma in dieser Reihenfolge; darunter bleiben Workspaces und Chats. Firma verwendet dieselbe nav-item-Zeile ohne eigene Abschnittsüberschrift. Verbindungen und Skills werden über die Einstellungen im Agentenmenü erreicht. Modul-Platzhalter und reservierte Leerzeilen entfallen. Symbole, Textkanten, Abstände und Flächengestaltung bleiben erhalten.
 
 Derselbe Avatar steht bei den Antwortsignaturen. Nach dem Speichern des Profils übernehmen alle offenen Panels Namen und Avatar über das gemeinsame Identitätsereignis.
 
@@ -636,7 +640,7 @@ liefert die gekürzte Vorschau, keine Werkzeuge oder Zwischenmeldungen. Fehlende
 Vorschau bleibt ausdrücklich erkennbar; verspätete Antworten überschreiben keinen
 neueren Turn. Klick öffnet den zuständigen Chat und springt zum Antwortanfang,
 auch bei bereits geöffnetem Panel. Gelesen wird weiterhin erst bei bewusster
-Auswahl und Leseposition am Ende bestätigt, niemals durch die Kartenvorschau.
+Auswahl und vollständig geladenem, abgeschlossenem Verlauf im aktiven Chat bestätigt, niemals durch die Kartenvorschau.
 
 Unser Design enthält ein lokales Live-Beispiel zum Hinzufügen, Entfernen und
 Zurücksetzen. Beispiele verändern keine Chats. Keine neue Datenhaltung oder
@@ -968,3 +972,130 @@ Assistentenname und Firmenbasis bleiben gemeinsam. Wiederholte Startanfragen
 Quelle, Revisionsschutz, Fehler und Migration führt
 [workspaces.md](workspaces.md). Bestehende Scroll- und native Sitzungsregeln
 bleiben eigenständig und sind durch diese Erweiterung nicht neu abgenommen.
+
+Gesprächs-Skeletons stehen in derselben `message-column` wie geladene Turns.
+Dadurch teilen sie Maximalbreite, Panelränder und vertikale Abstände mit dem
+Verlauf und dem Composer, auch bei mehreren Panels und schmalen Fenstern.
+Die Autorenzeile verwendet `turn-author`, `agent-signature` und `turn-author-meta`.
+Der App-Start verwendet ebenfalls Chatpanel, Nachrichtenspalte und Composerbereich
+statt eigener Inhaltsbreiten. Reine Layoutkorrektur, keine Datenmigration.
+
+### Startkarten · Version 1.4.0
+
+Kompakte Überlappung aus attentionFanMotion; bei bis zu 800 px Höhe schrumpfen
+Avatar und Abstände, Karten und Touchziele behalten ihre Größe. Der Startbereich
+reserviert oben 64 px und unten die gemessene Composerhöhe. Kein Nachrichten-Fade
+über den Startkarten; bei Platzmangel bleibt die Navigation scrollbar erreichbar.
+Wetter und Kalender stehen als letzte feste Karten direkt links neben der ersten
+Karte im umlaufenden Stapel, nach Statistik und Kontingenten. Der Kalender zeigt
+das lokale heutige Datum und öffnet die vorhandene Kalenderansicht, ohne Termine
+zu erfinden oder eine externe Synchronisierung zu behaupten.
+Keine automatische Rotation, Nachrichten oder zusätzlichen Abrufe. Bestehende
+Auswahl und Reihenfolge bleiben während der Nutzung stabil; neue ungelesene
+Antworten bleiben verfügbar. Keine Datenmigration; Rückkehr ist rein visuell.
+
+Weiterentwicklung, noch nicht implementiert: freiwilliges Ausblenden einzelner
+Inhalte bis zu einer relevanten Änderung; wenige zeitlich passende Anlässe beim
+neuen Einstieg, höchstens ein Vorschlag pro Thema und keine Wiederholung ohne
+neuen Nutzen. Dringende Rückfragen behalten Vorrang.
+
+## Nachrichtenübergabe · Version 1.0.0
+
+Der gemeinsame MessageOutbox läuft unabhängig von geöffneten Chat-Panes.
+Absenden speichert Text, Anhängepfade, Ziel, Modellwahl und eine eindeutige
+clientMessageId vor dem Leeren des Entwurfs lokal. Chatwechsel bleibt frei.
+Neue Chats verwenden zunächst eine lokale Kennung; spätere Antworten ordnen
+nur diese Kennung zu und überschreiben keinen inzwischen geöffneten Chat.
+
+Unter der Nachrichtenblase zeigt DeliveryMark ausschließlich neutrale Symbole:
+Uhr für Übertragung/fehlende Verbindung, ein Check nach dauerhaft bestätigter
+Serverannahme, ein kompaktes `DeliveryChecks`-Doppelzeichen nach bestätigtem Workerstart, ein
+anklickbares Ausrufezeichen bei Fehler oder unklarem Ausgang. Zugänglicher Name
+und Tooltip erklären den Zustand. Bestehende Nachrichten ohne Beleg erhalten
+keinen erfundenen Haken. `DeliveryChecks` zeichnet den zweiten Haken nur mit seinem
+sichtbaren Arm, sodass er hinter dem ersten liegt statt ihn zu kreuzen.
+Einzelzeichen 12 × 12 px, Doppelzeichen 18 × 12 px, feine gerundete Konturen.
+Die Anzeige steht 2 px unter der Bubble und 12 px innerhalb ihrer rechten Kante.
+Fehleraktionen behalten ihre zugängliche Bedienfläche. Unser Design zeigt beide
+Bestätigungen am produktiven Bubblelayout. Reine Darstellung, keine Datenmigration.
+Nachricht, Zeit und bestehende Aktionen bleiben erhalten.
+Nach sicherer Serverannahme ist kein offener Browser für die Verarbeitung nötig.
+Vorher wird bei erneutem Öffnen der App weiter übertragen; kein Closed-Browser-
+Upload wird zugesagt.
+
+POST /api/delivery speichert vor Antwort den Beleg in state.messageDelivery
+Version 1 über den vorhandenen Storage-/SQLite-Anschluss. GET /api/delivery
+liest eine einzelne Kennung; GET /api/deliveries?id liest einen Chat unter der
+bestehenden Privatsperre. Identische Wiederholungen verwenden denselben Beleg;
+abweichende Inhalte mit gleicher Kennung werden abgewiesen. Neue Chats und
+Workerübergaben laufen serverseitig unabhängig vom HTTP-Aufrufer. Gleiche Chats
+werden seriell übergeben. Vorhandene Turn-/Steer-, Modell- und Projektwege gelten.
+Private Antworten tragen chatId und durchlaufen die bestehende Privacy-Filterung.
+
+Browserablage: agent-message-outbox-v1:<workspace>:<clientMessageId>, ausschließlich offene
+Nachrichten plus inhaltsfreie Kennungszuordnungen für neue Chats nach Übergabe.
+Jede Nachricht hat einen eigenen atomaren Storage-Eintrag; mehrere
+Tabs überschreiben keine gemeinsame Indexliste.
+Serverbelege bleiben für Wiederholungsschutz erhalten. Keine Löschung oder
+Migration bestehender Chats. Alte Versionen ignorieren das additive Feld;
+vor Rückkehr offenen Postausgang abarbeiten. Unterbrochene Workerübergaben
+werden als unklar erhalten und niemals automatisch erneut ausgeführt.
+Ein Klick prüft dort den Status; ein erneuter Auftrag erfordert bewusstes Senden.
+Speicherfehler lassen den Entwurf stehen. Feature-Erkennung erhält ältere Server.
+Prüfungen: langsame Übergabe, Verbindungsabbruch, Wiederholungsschutz, parallele
+Anfragen, neue Chats, Wiederherstellung, volle lokale Ablage, Anhänge, Chatwechsel,
+Desktop und mobile Emulation.
+
+
+## Effizienter mobiler Einstieg · Version 1.0.0
+
+Zusatzinhalte verwenden die lokalen Ladegrenzen aus DESIGN.md. Der Start des
+Ereignisstreams fragt die beim Einstieg geladenen Grunddaten nicht nochmals ab;
+echte Wiederverbindungen gleichen Chats, Rückfragen und den geöffneten Verlauf ab.
+Ein Kernereignis wird pro Tab einmal verteilt, auch bei mehreren Panels.
+Gleichzeitige Leseanfragen werden geteilt, ohne dauerhaften Cache privater Daten.
+Die optionale API-Projektion `view=sidebar` auf bootstrap/chats lässt nur die
+unbenutzten tokenUsage/statisticsTurns-Zähler weg. Modellwahl, Fähigkeiten,
+Privatsperre und Statistikberichte behalten ihre bisherigen Felder. Der normale
+API-Aufruf bleibt kompatibel. Native Kontexte verwenden keine Browserprojektion.
+
+Verborgene gespeicherte Panels stellen ihren Verlauf erst bei Sichtbarkeit wieder
+her. Ihre gespeicherte Zuordnung wird davor nicht überschrieben. Bereits geöffnete
+Chats, Entwürfe und Streams bleiben gemountet. Streaming kopiert nur den betroffenen
+Turn und das veränderte Item; abgeschlossene Turns behalten ihre Referenzen und
+werden nicht bei jedem neuen Textstück erneut gerendert. Aktionen greifen auf den
+aktuellen App-Zustand zu. Sperren, Wiederverbinden und Lesen bleiben maßgebend.
+
+Startdaten und Statistik pausieren in verborgenen Panels. Beim Wiederaktivieren
+verhindert ein kurzer Frischeabstand parallele Fokus-/Sichtbarkeitsabfragen; explizite
+Änderungen werden sofort berücksichtigt. Updateabfragen pausieren in versteckten
+Tabs, außer bei laufender Neustartwiederherstellung oder Sprachsession.
+
+Die Diktatsicherung teilt einen Timer pro Tab und liest Audio nur für noch nicht
+vollständig gesicherte Aufnahmen. Bestehende Datenbankversion, Chunk-Schlüssel,
+Audioarchive und Download-Wiederherstellung bleiben erhalten. Gleichzeitige
+Synchronisation wird zusammengefasst; neue Daten während eines Durchlaufs erhalten
+einen weiteren Durchlauf. Fehlgeschlagene Übertragung bleibt wiederholbar.
+
+Migration: keine Änderung gespeicherter Chat-, Audio- oder Serverdaten. Rückkehr
+zur vorherigen Version bleibt möglich. Frontend-Build und statische Auslieferung
+werden zusammen geprüft; ohne neuen Server bleibt der Build lesbar, erhält aber
+noch keine Kompression oder langlebige Cache-Header.
+
+
+## Chatabruf und optionale Startdaten · Version 1.1.0
+
+Die Browseransicht verwendet `/thread?view=chat`. Nachrichten, native Sitzungssteuerung,
+Ergebnisdateien und erzeugte Bilder bleiben vorhanden. Große Werkzeugausgaben
+werden als beschriftete Zusammenfassung übertragen und erst beim Öffnen des einzelnen
+Schritts über `/thread/item` geladen. Der bestehende Chat-Datenschutz gilt vor und nach
+beiden Antworten. Originalverlauf, Exportanschluss und Worker-Kontext bleiben vollständig.
+Auch bereits vorhandene Werkzeugdaten werden erst aufgeklappt gerendert.
+Fehler und Zeitüberschreitungen bieten Wiederholen im betroffenen Bereich; Entwürfe
+bleiben erhalten. Leseanfragen ohne eigenes Abbruchsignal enden nach 15 Sekunden.
+
+Der Startfächer zeigt vorhandene Hinweise direkt. Aufträge, Profil und Berichte
+ergänzen sich unabhängig; eine langsame Quelle sperrt die anderen nicht. Der
+gemeinsame Attention-Skeleton bleibt für das Laden des Oberflächenmoduls vorhanden.
+Verbindungsdaten werden erst für die Verbindungsseite oder einen Ablauf geladen,
+der sie benötigt. Keine Migration gespeicherter Chats, Aufnahmen oder Einstellungen.

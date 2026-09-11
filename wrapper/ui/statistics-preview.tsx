@@ -4,7 +4,7 @@ import {StatisticsDashboard} from './statistics';
 import {AttentionFan} from './components/ui/attention-fan';
 import {shiftDay} from './statistics-data.mjs';
 const today='2026-08-20';
-export const allowanceExample={updatedAt:Date.now(),providers:[{id:'codex',name:'Codex',status:'ready',resetCredits:1,rows:[{id:'week',label:'Codex · Woche',usedPercent:30,resetAt:Date.now()+86400000*3}]},{id:'claw-code',name:'Claude Code',status:'ready',rows:[{id:'hours',label:'Claude · 5 Stunden',usedPercent:42,resetAt:Date.now()+7200000},{id:'fable',label:'Fable · Woche',usedPercent:68,resetAt:Date.now() + 172_800_000}]}]};
+export const allowanceExample={updatedAt:Date.now(),providers:[{id:'codex',name:'Codex',status:'ready',resetCredits:1,rows:[{id:'week',label:'Codex · Woche',usedPercent:30,resetAt:Date.now()+86400000*3}]},{id:'claw-code',name:'Claude Code',status:'ready',rows:[{id:'hours',label:'Claude · 5 Stunden',usedPercent:42,resetAt:Date.now()+7200000},{id:'fable',label:'Fable · Woche',usedPercent:68,resetAt:Date.now()+172_800_000}]}]};
 export const statisticsExample={version:1,generatedAt:Date.parse(today+'T14:00:00Z'),timeZone:'Europe/Berlin',projectId:'example',totalSessions:24,tokens:3456789,usage:{totalTokens:3456789,inputTokens:2100000,outputTokens:356789,cachedInputTokens:1000000},coverage:{missing:0,undated:0,unknownModels:0,tokenSessions:24,availableSessions:24},events:Array.from({length:84},(_,i)=>({day:shiftDay(today,i-83),hour:15,session:'example-'+i%24,messages:i%6+2,model:i%3?'Beispielmodell A':'Beispielmodell B'})).filter((_,i)=>i%5!==0)};
 export function StatisticsPreview(){
  const [open,setOpen]=useState('');

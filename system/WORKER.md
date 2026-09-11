@@ -58,3 +58,14 @@ aktuellen Arbeitsbereichs kopieren. Der Chat-Dateizugriff bleibt auf seine
 freigegebenen Bereiche beschränkt. Native Bilderzeugung kann öffentliche
 typisierte Bilddaten direkt als Ergebnis zeigen; eine Werkzeugmeldung allein
 belegt jedoch nicht, dass die lokale Oberfläche sie sichtbar dargestellt hat.
+
+## Quellcode im eingerichteten Entwicklungsablauf
+
+Bei Bauaufträgen zuerst `npm run source:work -- status` am zuständigen
+Installationsanschluss lesen. Ist die Quellübergabe eingerichtet, über `begin`
+eine isolierte Arbeitskopie anlegen und ausschließlich dort entwickeln. Nach
+der beauftragten Umsetzung mit `ready` zur automatischen Speicherung und Prüfung
+anmelden. Anschließend dort nicht weiter schreiben. Reine Pläne, Vorschauen ohne
+Umsetzungsauftrag und abgebrochene Arbeiten nicht als bereit melden.
+Den zurückgegebenen Status ausdrücklich unterscheiden: gespeichert, geprüft und
+zusammengeführt sind noch nicht live. Ablauf und Fehler führen docs/CODE-SYNC.md.

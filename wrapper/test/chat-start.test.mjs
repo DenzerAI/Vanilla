@@ -116,3 +116,14 @@ test('preview extracts only the requested completed final answer',()=>{
  thread.turns[1].status='inProgress';
  assert.equal(replyPreview(thread,'new'),'');
 });
+
+test('weather and honest calendar flank the first card without dropping unread replies',()=>{
+ const chats=Array.from({length:12},(_,i)=>({id:'c'+i,title:'Thema',projectId:'default',updatedAt:i,lastTurnStatus:'completed',lastCompletedTurnId:'t'+i}));
+ const feed=chatStartFeed({chats,includeWeather:true,includeCalendar:true,includeStatistics:true,includeAllowances:true,now:new Date(2026,8,11,12).getTime()});
+ assert.equal(feed.filter(i=>i.kind==='chat').length,12);
+ assert.deepEqual(feed.slice(-2).map(i=>i.kind),['weather','calendar']);
+ assert.match(feed.at(-1).title,/11. September/);
+ assert.match(feed.at(-1).description,/noch nicht synchronisiert/);
+ assert.equal(feed.at(-1).prompt,undefined);
+ assert.equal(new Set(feed.map(i=>i.id)).size,feed.length);
+});

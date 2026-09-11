@@ -111,10 +111,14 @@ Textfarben müssen mindestens 4,5:1 Kontrast zu ihren vorgesehenen Flächen erre
 
 ### Aufmerksamkeit in der Chatliste
 
-In der Mehrfachansicht bestätigt Pointer-Aktivierung auf der gesamten Chat-Pane
-oder Tastaturfokus innerhalb der Pane die bewusste Auswahl eines Chats. Sichtbarkeit und wiederhergestellte
-Panelauswahl allein bestätigen keine Antwort als gelesen; dafür gelten zusätzlich
-Vordergrund, sichtbares aktives Panel, Antwortabschluss und Leseposition am Ende.
+Die Lesebestätigung folgt dem sichtbaren ausgewählten Chat im aktiven Fenster.
+Nach Ende des Ladens und Abschluss der Antwort wird der fertig gerenderte Verlauf
+nach einem Browser-Paint als gelesen bestätigt. Composerfokus und Scrollposition
+sind keine Voraussetzung. Das gilt auch für das wiederhergestellte aktive Panel;
+weitere sichtbare oder verborgene Panels bleiben ungelesen. Beim Chatwechsel muss
+der geladene Verlauf zur ausgewählten Chat-ID gehören. Der grüne Haken blendet
+nach bestätigtem Speichern mit `motion-feedback-duration` aus, ohne Layoutsprung.
+Reduzierte Bewegung entfernt ihn direkt. Keine neue Speicherung oder Migration.
 Klicks auf Freiflächen, Nachrichten und Bedienelemente wählen die zugehörige Pane
 und aktivieren die vorhandene Composer-Kontur. Sie setzen keinen Schreibfokus;
 das Eingabefeld wird weiterhin direkt fokussiert. Scrollen allein wählt keine Pane.
@@ -168,7 +172,7 @@ Die Seitenleiste verwendet eine gemeinsame Textkante für Navigation, Projektnam
 
 Neue Chats werden über das Plus ganz rechts am Projektordner angelegt; das Projekt-Plus erscheint an der Überschrift „Workspace“ bei Hover oder Tastaturfokus. Projektmenü und Einklapp-Pfeil erscheinen bei Hover/Fokus, auf Touch-Geräten bleiben sie erreichbar. Neben der Agentenidentität öffnet ein kreisrunder Such-Iconbutton dieselbe Suche wie Cmd/Ctrl+K. „Neuer Chat“-Zeile und „Neuer Workspace“-Zeile entfallen; Cmd/Ctrl+N bleibt erhalten. Offene Rückfragen erscheinen bei Bedarf neben dem Such-Iconbutton.
 
-Grüne Haken bezeichnen ausschließlich ungelesene abgeschlossene Antworten. Der Server speichert die gelesene Turn-ID; eine neuere Antwort ist wieder ungelesen. Die UI bestätigt erst nach 700 ms bei sichtbarem Chat, aktivem Fenster und Leseposition am Ende. Ein veralteter Lesehinweis kann keine neuere Antwort als gelesen markieren.
+Grüne Haken bezeichnen ausschließlich ungelesene abgeschlossene Antworten. Der Server speichert die gelesene Turn-ID; eine neuere Antwort ist wieder ungelesen. Die UI bestätigt nach dem Rendern des vollständig geladenen, abgeschlossenen Verlaufs im sichtbaren aktiven Chatfenster. Composerfokus und Leseposition spielen dabei keine Rolle. Ein veralteter Lesehinweis kann keine neuere Antwort als gelesen markieren.
 
 ## Verbindliche Bereichsverträge
 
@@ -334,7 +338,7 @@ Wertetabelle.
 
 ## Kompakte Navigation und Suche
 
-Das Hauptmenü zeigt Heute, Inbox, Aufträge und die verfügbare Bibliothek in dieser Reihenfolge, darunter Projekte und Chats. Skills und Verbindungen sind eigene Einträge der vorhandenen Einstellungsnavigation. Der Einstieg bleibt im Agentenmenü. Bestehende Icons, Textkanten, Abstände und Inhaltsansichten bleiben erhalten; keine Platzhalter oder reservierten Leerzeilen für künftige Module. Suche und Querverweise öffnen beide Kataloge direkt mit ausgewähltem Einstellungsbereich. Die Einstellungsnavigation scrollt bei Platzmangel innerhalb der Seitenleiste; Zurück-Einstieg und Agentenzeile bleiben erreichbar.
+Das Hauptmenü zeigt Inbox, Aufträge, die verfügbare Bibliothek und Firma in dieser Reihenfolge, darunter Workspaces und Chats. Firma verwendet dieselbe nav-item-Zeile ohne eigene Abschnittsüberschrift. Skills und Verbindungen sind eigene Einträge der vorhandenen Einstellungsnavigation. Der Einstieg bleibt im Agentenmenü. Bestehende Icons, Textkanten, Abstände und Inhaltsansichten bleiben erhalten; keine Platzhalter oder reservierten Leerzeilen für künftige Module. Suche und Querverweise öffnen beide Kataloge direkt mit ausgewähltem Einstellungsbereich. Die Einstellungsnavigation scrollt bei Platzmangel innerhalb der Seitenleiste; Zurück-Einstieg und Agentenzeile bleiben erreichbar.
 
 Oben in der Seitenleiste steht der konfigurierte Agent: 32-px-Avatar mittig in der 18-px-Symbolspalte der Navigation, Name auf derselben Textkante mit reading (16 px), semibold und bestehender UI-Schrift. Daneben stehen Suche als kreisrunder Iconbutton, bei Bedarf Benachrichtigungen sowie Einklappen. Der Agentenbutton nutzt die bestehende Hoverfläche und das gemeinsame ChatMenu mit Fokusführung, Pfeiltasten, Escape und Außenklick; das Portal hält das Menü im Viewport. Auch Inbox und Einstellungen behalten diesen Einstieg. Der Such-Iconbutton öffnet den Suchdialog mit fokussierter Eingabe und nennt Cmd/Ctrl+K im Tooltip und zugänglichen Tastaturhinweis. Suche umfasst Gesprächstitel, lokal gespeicherte Nutzer- und Agententexte einschließlich archivierter Chats über alle Projekte, Projektnamen und Navigation/Einstellungen. Treffer zeigen Kontext und Textausschnitt; moderate Tippfehler, Buchstabendreher und Akzente werden toleriert. Werkzeugausgaben, interne Überlegungen und reine Kanalgespräche sind ausgeschlossen. Fehlende lokale Exporte werden als eingeschränkte Inhaltssuche kenntlich gemacht; es wird kein Worker für die Suche gestartet.
 
@@ -344,7 +348,7 @@ Der Update-/Neustart-Button ist eine kleine transparente Glaspille mit 40-px-Blu
 
 Die globale Suche verwendet die transparente `sheet-glass`-Fläche ohne Glanzrand und 40 px Hintergrundunschärfe. Die gesamte Kulisse wird mit `overlay` abgedunkelt und um 8 px weichgezeichnet. Das Suchfeld verwendet `workspace-backdrop`, ohne native Suchfelddekoration oder Fokusrahmen. Fokus zeigen Schreibmarke und hervorgehobene Lupe; im erzwungenen Kontrastmodus bleibt ein Systemrahmen erhalten. Treffer bleiben flach, gruppiert und mit sichtbarem Tastaturfokus bedienbar. Reduzierte Transparenz und fehlender Blur erhalten eine deckende Glasfarbe.
 
-Aktualisieren lädt die Oberfläche direkt ohne Bestätigungsdialog neu. HTML und Assets werden mit `Cache-Control: no-store` ausgeliefert; laufende Serverantworten bleiben bestehen. Nur ein tatsächlicher Serverneustart verwendet die bestehende Session-Bestätigung.
+Aktualisieren lädt die Oberfläche direkt ohne Bestätigungsdialog neu. HTML, Versionsdaten und private API-Antworten bleiben `no-store`. Öffentliche, inhaltsversionierte Assets verwenden einen langlebigen Browser-Cache; unversionierte Skripte und Styles werden vor Wiederverwendung validiert. Laufende Serverantworten bleiben bestehen. Nur ein tatsächlicher Serverneustart verwendet die bestehende Session-Bestätigung.
 
 Neustarten und anschließendes frisches Laden gehören zu einer Aktion. Die gemeinsame
 SystemNotice bleibt während Anfrage und Wiederanlauf als dieselbe zentrierte,
@@ -918,7 +922,7 @@ liefert die gekürzte Vorschau, keine Werkzeuge oder Zwischenmeldungen. Fehlende
 Vorschau bleibt ausdrücklich erkennbar; verspätete Antworten überschreiben keinen
 neueren Turn. Klick öffnet den zuständigen Chat und springt zum Antwortanfang,
 auch bei bereits geöffnetem Panel. Gelesen wird weiterhin erst bei bewusster
-Auswahl und Leseposition am Ende bestätigt, niemals durch die Kartenvorschau.
+Auswahl und vollständig geladenem, abgeschlossenem Verlauf im aktiven Chat bestätigt, niemals durch die Kartenvorschau.
 
 Unser Design enthält ein lokales Live-Beispiel zum Hinzufügen, Entfernen und
 Zurücksetzen. Beispiele verändern keine Chats. Keine neue Datenhaltung oder
@@ -1203,3 +1207,86 @@ Auftragskategorien verwenden eine native Combobox aus Input/Datalist im JobForm
 und einen separaten Select-Filter. Gemeinsame Abstände und Schriftrollen gelten.
 Die identischen Komponenten stehen unter Unser Design; den fachlichen Ablauf,
 Bestandsregeln und Grenzen führen surfaces/workspaces.md und surfaces/jobs.md.
+
+Gesprächs-Skeletons stehen in derselben `message-column` wie geladene Turns.
+Dadurch teilen sie Maximalbreite, Panelränder und vertikale Abstände mit dem
+Verlauf und dem Composer, auch bei mehreren Panels und schmalen Fenstern.
+Die Autorenzeile verwendet `turn-author`, `agent-signature` und `turn-author-meta`.
+Der App-Start verwendet ebenfalls Chatpanel, Nachrichtenspalte und Composerbereich
+statt eigener Inhaltsbreiten. Reine Layoutkorrektur, keine Datenmigration.
+
+### Startkarten · Version 1.4.0
+
+Kompakte Überlappung aus attentionFanMotion; bei bis zu 800 px Höhe schrumpfen
+Avatar und Abstände, Karten und Touchziele behalten ihre Größe. Der Startbereich
+reserviert oben 64 px und unten die gemessene Composerhöhe. Kein Nachrichten-Fade
+über den Startkarten; bei Platzmangel bleibt die Navigation scrollbar erreichbar.
+Wetter und Kalender stehen als letzte feste Karten direkt links neben der ersten
+Karte im umlaufenden Stapel, nach Statistik und Kontingenten. Der Kalender zeigt
+das lokale heutige Datum und öffnet die vorhandene Kalenderansicht, ohne Termine
+zu erfinden oder eine externe Synchronisierung zu behaupten.
+Keine automatische Rotation, Nachrichten oder zusätzlichen Abrufe. Bestehende
+Auswahl und Reihenfolge bleiben während der Nutzung stabil; neue ungelesene
+Antworten bleiben verfügbar. Keine Datenmigration; Rückkehr ist rein visuell.
+
+Weiterentwicklung, noch nicht implementiert: freiwilliges Ausblenden einzelner
+Inhalte bis zu einer relevanten Änderung; wenige zeitlich passende Anlässe beim
+neuen Einstieg, höchstens ein Vorschlag pro Thema und keine Wiederholung ohne
+neuen Nutzen. Dringende Rückfragen behalten Vorrang.
+
+## Nachrichtenbelege und Bildschirmhinweise · Version 1.0.0
+
+DeliveryMark verwendet vorhandene Check-, Clock- und AlertCircle-Icons in muted
+direkt unter der Nachrichtenblase. Zwei Checks stehen leicht versetzt als ein
+zusammenhängendes Symbol. Keine Statusfarben oder sichtbaren Erklärungstexte;
+Tooltip und zugänglicher Name bleiben vorhanden. Layout, Fehlerbedienung und
+Datenvertrag stehen in surfaces/chat.md.
+
+Alle SystemNotice-Zustände einschließlich Updates stehen oben rechts mit space-16
+und sicheren Displayrändern. Das Portal an document.body verhindert eine
+Verschiebung durch transformierte Chat-/App-Flächen. Schmale Ansichten begrenzen
+die Breite und erlauben Textumbruch. Bestehende GlassButton-/Hinweisbausteine,
+Tastaturbedienung und Neustartbestätigung bleiben erhalten.
+
+
+## Effizientes Laden · Version 1.0.0
+
+Der Chat-Composer und die Navigation bleiben während des Nachladens bedienbar.
+Zusatzseiten, Einstellungsinhalte, Berichte und Dialoginhalte verwenden lokale
+`lazySurface`-Grenzen mit dem gemeinsamen Skeleton. Ein Ladefehler betrifft nur
+diesen Inhalt und bietet Wiederholen an; kein automatisches Neuladen und kein
+Verlust von Entwürfen. Bestehende Farben, Schriften, Abstände und Bedienwege bleiben.
+Vite trennt JavaScript und CSS nach Bedarf. Statische Assets tragen Inhalts-Hashes;
+Brotli/Gzip entstehen beim Build. Alte Hash-Dateien bleiben für bereits offene
+Tabs erhalten. Private Inhalte gelangen weder in den Asset-Cache noch in den
+Service Worker. Öffentliche Assets sind kein Offline-Modus für Chats.
+
+Geteilte gleichzeitige GET-Anfragen leben nur bis zur Antwort im Arbeitsspeicher.
+Schreibaktionen invalidieren diese Zuordnung und werden niemals automatisch
+wiederholt. Native Worker-Kontexte, Dateien, Aufträge und Server-Sessions sind
+unabhängig davon vollständig erhalten. Kein Reset oder neue Nutzereinstellung.
+
+
+## Chatabruf und optionale Startdaten · Version 1.1.0
+
+Die Browseransicht verwendet `/thread?view=chat`. Nachrichten, native Sitzungssteuerung,
+Ergebnisdateien und erzeugte Bilder bleiben vorhanden. Große Werkzeugausgaben
+werden als beschriftete Zusammenfassung übertragen und erst beim Öffnen des einzelnen
+Schritts über `/thread/item` geladen. Der bestehende Chat-Datenschutz gilt vor und nach
+beiden Antworten. Originalverlauf, Exportanschluss und Worker-Kontext bleiben vollständig.
+Auch bereits vorhandene Werkzeugdaten werden erst aufgeklappt gerendert.
+Fehler und Zeitüberschreitungen bieten Wiederholen im betroffenen Bereich; Entwürfe
+bleiben erhalten. Leseanfragen ohne eigenes Abbruchsignal enden nach 15 Sekunden.
+
+Der Startfächer zeigt vorhandene Hinweise direkt. Aufträge, Profil und Berichte
+ergänzen sich unabhängig; eine langsame Quelle sperrt die anderen nicht. Der
+gemeinsame Attention-Skeleton bleibt für das Laden des Oberflächenmoduls vorhanden.
+Verbindungsdaten werden erst für die Verbindungsseite oder einen Ablauf geladen,
+der sie benötigt. Keine Migration gespeicherter Chats, Aufnahmen oder Einstellungen.
+Die Nachrichtenübergabe verwendet `DeliveryChecks`: ein feines neutrales
+Einzelzeichen (12 × 12 px) oder Doppelzeichen (18 × 12 px) mit nur teilweise
+sichtbarem hinterem Haken. Keine zwei sich kreuzenden vollständigen Icons.
+`message-delivery` steht mit `space-2` direkt unter der Nachrichtenblase und
+`space-12` Einzug an ihrer rechten Kante. Fehler behalten die bisherigen
+zugänglichen Bedienflächen. Unser Design zeigt dieselben Bausteine.
+Statusbedeutung und Speicherung bleiben unverändert; keine Datenmigration.

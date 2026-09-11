@@ -1,0 +1,55 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import { mkdtemp, rm, readFile, writeFile } from 'node:fs/promises';
+import { spawn } from 'node:child_process';
+import { once } from 'node:events';
+import path from 'node:path';
+import net from 'node:net';
+import { fileURLToPath } from 'node:url';
+const root=fileURLToPath(new URL('../../',import.meta.url));
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+async function until(fn) {for(let i=0;i<200;i++){const value=await fn();if(value)return value;await delay(25);}throw Error('Timed out');}
+test('durable message HTTP acknowledges, deduplicates new chats, reconciles native messages and survives restart', {timeout:30000}, async t=>{
+  const dir=await mkdtemp(path.join(root,'.verify-delivery-http-'));
+  const reservation=net.createServer().listen(0,'127.0.0.1');await once(reservation,'listening');const port=reservation.address().port;await new Promise(r=>reservation.close(r));
+  let child,exit,token,logs='';const base=`http://127.0.0.1:${port}/api`, state=path.join(dir,'worker.json');
+  const get=async route=>{const r=await fetch(base+route);if(!r.ok)throw Error(await r.text());return r.json();};
+  const post=async(route,body)=>{const r=await fetch(base+route,{method:'POST',headers:{'content-type':'application/json','x-uwe-token':token},body:JSON.stringify(body)});const result=await r.json();assert.equal(r.status,200,JSON.stringify(result));return result;};
+  const binary=path.join(dir,'worker.mjs');
+  await writeFile(binary, '#!'+process.execPath+'\n'+(await readFile(path.join(root,'wrapper/test/message-delivery-worker.fixture.mjs'),'utf8')).replace(/^#![^\n]*\n/,'').replace('process.env.DELIVERY_FIXTURE_STATE',JSON.stringify(state)),{mode:0o700});
+  const start=async()=>{
+    child=spawn(process.execPath,['wrapper/server.mjs'],{cwd:root,env:{...process.env,AGENT_CORE_URL:'',COMPANY_BASE:path.join(root,'firmenbasis'),SYSTEM_BASE:path.join(root,'system'),UWE_CODEX_SOURCE_HOME:'',UWE_PORT:String(port),UWE_WORKSPACE:path.join(dir,'workspace'),UWE_DATA_ROOT:path.join(dir,'control'),UWE_CODEX_BINARY:binary,DELIVERY_FIXTURE_STATE:state},stdio:['ignore','pipe','pipe']});exit=once(child,'exit');child.stderr.on('data',b=>logs+=b);child.stdout.on('data',b=>logs+=b);
+    await until(async()=>{if(child.exitCode!==null)throw Error(logs);try{return await get('/chats');}catch{return false;}});token=(await get('/bootstrap')).token;
+  };
+  const stop=async()=>{child.kill();await exit;};
+  t.after(async()=>{if(child?.exitCode===null)await stop();await rm(dir,{recursive:true,force:true});});
+  await start();await post('/workers/connect',{id:'codex'});
+  assert.equal((await get('/bootstrap')).features.messageDelivery,true);
+  const payload={clientMessageId:'12345678-1234-1234-1234-123456789012',localId:'outbox-test',id:null,
+    text:'tool',attachments:[],chat:{projectId:'default',worker:'codex',model:'fixture'}};
+  const [a,b]=await Promise.all([post('/delivery',payload),post('/delivery',payload)]);
+  assert.equal(a.status,'accepted');assert.equal(a.clientMessageId,b.clientMessageId);
+  const receipt=await until(async()=>{const r=await get('/delivery?clientMessageId='+payload.clientMessageId);return r.status==='started'&&r;});
+  assert.ok(receipt.chatId);assert.ok(receipt.turnId);assert.ok(receipt.itemId);
+  assert.equal((await get('/deliveries?id='+receipt.chatId)).entries.length,1);
+  let disk=JSON.parse(await readFile(state,'utf8'));
+  assert.equal((await get('/chats')).chats.length,1);assert.equal(disk.calls.filter(c=>c.params.threadId===receipt.chatId).length,1);
+  await stop();
+  const saved=JSON.parse(await readFile(state,'utf8'));
+  const bigTool={id:'large-tool',type:'commandExecution',status:'completed',command:'fixture',aggregatedOutput:'Synthetic result '.repeat(10000)};
+  saved.threads[receipt.chatId].turns[0].items.push(bigTool);
+  await writeFile(state,JSON.stringify(saved));
+  await start();await post('/workers/connect',{id:'codex'});
+  const full=await get('/thread?id='+receipt.chatId);
+  const compact=await get('/thread?view=chat&id='+receipt.chatId);
+  const findTool=result=>result.thread.turns[0].items.find(item=>item.id==='large-tool');
+  assert.equal(findTool(compact).detailsDeferred,true);
+  assert.equal(findTool(full).aggregatedOutput,bigTool.aggregatedOutput);
+  const detail=await get('/thread/item?id='+receipt.chatId+'&turnId='+receipt.turnId+'&itemId=large-tool');
+  assert.deepEqual(detail.item,bigTool);
+  assert.ok(JSON.stringify(compact).length<JSON.stringify(full).length/20);
+
+  const after=await post('/delivery',payload);
+  assert.equal(after.status,'started');assert.equal(after.chatId,receipt.chatId);
+  disk=JSON.parse(await readFile(state,'utf8'));assert.equal(disk.calls.filter(c=>c.params.threadId===receipt.chatId).length,1);
+});

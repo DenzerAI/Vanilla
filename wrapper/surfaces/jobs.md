@@ -149,3 +149,9 @@ bleiben beim Auftrag und im vorhandenen Backup.
 JobCategoryField und JobCategoryFilter verwenden native Eingaben im vorhandenen
 Formular, gemeinsame Abstände und eine lokale Referenz unter Unser Design.
 Prüfungen: job-categories.test.mjs und core/tests/test_routines.py.
+
+## Gemeinsamer Integrationsstand
+Die Benachrichtigungsansicht teilt gleichzeitige Leseanfragen. Kategorien,
+Routinen und die ursprünglichen Ausführungskennungen bleiben erhalten.
+Die Entwicklungswartung führt eigene Quellprüfungen bei ruhender Arbeit aus;
+sie ist kein beliebiger Jobskript- oder externer Versandanschluss.
