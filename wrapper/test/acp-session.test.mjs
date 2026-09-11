@@ -81,6 +81,20 @@ test('slash command and arguments stay first and exact; no shell or local comman
   assert.equal(thread.turns[0].items[0].content[0].text,text);
 });
 
+test('a turn carries start and completion time so the activity chain can show its duration', async()=>{
+  const {worker,thread,rpc,calls,events}=fixture();
+  rpc.call=async(method,params)=>{calls.push({method,params});return {stopReason:'end_turn'};};
+  const before=Date.now();
+  const started=await worker.call('turn/start',{threadId:'chat',input:[{type:'text',text:'hi'}]});
+  assert.ok(started.turn.startedAt>=before);
+  await new Promise(resolve=>setImmediate(resolve));
+  const turn=thread.turns[0];
+  assert.equal(turn.status,'completed');
+  assert.ok(turn.completedAt>=turn.startedAt);
+  const completed=events.find(e=>e.method==='turn/completed');
+  assert.ok(completed.params.turn.startedAt&&completed.params.turn.completedAt);
+});
+
 test('a resumed session does not advertise removed settings from its persisted snapshot', async()=>{
   const {worker,thread,rpc}=fixture();
   thread.workerSession.availableCommands=[{name:'old'}];

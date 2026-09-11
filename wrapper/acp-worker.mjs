@@ -240,7 +240,7 @@ export class ACPWorker extends EventEmitter {
         await this.rpc.call("session/set_model", { sessionId: thread.workerSession.sessionId, modelId: p.model });
         thread.workerSession.models.currentModelId = p.model;
       }
-      const turn = { id: randomUUID(), status: "inProgress", items: [{ id: randomUUID(), type: "userMessage", content: structuredClone(p.input) }] };
+      const turn = { id: randomUUID(), status: "inProgress", startedAt: Date.now(), items: [{ id: randomUUID(), type: "userMessage", content: structuredClone(p.input) }] };
       thread.turns.push(turn); this.running.set(thread.id, turn);
       try { await this.persist(thread); } catch(e) { this.running.delete(thread.id); thread.turns.pop(); throw e; }
       // Defer notifications so the caller has stored the returned active turn first.
@@ -405,7 +405,7 @@ export class ACPWorker extends EventEmitter {
   async finish(id, status, error = null) {
     const turn = this.running.get(id);
     if (!turn) return;
-    this.running.delete(id); turn.status = status; turn.error = error;
+    this.running.delete(id); turn.status = status; turn.error = error; turn.completedAt = Date.now();
     for (const [key, request] of this.requests) if (request.params.threadId === id) {
       this.requests.delete(key); this.event("serverRequest/resolved", id, { requestId: key });
     }
