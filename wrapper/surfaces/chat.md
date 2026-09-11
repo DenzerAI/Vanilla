@@ -76,7 +76,7 @@ Die gemeinsame Darstellung verarbeitet normalisierte öffentliche Werkzeugdaten.
 ## Austauschbare Worker
 
 Der Composer zeigt die Modelle und unterstützten Funktionen des tatsächlichen Workers. Eine Übernahme wird innerhalb der Modellwahl mit dem tatsächlichen Worker und „Vertretung“ erklärt. Eine zusätzliche dauerhafte Worker-Beschriftung unter der Eingabe entfällt. Ein
-Planmodus ohne wirksamen Schreibschutz wird nicht angeboten. Die gemeinsame Modellwahl bietet Codex und Claude Code immer als anklickbare Bereiche mit Original-Icons aus `BrandIcon`. Andere bestehende Worker erscheinen dort, wenn sie das aktuelle Gespräch führen. Standard und Vertretung bleiben unter Einstellungen → Worker. Ein ausdrücklicher Anbieterwechsel setzt denselben sichtbaren Chat fort. Chat-ID, Titel, Projekt, Entwurf, Anhänge und Verlauf bleiben erhalten. Im Leerlauf wechselt ein Klick auf den Anbieter direkt, ohne zusätzlichen Lade- oder Fortsetzen-Button; während einer Antwort bleibt „Stoppen und wechseln“ ausdrücklich beschriftet. Erst wird die Zielanmeldung geprüft, dann gegebenenfalls die bisherige Antwort gestoppt und deren Abschluss bestätigt. Der neue Worker erhält eine eigene native Sitzung und den bisherigen Gesprächskontext. Fehler vor der Übernahme verändern die bisherige Zuordnung nicht. Automatische Jobs und Kanalgespräche bleiben fest zugeordnet. Die Anbieterwahl im Chat verändert den globalen Standard nicht.
+Planmodus ohne wirksamen Schreibschutz wird nicht angeboten. Die gemeinsame Modellwahl bietet Codex und Claude Code immer als anklickbare Bereiche mit Original-Icons aus `BrandIcon`. Andere bestehende Worker erscheinen dort, wenn sie das aktuelle Gespräch führen. Standard und Vertretung bleiben unter Einstellungen → Worker. Ein ausdrücklicher Anbieterwechsel setzt denselben sichtbaren Chat fort. Chat-ID, Titel, Projekt, Entwurf, Anhänge und Verlauf bleiben erhalten. Ein Klick merkt den Anbieter sofort für die nächste Nachricht vor und speichert die Auswahl im Hintergrund. Die laufende Antwort bleibt unberührt. Erst beim nächsten Senden, nach Abschluss der bisherigen Antwort, wird die Zielanmeldung geprüft. Der neue Worker erhält eine eigene native Sitzung und den bisherigen Gesprächskontext. Fehler vor der Übernahme verändern die bisherige Zuordnung nicht. Automatische Jobs und Kanalgespräche bleiben fest zugeordnet. Die Anbieterwahl im Chat verändert den globalen Standard nicht.
 
 
 ## Dateien anheften
@@ -275,7 +275,7 @@ Gesprächs-Skeletons verwenden user-message-row/user-message und agent-message/m
 
 `ModelPicker` nutzt die gemeinsame `popover-glass`-Fläche mit 28 px Blur, stärkerer Transparenz, feinen Lichtkanten und flachen 32-px-Zeilen. Die Standardansicht zeigt `ReasoningSlider` direkt unter dem kompakten Kopf: Stufe mittig, Modell klein darunter, nativer Fast-Blitz links und Arbeitsmodus rechts. Sichtbare Überschriften entfallen. Die Namen beginnen groß, `xhigh` erscheint als `X-High`; native Werte und Anzahl bleiben unverändert. Klick auf die Mitte öffnet im selben Glas mit 24-px-Außenrundung die Anbieter- und Modellwahl mit Original-Icons. Erfolg kehrt zum Regler zurück, Fehler bleiben sichtbar. Zurück und Escape gehen vom Modellmenü zum Regler, ein weiteres Escape schließt. Ohne geladene Modelle steht direkt der bestehende Einrichtungszustand. Die Höhe passt sich sanft an, ohne Inhalte zu skalieren oder unsichtbare Bedienelemente zu duplizieren. Low bis Max unterscheiden sich zusätzlich durch Dichte und Ausdehnung des Quadratfelds; Ultra behält seinen verstärkten Abschluss. Auf Touch sind Ziele mindestens 44 px hoch. Kein Fertig-Button und keine dauerhaften Effort-Kacheln. Escape, Außenklick und Verlassen schließen; Tastaturfokus bleibt sichtbar. Fenster, Bildschirmtastatur und vergrößerte Schrift begrenzen Position und Scrollhöhe. Ohne Transparenz oder Blur wird die Fläche deckend. Animationen folgen der App-/Systemvorgabe für reduzierte Bewegung und pausieren außerhalb der sichtbaren Fläche.
 
-Während einer laufenden Antwort bleiben Modell und Denkaufwand auswählbar. Die Wahl wird pro Chat für die nächste Nachricht vorgemerkt; der Hinweis im geöffneten Menü benennt dies. Die laufende Antwort bleibt unverändert, ein Anbieterwechsel verwendet die ausdrücklich beschriftete Stoppen-und-Wechseln-Aktion. Die Vormerkung bleibt beim Wechsel zwischen Chats in der geöffneten App erhalten. Erst das nächste Senden übergibt sie unter derselben serverseitigen Turnsperre wie den Prompt. Eine noch laufende Antwort nimmt die Vormerkung nicht als Steuerungsnachricht entgegen. ACP bestätigt Modell und anschließend die zugehörigen Denkstufen nativ; unbekannte Werte stoppen das Senden und erhalten den Entwurf. Bei einem vorgemerkten anderen ACP-Modell erscheinen dessen noch nicht gemeldete Denkstufen nicht vorab.
+Während einer laufenden Antwort bleiben Modell und Denkaufwand auswählbar. Die Wahl wird pro Chat für die nächste Nachricht vorgemerkt; der Hinweis im geöffneten Menü benennt dies. Die laufende Antwort bleibt unverändert; auch Anbieterwechsel sind Vormerkungen. Die Auswahl bestehender Chats wird im Hintergrund gespeichert und bleibt nach erneutem Öffnen erhalten. Erst das nächste Senden übergibt sie unter derselben serverseitigen Turnsperre wie den Prompt. Eine noch laufende Antwort nimmt die Vormerkung nicht als Steuerungsnachricht entgegen. ACP bestätigt Modell und anschließend die zugehörigen Denkstufen nativ; unbekannte Werte stoppen das Senden und erhalten den Entwurf. Bei einem vorgemerkten anderen ACP-Modell erscheinen dessen noch nicht gemeldete Denkstufen nicht vorab.
 
 Codex zeigt ausschließlich gemeldete, sichtbare Modelle der GPT-5.6- und GPT-6-Serie. Bereits vorhandene Gespräche mit älteren Modellen behalten ihren tatsächlichen Modellnamen. Die Stufen kommen exakt aus `supportedReasoningEfforts`, mit unveränderten nativen Werten und lediglich großgeschriebenen Anzeigenamen. Beim Modellwechsel bleibt eine Stufe nur erhalten, wenn das neue Modell sie anbietet.
 
@@ -1155,14 +1155,12 @@ nach Herkunft unterscheidbar. Kalenderdaten und Migrationsvertrag: docs/PLANNER.
 ### Gemeinsamer Workerwechsel · Version 2
 
 Der bestehende Chat wechselt über einen einzigen Übergabeaufruf. Eine zusätzliche
-Aktivierungsanfrage entfällt. Verlauf und Entwurf bleiben sichtbar; ausschließlich
-die Auswahl zeigt die tatsächliche ausstehende Bestätigung. Der vollständige
+Aktivierungsanfrage entfällt. Verlauf und Entwurf bleiben sichtbar; die Auswahl reagiert sofort, während die Präferenz im Hintergrund gespeichert wird. Der vollständige
 unveränderliche Verlauf bleibt erhalten. Der begrenzte Kontextblock enthält bei
 langen Chats sowohl den ursprünglichen Auftrag als auch den jüngsten Stand,
 mit Verweis auf die vollständige Datei, ohne zusätzlichen Zusammenfassungsaufruf.
 Bei ausgefallener Quellverbindung verwendet die Übergabe den vorhandenen lokalen
-Verlauf über denselben Leseanschluss wie der Chat. Aktive Arbeit muss weiterhin
-bestätigt beendet sein. Kein automatisches Wiederholen von Nachrichten.
+Verlauf über denselben Leseanschluss wie der Chat. Aktive Arbeit läuft unberührt zu Ende; erst die nächste Nachricht übernimmt den Wechsel. Kein automatisches Wiederholen von Nachrichten.
 Keine Datenmigration; bestehende Übergabedateien und Modellwerte bleiben lesbar.
 Ein älterer UI-Stand zeigt wieder die separaten ACP-Menüs.
 
@@ -1231,7 +1229,7 @@ Reihenfolge (`event-batcher.test.mjs`), Rahmen ohne Kennung unverändert.
 
 ### Bestätigte Anfangsstufe · Version 1.2.0
 
-Der mitgelieferte Claude-Adapter bestätigt eine konkrete Anfangsstufe (Medium, sofern angeboten, sonst erste native Stufe) beim Öffnen und Wiederherstellen sowie nach Modellwechsel ohne explizite Stufe. Bestehende explizite Einstellungen bleiben erhalten. Der gemeinsame Regler zeigt damit sofort Griff und Stufenname. Native Default-Modellaliase markieren bei exakt gleicher resolvedModel-ID die konkrete Modellzeile und verwenden deren bestätigten Denkaufwand. Versionen zeigen auch die Minor-Version .0. Keine globale Profiländerung oder Datenmigration; ältere Stände lesen die native Einstellung weiter. Modellwechsel während einer Antwort bleiben für die nächste Nachricht vorgemerkt, Anbieterwechsel verwenden weiterhin den bestätigten Stop-und-Übergabeweg im selben Chat.
+Der mitgelieferte Claude-Adapter bestätigt eine konkrete Anfangsstufe (Medium, sofern angeboten, sonst erste native Stufe) beim Öffnen und Wiederherstellen sowie nach Modellwechsel ohne explizite Stufe. Bestehende explizite Einstellungen bleiben erhalten. Der gemeinsame Regler zeigt damit sofort Griff und Stufenname. Native Default-Modellaliase markieren bei exakt gleicher resolvedModel-ID die konkrete Modellzeile und verwenden deren bestätigten Denkaufwand. Versionen zeigen auch die Minor-Version .0. Keine globale Profiländerung oder Datenmigration; ältere Stände lesen die native Einstellung weiter. Modellwechsel während einer Antwort bleiben für die nächste Nachricht vorgemerkt, Anbieterwechsel werden ebenfalls für die nächste Nachricht vorgemerkt.
 
 
 ## Verlauf bleibt beim Senden stehen · Version 1.0.0
@@ -1262,3 +1260,34 @@ gleicht diesen Turn in den geladenen Verlauf ein und behält alle anderen Turns;
 Schnappschuss für einen noch nicht geladenen Chat wird ignoriert. Lange Verläufe lösen so
 keinen `wrapper/resync` und kein Neuladen mehr aus. Vollständige Schnappschüsse bleiben
 für Übergaben und Verlaufsänderungen. Keine Datenmigration. Prüfungen: `thread-update.test.mjs`.
+
+
+## Auswahl für die nächste Nachricht · Version 1.0.0
+
+Engine, Modell und Denkaufwand erscheinen unmittelbar als Auswahl im vorhandenen
+ModelPicker, ohne Ladeanzeige oder neue native Sitzung beim Anklicken. Das Layout
+bleibt erhalten. Änderungen sind Präferenzen, keine Bestätigung eines Workerstarts.
+`POST /api/chat/provider` mit `defer:true` speichert `composerSelection` mit einer
+Auswahlkennung, Worker, optionalem Modell und Denkaufwand. Schnelle Änderungen
+werden je Chat in Klickreihenfolge gespeichert; verspätete Antworten überschreiben
+keine neuere lokale Auswahl und keine andere Pane. Speicherfehler werden gemeldet;
+die lokale Auswahl bleibt zum erneuten Senden erhalten. Unbekannte Modellkataloge
+zeigen das native Standardmodell für die nächste Nachricht, ohne Sitzungsaufbau.
+
+Beim Absenden wird die gewählte Auswahl unveränderlich in `nextSelection` des
+vorhandenen Postausgangs übernommen. Bei laufender Antwort bleibt die Nachricht
+angenommen und wartet. Es gibt weder Interrupt noch Steer mit der neuen Auswahl.
+Nach Abschluss und Speicherung des alten Turns verwendet der bestehende
+Übergabeweg unter derselben Turnsperre den vollständigen Kontext. Erst dann werden
+Zielanmeldung, Sitzung, Modell und Denkaufwand nativ geprüft und die Nachricht
+übergeben. Bei Fehlern bleiben Nachricht und Verlauf über den Postausgang prüfbar;
+kein Ausweichen auf eine andere Engine und keine automatische Wiederholung bei
+unklarer Zustellung. Ohne neue Auswahl bleibt der normale Steer-Weg bestehen.
+
+`appliedComposerSelectionId` bezeichnet die übernommene Auswahl. Eine spätere
+Präferenz verändert keine bereits angenommene Nachricht. Die Speicherung ist
+additiv im bestehenden Chat-/SQLite-Speicher; kein Umbau nativer Sitzungen und
+keine Übernahme globaler Einstellungen. Vor Rückkehr auf ältere Versionen offene
+Nachrichten mit Engine-Vormerkung abarbeiten, da diese Versionen das Zusatzfeld
+nicht ausführen. Prüfungen: workers, message-delivery und message-outbox sowie
+Desktop und mobile Browseremulation mit verzögerter Präferenzspeicherung.

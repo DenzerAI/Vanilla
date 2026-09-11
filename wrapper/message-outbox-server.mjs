@@ -66,7 +66,7 @@ export class MessageDelivery {
     if (this.paused()) return;
     for (const entry of this.entries) {
       const key = entry.chatId || entry.localId;
-      if (entry.status !== 'accepted' || this.inflight.has(entry.clientMessageId) || this.entries.some(e => this.inflight.has(e.clientMessageId) && (e.chatId || e.localId) === key) || this.locked(entry.chatId)) continue;
+      if (entry.status !== 'accepted' || this.inflight.has(entry.clientMessageId) || this.entries.some(e => this.inflight.has(e.clientMessageId) && (e.chatId || e.localId) === key) || this.locked(entry.chatId, entry.payload)) continue;
       this.inflight.add(entry.clientMessageId);
       void this.process(entry).catch(() => {}).finally(() => {this.inflight.delete(entry.clientMessageId);});
     }

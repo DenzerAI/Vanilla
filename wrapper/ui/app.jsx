@@ -150,7 +150,7 @@ import { nextChatGreeting } from "./chat-greetings.mjs";
 import { Dictation } from "./dictation.jsx";
 import { SettingRow } from "./settings-row.jsx";
 import { ModelPicker } from "./model-picker.jsx";
-import { effortConfig, modelConfig, preferredModel, sessionModelSelection, supportedEffort } from "../worker-models.mjs";
+import { preferredModel, sessionModelSelection, supportedEffort } from "../worker-models.mjs";
 import { groupSkills } from "./skill-categories.mjs";
 import { FilterPicker } from "./filter-picker.jsx";
 import {
@@ -853,12 +853,19 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const current = chats.find((c) => c.id === chatId),
     running = !!active[chatId],
     project = boot?.projects?.find((p) => p.id === projectId);
-  const pickerWorker = current?.workerId || (draftWorker === "auto" ? boot?.effectiveWorker || "codex" : draftWorker);
-  const nativeSelection = thread?.workerSession ? sessionModelSelection(thread.workerSession) : null;
-  const pickerModels = nativeSelection?.models || boot?.modelsByWorker?.[pickerWorker] || current?.models || [];
-  const nextSelection = nextSelections[chatId];
-  const pickerModel = nextSelection?.model ?? (nativeSelection ? nativeSelection.model : model);
-  const pickerEffort = nextSelection?.effort ?? (nativeSelection ? nativeSelection.effort : supportedEffort(pickerModels.find(m => m.model === model), effort));
+  const selectionKey = chatId || `new:${projectId}`;
+  const composerSelection = nextSelections[selectionKey] || current?.composerSelection;
+  const actualWorker = current?.workerId || (draftWorker === "auto" ? boot?.effectiveWorker || "codex" : draftWorker);
+  const pickerWorker = composerSelection?.workerId || actualWorker;
+  const sameWorker = pickerWorker === actualWorker;
+  const nativeSelection = sameWorker && thread?.workerSession ? sessionModelSelection(thread.workerSession) : null;
+  const knownModels = workerId => boot?.modelsByWorker?.[workerId]?.length ? boot.modelsByWorker[workerId]
+    : chats.find(c => c.workerId === workerId && c.models?.length)?.models || [];
+  const pickerModels = nativeSelection?.models || (sameWorker && current?.models?.length ? current.models : knownModels(pickerWorker));
+  const nextSelection = composerSelection && composerSelection.selectionId !== current?.appliedComposerSelectionId ? composerSelection : undefined;
+  const pickerModel = composerSelection?.model || (sameWorker ? nativeSelection?.model || model : "");
+  const pickerEffort = composerSelection?.effort || (sameWorker ? nativeSelection?.effort || supportedEffort(pickerModels.find(m => m.model === model), effort) : "");
+  const selectionWrites = useRef(new Map());
   const toastTimer = useRef(null);
   const notify = useCallback((msg) => {
     if (embedded) {
@@ -1508,45 +1515,28 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       setBoot(old => ({...old, workers: state.workers}));
     } catch (error) { notify(error.message); }
   }
-  async function chooseProvider(workerId) {
-    if (busy) throw new Error("Bitte die laufende Übertragung abwarten.");
-    setBusy(true);
-    const sourceChat = chatRef.current, sourceProject = projectRef.current;
-    try {
-      if (sourceChat) {
-        const result = await api("/chat/provider", {id:sourceChat, workerId, expectedWorker:pickerWorker, expectedTurnId:active[sourceChat] || null, stop:running});
-        setChats(old => old.map(c => c.id === sourceChat ? result.meta : c));
-        setNextSelections(old => { const next = {...old}; delete next[sourceChat]; return next; });
-        if (chatRef.current === sourceChat) {
-          setThread(result.thread); setModel(result.meta.model); setEffort(result.meta.effort);
-          setMode(result.meta.mode); setDraftWorker(workerId);
-        }
-        return;
-      }
-      const state = await api("/workers/activate", {id: workerId});
-      setBoot(old => ({...old, workers: state.workers, modelsByWorker: {...old.modelsByWorker, [workerId]: state.models}}));
-      if (chatRef.current !== sourceChat || projectRef.current !== sourceProject) return;
-      const worker = state.workers.find(w => w.id === workerId);
-      const nextModel = preferredModel(state.models, workerId, workerId === pickerWorker ? model : "");
-      if (worker.adapter === "codex" && !nextModel) throw new Error("Codex meldet noch keine Modelle der 5.6- oder 6er-Serie. Bitte die CLI-Anmeldung prüfen.");
-      // ACP negotiates its exact model/effort options when the empty session is opened.
-      const result = worker.adapter === "acp" ? await api("/chats", {worker: workerId, mode: "default", projectId: sourceProject, title: !sourceChat ? draftTitle || undefined : undefined}) : null;
-      if (chatRef.current !== sourceChat || projectRef.current !== sourceProject) return;
-      saveDraft();
-      setDraftSpeed(null);
-      setDraftWorker(workerId); setMode(worker.capabilities.plan ? mode : "default");
-      if (result) {
-        chatRef.current = result.thread.id; setChatId(result.thread.id); setThread(result.thread);
-        const selection = sessionModelSelection(result.thread.workerSession);
-        setModel(selection.model); setEffort(selection.effort);
-        setChats(old => [result.meta, ...old.filter(c => c.id !== result.meta.id)]);
-      } else {
-        chatRef.current = null; setChatId(null); setThread(null);
-        setModel(nextModel.model); setEffort(supportedEffort(nextModel));
-      }
-      if (sourceChat) setDraftTitle("");
-      followScroll.current = true;
-    } finally { setBusy(false); }
+  function selectForNextMessage(workerId, nextModel, nextEffort) {
+    const id = chatRef.current, key = id || `new:${projectRef.current}`;
+    const selection = {selectionId:crypto.randomUUID(), workerId, model:nextModel || null, effort:nextEffort || ""};
+    // Feedback is local and immediate. Only lightweight preferences are saved here.
+    setNextSelections(old => ({...old, [key]:selection}));
+    if (!id || id.startsWith("outbox-")) return;
+    const pending = (selectionWrites.current.get(id) || Promise.resolve()).catch(() => {}).then(async () => {
+      const result = await api("/chat/provider", {id, defer:true, ...selection});
+      setChats(old => old.map(c => c.id === id ? {...c, composerSelection:result.selection} : c));
+      setNextSelections(old => {
+        if (old[key]?.selectionId !== selection.selectionId) return old;
+        const next = {...old}; delete next[key]; return next;
+      });
+    }).catch(error => notify("Auswahl noch nicht gespeichert: " + error.message));
+    selectionWrites.current.set(id, pending);
+  }
+  function chooseProvider(workerId) {
+    const native = workerId === actualWorker && thread?.workerSession ? sessionModelSelection(thread.workerSession) : null;
+    const models = native?.models || (workerId === actualWorker && current?.models?.length ? current.models : knownModels(workerId));
+    const selected = preferredModel(models, workerId, workerId === actualWorker ? native?.model || model : "");
+    selectForNextMessage(workerId, selected?.model, supportedEffort(selected));
+    if (boot.workers?.find(w => w.id === workerId)?.capabilities?.plan === false) setMode("default");
   }
   async function changeSpeed(serviceTier) {
     if (!chatId) { setDraftSpeed(serviceTier); return; }
@@ -1554,40 +1544,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     const result = await api("/chat/speed", {id, model:pickerModel, serviceTier});
     setChats(old => old.map(c => c.id === id ? {...c, serviceTier:result.serviceTier} : c));
   }
-  async function changePickerSelection(nextModel, nextEffort) {
-    if (busy) throw new Error("Bitte die Übertragung abwarten.");
-    if (running || nextSelection) {
-      setNextSelections(old => ({...old, [chatId]:{model:nextModel, effort:nextEffort}}));
-      return;
-    }
-    if (!thread?.workerSession) { setModel(nextModel); setEffort(nextEffort); return; }
-    const id = chatId, session = thread.workerSession;
-    const option = nextModel !== pickerModel ? modelConfig(session) : effortConfig(session);
-    const change = nextModel !== pickerModel
-      ? option ? {configId: option.id, value: nextModel} : {modelId: nextModel}
-      : option ? {configId: option.id, value: nextEffort} : null;
-    if (!change) return;
-    setBusy(true);
-    try {
-      let result = await api("/worker-session", {id, ...change});
-      let selection = sessionModelSelection(result.thread.workerSession);
-      // A model change may reset effort in the native adapter. Keep this chat's
-      // explicit choice when the newly acknowledged model supports it.
-      const nextOption = effortConfig(result.thread.workerSession);
-      if (nextModel !== pickerModel && pickerEffort && !["default", "auto"].includes(pickerEffort)
-          && selection.effort !== pickerEffort
-          && selection.models.find(m => m.model === selection.model)?.supportedReasoningEfforts.some(e => e.reasoningEffort === pickerEffort)) {
-        // Reflect the confirmed model even if the following effort request fails.
-        setChats(old => old.map(c => c.id === id ? {...c, model:selection.model, models:selection.models, effort:selection.effort} : c));
-        if (chatRef.current === id) setThread(old => old ? {...old, workerSession:result.thread.workerSession} : old);
-        result = await api("/worker-session", {id, configId:nextOption.id, value:pickerEffort});
-        selection = sessionModelSelection(result.thread.workerSession);
-      }
-      if (chatRef.current !== id) return;
-      setThread(old => old ? {...old, workerSession: result.thread.workerSession} : old);
-      setModel(selection.model); setEffort(selection.effort);
-      setChats(old => old.map(c => c.id === id ? {...c, model: selection.model, models: selection.models, effort: selection.effort} : c));
-    } finally { setBusy(false); }
+  function changePickerSelection(nextModel, nextEffort) {
+    selectForNextMessage(pickerWorker, nextModel, nextEffort);
   }
   async function submit(e, voiceText, includeDraft = false) {
     e?.preventDefault();
@@ -1605,10 +1563,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       notify(message);
     };
     if ((!msg.trim() && !attachments.length) || busy) { if (voiceText) rejectVoice("Chat ist beschäftigt."); return; }
-    if (running && nextSelection) {
-      const message = "Die Modellwahl gilt für die nächste Antwort. Bitte die laufende Antwort abwarten oder stoppen.";
-      rejectVoice(message); return;
-    }
     if (uploadCounts.current.get(draftKey())) { rejectVoice("Dateien werden noch angeheftet."); return; }
     if(boot?.features?.messageDelivery){
       const targetId=chatRef.current;
@@ -1620,13 +1574,14 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       const files=voiceText && !includeDraft?[]:attachments;
       const payload={clientMessageId,localId,id:targetId && !targetId.startsWith("outbox-")?targetId:null,
         text:msg,attachments:files,model:pickerModel || model,effort:pickerEffort || undefined,nextSelection,mode,projectId:projectRef.current,
-        ...(!targetId?{chat:{model,worker:draftWorker,serviceTier:draftSpeed,mode,projectId:projectRef.current,title:draftTitle || undefined}}:{})};
+        ...(!targetId?{chat:{model:pickerModel || undefined,worker:composerSelection?.workerId || draftWorker,serviceTier:draftSpeed,mode,projectId:projectRef.current,title:draftTitle || undefined}}:{})};
       try{messageOutbox.enqueue(payload);}catch(error){rejectVoice(error.message);return;}
       if(!voiceText || includeDraft){setText("");setAttachments([]);}
       draftCache.current.delete(targetId || "new:"+projectRef.current);
-      if(nextSelection)setNextSelections(old=>{const next={...old};delete next[targetId];return next;});
+
       followScroll.current=true;
       if(!targetId){
+        if (composerSelection) setNextSelections(old => ({...old, [localId]:composerSelection}));
         chatRef.current=localId;setChatId(localId);setThread({id:localId,turns:[]});
         setChats(old=>[{id:localId,projectId:projectRef.current,title:draftTitle || msg.slice(0,40)||"Neue Nachricht",updatedAt:Date.now()},...old]);
       }
@@ -1641,8 +1596,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       followScroll.current = true;
       if (!id) {
         const r = await api("/chats", {
-          model,
-          worker: draftWorker,
+          model: pickerModel || undefined,
+          worker: composerSelection?.workerId || draftWorker,
           serviceTier: draftSpeed,
           mode,
           projectId: projectRef.current,
@@ -1692,7 +1647,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       });
       if(delivery.message?.status==='waiting')notify("Nachricht gespeichert; folgt nach der laufenden Antwort.");
       if (nextSelection) {
-        setNextSelections(old => { const next = {...old}; delete next[id]; return next; });
         setModel(selectedModel); setEffort(pickerEffort);
         if (thread?.workerSession) {
           void api("/thread?view=chat&id=" + encodeURIComponent(id)).then(updated => {
@@ -2473,18 +2427,18 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                   </ComposerFocus>
                   <div className="composer-options" role="group" aria-label="Nachrichtenoptionen">
                       <ModelPicker
-                        workerSession={thread?.workerSession}
+                        workerSession={sameWorker ? thread?.workerSession : undefined}
                         onSessionChange={async change => {
                           const id = chatId;
                           const r = await api("/worker-session", {id, ...change});
                           if (chatRef.current === id) setThread(old => old ? {...old, workerSession:r.thread.workerSession} : old);
                         }}
                         mode={mode} onModeChange={setMode} modeDisabled={running || busy}
-                        planAvailable={current ? current.capabilities?.plan !== false : draftWorker !== "auto" ? boot.workers?.find(w => w.id === draftWorker)?.capabilities?.plan !== false : boot.planAvailable !== false}
+                        planAvailable={boot.workers?.find(w => w.id === pickerWorker)?.capabilities?.plan !== false}
                         models={pickerModels} model={pickerModel} effort={pickerEffort} reduceMotion={boot.settings.reduceMotion === "on"}
                         workerId={pickerWorker} workers={boot.workers || []}
                         hasConversation={!!chatId} disabled={busy} providerDisabled={!!current?.jobId || !!current?.channelOnly}
-                        running={running} serviceTier={chatId ? current?.serviceTier : draftSpeed} onSpeedChange={changeSpeed}
+                        running={running} serviceTier={sameWorker ? chatId ? current?.serviceTier : draftSpeed : null} onSpeedChange={sameWorker ? changeSpeed : undefined}
                         onProviderChange={chooseProvider} onRefresh={refreshPickerWorkers}
                         context={nextSelection ? "Nächste Nachricht" : running ? "Auswahl für die nächste Nachricht" : current?.fallbackFrom ? `${workerName(current.workerId)} übernimmt als Vertretung für ${workerName(current.fallbackFrom)}.` : undefined}
                         onChange={changePickerSelection}

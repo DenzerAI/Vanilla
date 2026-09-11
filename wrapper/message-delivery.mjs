@@ -61,7 +61,7 @@ export class MessageDelivery {
     if (typeof body.text !== 'string' || body.text.length > 100000 || (!body.text.trim() && !body.attachments?.length)) throw new Error('Nachricht ist leer oder zu lang.');
     if (body.attachments !== undefined && (!Array.isArray(body.attachments) || body.attachments.length > 50 || body.attachments.some(a => typeof a.path !== 'string'))) throw new Error('Ungültige Anhänge.');
     const payload = { text: body.text, attachments: body.attachments || [], model: body.model || null, effort: body.effort || null, mode: body.mode || 'default', ...(body.nextSelection ? {nextSelection:body.nextSelection} : {}) };
-    const intent = body.intent || 'send';
+    const intent = body.nextSelection ? 'after' : body.intent || 'send';
     const fingerprint = createHash('sha256').update(JSON.stringify({ chatId, intent, payload })).digest('hex');
     const result = await this.change(s => {
       const existing = s.messages.find(m => m.id === body.messageId);

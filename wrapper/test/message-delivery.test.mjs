@@ -122,3 +122,17 @@ test('restart gate or another handoff leaves unattempted messages waiting', asyn
   await f.send('paused-msg');await f.q.settle('chat');assert.equal((await f.q.list('chat')).messages[0].status,'waiting');assert.equal(f.calls.length,0);
   paused=false;f.q.kick('chat');await f.q.settle('chat');assert.equal(f.calls.length,1);
 });
+
+test('a queued engine or reasoning choice never steers the active turn',async t=>{
+  const f=await fixture(t);
+  await f.send('initial-turn');await f.q.settle('chat');
+  const selection={workerId:'hermes',model:'native',effort:'high',selectionId:'chosen'};
+  await f.q.enqueue('chat',{messageId:'selected-next',text:'Next message',nextSelection:selection});
+  await f.q.settle('chat');
+  assert.equal(f.calls.length,1);
+  assert.equal((await f.q.list('chat')).messages[1].status,'waiting');
+  await f.finish();
+  assert.equal(f.calls.length,2);
+  assert.equal(f.calls[1].delivery.targetTurnId,null);
+  assert.deepEqual(f.calls[1].payload.nextSelection,selection);
+});

@@ -435,3 +435,18 @@ nativen Modus, der Freigaben überspringt (`bypassPermissions` oder die entsprec
 Sitzungsoption), und beantwortet verbleibende `session/request_permission`-Anfragen selbst mit der
 dauerhaften, sonst der einmaligen Erlaubnis. Bei Arbeitsbereichs- oder Lesezugriff bleiben die
 nativen Rückfragen wie bisher beim Nutzer. Prüfungen: `acp-session.test.mjs`.
+
+
+## Vorgemerkter Enginewechsel · Version 1.0.0
+
+Der Composer speichert Engine, Modell und Denkaufwand als additive Chatpräferenz
+über den bestehenden Anbieteranschluss (`defer:true`). Dieser Weg startet keine
+Verbindung und keine Sitzung und unterbricht keine Antwort. Die eigentliche
+Übergabe findet unter der Turnsperre beim nächsten Senden nach Abschluss des
+vorherigen Turns statt. Der unveränderliche Postausgang enthält die beim Senden
+gewählte Auswahl; spätere Klicks ändern diesen Auftrag nicht. Der gemeinsame
+Übergabeweg behält Kontext, Anmeldung und native Validierung. Ohne bekannten
+Modellkatalog gilt das native Standardmodell; unbekannte explizite Werte bleiben
+Fehler. Automatische Jobs und Kanalgespräche behalten ihre feste Engine.
+Migration und Rückkehrgrenze offener Nachrichten: surfaces/chat.md, Auswahl für
+die nächste Nachricht. Prüfung: workers, message-delivery, message-outbox.

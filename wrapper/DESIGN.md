@@ -1386,3 +1386,15 @@ Die Modellliste zeigt Claude-Familie und native Version einschließlich .0; Kont
 `VoiceProfiles` verwendet gemeinsame SettingRows, kreisrunde Iconaktionen und den vorhandenen Modal: Plus öffnet Voice-ID und optionalen Namen. Gespeicherte Namen bleiben vorn, IDs stehen als sekundäre Beschreibung. Die Auswahl verwendet Check mit aria-pressed; Bearbeiten und Entfernen haben eindeutige Beschriftungen. Fehler bleiben am Formular, während Speicherung sind Aktionen gesperrt. `VoiceProfilesPreview` zeigt denselben Baustein in Unser Design ohne Anbieteraufrufe.
 
 Hinweise zur Zugangsspeicherung benennen jetzt die lokale .env im Vanilla-Ordner. Die bestehenden Verbindungsdialoge, Secret-Zeilen und der Status der Schlüsselablage bleiben die gemeinsamen Bausteine; es gibt keine zusätzlichen Mac-Passwortfelder.
+
+
+### Unmittelbare Composer-Auswahl
+
+Engine, Modell und Denkaufwand verwenden weiterhin denselben ModelPicker und
+seine beiden Ansichten. Die Auswahl wird sofort lokal angezeigt, ohne Ladeanzeige
+oder Sperre für den Hintergrund-Speichervorgang. „Nächste Nachricht“ bezeichnet die
+Vormerkung; die laufende Antwort bleibt unberührt. Fehlende Modelloptionen zeigen
+den nativen Standard für die nächste Nachricht. Verbindungsaufbau und native
+Bestätigung gehören erst zum vorhandenen Nachrichten-Postausgang beim Senden.
+Speicherfehler verwenden die bestehende Fehlermeldung. Keine neuen Tokens,
+Komponenten oder Animationen. Verhalten und Migration: surfaces/chat.md.

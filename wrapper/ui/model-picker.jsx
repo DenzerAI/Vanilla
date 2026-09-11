@@ -142,7 +142,7 @@ export function ModelPicker({ workerSession, onSessionChange, models = [], model
         {!!choices.length && <button type="button" className="model-back" aria-label="Zurück zum Regler" onClick={showCompact}><ArrowLeft size={14}/><span>{modelName(selected)}</span></button>}
       <div className="model-providers" role="group" aria-label="KI-Anbieter">
         {providers.map(value => <button key={value} type="button" aria-pressed={provider === value} disabled={pending || disabled || providerDisabled}
-          onClick={() => { setProvider(value); setError(""); if (value !== workerId && (!hasConversation || !running)) void act(async () => { await onProviderChange?.(value); setDetails(false); }); }}>
+          onClick={() => { setProvider(value); setError(""); if (value !== workerId) { onProviderChange?.(value); setDetails(false); } }}>
           <BrandIcon name={value}/><span>{workerName(value)}</span>
         </button>)}
       </div>
@@ -150,7 +150,7 @@ export function ModelPicker({ workerSession, onSessionChange, models = [], model
         {efforts.length ? <ReasoningSlider key={`${workerId}:${model}:${efforts.map(e => e.reasoningEffort).join(",")}`}
           options={efforts.map(e => ({value:e.reasoningEffort,label:e.displayName || e.reasoningEffort,description:e.description}))}
           value={effort} disabled={disabled || pending} reduceMotion={reduceMotion} renderHeading={heading}
-          onChange={next => act(() => onChange(model, next))}/> : heading()}
+          onChange={next => onChange(model, next)}/> : heading()}
       </div>}
       {context && sameProvider && <p className="model-context">{context}</p>}
       {pending && expanded && <p className="model-status" role="status"><AppLoader size={14}/> Auswahl wird geladen …</p>}
@@ -160,17 +160,14 @@ export function ModelPicker({ workerSession, onSessionChange, models = [], model
           {choices.map(m => <label className="model-option" key={m.model} data-selected={selectedId === m.model}>
             <input type="radio" name={id + "-model"} value={m.model} checked={selectedId === m.model}
               onClick={() => { if (selectedId === m.model) setDetails(false); }}
-              onChange={() => void act(async () => { await onChange(m.model, supportedEffort(m, effort)); setDetails(false); })}/>
+              onChange={() => { onChange(m.model, supportedEffort(m, effort)); setDetails(false); }}/>
             <span>{optionName(m)}</span><Check size={14}/>
           </label>)}
         </fieldset>}
       </>}
-      {!pending && (!sameProvider || !choices.length) && <div className="model-provider-state">
-        <p>{!sameProvider && hasConversation ? running ? "Die laufende Antwort wird gestoppt. Dein Verlauf bleibt erhalten." : "Im selben Chat mit dem bisherigen Kontext weiterarbeiten." : providerInfo?.installed === false ? `${workerName(provider)} ist noch nicht installiert.` : "Modelle aus der angemeldeten CLI laden."}</p>
-        <button type="button" disabled={disabled || providerInfo?.installed === false} onClick={() => void act(async () => { await onProviderChange?.(provider); setDetails(false); })}>
-          {error ? "Erneut versuchen" : hasConversation && !sameProvider ? running ? "Stoppen und wechseln" : `Mit ${workerName(provider)} fortsetzen` : "Modelle laden"}
-        </button>
-        {providerInfo?.installURL && <a href={providerInfo.installURL} target="_blank" rel="noreferrer">{workerName(provider)} einrichten ↗</a>}
+      {!pending && !choices.length && <div className="model-provider-state">
+        <p>{providerInfo?.installed === false ? `${workerName(provider)} ist noch nicht installiert.` : "Das Standardmodell wird mit der nächsten Nachricht gestartet."}</p>
+        {providerInfo?.installURL && providerInfo?.installed === false && <a href={providerInfo.installURL} target="_blank" rel="noreferrer">{workerName(provider)} einrichten ↗</a>}
       </div>}
       </div>
     </div>, document.body)}
