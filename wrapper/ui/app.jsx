@@ -2195,6 +2195,9 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                           </IconButton>
                           {chatMenu === c.id && (
                             <div className="context-menu">
+                              <button onClick={guard(async()=>{setChatMenu(null);if(audioState.chatId===c.id && audioState.mode==='follow') chatAudio.stop();else await chatAudio.start(api,{chatId:c.id,title:c.title,mode:'follow'});})}>
+                                {icon(Volume2,15)}{audioState.chatId===c.id && audioState.mode==='follow' ? 'Chat vorlesen ausschalten' : 'Chat vorlesen'}
+                              </button>
                               <button
                                 onClick={() => {
                                   setModal({ type: "rename", chat: c });

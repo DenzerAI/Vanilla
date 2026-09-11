@@ -4,3 +4,8 @@
 .chat-row:has(.chat-audio-indicator) .chat-row-title { padding-right: var(--space-32); }
 
 .sidebar .chat-row .chat-audio-indicator .icon-button { opacity: 1; position: static; margin: 0; }
+.sidebar .workspace-chats .chat-row:has(.chat-audio-indicator) > button:first-child { padding-right: calc(var(--control-height) + var(--space-8)); }
+@media (hover: none) {
+  .sidebar .chat-row .chat-audio-indicator .icon-button { width: var(--control-touch); height: var(--control-touch); }
+  .sidebar .workspace-chats .chat-row:has(.chat-audio-indicator) > button:first-child { padding-right: calc(var(--control-touch) + var(--space-8)); }
+}

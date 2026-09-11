@@ -1,4 +1,4 @@
-.attention-fan { width: 100%; max-width: 480px; min-width: 0; container-type: inline-size; }
+.attention-fan { width: 100%; max-width: 640px; min-width: 0; container-type: inline-size; }
 .attention-fan-track { display: grid; justify-items: center; padding: var(--space-16) 0 var(--space-24); touch-action: pan-y; }
 .attention-fan-card { grid-area: 1 / 1; width: 62%; max-width: 230px; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-8); padding: var(--space-16); box-sizing: border-box; height: 14rem; min-height: 14rem; max-height: 14rem; overflow: hidden; text-align: left; border: 1px solid var(--border); border-radius: var(--radius-panel); background: color-mix(in srgb, var(--surface) 72%, transparent); background-image: var(--popover-glass-sheen); backdrop-filter: blur(var(--fan-blur)) saturate(1.5); -webkit-backdrop-filter: blur(var(--fan-blur)) saturate(1.5); color: var(--text); box-shadow: var(--popover-glass-shadow); position: relative;  transform-origin: center bottom; overflow-wrap: anywhere; }
 .attention-fan-card.is-active { background-color: color-mix(in srgb, var(--surface) 86%, transparent); }
@@ -30,7 +30,7 @@
 .attention-fan-card.is-hovered { z-index: 5; border-color: var(--border-strong); background-color: color-mix(in srgb, var(--surface) 86%, transparent); }
 .chat-main > .conversation:has(> .chat-start) { display: flex; flex-direction: column; min-height: 0; }
 .welcome.agent-chat-welcome.chat-start { min-height: 0; flex: 0 0 auto; margin: 0 auto; padding-block: var(--space-24); gap: var(--space-16); }
-.chat-start-intro { display: flex; flex-direction: column; align-items: center; gap: var(--space-12); width: 100%; max-width: 480px; }
+.chat-start-intro { display: flex; flex-direction: column; align-items: center; gap: var(--space-12); width: 100%; max-width: 640px; }
 .welcome.agent-chat-welcome.chat-start .identity-avatar { width: 80px; height: 80px; margin: 0; flex-shrink: 0; }
 .welcome.agent-chat-welcome.chat-start h1 { font-size: var(--text-subheading); line-height: var(--leading-normal); text-align: center; max-width: 100%; min-width: 0; margin: 0; height: 2lh; min-height: 2lh; max-height: 2lh; overflow: hidden; }
 .chat-start-heading { display: block; width: 100%; position: relative; color: var(--text); font-family: var(--font-conversation); font-weight: var(--weight-regular); }
@@ -64,7 +64,7 @@
 
 /* Loading and loaded cards reserve the same footprint. */
 .attention-fan-navigation { min-height: var(--control-touch); }
-.skeleton-attention { max-width: 480px; }
+.skeleton-attention { max-width: 640px; }
 .skeleton-attention .attention-fan-card[data-side="-1"] { transform: rotate(-6deg) translateY(10px) scale(.94); }
 .skeleton-attention .attention-fan-card[data-side="1"] { transform: rotate(6deg) translateY(10px) scale(.94); }
 .skeleton-attention .attention-fan-kind { width: 100%; }
@@ -111,3 +111,32 @@
 .attention-fan-card[data-kind="allowances"] .attention-fan-kind svg { color: var(--success); }
 .attention-fan-card[data-kind="chat"] .attention-fan-kind svg { color: var(--muted); }
 @media (forced-colors: active) { .attention-fan-count { background: CanvasText; color: Canvas; } .attention-fan-stack-row { border-left-color: CanvasText; } }
+
+/* A tint per topic: warm red for calendar and inbox, green for allowances. */
+.attention-fan-card[data-kind="inbox"], .attention-fan-card[data-kind="calendar"] { --fan-tint: var(--brand-accent); }
+.attention-fan-card[data-kind="allowances"] { --fan-tint: var(--success); }
+.attention-fan-card[data-kind="request"] { --fan-tint: var(--warning); }
+.attention-fan-card[data-kind="inbox"], .attention-fan-card[data-kind="calendar"],
+.attention-fan-card[data-kind="allowances"], .attention-fan-card[data-kind="request"] {
+ border-color: color-mix(in srgb, var(--fan-tint) 32%, var(--border));
+ background-color: color-mix(in srgb, var(--fan-tint) 8%, color-mix(in srgb, var(--surface) 72%, transparent));
+}
+.attention-fan-card[data-kind="inbox"].is-active, .attention-fan-card[data-kind="calendar"].is-active,
+.attention-fan-card[data-kind="allowances"].is-active, .attention-fan-card[data-kind="request"].is-active,
+.attention-fan-card[data-kind="inbox"].is-hovered, .attention-fan-card[data-kind="calendar"].is-hovered,
+.attention-fan-card[data-kind="allowances"].is-hovered, .attention-fan-card[data-kind="request"].is-hovered {
+ background-color: color-mix(in srgb, var(--fan-tint) 11%, color-mix(in srgb, var(--surface) 86%, transparent));
+ border-color: color-mix(in srgb, var(--fan-tint) 48%, var(--border));
+}
+.attention-fan-card[data-kind="calendar"] .attention-fan-kind svg,
+.attention-fan-card[data-kind="allowances"] .attention-fan-kind svg { color: var(--fan-tint); }
+.attention-fan-card[data-kind="calendar"] .calendar-date { color: color-mix(in srgb, var(--brand-accent) 55%, var(--text)); }
+@media (prefers-reduced-transparency: reduce) {
+ .attention-fan-card[data-kind="inbox"], .attention-fan-card[data-kind="calendar"],
+ .attention-fan-card[data-kind="allowances"], .attention-fan-card[data-kind="request"] { background: color-mix(in srgb, var(--fan-tint) 8%, var(--surface)); }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+ .attention-fan-card[data-kind="inbox"], .attention-fan-card[data-kind="calendar"],
+ .attention-fan-card[data-kind="allowances"], .attention-fan-card[data-kind="request"] { background: color-mix(in srgb, var(--fan-tint) 8%, var(--surface)); }
+}
+@media (forced-colors: active) { .attention-fan-card[data-kind] { background: Canvas; border-color: CanvasText; } }

@@ -1467,7 +1467,7 @@ der geladene Befehlsbaustein zeigt seinen eigenen Abrufstatus.
 
 ## Chatübergreifendes Vorlesen und Arbeitsbegleitung
 
-„Chat vorlesen“ im Chatmenü aktiviert die sichtbaren künftigen Agenten-Prosameldungen
+„Chat vorlesen“ im Chatmenü und im Menü der Chatliste aktiviert die sichtbaren künftigen Agenten-Prosameldungen
 und Endantworten dieses Chats. Keine Werkzeugausgaben oder Reasoning-Inhalte.
 Abgeschlossene Meldungen werden dedupliziert; ACP-Prosa wird spätestens beim
 folgenden Werkzeugstart vorgelesen. Es spricht genau eine Quelle pro Browser-Tab.

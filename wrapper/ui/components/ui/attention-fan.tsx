@@ -13,7 +13,7 @@ import './attention-fan.css';
 import {reconcileFan,entryTime,inboxAction,inboxKindLabel} from '../../chat-start-feed.mjs';
 import {ReplyCardPreview} from '../../reply-card-preview';
 export interface AttentionItem {id:string;kind:string;title:string;description:string;prompt?:string;continuation?:boolean;threadId?:string;turnId?:string;noticeId?:string;entry?:any;job?:any;calendar?:any;weather?:any;weatherConfigured?:boolean;statistics?:any;allowances?:any;entries?:any[];count?:number;lead?:any;}
-export function AttentionFan({items,onOpen,onActiveChange,reduceMotion=false,disabled=false,api}:{items:AttentionItem[];onOpen:(item:AttentionItem)=>void;onActiveChange?:(item:AttentionItem)=>void;reduceMotion?:boolean;disabled?:boolean;api?:any}) {
+export function AttentionFan({items,onOpen,onActiveChange,reduceMotion=false,disabled=false,autoplay=false,api}:{items:AttentionItem[];onOpen:(item:AttentionItem)=>void;onActiveChange?:(item:AttentionItem)=>void;reduceMotion?:boolean;disabled?:boolean;autoplay?:boolean;api?:any}) {
   const signature=JSON.stringify(items.map(item=>item.id));
   const [order,setOrder]=useState(()=>({...reconcileFan({ids:[],selected:''},items),signature}));
   const [hovered,setHovered]=useState<string|null>(null);
@@ -31,7 +31,7 @@ export function AttentionFan({items,onOpen,onActiveChange,reduceMotion=false,dis
     const frame=requestAnimationFrame(()=>{measured.current=true;});
     return()=>{observer.disconnect();cancelAnimationFrame(frame);measured.current=false;};
   },[hasItems]);
-  const compact=width<380,wide=width>=attentionFanMotion.wideThreshold;
+  const compact=width<380,wide=width>=attentionFanMotion.wideThreshold,veryWide=width>=attentionFanMotion.veryWideThreshold;
   const focusedCard=useRef<string|null>(null);
   useEffect(()=>{
     if(!focusedCard.current||byId.has(focusedCard.current))return;
@@ -45,11 +45,18 @@ export function AttentionFan({items,onOpen,onActiveChange,reduceMotion=false,dis
   const wheel=useRef({sum:0,last:0,at:0});
   const touch=useRef<{x:number;y:number}|null>(null),ignoreClick=useRef(0);
   useEffect(()=>{if(active){onActiveChange?.(active);}},[active?.id,onActiveChange]);
+  const step=useRef((_:number)=>{});
+  step.current=(direction:number)=>{if(!disabled&&items.length>1)setOrder(old=>({...old,selected:items[(index+direction+items.length)%items.length].id}));};
+  useEffect(()=>{
+    if(!autoplay||reduced||disabled||hovered||items.length<2)return;
+    const timer=setInterval(()=>{if(!document.hidden)step.current(1);},attentionFanMotion.autoplayInterval);
+    return()=>clearInterval(timer);
+  },[autoplay,reduced,disabled,hovered,signature,items.length]);
   if(!active)return null;
   const select=(i:number)=>{if(!disabled){setHovered(null);setOrder(old=>({...old,selected:items[(i+items.length)%items.length].id}));}};
-  const count=Math.min(items.length,wide?5:3),left=Math.floor((count-1)/2);
+  const count=Math.min(items.length,veryWide?7:wide?5:3),left=Math.floor((count-1)/2);
   const visible=Array.from({length:count},(_,n)=>({i:(index+n-left+items.length)%items.length,side:n-left}));
-  const spread=compact?attentionFanMotion.compactSpread:wide?attentionFanMotion.wideSpread:attentionFanMotion.spread;
+  const spread=compact?attentionFanMotion.compactSpread:veryWide?attentionFanMotion.veryWideSpread:wide?attentionFanMotion.wideSpread:attentionFanMotion.spread;
   return <section ref={track} onPointerLeave={()=>setHovered(null)} className="attention-fan" aria-label="Anknüpfungspunkte für dein Gespräch" aria-roledescription="Karussell"
     onWheel={e=>{const delta=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.shiftKey?e.deltaY:0;if(!delta)return;const now=Date.now(),state=wheel.current;if(now-state.at>180||Math.sign(delta)!==Math.sign(state.sum))state.sum=0;state.at=now;state.sum+=delta*(e.deltaMode===1?16:1);if(Math.abs(state.sum)>=attentionFanMotion.wheelThreshold&&now-state.last>=attentionFanMotion.wheelCooldown){select(index+(state.sum>0?1:-1));state.sum=0;state.last=now;}}}
     onKeyDown={e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();select(index+(e.key==='ArrowRight'?1:-1));}}}
@@ -58,11 +65,11 @@ export function AttentionFan({items,onOpen,onActiveChange,reduceMotion=false,dis
     onTouchCancel={()=>{touch.current=null;}}>
     <div className="attention-fan-track"><AnimatePresence initial={false}>
       {visible.map(({i,side})=>{
-        const item=items[i],isActive=i===index,isHovered=hovered===item.id,outer=Math.abs(side)===2;
+        const item=items[i],isActive=i===index,isHovered=hovered===item.id,distance=Math.abs(side),outer=distance===2,far=distance>=3;
         const weatherReady=item.kind==='weather'&&item.weather?.status==='ready';
         const Icon=item.kind==='inbox'?Inbox:item.kind==='statistics'?Activity:item.kind==='allowances'?Zap:item.kind==='calendar'?Calendar:item.kind==='weather'?MapPin:item.kind==='job'?Clock:item.kind==='artifact'?FileText:item.kind==='request'||item.kind==='notice'?Bell:item.kind==='report'?FileText:item.kind==='chat'?MessageCircle:BrainCircuit;
-        return <FanCard type="button" key={item.id} className={'attention-fan-card'+(weatherReady?' weather-card':'')+(isActive?' is-active':'')+(isHovered?' is-hovered':'')} data-side={side} data-kind={item.kind} style={{zIndex:isHovered?6:3-Math.abs(side)}}
-          initial={reduced?false:{opacity:0,y:attentionFanMotion.arrivalY,scale:attentionFanMotion.arrivalScale,x:side*width*spread}} exit={reduced?{opacity:0,transition:{duration:0}}:{opacity:0,y:attentionFanMotion.departureY,scale:attentionFanMotion.departureScale,transition:{duration:attentionFanMotion.exitDuration,ease:attentionFanMotion.ease}}} animate={{opacity:1,x:side*width*spread,rotate:isHovered?0:outer?Math.sign(side)*attentionFanMotion.outerRotation:side*(compact?attentionFanMotion.compactRotation:attentionFanMotion.rotation),y:isHovered?attentionFanMotion.hoverLift:isActive?0:outer?attentionFanMotion.outerDepth:attentionFanMotion.depth,scale:isHovered?attentionFanMotion.hoverScale:isActive?1:outer?attentionFanMotion.outerScale:attentionFanMotion.scale}}
+        return <FanCard type="button" key={item.id} className={'attention-fan-card'+(weatherReady?' weather-card':'')+(isActive?' is-active':'')+(isHovered?' is-hovered':'')} data-side={side} data-kind={item.kind} style={{zIndex:isHovered?8:5-distance}}
+          initial={reduced?false:{opacity:0,y:attentionFanMotion.arrivalY,scale:attentionFanMotion.arrivalScale,x:side*width*spread}} exit={reduced?{opacity:0,transition:{duration:0}}:{opacity:0,y:attentionFanMotion.departureY,scale:attentionFanMotion.departureScale,transition:{duration:attentionFanMotion.exitDuration,ease:attentionFanMotion.ease}}} animate={{opacity:1,x:side*width*spread,rotate:isHovered?0:far?Math.sign(side)*attentionFanMotion.farRotation:outer?Math.sign(side)*attentionFanMotion.outerRotation:side*(compact?attentionFanMotion.compactRotation:attentionFanMotion.rotation),y:isHovered?attentionFanMotion.hoverLift:isActive?0:far?attentionFanMotion.farDepth:outer?attentionFanMotion.outerDepth:attentionFanMotion.depth,scale:isHovered?attentionFanMotion.hoverScale:isActive?1:far?attentionFanMotion.farScale:outer?attentionFanMotion.outerScale:attentionFanMotion.scale}}
           transition={reduced||!measured.current?{duration:0}:{type:'spring',...attentionFanMotion.spring,opacity:{duration:attentionFanMotion.enterDuration,ease:attentionFanMotion.ease}}}
           onPointerEnter={e=>{if(e.pointerType==='mouse'&&!disabled)setHovered(item.id);}}
           onFocus={e=>{if(e.currentTarget.matches(':focus-visible')){setHovered(item.id);focusedCard.current=item.id;}}} onBlur={e=>{setHovered(null);if(e.relatedTarget)focusedCard.current=null;}}

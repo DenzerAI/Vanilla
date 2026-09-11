@@ -61,3 +61,8 @@ test('ACP prose is spoken at the tool boundary and never duplicated at completio
  assert.deepEqual(played,['Ich prüfe die Datei.']);
  audio.event(event('a1','Ich prüfe die Datei.'));players[0].finish();await tick();assert.equal(played.length,1);audio.stop();
 });
+test('releasing an old microphone request never unlocks a newer recording',async()=>{
+ const a=holdMicrophone(Symbol()), b=holdMicrophone(Symbol());a();
+ const p=new SpeechPlayback(async()=>({audio:'AA=='}));
+ await assert.rejects(p.speak('No.'),/Diktat/);b();
+});
