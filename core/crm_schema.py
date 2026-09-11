@@ -14,5 +14,6 @@ CREATE TABLE IF NOT EXISTS crm_external_ids(connection_id TEXT NOT NULL, object_
 CREATE TABLE IF NOT EXISTS crm_relations(id TEXT PRIMARY KEY, entity_id TEXT NOT NULL REFERENCES crm_entities(id), target_type TEXT NOT NULL, target_id TEXT NOT NULL, relation TEXT NOT NULL, role TEXT NOT NULL, department TEXT NOT NULL, signal_id TEXT NOT NULL REFERENCES crm_signals(id), actor TEXT NOT NULL, created_at REAL NOT NULL, UNIQUE(entity_id,target_type,target_id,relation,role,department));
 CREATE TABLE IF NOT EXISTS crm_workflows(id TEXT PRIMARY KEY, definition TEXT NOT NULL CHECK(json_valid(definition)));
 CREATE TABLE IF NOT EXISTS crm_views(id TEXT PRIMARY KEY, revision INTEGER NOT NULL, definition TEXT NOT NULL CHECK(json_valid(definition)));
+CREATE TABLE IF NOT EXISTS crm_template_installations(namespace TEXT PRIMARY KEY, template_id TEXT NOT NULL, version INTEGER NOT NULL CHECK(version>0), snapshot TEXT NOT NULL CHECK(json_valid(snapshot)), resources TEXT NOT NULL CHECK(json_valid(resources)), actor TEXT NOT NULL, installed_at REAL NOT NULL);
 CREATE TABLE IF NOT EXISTS crm_audit(id INTEGER PRIMARY KEY AUTOINCREMENT, entity_id TEXT, action TEXT NOT NULL, actor TEXT NOT NULL, reason TEXT NOT NULL, reference TEXT NOT NULL, created_at REAL NOT NULL);
 '''

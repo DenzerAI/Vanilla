@@ -36,13 +36,14 @@
       "stage": "partial",
       "contract": "docs/CRM.md",
       "setup": "docs/CUSTOMER-SETUP.md#crm-core",
-      "data": "Installationsdaten in data/control und workspaces; Code enthält keine Kundendaten.",
+      "data": "CRM-Fakten, eigene Felder, Abläufe, Ansichten und Vorlageninstallationen in der bestehenden lokalen SQLite-Datenbank; neutrale Vorlagen reisen als Code. Keine Kundendaten in Git.",
       "sources": [
         "core/crm.py",
         "core/crm_api.py",
         "core/crm_mapping.py",
         "core/crm_models.py",
         "core/crm_schema.py",
+        "core/crm_templates.py",
         "core/mcp.py",
         "wrapper/crm-connections.mjs",
         "wrapper/ui/crm-connection.jsx"
@@ -55,6 +56,7 @@
         "GET /api/crm/schema",
         "GET /api/crm/sources/{signal_id}",
         "GET /api/crm/sources/{signal_id}/normalize",
+        "GET /api/crm/templates",
         "POST /api/crm/decisions",
         "POST /api/crm/entities/{entity_id}/archive",
         "POST /api/crm/entities/{entity_id}/check",
@@ -65,6 +67,7 @@
         "POST /api/crm/relations",
         "POST /api/crm/sources",
         "POST /api/crm/sources/{signal_id}/classify",
+        "POST /api/crm/templates/install",
         "POST /api/crm/tool",
         "POST /api/crm/views",
         "POST /api/crm/workflows",
@@ -75,15 +78,16 @@
         "platform"
       ],
       "verification": [
-        "core/tests/test_crm.py"
+        "core/tests/test_crm.py",
+        "core/tests/test_crm_templates.py"
       ],
       "status": {
         "endpoint": "GET /api/crm/schema",
-        "meaning": "Schema ist verfügbar; externe CRM-Synchronisation separat prüfen."
+        "meaning": "Schema und lokal eingerichtete Vorlagen sind lesbar; produktive CRM-Masken und externe Synchronisation bleiben separat auszubauen."
       },
-      "limits": "Schema ist verfügbar; externe CRM-Synchronisation separat prüfen.",
-      "version": 2,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der gemeinsam genutzte MCP-Katalog ergänzt optionale Routine-Kategorien; bestehende CRM-/Memory-Werkzeugfelder bleiben kompatibel."
+      "limits": "Neutrale People-/Firmenlisten und Deal-Listen-/Boarddefinitionen sind explizit einrichtbar. Noch keine produktiven CRM-Bearbeitungsmasken, kein Ablauf-Builder und kein externer Sync.",
+      "version": 3,
+      "migration": "Version 3 ergänzt crm_template_installations additiv und idempotent. Keine automatische Einrichtung oder Änderung vorhandener Fakten, Felder, Abläufe und Ansichten. Installationen speichern Vorlagenversion und Snapshot; Wiederholung ist ohne Schreibwirkung, Versions- oder Kennungskonflikte brechen atomar ab. Alter Code kann bestehende CRM-Daten lesen und ignoriert die neue Tabelle; keine Tabellen beim Rückwechsel löschen. Rückkehrregeln: docs/CRM.md."
     },
     {
       "id": "planner",

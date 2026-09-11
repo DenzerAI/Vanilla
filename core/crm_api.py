@@ -4,7 +4,7 @@ from fastapi import APIRouter, Query
 from pydantic import Field
 from .crm_mapping import graph_contact
 from .crm_models import (Strict, Decision, EntityQuery, Evidence, ExternalID, FieldDefinition,
-                         Proposal, Relation, SavedView, Workflow)
+                         Proposal, Relation, SavedView, TemplateInstallation, Workflow)
 
 
 class SourceInput(Strict):
@@ -37,6 +37,14 @@ def routes(crm, memory):
     @router.get('/api/crm/schema')
     async def schema():
         return crm.schema()
+
+    @router.get('/api/crm/templates')
+    async def templates():
+        return await asyncio.to_thread(crm.templates)
+
+    @router.post('/api/crm/templates/install')
+    async def install_template(body: TemplateInstallation):
+        return await asyncio.to_thread(crm.install_template, body)
 
     @router.post('/api/crm/query')
     async def query(body: EntityQuery):
