@@ -77,9 +77,12 @@ export function allowanceReader({readCodex,readClaude,enabled,now=Date.now,ttl=6
 /** The compact card shows the allowances that carry real work: one main window
  * per provider, the week first. Side buckets stay in the details. */
 export function featuredAllowances(providers=[],limit=3) {
+ // Older payloads from a running instance carry no classification yet.
+ const isMain=r=>r.primary!==undefined?r.primary===true:/^(codex:|five_hour$|seven_day$)/.test(String(r.id));
+ const periodOf=r=>r.period!==undefined?r.period:/Woche/.test(String(r.label))?'week':/5 Stunden/.test(String(r.label))?'short':null;
  const picked=[];
  for(const provider of providers){
-  const own=(provider.rows||[]).filter(r=>r.primary).map(r=>({...r,provider:provider.id}));
+  const own=(provider.rows||[]).filter(isMain).map(r=>({...r,period:periodOf(r),provider:provider.id}));
   const week=own.find(r=>r.period==='week'), short=own.find(r=>r.period==='short');
   for(const row of [week,short].filter(Boolean))picked.push(row);
  }

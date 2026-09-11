@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {codexAllowance,claudeAllowance,allowanceReader,claudeTurnUsage,recordUsage,addTokens} from '../usage.mjs';
+import {codexAllowance,claudeAllowance,allowanceReader,claudeTurnUsage,recordUsage,addTokens,featuredAllowances,remainingPercent} from '../usage.mjs';
 import {summarizeStatistics} from '../ui/statistics-data.mjs';
 import {readClaudeUsage} from '../claude-usage.mjs';
 import {mkdtemp,rm} from 'node:fs/promises';
@@ -73,4 +73,19 @@ test('the real ACP adapter forwards native turn counters and preserves context u
  assert.equal(thread.turns[0].usage.total.totalTokens,12);
  worker.receive({method:'session/update',params:{sessionId:'s',update:{sessionUpdate:'usage_update',used:45,size:100,cost:{amount:1.2,currency:'USD'}}}});
  assert.equal(thread.workerSession.usage.contextUsed,45);assert.equal(thread.workerSession.usage.cost,1.2);
+});
+
+test('the card features the working allowances, week first, and ignores side buckets',()=>{
+ const now=Date.now();
+ const codex=codexAllowance({rateLimitsByLimitId:{
+  codex:{limitName:'Codex',primary:{usedPercent:73,resetsAt:now/1000+600,windowDurationMins:10080},secondary:{usedPercent:12,resetsAt:now/1000+600,windowDurationMins:300}},
+  codex_bengalfox:{limitName:'GPT-5.3-Codex-Spark',primary:{usedPercent:0,resetsAt:now/1000+600,windowDurationMins:300}}}},now);
+ const claude=claudeAllowance({rate_limits_available:true,rate_limits:{seven_day:{utilization:40,resets_at:new Date(now+600000).toISOString()},seven_day_oauth_apps:{utilization:90,resets_at:new Date(now+600000).toISOString()}}},now);
+ const featured=featuredAllowances([codex,claude]);
+ assert.deepEqual(featured.map(r=>r.label),['Codex · Woche','Claude · Woche','Codex · 5 Stunden']);
+ assert.ok(!featured.some(r=>/Spark|Apps/.test(r.label)));
+ assert.equal(remainingPercent(featured[0],now),27);
+ assert.equal(remainingPercent({...featured[0],expired:true},now),null);
+ const legacy=featuredAllowances([{id:'codex',rows:[{id:'codex_x:primary',label:'Spark · Woche',usedPercent:0},{id:'codex:primary',label:'Codex · Woche',usedPercent:50}]}]);
+ assert.deepEqual(legacy.map(r=>r.label),['Codex · Woche']);
 });
