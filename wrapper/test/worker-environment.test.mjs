@@ -51,3 +51,20 @@ test('service credentials require an explicit local selector and stay with their
   await assert.rejects(installationEnvironment(root,'claw-code',{}),/konfigurierte Claude-Zugang fehlt/);
  } finally {await rm(root,{recursive:true,force:true});}
 });
+
+test('OAuth service bindings reject malformed selectors and external binding files', async t => {
+ const root=await mkdtemp(path.join(os.tmpdir(),'worker-oauth-'));
+ const foreign=await mkdtemp(path.join(os.tmpdir(),'foreign-auth-'));
+ t.after(()=>Promise.all([rm(root,{recursive:true,force:true}),rm(foreign,{recursive:true,force:true})]));
+ const file=path.join(root,'worker-auth.json'),environment={CLAUDE_CODE_OAUTH_TOKEN:'synthetic',ANTHROPIC_API_KEY:'unselected'};
+ await writeFile(file,JSON.stringify({version:1,environment:{'claw-code':'oauth'}}));
+ const env=await installationEnvironment(root,'claw-code',environment);
+ assert.equal(env.CLAUDE_CODE_OAUTH_TOKEN,'synthetic');assert.equal(env.ANTHROPIC_API_KEY,undefined);
+ for(const value of [null,[],{version:2,environment:{}},{version:1,environment:[]},{version:1,environment:{'claw-code':'PATH'}}]) {
+  await writeFile(file,JSON.stringify(value));
+  await assert.rejects(installationEnvironment(root,'claw-code',environment),/Unbekannt/);
+ }
+ await rm(file); await writeFile(path.join(foreign,'auth.json'),'{}');
+ await symlink(path.join(foreign,'auth.json'),file);
+ await assert.rejects(installationEnvironment(root,'claw-code',environment),/außerhalb/);
+});

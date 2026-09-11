@@ -44,13 +44,13 @@ export async function installationEnvironment(dataRoot, workerId, environment = 
       if (!inside(await realpath(authFile))) throw Error('Worker-Anmeldung liegt außerhalb dieser Installation.');
       auth = JSON.parse(await readFile(authFile, 'utf8'));
     } catch (error) { if (error.code !== 'ENOENT') throw error; }
-    if (auth) {
-      if (auth.version !== 1) throw Error('Unbekanntes Format der Worker-Anmeldung.');
+    if (auth !== undefined) {
+      if (!auth || Array.isArray(auth) || auth.version !== 1 || !auth.environment || typeof auth.environment !== 'object' || Array.isArray(auth.environment)) throw Error('Unbekanntes Format der Worker-Anmeldung.');
       const source = auth.environment?.['claw-code'];
       if (source !== undefined) {
         const key = new Map([['oauth','CLAUDE_CODE_OAUTH_TOKEN'], ['api-key','ANTHROPIC_API_KEY']]).get(source);
         if (!key) throw Error('Unbekannte Claude-Anmeldequelle.');
-        if (!environment[key]) throw Error('Der konfigurierte Claude-Zugang fehlt im Dienst. Bitte Dienstanmeldung prüfen.');
+        if (typeof environment[key] !== 'string' || !environment[key].trim()) throw Error('Der konfigurierte Claude-Zugang fehlt im Dienst. Bitte Dienstanmeldung prüfen.');
         result[key] = environment[key];
       }
     }

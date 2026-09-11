@@ -5,11 +5,26 @@ import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { WorkerRPC } from "./worker-rpc.mjs";
 import { optionValues, sessionModelSelection } from "./worker-models.mjs";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import { workerEnvironment } from "./worker-environment.mjs";
+
+export async function readClaudeServiceAuthentication({command, args = [], cwd, env}, execute = promisify(execFile)) {
+  try {
+    const {stdout} = await execute(command, [...args, '--cli', 'auth', 'status', '--json'], {
+      cwd, env: {...workerEnvironment(), ...env}, timeout: 5000, maxBuffer: 65536,
+    });
+    const status = JSON.parse(stdout);
+    return status.loggedIn === true && status.authMethod === 'oauth_token';
+  } catch { return false; }
+}
 
 export class ACPWorker extends EventEmitter {
-  constructor({ id, name, command, args, cwd, contextEnv, readThread, persist, rpc, mcpServers = () => [] }) {
+  constructor({ id, name, command, args, cwd, contextEnv, readThread, persist, rpc, mcpServers = () => [], probeAuthentication }) {
     super(); Object.assign(this, { id, name, readThread, persist, mcpServers });
     this.rpc = rpc || new WorkerRPC({ command, args, cwd, env: contextEnv });
+    this.probeServiceAuth = id === 'claw-code' && contextEnv?.CLAUDE_CODE_OAUTH_TOKEN
+      ? probeAuthentication || (() => readClaudeServiceAuthentication({command, args, cwd, env:contextEnv})) : null;
     this.threads = new Map(); this.sessions = new Map(); this.running = new Map(); this.requests = new Map();
     this.connected = false; this.setupCount = 0; this.earlyUpdates = []; this.authRevision = 0;
     const save = this.persist;
@@ -21,6 +36,7 @@ export class ACPWorker extends EventEmitter {
     };
     this.rpc.on("message", msg => this.receive(msg));
     this.rpc.on("disconnected", error => {
+      this.authRevision++;
       this.connected = false; this.starting = null; this.authenticated = undefined; this.sessions.clear(); this.earlyUpdates = [];
       for (const [id] of this.running) this.finish(id, "failed", { message: "Verbindung unterbrochen. Ergebnis prüfen, bevor du erneut startest." }).catch(() => {});
       this.requests.clear(); this.emit("disconnected", error);
@@ -249,7 +265,18 @@ export class ACPWorker extends EventEmitter {
     if (msg.method === "_auth/status_update") {
       const kind = msg.params?.authStatus?.kind;
       if (["none", "account", "api_key", "external", "gateway"].includes(kind)) {
-        this.authRevision++;
+        const revision = ++this.authRevision;
+        // ACP 0.75 omits token-only OAuth identities from its mapping. Ask the
+        // same bundled CLI; the presence of a token alone never proves login.
+        if (kind === 'none' && this.probeServiceAuth) {
+          this.authenticated = undefined;
+          Promise.resolve().then(() => this.probeServiceAuth()).catch(() => false).then(authenticated => {
+            if (revision !== this.authRevision || !this.connected) return;
+            this.authenticated = authenticated === true;
+            this.emit('authentication', this.authenticated);
+          });
+          return;
+        }
         this.authenticated = kind !== "none";
         this.emit("authentication", this.authenticated);
       }

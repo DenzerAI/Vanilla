@@ -193,14 +193,30 @@ Ladefehler und nicht mehr verfügbare Einstellungen bleiben sichtbare Fehler.
 
 Die native Claude-Verlaufsspeicherung verwendet wie Codex einen eigenen
 Installationsordner: standardmäßig `UWE_DATA_ROOT/claude`, übergeben als
-`CLAUDE_CONFIG_DIR`. Ein ausdrücklich konfigurierter absoluter
-`CLAUDE_CONFIG_DIR` hat Vorrang. Der Ordner wird vor dem Workerstart angelegt;
-ein Schreibfehler verhindert den Start. Der Wrapper-Export ersetzt den nativen
-Verlauf nicht. Anmeldung und Schlüsselverwaltung bleiben nativ, auch ein
-bereits im Prozess bereitgestellter OAuth-Zugang. Es werden keine globalen
-Claude-Konfigurationen oder Zugangsdaten kopiert. Wenn keine native Anmeldung
-für diesen Ordner vorliegt, die Claude-CLI mit demselben `CLAUDE_CONFIG_DIR`
-anmelden. Bestehende angenommene Sitzungen werden bei fehlendem nativen Verlauf
+`CLAUDE_CONFIG_DIR`. Der Ordner gehört zur Installation und wird vor dem
+Workerstart angelegt. Anmeldung und Schlüsselverwaltung bleiben nativ. Es werden
+keine globalen Claude-Konfigurationen oder Zugangsdaten kopiert. Ohne Anmeldung
+für diesen Ordner die CLI über `npm run worker:login -- claw-code` anmelden.
+
+Ein bereits ausdrücklich eingerichteter Dienstzugang kann unter
+`UWE_DATA_ROOT/worker-auth.json` gebunden werden:
+`{"version":1,"environment":{"claw-code":"oauth"}}` übernimmt ausschließlich
+`CLAUDE_CODE_OAUTH_TOKEN`; `api-key` wählt ausschließlich `ANTHROPIC_API_KEY`.
+Die Datei enthält nur den Selektor, niemals den Schlüssel. Ohne diese lokale
+Bindung werden keine Umgebungszugänge übernommen. Fehlender Dienstzugang oder
+ungültige Bindungen verhindern den Start. Andere Worker erhalten diese Werte
+nicht. Bestehende Installationen richten die Bindung ausdrücklich ein; neue
+Clones bleiben unverbunden. Entfernen der Bindung stellt das Profilverhalten
+wieder her, ohne Zugangsdaten oder Chats zu verändern.
+
+ACP 0.75 kann tokenbasierte OAuth-Anmeldungen ohne Abonnementfelder als `none`
+melden. Nur bei ausdrücklich gebundenem OAuth prüft der Wrapper dann dieselbe
+CLI über den Adapter (`--cli auth status --json`). Erst `loggedIn: true` mit
+`authMethod: oauth_token` bestätigt die Anmeldung. Späte Ergebnisse nach einer
+neueren Identität oder Trennung werden verworfen. Ein vorhandener Token allein
+bestätigt keine Anmeldung; eine echte Testantwort bestätigt die Nutzbarkeit.
+
+Bestehende angenommene Sitzungen werden bei fehlendem nativen Verlauf
 nicht automatisch neu ausgeführt.
 
 Vorgemerkte Modellwahl: `/api/turn` akzeptiert `nextSelection: {model, effort}` für die nächste Antwort. Während eines aktiven Turns wird dieser Request abgewiesen, bevor `turn/steer` möglich ist. Im Leerlauf prüft Codex gegen den gemeldeten Katalog; ACP übernimmt Modell und Effort anhand aufeinanderfolgender nativer Antworten. Auswahl und Prompt bleiben unter derselben `turnLocks`-Sperre. Fehler verhindern die Promptübergabe.

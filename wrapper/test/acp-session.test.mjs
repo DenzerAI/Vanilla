@@ -282,3 +282,37 @@ test('expired authentication blocks restored sessions and prompts before accepti
   assert.equal(thread.turns.length,0);
   assert.equal(calls.length,0);
 });
+
+test('token-only Claude login uses the native CLI result and ignores stale probes', async () => {
+  const rpc = new EventEmitter(); let resolve;
+  const worker = new ACPWorker({id:'claw-code', name:'Claude', rpc, contextEnv:{CLAUDE_CODE_OAUTH_TOKEN:'synthetic'},
+    persist:async()=>{}, readThread:async()=>null, probeAuthentication:()=>new Promise(r=>resolve=r)});
+  worker.connected=true; worker.info={agentCapabilities:{_meta:{authStatus:{}}}};
+  const report=kind=>worker.receive({method:'_auth/status_update',params:{authStatus:{kind}}});
+  report('none'); await Promise.resolve();
+  assert.equal(worker.authenticated,undefined);
+  const checked=worker.checkAuthentication(); resolve(true); await checked;
+  assert.equal(worker.authenticated,true);
+  report('none'); await Promise.resolve(); report('api_key'); resolve(false);
+  await new Promise(r=>setImmediate(r)); assert.equal(worker.authenticated,true);
+  report('none'); await Promise.resolve();
+  const rejected=assert.rejects(worker.checkAuthentication(),/nicht angemeldet/); resolve(false); await rejected;
+  report('none'); await Promise.resolve(); rpc.emit('disconnected',{}); worker.connected=true; resolve(true);
+  await new Promise(r=>setImmediate(r)); assert.equal(worker.authenticated,undefined);
+});
+
+test('native token probe forwards only to the configured adapter and requires a positive OAuth result', async () => {
+  const {readClaudeServiceAuthentication} = await import('../acp-worker.mjs');
+  const request={command:'fixture-adapter',args:['fixture-flag'],cwd:'/fixture',env:{CLAUDE_CODE_OAUTH_TOKEN:'synthetic'}};
+  const result=await readClaudeServiceAuthentication(request,async(command,args,options)=>{
+    assert.equal(command,request.command);
+    assert.deepEqual(args,['fixture-flag','--cli','auth','status','--json']);
+    assert.equal(options.env.CLAUDE_CODE_OAUTH_TOKEN,'synthetic');
+    assert.equal(options.timeout,5000);
+    return {stdout:JSON.stringify({loggedIn:true,authMethod:'oauth_token'})};
+  });
+  assert.equal(result,true);
+  for(const stdout of ['bad','{}','{"loggedIn":false,"authMethod":"oauth_token"}','{"loggedIn":true,"authMethod":"api_key"}'])
+    assert.equal(await readClaudeServiceAuthentication(request,async()=>({stdout})),false);
+  assert.equal(await readClaudeServiceAuthentication(request,async()=>{throw Error('private');}),false);
+});

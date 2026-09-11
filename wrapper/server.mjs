@@ -97,7 +97,7 @@ const nativeCodex = new Codex({
   home: runtime.home,
   config: {...runtime.config,...sharedMemoryCodexConfig()},
   binary: await resolveAICommand(workerCatalog.find(w => w.id === "codex")) || "codex",
-  contextEnv: { ...await installationEnvironment(dataRoot), AGENT_INTERNAL_TOKEN: process.env.AGENT_INTERNAL_TOKEN || "", COMPANY_BASE: companyRoot(root), SYSTEM_BASE: systemRoot() },
+  contextEnv: { ...await installationEnvironment(dataRoot, 'codex'), AGENT_INTERNAL_TOKEN: process.env.AGENT_INTERNAL_TOKEN || "", COMPANY_BASE: companyRoot(root), SYSTEM_BASE: systemRoot() },
 });
 const workers = new Workers({ store, root, codex: nativeCodex, resolveCommand: resolveAICommand });
 await workers.init();

@@ -23,6 +23,9 @@ der installationsgebundene Einstieg ist `npm run worker:login -- WORKER`.
 Danach unter den bestehenden Worker-Einstellungen verbinden und eine kurze
 Testnachricht ausführen. Installiert, verbunden und authentifiziert getrennt
 prüfen. Trennen beendet den Anschluss; Profile werden nicht heimlich gelöscht.
+Ein ausdrücklich vorhandener Claude-Dienstzugang kann über die lokale
+`worker-auth.json` an diese Installation gebunden werden; Selektoren und
+Rückweg stehen in wrapper/WORKERS.md. Ohne Bindung bleibt die Umgebung isoliert.
 Weitere Protokollgrenzen und Wiederaufnahme: wrapper/WORKERS.md.
 
 ## inbox
