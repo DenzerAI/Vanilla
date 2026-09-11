@@ -15,7 +15,7 @@ import {createSharedApi} from './shared-reads.mjs';
 import {copyThreadForEvent,reconcileThreadSnapshot} from './thread-update.mjs';
 import { createMessageOutbox, deliveryView } from './message-outbox.mjs';
 import {PaneShortcutSettings,usePaneShortcuts} from './pane-shortcut-settings.jsx';
-import {matchPaneShortcut} from './pane-shortcuts.mjs';
+import {bindPaneShortcuts} from './pane-shortcuts.mjs';
 import { sharedParticlesEnabled } from "./chat-layout.mjs";
 import {statisticsTimeZone} from './statistics-client';
 import {ComposerQuestion, useComposerQuestion} from './composer-question';
@@ -767,7 +767,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const setComposerText = value => questionState.request ? questionState.setText(typeof value === "function" ? value(questionState.text) : value) : setText(value);
   const [engagedChatId, setEngagedChatId] = useState(undefined);
   const paneShortcuts=usePaneShortcuts();
-  const paneShortcutState=useRef(null);
+  const paneShortcutState=useRef(null), dictationControl=useRef(null);
   const selectedPane = embedded ? paneActive : activePane === 0;
   const composerActive = selectedPane && engagedChatId === chatId;
   const activateComposer = () => {
@@ -777,23 +777,16 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   paneShortcutState.current={bindings:paneShortcuts,view,modal,order:paneOrder,activate:activatePane};
   useEffect(()=>{
     if(embedded)return;
-    let frame;
-    const key=event=>{
-      const state=paneShortcutState.current;
-      if(state.view!=="chat" || state.modal || document.hidden || !document.hasFocus() || document.querySelector('[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"]'))return;
-      const id=matchPaneShortcut(event,state.bindings);
-      if(id<0)return;
-      event.preventDefault();
-      if(!state.order.includes(id)){notify(`Chat ${id+1} ist nicht geöffnet.`);return;}
-      state.activate(id);
-      cancelAnimationFrame(frame);
-      frame=requestAnimationFrame(()=>{
-        if(paneShortcutState.current.view==="chat" && activePaneRef.current===id)
-          sessions.current[id].current?.focusComposer();
-      });
-    };
-    window.addEventListener("keydown",key);
-    return()=>{window.removeEventListener("keydown",key);cancelAnimationFrame(frame);};
+    return bindPaneShortcuts(window,{
+      state:()=>paneShortcutState.current,
+      visibilityTarget:document,
+      available:()=>!document.hidden && document.hasFocus() && !document.querySelector('[role="dialog"], [role="alertdialog"], [role="menu"], [role="listbox"]'),
+      active:()=>activePaneRef.current,
+      session:id=>sessions.current[id].current,
+      notify,
+      schedule:fn=>requestAnimationFrame(fn),
+      cancel:frame=>cancelAnimationFrame(frame),
+    });
   },[embedded]);
   // A draft becoming a saved chat keeps intentional input focus. Restoration does not.
   useEffect(() => {
@@ -1933,6 +1926,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     projectIcon:<span className="project-glyph" style={{color:projectColor(modal?.type === "project" && modal.project?.id === project?.id ? modal.color ?? project?.color : project?.color)}}>{icon(projectGlyphs[project?.icon] || Folder, 18)}</span>, running, busy, status:current?.lastTurnStatus, unread:hasUnreadReply(current),
     newDraft, openChat:openChatHere, projectId,
     focusComposer:()=>{activateComposer();if(!chatLocked)inputRef.current?.focus({preventScroll:true});},
+    toggleDictation:()=>{if(!chatLocked)dictationControl.current?.toggle();},
+    cancelDictation:()=>dictationControl.current?.cancel() || false,
     items:chatLocked ? [{id:'open',label:'PIN eingeben',icon:icon(Lock),action:()=>document.querySelector(`#chat-pane-${paneNumber} input`)?.focus()}, {id:'new',label:'Neuer Chat',icon:icon(Plus),disabled:busy,action:()=>newDraft(projectId)}] : [
       ...(boot?.features?.chatPrivacy ? [{id:'privacy',label:current?.private ? 'Jetzt sperren' : 'Chat sperren …',icon:icon(Lock),disabled:!current || busy,action:current?.private ? guard(()=>changeChatPrivacy(api,'lock',chatId)) : ()=>setModal({type:'chat-privacy',action:'setup'})},
         ...(current?.private ? [{id:'privacy-remove',label:'Schutz entfernen …',icon:icon(Lock),action:()=>setModal({type:'chat-privacy',action:'remove'})}] : [])] : []),
@@ -2405,7 +2400,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       }
                     }}
                   />
-                      <Dictation shortcutEnabled={foreground && view === "chat" && readablePane && selectedPane && !chatLocked} api={api} notify={notify} chatId={chatId || "draft:" + projectId} enabled={embedded ? paneVisible : visible.includes(0)} running={running || busy || questionState.pending || !!uploadCounts.current.get(chatId || `new:${projectId}`)} onText={(transcript) => setComposerText(previous => previous ? previous + "\n" + transcript : transcript)} onVoiceText={transcript => submit(undefined, transcript)} onSendText={transcript => submit(undefined, transcript, true)} reply={(() => { const t = thread?.turns?.filter(t => !t.clientPending && t.status !== "inProgress").at(-1); return t ? { id:t.id, chatId, status:t.status, text:t.items?.filter(i => i.type === "agentMessage" && i.phase !== "commentary").map(i => i.text || "").join("\n") || "" } : null; })()} openSettings={() => { setSettingsTab("voice"); setView("settings"); }} />
+                      <Dictation controlRef={dictationControl} shortcutEnabled={foreground && view === "chat" && readablePane && selectedPane && !chatLocked} api={api} notify={notify} chatId={chatId || "draft:" + projectId} enabled={embedded ? paneVisible : visible.includes(0)} running={running || busy || questionState.pending || !!uploadCounts.current.get(chatId || `new:${projectId}`)} onText={(transcript) => setComposerText(previous => previous ? previous + "\n" + transcript : transcript)} onVoiceText={transcript => submit(undefined, transcript)} onSendText={transcript => submit(undefined, transcript, true)} reply={(() => { const t = thread?.turns?.filter(t => !t.clientPending && t.status !== "inProgress").at(-1); return t ? { id:t.id, chatId, status:t.status, text:t.items?.filter(i => i.type === "agentMessage" && i.phase !== "commentary").map(i => i.text || "").join("\n") || "" } : null; })()} openSettings={() => { setSettingsTab("voice"); setView("settings"); }} />
                     <div className="composer-send-actions">
                       {questionState.request ? (
                         <>

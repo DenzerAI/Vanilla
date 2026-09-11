@@ -19,8 +19,8 @@ export function PaneShortcutSettings(){
   save(bindings.map((old,i)=>i===index?value:old));
  }
  return <>
-  <h3 className="section-heading">Chat-Panes</h3>
-  <p className="page-note">Wählt einen geöffneten Chat und setzt den Schreibcursor. Auch mit entsprechend belegten Maustasten. Auf diesem Gerät gespeichert; System- und Browserkürzel können Vorrang haben.</p>
+  <h3 className="section-heading">Diktieren in Chat 1–4</h3>
+  <p className="page-note">Einmal drücken wählt den geöffneten Chat und startet das Diktat. Nochmals drücken beendet und sendet es mit Entwurf und Anhängen. Escape bricht ohne Senden ab. Auf diesem Gerät gespeichert; System- und Browserkürzel können Vorrang haben.</p>
   <div className="settings-group">
    {bindings.map((value,index)=><SettingRow key={index} title={`Chat ${index+1}`}><div className="row compact">
     <button type="button" aria-label={`Tastenkürzel für Chat ${index+1} ändern`} aria-pressed={capture===index} onClick={()=>{setCapture(index);setError('');}} onBlur={()=>setCapture(old=>old===index?null:old)} onKeyDownCapture={event=>record(event,index)}>{capture===index?'Kombination drücken …':shortcutLabel(value)}</button>

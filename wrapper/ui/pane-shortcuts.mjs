@@ -26,3 +26,32 @@ export function shortcutLabel(value){
  const key=value.code.replace(/^Digit|^Key|^Numpad/,'').replace('Arrow','Pfeil ').replace('Space','Leertaste');
  return [value.ctrlKey&&'Ctrl',value.altKey&&'Alt / ⌥',value.shiftKey&&'Shift',value.metaKey&&'⌘ / Win',key].filter(Boolean).join(' + ');
 }
+
+// One outer-app owner routes gestures after the selected pane has rendered.
+export function bindPaneShortcuts(target,{state,available,active,session,notify,schedule,cancel,visibilityTarget=target}){
+ let frame;
+ const clear=()=>{cancel(frame);frame=undefined;};
+ const eligible=()=>{const s=state();return s.view==='chat'&&!s.modal&&available();};
+ const key=event=>{
+  if(!eligible()||event.repeat||event.isComposing||event.defaultPrevented)return;
+  if(event.key==='Escape'){
+   const pending=frame!==undefined;clear();
+   if(session(active())?.cancelDictation()||pending)event.preventDefault();
+   return;
+  }
+  const s=state(),id=matchPaneShortcut(event,s.bindings);
+  if(id<0)return;
+  event.preventDefault();clear();
+  if(!s.order.includes(id)){notify(`Chat ${id+1} ist nicht geöffnet.`);return;}
+  const selected=session(id),chatId=selected?.id,projectId=selected?.projectId;
+  s.activate(id);
+  frame=schedule(()=>{
+   frame=undefined;
+   const current=session(id);
+   if(!eligible()||active()!==id||!state().order.includes(id)||!current||current.id!==chatId||current.projectId!==projectId)return;
+   current.focusComposer();current.toggleDictation();
+  });
+ };
+ target.addEventListener('keydown',key);target.addEventListener('blur',clear);visibilityTarget.addEventListener('visibilitychange',clear);
+ return()=>{clear();target.removeEventListener('keydown',key);target.removeEventListener('blur',clear);visibilityTarget.removeEventListener('visibilitychange',clear);};
+}

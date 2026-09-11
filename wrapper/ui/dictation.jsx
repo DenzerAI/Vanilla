@@ -1,6 +1,6 @@
 import {useDictationShortcut} from './dictation-shortcut-settings.jsx';
 import {bindDictationShortcut,shortcutCode} from './dictation-shortcut.mjs';
-import React, {useState,useRef,useEffect} from 'react';
+import React, {useState,useRef,useEffect,useImperativeHandle} from 'react';
 import {Mic,ArrowUp,Pause,Play,Trash2,Check,X,Square,Volume2,Download} from './icons.jsx';
 import {write,sync,all,downloadLocal,subscribeSync} from './dictation-storage.mjs';
 import {microphone,microphoneError} from './dictation-audio.mjs';
@@ -9,12 +9,12 @@ import {VoiceWave,VoiceStatus} from './voice-visual';
 import {voiceWaveGeometry} from './design-system.mjs';
 import './dictation.css';
 const delay=ms=>new Promise(resolve=>setTimeout(resolve,ms));
-export function Dictation({api,notify,onText,onVoiceText,onSendText,chatId,reply,running=false,enabled=true,shortcutEnabled=false,openSettings}) {
+export function Dictation({api,notify,onText,onVoiceText,onSendText,chatId,reply,running=false,enabled=true,shortcutEnabled=false,controlRef,openSettings}) {
   const shortcut=useDictationShortcut();
-  const shortcutState=useRef(null),shortcutBinding=useRef(null);
+  const shortcutState=useRef(null),shortcutBinding=useRef(null),paneOwned=useRef(false);
   const [awaitingId,setAwaitingId]=useState(null);
   const [phase,setPhase]=useState('idle'),[seconds,setSeconds]=useState(0),[levels,setLevels]=useState(Array(voiceWaveGeometry.samples).fill(0)),[sessionActive,setSessionActive]=useState(false),[output,setOutput]=useState('idle'),[issue,setIssue]=useState('');
-  const current=useRef(null),mounted=useRef(true),stopRef=useRef(null),startRef=useRef(null),generation=useRef(0),session=useRef(null),playback=useRef(null),latest=useRef({reply,chatId});latest.current={reply,chatId,onSendText};
+  const current=useRef(null),mounted=useRef(true),stopRef=useRef(null),startRef=useRef(null),generation=useRef(0),session=useRef(null),playback=useRef(null),latest=useRef({reply,chatId});latest.current={reply,chatId,onSendText,onText,running};
   if(!playback.current)playback.current=new SpeechPlayback(api,s=>{if(mounted.current)setOutput(s);});
   const phaseRef=useRef(phase);phaseRef.current=phase;
   function report(e){if(mounted.current){setIssue(e.message);notify(e.message);}}
@@ -95,6 +95,39 @@ export function Dictation({api,notify,onText,onVoiceText,onSendText,chatId,reply
     finish:()=>{void stopRef.current?.(false,true);},
     cancelPending:()=>{generation.current++;phaseRef.current='idle';setPhase('idle');},
   };
+  useImperativeHandle(controlRef,()=>({
+    toggle(){
+      if(!shortcutState.current.available())return;
+      const currentPhase=phaseRef.current;
+      if(currentPhase==='idle'){
+        paneOwned.current=true;void startRef.current?.();
+      }else if(currentPhase==='starting'){
+        paneOwned.current=false;shortcutState.current.cancelPending();
+      }else if(['recording','paused'].includes(currentPhase)){
+        paneOwned.current=false;
+        shortcutBinding.current?.releaseOwnership?.();
+        // The existing delivery path preserves drafts and blocks busy sends.
+        void stopRef.current?.(false,true,true);
+      }
+    },
+    cancel(){
+      if(phaseRef.current==='idle' || phaseRef.current==='waiting' || session.current)return false;
+      paneOwned.current=false;shortcutBinding.current?.releaseOwnership?.();
+      void end();return true;
+    },
+  }));
+  useEffect(()=>{
+    const interrupt=()=>{
+      if(!paneOwned.current)return;
+      paneOwned.current=false;
+      if(phaseRef.current==='starting')shortcutState.current.cancelPending();
+      else if(['recording','paused'].includes(phaseRef.current))void stopRef.current?.(false,true);
+    };
+    const hidden=()=>{if(document.hidden)interrupt();};
+    if(!shortcutEnabled || !enabled)interrupt();
+    window.addEventListener('blur',interrupt);document.addEventListener('visibilitychange',hidden);
+    return()=>{window.removeEventListener('blur',interrupt);document.removeEventListener('visibilitychange',hidden);interrupt();};
+  },[shortcutEnabled,enabled,chatId]);
   useEffect(()=>{
     if(!shortcutEnabled || !enabled)return;
     const invoke=name=>(...args)=>shortcutState.current[name](...args);
@@ -104,19 +137,26 @@ export function Dictation({api,notify,onText,onVoiceText,onSendText,chatId,reply
     document.addEventListener('visibilitychange',hidden);
     return()=>{document.removeEventListener('visibilitychange',hidden);dispose();};
   },[shortcut.key,shortcut.mode,shortcutEnabled,enabled,chatId]);
-  useEffect(()=>{if(phase==='idle')shortcutBinding.current?.releaseOwnership?.();},[phase]);
+  useEffect(()=>{if(phase==='idle'){paneOwned.current=false;shortcutBinding.current?.releaseOwnership?.();}},[phase]);
 
   async function transcribe(id,g,conversation,direct=false){
+    const targetChat=latest.current.chatId;
     setPhase('recognizing');
     await api('/dictation/transcribe',{id});
     for(let i=0;i<1800;i++){
       await delay(1000);if(!mounted.current || g!==generation.current)return;
-      const status=await api('/dictation/status');const r=status.recordings.find(r=>r.id===id);
+      const status=await api('/dictation/status');
+      if(!mounted.current || g!==generation.current || latest.current.chatId!==targetChat)return;
+      const r=status.recordings.find(r=>r.id===id);
       if(!r)throw new Error('Aufnahme ist unter Stimme wiederherstellbar.');
       if(r.processing)continue;
       if(r.error)throw new Error(r.error);
       if(!r.text?.trim()){setPhase('idle');setIssue('Keine Sprache erkannt.');return;}
       if(direct){
+        if(latest.current.running){
+          latest.current.onText(r.text);setPhase('idle');
+          setIssue('Chat ist beschäftigt. Das Diktat steht im Entwurf.');return;
+        }
         setPhase('waiting');
         await latest.current.onSendText(r.text);
         if(mounted.current && g===generation.current)setPhase('idle');
@@ -139,13 +179,13 @@ export function Dictation({api,notify,onText,onVoiceText,onSendText,chatId,reply
       for(const chunk of s.unsaved)await write('chunks',chunk);s.unsaved=[];s.failed=false;
       if(s.seq)await write('recordings',{...s.r,finished:true,count:s.seq,trash});secured=true;
       s.stream.getTracks().forEach(t=>t.stop());await s.context.close();current.current=null;
-      if(!s.seq){if(mounted.current)setPhase('idle');return;}
+      if(!s.seq){if(mounted.current && g===generation.current)setPhase('idle');return;}
       await sync(api);
       if(mounted.current && g===generation.current && !trash && recognize)await transcribe(s.r.id,g,conversation,direct);
-      else if(mounted.current)setPhase('idle');
+      else if(mounted.current && g===generation.current)setPhase('idle');
     }catch(e){
       if(!secured){s.stopping=false;s.failed=true;if(mounted.current){setPhase('paused');setIssue('Audio noch im Speicher. Sicherheitskopie herunterladen.');}}
-      else if(mounted.current){setPhase('idle');setIssue('Audio gesichert. Unter Stimme erneut versuchen.');notify(e.message);}
+      else if(mounted.current && g===generation.current){setPhase('idle');setIssue('Audio gesichert. Unter Stimme erneut versuchen.');notify(e.message);}
     }
   }
   stopRef.current=stop;
