@@ -46,6 +46,7 @@ const NetworkConnection = lazySurface(() => import('./device-connection.tsx'), '
 import { uploadAttachmentBatch } from "./attachment-upload.mjs";
 import "./workspace-layout.css";
 import { createChatScroll } from "./chat-scroll.mjs";
+import { createMessageHover } from "./message-hover.mjs";
 import { connectionCatalog, connectionCategories, connectionCategory } from "./connection-catalog.mjs";
 import './library-connections.css';
 import { hasUnreadReply } from "../chat-read-state.mjs";
@@ -756,6 +757,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const projectRef = useRef(initialProject),
     chatRef = useRef(null),
     scrollRef = useRef(null),
+    hoverController = useRef(null),
     scrollController = useRef(null),
     inputRef = useRef(null),
     uploadRef = useRef(null),
@@ -1172,10 +1174,12 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       scrollController.current = element
         ? createChatScroll(element, followScroll, setAwayFromBottom)
         : null;
+      hoverController.current?.dispose();
+      hoverController.current = element ? createMessageHover(element) : null;
     }
     scrollController.current?.sync();
   });
-  useEffect(() => () => scrollController.current?.dispose(), []);
+  useEffect(() => () => { scrollController.current?.dispose(); hoverController.current?.dispose(); }, []);
   useEffect(()=>{
     if(!replyTarget||loading||thread?.id!==replyTarget.chatId)return;
     const frame=requestAnimationFrame(()=>{
