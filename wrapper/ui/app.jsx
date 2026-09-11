@@ -606,6 +606,8 @@ function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, 
 const projectGlyphs = { folder: Folder, code: Braces, briefcase: Briefcase, globe: Globe, idea: BrainCircuit, calendar: Calendar, message: MessageCircle, files: FileText };
 function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNumber = 0, panePosition = 0, showPaneHeader = false, isMaximized = false, onMaximize, onClosePane, onOpenFile, onOpenCalendar, paneVisible = true, paneActive = false, initialProject = "default" }) {
   const [libraryRevision,setLibraryRevision]=useState(0);
+  const [libraryJob,setLibraryJob]=useState(null);
+  const [resultCategories,setResultCategories]=useState([]);
   const historyReads=useRef(null);
   historyReads.current ||= createLatestRead((url,signal)=>api(url,undefined,true,signal));
   useEffect(()=>()=>historyReads.current.cancel(),[]);
@@ -1957,13 +1959,14 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     document.addEventListener('keydown', close);
     return () => { cancelAnimationFrame(frame); document.removeEventListener('keydown', close); };
   }, [view, modal?.type, modal?.job?.id, modal?.template?.id]);
+  useEffect(()=>{if(modal?.type!=='job')return;let active=true;api('/library').then(data=>{if(active)setResultCategories(data.categories||[]);}).catch(()=>{});return()=>{active=false;};},[modal?.type,modal?.job?.id]);
   const visibleJobs = filterJobs(jobs, jobFilter, search, jobCategory);
   const jobEditor = modal?.type === 'job' && !modal.job?.managed ? <JobForm
     key={modal.job?.id || modal.template?.id || 'new'}
     routines={!!boot.features?.routines} configurationReady={!!boot.features?.jobConfiguration} initialTemplate={modal.template}
     workers={boot.workers || []} projects={boot.projects || []}
     modelsByWorker={boot.modelsByWorker || {}} defaultProjectId={projectId}
-    job={modal.job} jobs={jobs} connections={integrations.connections}
+    job={modal.job} jobs={[...jobs,...resultCategories.map(category=>({category}))]} connections={integrations.connections}
     onSave={guard(async job => {
       await api('/jobs/save', job);
       setJobs(await api('/jobs'));
@@ -1973,7 +1976,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const nav = [
       ["inbox", Inbox, "Inbox"],
       ["jobs", Clock, "Aufträge"],
-      ...(boot?.features?.library?[["library", FileText, "Bibliothek"]]:[]),
+      ...(boot?.features?.library?[["library", FileText, "Ergebnisse"]]:[]),
       ...(boot?.features?.firma?[["firma", Briefcase, "Firma"]]:[]),
     ];
   const settingNav = [
@@ -2103,7 +2106,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                     "nav-item " +
                     ((view === id || (id === "today" && view === "calendar")) && id !== "chat" ? "selected" : "")
                   }
-                  onClick={() => { closeMobileNavigation(); id === "chat" ? newDraft() : setView(id); }}
+                  onClick={() => { closeMobileNavigation(); if(id === "library")setLibraryJob(null); id === "chat" ? newDraft() : setView(id); }}
                 >
                   {icon(I)}
                   {label}
@@ -2729,6 +2732,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               <button onClick={()=>{setSettingsTab(modal.job.id==='system-memory'?'memory':['system-backup','system-cleanup'].includes(modal.job.id)?'storage':'system');setModal(null);setView('settings');}}>Systemeinstellungen öffnen</button>
               {modal.job.lastRun?.coreRunId && <CoreRunDetails api={api} id={modal.job.lastRun.coreRunId}/>}
             </> : <>
+              {modal.job?.id && <div className="row job-detail-links"><button onClick={()=>{setLibraryJob({id:modal.job.id,name:modal.job.name});setModal(null);setView('library');}}>Ergebnisse ansehen</button></div>}
               {modal.job?.lastRun && <div className="row job-detail-links">
                 <button onClick={()=>setModal({type:'job-run',job:modal.job})}>Letzte Ausführung ansehen</button>
                 {modal.job.lastRun.threadId && <button onClick={guard(async()=>{const id=modal.job.lastRun.threadId;setModal(null);await openChat(id);})}>Ergebnis im Chat öffnen</button>}
@@ -2738,7 +2742,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
           </section>}
           </div>
         ) : view === "library" ? (
-          <LibraryPage revision={libraryRevision} api={api} notify={notify} projects={boot.projects} PageHeading={PageHeading} onShowSidebar={!sidebar?()=>setSidebar(true):undefined} onOpen={(entry,entries)=>setModal({type:'library-file',entry,entries})} onReuse={guard(async entry=>{const file=await api('/library/reuse',{id:entry.id,projectId});setAttachments(a=>[...a,file]);setView('chat');})} onSource={guard(async entry=>{if(chats.some(c=>c.id===entry.threadId))await openChat(entry.threadId);else notify('Das Quellgespräch ist nicht verfügbar.');})}/>
+          <LibraryPage jobFilter={libraryJob} onClearJob={()=>setLibraryJob(null)} onJob={guard(async entry=>{const currentJobs=await api('/jobs');setJobs(currentJobs);const job=currentJobs.find(j=>j.id===entry.jobId);if(!job){notify('Der Auftrag ist nicht mehr verfügbar.');return;}setView('jobs');setModal({type:'job',job});})} revision={libraryRevision} api={api} notify={notify} projects={boot.projects} PageHeading={PageHeading} onShowSidebar={!sidebar?()=>setSidebar(true):undefined} onOpen={(entry,entries)=>setModal({type:'library-file',entry,entries})} onReuse={guard(async entry=>{const file=await api('/library/reuse',{id:entry.id,projectId});setAttachments(a=>[...a,file]);setView('chat');})} onSource={guard(async entry=>{if(chats.some(c=>c.id===entry.threadId))await openChat(entry.threadId);else notify('Das Quellgespräch ist nicht verfügbar.');})}/>
         ) : connectionsActive ? (
           <div className="page connections-page">
             <PageHeading title="Verbindungen" onShowSidebar={!sidebar ? () => setSidebar(true) : undefined}/>

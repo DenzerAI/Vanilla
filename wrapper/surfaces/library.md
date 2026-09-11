@@ -1,10 +1,10 @@
-# Bibliothek
+# Ergebnisse
 
 Modus: Operate. Die bestehende Designsprache aus ../DESIGN.md ist verbindlich.
 
 ## Kompakter Dateibrowser
 
-Die Bibliothek zeigt ausschließlich den Dateibrowser. Die Reiter „Dateien“ und
+Die Ergebnisansicht zeigt ausschließlich den Dateibrowser. Die Reiter „Dateien“ und
 „Wissen und Notizen“ sowie „Notiz erstellen“ entfallen. Bestehende Wissensdateien
 bleiben unverändert über die globale Suche und ihren vorhandenen Editor erreichbar.
 
@@ -32,9 +32,9 @@ Vor/Zurück wechseln durch die gefilterten Ergebnisse. Escape schließt den Moda
 und gibt den Fokus zurück. Die große Ansicht ist ausschließlich zum Betrachten: Inhalt, Titel, Navigation und Schließen. Favorit, Download, Quellgespräch und Wiederverwendung liegen nur im rechten Workspace. Fehlende Dateien und Ladefehler
 verwenden die bestehenden FileContent-Zustände und Wiederholen-Aktion.
 
-Ergebnisse aus Chats, Kanalaufträgen, Jobs, Projekt-output/ und dem bestehenden Order-Artefaktordner teilen denselben Index. Die Bibliothek dupliziert Dateien erst bei ausdrücklicher Wiederverwendung. Favoriten und Quellen bleiben erhalten. Neue Ergebnisse aktualisieren die Ansicht über das bestehende Ereignissystem.
+Ergebnisse aus Chats, Kanalaufträgen, Jobs, Projekt-output/ und dem bestehenden Order-Artefaktordner teilen denselben Index. Die Ergebnisansicht dupliziert Dateien erst bei ausdrücklicher Wiederverwendung. Favoriten und Quellen bleiben erhalten. Neue Ergebnisse aktualisieren die Ansicht über das bestehende Ereignissystem.
 
-Die Bibliothek bietet keinen „Bild erstellen“-Button. Bilderzeugung bleibt im Chat beziehungsweise über vorhandene Anschlüsse verfügbar. Lade-, Fehler- und Leerzustände verwenden die vorhandenen Muster; keine neue globale Toolleiste.
+Die Ergebnisansicht bietet keinen „Bild erstellen“-Button. Bilderzeugung bleibt im Chat beziehungsweise über vorhandene Anschlüsse verfügbar. Lade-, Fehler- und Leerzustände verwenden die vorhandenen Muster; keine neue globale Toolleiste.
 
 ## Ladeformen
 
@@ -46,7 +46,7 @@ während des anfänglichen Such-Debounce.
 
 ## Feinschliff der Vorschau
 
-Der Ansichtswechsel verwendet die gemeinsamen runden Iconbuttons: transparent im Ruhezustand, feiner Kreisrand und betontes Symbol bei Auswahl, einmalige Hoveranimation auf Desktop. Keine eigene Gruppenfüllung oder Auswahlkachel. Markdown wird im Bibliotheks-Lesemodus von FileContent über den vorhandenen bereinigten Markdown-Renderer dargestellt. Andere Text-/Codedateien erscheinen als lesbarer schreibgeschützter Text, editierbare FileContent-Aufrufer behalten ihren Editor. Im Workspace scrollt der gesamte Inhalt, ohne verschachteltes Textfeld. Die große Vorschau nutzt die verfügbare Fensterhöhe; lange Dokumente scrollen, Bilder bleiben vollständig sichtbar.
+Der Ansichtswechsel verwendet die gemeinsamen runden Iconbuttons: transparent im Ruhezustand, feiner Kreisrand und betontes Symbol bei Auswahl, einmalige Hoveranimation auf Desktop. Keine eigene Gruppenfüllung oder Auswahlkachel. Markdown wird im Ergebnis-Lesemodus von FileContent über den vorhandenen bereinigten Markdown-Renderer dargestellt. Andere Text-/Codedateien erscheinen als lesbarer schreibgeschützter Text, editierbare FileContent-Aufrufer behalten ihren Editor. Im Workspace scrollt der gesamte Inhalt, ohne verschachteltes Textfeld. Die große Vorschau nutzt die verfügbare Fensterhöhe; lange Dokumente scrollen, Bilder bleiben vollständig sichtbar.
 
 ## Vorschau nach Dateityp
 
@@ -59,7 +59,7 @@ Der Datei-Skeleton folgt der aktiven Listen-/Rasterwahl innerhalb des scrollende
 ## HTML-Dokumente im Workspace und in der Großansicht
 
 HTML und HTM werden in FileContent standardmäßig als gerenderte Seite angezeigt.
-HtmlPreview ist der gemeinsame iframe-Baustein; Unser Design beschreibt diesen gemeinsamen Baustein. Bibliothek, Chat-Artefakte und Workspace verwenden denselben
+HtmlPreview ist der gemeinsame iframe-Baustein; Unser Design beschreibt diesen gemeinsamen Baustein. Ergebnisansicht, Chat-Artefakte und Workspace verwenden denselben
 Anzeigeweg. HTML erhält einen eigenen Dateitypfilter; Miniaturen zeigen ein
 Formatsymbol und starten keine Dokumentskripte.
 
@@ -67,8 +67,8 @@ Ein HTML-Link im Chat öffnet zunächst die kompakte Workspace-Vorschau. HTML re
 auf die tatsächliche iframe-Breite wie auf einem schmalen Gerät. „Vergrößern“ erweitert
 denselben Workspace; „Verkleinern“ stellt die vorherige Breite wieder her. „Vollbild“
 nutzt die native Browserfunktion von HtmlPreview. Dabei bleiben iframe, Scrollposition
-und Dokumentzustand erhalten. Die Bibliothek behält Auswahlvorschau, Doppelklick und
-Vergrößern in LibraryPreview. Kein automatischer Wechsel in die Bibliothek oder ein Modal.
+und Dokumentzustand erhalten. Die Ergebnisansicht behält Auswahlvorschau, Doppelklick und
+Vergrößern in LibraryPreview. Kein automatischer Wechsel in die Ergebnisansicht oder ein Modal.
 Die Großansicht nutzt bei HTML fast die gesamte Fensterbreite und -höhe; auf dem
 Handy bleiben Kopf und Schließen erreichbar. Der Inhalt scrollt im Dokument.
 
@@ -88,7 +88,7 @@ Raw-/Download-Weg bleiben unverändert. Diese erste Vorschau ist für eigenstän
 HTML-Dateien gedacht; sie synchronisiert noch keine externen Dateiänderungen live.
 
 
-Der helle Workspace verwendet dieselbe dunkler abgesetzte Papierfläche wie im Chat, auch in Dateivorschau und Bibliothek. Menüs und Dialoge folgen der hellen Materialhierarchie aus DESIGN.md; es gibt keine eigene Bibliothekspalette.
+Der helle Workspace verwendet dieselbe dunkler abgesetzte Papierfläche wie im Chat, auch in Dateivorschau und Ergebnisansicht. Menüs und Dialoge folgen der hellen Materialhierarchie aus DESIGN.md; es gibt keine eigene Ergebnispalette.
 
 
 Codeblöcke im gemeinsamen Markdown-Renderer verwenden ebenfalls CopyButton.
@@ -103,7 +103,7 @@ AgentFiles verwendet die gewählte Projekt-ID und den Workspace-Namen. Die
 Navigation endet an dessen Wurzel; ein Workspace-Wechsel verwirft die bisherige
 Dateiauswahl. Während ein ausdrücklich verlinkter Unterordner geladen wird,
 bleibt der Datei-Skeleton sichtbar. LibraryThumbnail bietet zusätzlich eine
-Kartenvariante mit lesbarer Dokumentbreite; normale Bibliotheksminiaturen
+Kartenvariante mit lesbarer Dokumentbreite; normale Ergebnisminiaturen
 behalten ihren Aufbau und ihre bisherigen Ladegrenzen.
 
 
@@ -150,3 +150,37 @@ Die Serverergänzung muss für Foliensteuerung aktiv sein; ältere Server liefer
 weiter die normale Vorschau ohne Präsentationsbutton. Neues Vollbild funktioniert
 auch ohne Steuerbrücke. Ältere Viewer verwenden den bestehenden Endpunkt ohne
 Zusatzparameter. Ein Zurücksetzen verliert nur die neuen Anzeigeaktionen.
+
+
+## Kategorien und Auftragsherkunft · Version 3
+
+Die Oberfläche heißt Ergebnisse, die Navigation bleibt Inbox, Aufträge, Ergebnisse,
+Firma und Workspaces. Bestehende library-Routen, Kennungen, Favoriten und Dateien
+bleiben erhalten. Kategorie, Workspace und Dateityp sind unabhängige Filter.
+Die Kategorie verwendet denselben kurzen freien Namen und dieselbe Validierung
+wie Aufträge. Der Katalog enthält Auftrags- und Ergebniskategorien; Allgemein ist
+weiterhin die leere Kategorie. Auch die globale Suche berücksichtigt Kategorien.
+
+Ergebnisse aus Auftrags-output/ und registrierten Auftragschats erhalten jobId
+und den Workspace des Auftrags. Bei jedem Abruf wird seine aktuelle Kategorie
+übernommen. Die Vorschau verwendet ResultCategoryEditor mit nativer Input/Datalist,
+vorhandenem Formular und explizitem Speichern. Fehler erhalten den Entwurf.
+Eine eigene Zuordnung bleibt beim Neuladen erhalten; „Vom Auftrag übernehmen“
+stellt die Vererbung wieder her. Unser Design zeigt denselben Baustein mit lokalen
+Beispieldaten. Zum Auftrag öffnet vorhandene Auftragsdetails; Ergebnisse ansehen
+am Auftrag öffnet die nach jobId gefilterte Ergebnisansicht, mit Alle Aufträge
+als Rückweg. Ein gelöschter oder unlesbarer Auftrag bleibt als nicht verfügbar
+gekennzeichnet; vorhandene Ergebnisse und letzte bekannte Kategorie bleiben erhalten.
+
+Daten/Migration: library.json Version 1 bleibt kompatibel. Additive Felder
+jobCategory, jobName und jobAvailable beschreiben den zuletzt gelesenen Auftrag.
+categoryOverride ist null/fehlend für Vererbung, sonst ein validierter Name;
+explizit leer bedeutet Allgemein. category ist die abgeleitete Anzeige.
+POST /api/library/category schreibt ausschließlich Indexmetadaten über dieselbe
+Warteschlange wie Refresh/Favoriten; keine Dateiverschiebung oder Manifeständerung.
+Alte Leser ignorieren Zusatzfelder und erhalten Dateien/Favoriten. Nach Rückkehr
+entfällt die Kategoriebedienung; erneutes Update übernimmt erhaltene Overrides.
+Prüfung: wrapper/test/service-platform.test.mjs sowie Desktop-/Handyansicht.
+
+Der Index erfasst auch lokale Dateilinks finaler Antworten einschließlich ihrer
+Auftragsherkunft. Die Chatansicht behält ihre Duplikatfilter unverändert.

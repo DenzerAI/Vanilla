@@ -32,7 +32,7 @@ import { ModelPicker } from "./model-picker.jsx";
 import { InboxPatternPreview } from "./inbox";
 import { PanelLight } from "./panel-light";
 import {LibraryThumbnail} from './library-thumbnail.jsx';
-import {LibraryPreview} from './library.jsx';
+import {LibraryPreview,ResultCategoryPreview} from './library.jsx';
 import {Skeleton} from './skeleton.tsx';
 import React, {useState} from "react";
 import { SettingsPatterns } from "./settings-patterns.jsx";
@@ -158,12 +158,12 @@ export function DesignReference({ theme, tone, accent }) {
       <h3 className="section-heading">Flächenlicht</h3>
       <div className="panel-light-preview"><PanelLight mode="animated"/><span>Dezente Tiefe mit ruhiger Lichtbewegung</span></div>
       <h3 className="section-heading">Dateivorschau</h3>
-      <p className="page-note">Quick Look verwendet die gemeinsame Glasfläche, einen kompakten Dateikopf und aufklappbare Informationen. Die Bibliothek ergänzt kompakte Listen und ein Bildraster mit direkter Auswahlvorschau im rechten Workspace. Doppelklick oder Leertaste öffnen Quick Look.</p>
-      <div className="library-entries-grid" aria-label="Dateisymbole">{['HTML','PDF','MP3','ZIP'].map(format=><div key={format}><LibraryThumbnail entry={{name:'Beispiel.'+format,path:'',missing:true,kind:format==='MP3'?'audio':'download'}}/></div>)}</div>
+      <p className="page-note">Quick Look verwendet die gemeinsame Glasfläche, einen kompakten Dateikopf und aufklappbare Informationen. Die Ergebnisansicht ergänzt kompakte Listen und ein Bildraster mit direkter Auswahlvorschau im rechten Workspace. Doppelklick oder Leertaste öffnen Quick Look.</p>
+      <ResultCategoryPreview/><div className="library-entries-grid" aria-label="Dateisymbole">{['HTML','PDF','MP3','ZIP'].map(format=><div key={format}><LibraryThumbnail entry={{name:'Beispiel.'+format,path:'',missing:true,kind:format==='MP3'?'audio':'download'}}/></div>)}</div>
       <button onClick={()=>setPreview(true)}>Vorschau öffnen</button>
       {preview&&<LibraryPreview entry={{id:'example',name:'Dateivorschau',path:'output/beispiel',origin:'Designbeispiel'}} onClose={()=>setPreview(false)}><div className="library-preview"><p>Hier steht das Bild oder Dokument. Dateiaktionen bleiben im rechten Workspace; diese Großansicht zeigt ausschließlich den Inhalt.</p></div></LibraryPreview>}
       <h3 className="section-heading">HTML · gerenderte Dokumente</h3>
-      <p className="page-note">HTML-Links öffnen eine responsive Vorschau im Workspace. Vergrößern und echtes Browser-Vollbild behalten denselben Inhalt. Präsentieren ergänzt Vor/Zurück und Folienstand für markierte Folien; gewöhnliches HTML bleibt scrollbar. Die Bibliothek verwendet den gleichen Renderer in Quick Look. Bearbeiten bleibt eine separate Aktion. Skripte im Dokument bleiben von der App isoliert.</p>
+      <p className="page-note">HTML-Links öffnen eine responsive Vorschau im Workspace. Vergrößern und echtes Browser-Vollbild behalten denselben Inhalt. Präsentieren ergänzt Vor/Zurück und Folienstand für markierte Folien; gewöhnliches HTML bleibt scrollbar. Die Ergebnisansicht verwendet den gleichen Renderer in Quick Look. Bearbeiten bleibt eine separate Aktion. Skripte im Dokument bleiben von der App isoliert.</p>
       <h3 className="section-heading">Inhalte laden</h3>
       <p className="page-note">Platzhalter für Listen, Einstellungen, Gesprächsverläufe und Vorschauen. Vorhandene Inhalte bleiben beim Aktualisieren sichtbar. Reduzierte Bewegung zeigt ruhende Formen.</p>
       <p className="page-note">Dateiliste: Name, Art und Datum</p>

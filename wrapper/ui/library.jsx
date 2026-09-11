@@ -1,7 +1,8 @@
+import {normalizeJobCategory} from './job-categories.mjs';
 import {fileKind} from './artifact-content.mjs';
 import {LibraryThumbnail} from './library-thumbnail.jsx';
 import {Skeleton} from './skeleton.tsx';
-import React,{useEffect,useState,useRef} from 'react';
+import React,{useEffect,useState,useRef,useId} from 'react';
 import {FilterPicker} from './filter-picker.jsx';
 import {FileText,Search,RefreshCw,Image,ChevronLeft,ChevronRight,Blocks,Maximize,X} from './icons.jsx';
 import {libraryDate,sortLibraryEntries} from './library-order.mjs';
@@ -9,14 +10,17 @@ import {Modal} from './modal.jsx';
 import {FileContent} from './file-content.jsx';
 const kindLabels={html:'HTML',image:'Bild',pdf:'PDF',text:'Text / Code',audio:'Audio',video:'Video',download:'Datei'};
 function rawUrl(entry){return '/api/file/raw?path='+encodeURIComponent(entry.path)+'&scope='+encodeURIComponent(entry.scope||'workspace');}
-export function LibraryPage({api,notify,onOpen,onReuse,onSource,projects,PageHeading,onShowSidebar,revision}) {
+export function LibraryPage({api,notify,onOpen,onReuse,onSource,onJob,jobFilter,onClearJob,projects,PageHeading,onShowSidebar,revision}) {
   const [layout,setLayout]=useState(()=>{try{return localStorage.getItem('library-view')==='grid'?'grid':'list';}catch{return 'list';}});
   const [selection,setSelection]=useState(null), listRef=useRef(null), inspectorRef=useRef(null);
+  const [category,setCategory]=useState(null);
   const [data,setData]=useState({entries:[]}),[query,setQuery]=useState(''),[kind,setKind]=useState('all'),[project,setProject]=useState('all'),[busy,setBusy]=useState(true),[error,setError]=useState('');
   async function refresh(){setBusy(true);setError('');try{setData(await api('/library'));}catch(e){setError(e.message);notify(e.message);}finally{setBusy(false);}}
   useEffect(()=>{void refresh();},[revision]);
   function changeLayout(value){setLayout(value);try{localStorage.setItem('library-view',value);}catch{}}
-  const entries=sortLibraryEntries(data.entries.map(entry=>({...entry,kind:fileKind(entry.path)}))).filter(e=>(kind==='all'||kind==='favorite'&&e.favorite||e.kind===kind)&&(project==='all'||e.projectId===project)&&`${e.name} ${e.path} ${e.origin||''}`.toLowerCase().includes(query.toLowerCase()));
+  const entries=sortLibraryEntries(data.entries.map(entry=>({...entry,kind:fileKind(entry.path)}))).filter(e=>(kind==='all'||kind==='favorite'&&e.favorite||e.kind===kind)&&(project==='all'||e.projectId===project)&&(category===null||(e.category||'')===category)&&(!jobFilter||e.jobId===jobFilter.id)&&`${e.name} ${e.path} ${e.origin||''} ${e.category||'Allgemein'} ${e.jobName||''}`.toLowerCase().includes(query.toLowerCase()));
+  const categories=[...new Set([...(data.categories||[]),...data.entries.map(e=>e.category).filter(Boolean)])].sort((a,b)=>a.localeCompare(b,'de'));
+  function updated(entry){setData(current=>({...current,entries:current.entries.map(item=>item.id===entry.id?entry:item)}));}
   const selected=entries.find(e=>e.id===selection);
   useEffect(()=>{if(inspectorRef.current)inspectorRef.current.scrollTop=0;},[selected?.id]);
   function closePreview(){listRef.current?.querySelector('[aria-pressed="true"]')?.focus();setSelection(null);}
@@ -31,11 +35,11 @@ export function LibraryPage({api,notify,onOpen,onReuse,onSource,projects,PageHea
     if(next!==null){event.preventDefault();setSelection(entries[next].id);buttons[next]?.focus();}
   }
   return <div className="page library-page library-browser">
-    <PageHeading title="Bibliothek" onShowSidebar={onShowSidebar}>
+    <PageHeading title="Ergebnisse" onShowSidebar={onShowSidebar}>
       <div className="library-view-switch" role="group" aria-label="Dateiansicht"><button className="icon-button" title="Liste" aria-label="Liste" aria-pressed={layout==='list'} onClick={()=>changeLayout('list')}><FileText size={18}/></button><button className="icon-button" title="Bildraster" aria-label="Bildraster" aria-pressed={layout==='grid'} onClick={()=>changeLayout('grid')}><Blocks size={18}/></button></div>
-      <button className="icon-button" aria-label="Bibliothek aktualisieren" title="Aktualisieren" disabled={busy} onClick={refresh}><RefreshCw size={18}/></button>
+      <button className="icon-button" aria-label="Ergebnisse aktualisieren" title="Aktualisieren" disabled={busy} onClick={refresh}><RefreshCw size={18}/></button>
     </PageHeading>
-    <div className="library-controls"><div className="search-box"><Search size={16}/><input aria-label="Dateien suchen" placeholder="Suchen" value={query} onChange={e=>{setQuery(e.target.value);setSelection(null);}}/></div><FilterPicker label="Dateityp" value={kind} onChange={value=>{setKind(value);setSelection(null);}} options={['all','favorite','image','pdf','html','text','audio','video','download'].map((v,i)=>({value:v,label:['Alle Dateien','Favoriten','Bilder','PDFs','HTML-Seiten','Text und Code','Audio','Video','Weitere Dateien'][i]}))}/><FilterPicker label="Arbeitsbereich" value={project} onChange={value=>{setProject(value);setSelection(null);}} options={[{value:'all',label:'Alle Arbeitsbereiche'},...projects.map(p=>({value:p.id,label:p.name}))]}/></div>
+    <div className="library-controls"><div className="search-box"><Search size={16}/><input aria-label="Dateien suchen" placeholder="Suchen" value={query} onChange={e=>{setQuery(e.target.value);setSelection(null);}}/></div><FilterPicker label="Dateityp" value={kind} onChange={value=>{setKind(value);setSelection(null);}} options={['all','favorite','image','pdf','html','text','audio','video','download'].map((v,i)=>({value:v,label:['Alle Dateien','Favoriten','Bilder','PDFs','HTML-Seiten','Text und Code','Audio','Video','Weitere Dateien'][i]}))}/><FilterPicker label="Arbeitsbereich" value={project} onChange={value=>{setProject(value);setSelection(null);}} options={[{value:'all',label:'Alle Arbeitsbereiche'},...projects.map(p=>({value:p.id,label:p.name}))]}/><FilterPicker label="Kategorie" value={category===null?'all':'category:'+category} onChange={value=>{setCategory(value==='all'?null:value.slice(9));setSelection(null);}} options={[{value:'all',label:'Alle Kategorien'},{value:'category:',label:'Allgemein'},...categories.map(label=>({value:'category:'+label,label}))]}/>{jobFilter&&<><span className="page-note">Auftrag: {jobFilter.name}</span><button onClick={()=>{onClearJob();setSelection(null);}}>Alle Aufträge</button></>}</div>
     {error&&<p role="alert">{error}</p>}{data.truncated&&<p className="page-note">Die Erfassung ist auf 5.000 Dateien begrenzt.</p>}{data.warnings?.map(w=><p className="page-note" key={w}>{w}</p>)}
     <div className="library-browser-body">
       <div className="library-files">
@@ -47,15 +51,37 @@ export function LibraryPage({api,notify,onOpen,onReuse,onSource,projects,PageHea
             <span className="library-entry-name"><LibraryThumbnail key={e.scope+e.path+e.modifiedAt} entry={e}/><span>{e.name}</span></span><span className="library-entry-kind">{e.missing?'Fehlt':kindLabels[e.kind]||'Datei'}</span><time className="library-entry-date">{libraryDate(e)}</time>
           </button>)}
         </div>
-        {!busy&&!entries.length&&!error&&<div className="empty"><FileText size={28}/><h3>Keine Dateien</h3><p>{query||kind!=='all'||project!=='all'?'Keine passenden Ergebnisse.':'Ergebnisse aus Chats und Output-Ordnern erscheinen hier.'}</p></div>}
+        {!busy&&!entries.length&&!error&&<div className="empty"><FileText size={28}/><h3>Keine Ergebnisse</h3><p>{query||kind!=='all'||project!=='all'||category!==null||jobFilter?'Keine passenden Ergebnisse.':'Ergebnisse aus Aufträgen und Chats erscheinen hier.'}</p></div>}
         <p className="library-status" role="status">{busy?'Dateien werden geladen …':`${entries.length} Dateien · Zuletzt geändert`}</p>
       </div>
       {selected&&<aside className="workspace-panel library-inspector" aria-label="Workspace-Dateivorschau" onKeyDown={event=>{if(event.key==='Escape'){event.preventDefault();closePreview();}}}>
         <div className="panel-head"><span>Vorschau</span><div className="row"><button className="icon-button" aria-label="Vorschau vergrößern" title="Vergrößern" onClick={()=>onOpen(selected,entries)}><Maximize size={16}/></button><button className="icon-button" aria-label="Vorschau schließen" onClick={closePreview}><X size={16}/></button></div></div>
-        <div ref={inspectorRef} className="library-inspector-content"><div className="library-preview"><FileContent key={selected.scope+selected.path} path={selected.path} scope={selected.scope} api={api} readOnly reading/></div><h2>{selected.name}</h2><p className="page-note">{kindLabels[selected.kind]||'Datei'}{Number.isFinite(selected.size)?' · '+new Intl.NumberFormat('de-DE',{maximumFractionDigits:1}).format(selected.size/1024)+' KB':''}</p><details className="library-file-details"><summary>Informationen</summary><p>Geändert: {libraryDate(selected)}</p><p>{selected.origin}</p><code className="path-label">{selected.path}</code></details><div className="library-inspector-actions"><button disabled={selected.missing} onClick={()=>onReuse(selected)}>Im Chat verwenden</button><a href={rawUrl(selected)+'&download=1'} download>Herunterladen</a><button aria-pressed={!!selected.favorite} onClick={async()=>{try{const entry=await api('/library/favorite',{id:selected.id,favorite:!selected.favorite});setData(current=>({...current,entries:current.entries.map(item=>item.id===entry.id?entry:item)}));}catch(error){notify(error.message);}}}>{selected.favorite?'Favorit entfernen':'Als Favorit merken'}</button>{onSource&&selected.threadId&&<button onClick={()=>onSource(selected)}>Zum Gespräch</button>}</div></div>
+        <div ref={inspectorRef} className="library-inspector-content"><div className="library-preview"><FileContent key={selected.scope+selected.path} path={selected.path} scope={selected.scope} api={api} readOnly reading/></div><h2>{selected.name}</h2><p className="page-note">{kindLabels[selected.kind]||'Datei'}{Number.isFinite(selected.size)?' · '+new Intl.NumberFormat('de-DE',{maximumFractionDigits:1}).format(selected.size/1024)+' KB':''}</p><ResultCategoryEditor key={selected.id} entry={selected} categories={categories} onSave={async category=>updated(await api('/library/category',{id:selected.id,category}))}/><details className="library-file-details"><summary>Informationen</summary><p>Geändert: {libraryDate(selected)}</p><p>{selected.origin}</p><code className="path-label">{selected.path}</code></details><div className="library-inspector-actions"><button disabled={selected.missing} onClick={()=>onReuse(selected)}>Im Chat verwenden</button><a href={rawUrl(selected)+'&download=1'} download>Herunterladen</a><button aria-pressed={!!selected.favorite} onClick={async()=>{try{const entry=await api('/library/favorite',{id:selected.id,favorite:!selected.favorite});setData(current=>({...current,entries:current.entries.map(item=>item.id===entry.id?entry:item)}));}catch(error){notify(error.message);}}}>{selected.favorite?'Favorit entfernen':'Als Favorit merken'}</button>{onJob&&selected.jobId&&<button disabled={!selected.jobAvailable} onClick={()=>onJob(selected)}>{selected.jobAvailable?'Zum Auftrag':'Auftrag nicht verfügbar'}</button>}{onSource&&selected.threadId&&<button onClick={()=>onSource(selected)}>Zum Gespräch</button>}</div></div>
       </aside>}
     </div>
   </div>;
+}
+export function ResultCategoryEditor({entry,categories=[],onSave}) {
+  const [value,setValue]=useState(entry.category||''),[saving,setSaving]=useState(false),[error,setError]=useState('');
+  const list=useId();
+  useEffect(()=>{setValue(entry.category||'');},[entry.category,entry.categoryOverride]);
+  async function save(category){
+    setSaving(true);setError('');
+    try{await onSave(category===null?null:normalizeJobCategory(category));}
+    catch(e){setError(e.message);}
+    finally{setSaving(false);}
+  }
+  return <form onSubmit={event=>{event.preventDefault();void save(value);}}>
+    <label className="field"><span>Kategorie</span><input aria-label="Ergebniskategorie" list={list} maxLength={80} placeholder="Allgemein" value={value} disabled={saving} onChange={event=>setValue(event.target.value)}/></label>
+    <datalist id={list}>{categories.map(label=><option key={label} value={label}/>)}</datalist>
+    {entry.jobId&&<p className="form-help">{entry.categoryOverride==null?'Vom Auftrag übernommen':'Eigene Zuordnung'} · {entry.jobName||'Auftrag'}</p>}
+    <div className="row connection-actions"><button disabled={saving||value===(entry.category||'')}>{saving?'Wird gespeichert …':'Kategorie speichern'}</button>{entry.jobId&&entry.categoryOverride!=null&&<button type="button" disabled={saving} onClick={()=>void save(null)}>Vom Auftrag übernehmen</button>}</div>
+    {error&&<p role="alert">{error}</p>}
+  </form>;
+}
+export function ResultCategoryPreview(){
+  const [entry,setEntry]=useState({id:'example',category:'Marketing',jobCategory:'Marketing',jobId:'example',jobName:'Kampagnentext',categoryOverride:null});
+  return <ResultCategoryEditor entry={entry} categories={['Marketing','Vertrieb']} onSave={async category=>setEntry(current=>({...current,categoryOverride:category,category:category??current.jobCategory}))}/>;
 }
 export function ImageForm({api,connections,projects,projectId,onCreated,Field}) {
   const [busy,setBusy]=useState(false),[error,setError]=useState('');const available=connections.filter(c=>c.provider==='openai-image');

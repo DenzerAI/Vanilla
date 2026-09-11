@@ -135,3 +135,10 @@ Vormerkung für die nächste Nachricht. Präferenzspeicherung sperrt den Compose
 nicht und startet keine Sitzung. Der vorhandene Postausgang übernimmt die
 Auswahl nach Abschluss der laufenden Antwort. Daten- und Rückkehrvertrag:
 wrapper/surfaces/chat.md, Auswahl für die nächste Nachricht.
+
+
+Das bestehende library-Modul heißt in der Oberfläche Ergebnisse. Navigation und
+Suche behalten ihre technischen IDs. Der Index übernimmt Auftragskategorien und
+speichert optional eigene Kategoriezuordnungen; Aufträge und Ergebnisse verwenden
+dieselbe Validierung und gegenseitige Detailverweise. Daten-/Rückkehrvertrag:
+wrapper/surfaces/library.md. Keine Migration von Dateien, Chats oder Jobmanifesten.

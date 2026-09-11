@@ -177,3 +177,15 @@ Die Seite zeigt nur Titel, „Erstellen“, Suche, Filter und die Liste. Keine E
 Titel, kein Hinweis am Seitenende, kein großer zentrierter Leerzustand. Ist die Liste leer, steht
 links eine kurze Zeile („Noch keine Aufträge“, „Keine passenden Aufträge“, „Keine Systemaufträge“).
 
+
+
+## Aufträge und Ergebnisse
+
+Aufträge bleibt der Menübegriff; Routinen bezeichnet wiederkehrende Aufträge.
+Kategorie beschreibt einen Bereich wie Marketing, nicht die Art einer Aufgabe
+oder das Dateiformat. Ergebnisse verwenden dieselben Namen. Eigene Kategorien
+von Ergebnissen stehen beim Bearbeiten eines Auftrags ebenfalls zur Auswahl.
+Ergebnisse ansehen führt aus den Auftragsdetails zur nach jobId gefilterten
+Ergebnisansicht, auch vor dem ersten Ergebnis. Ergebnis im Chat öffnen bleibt
+für textuelle Laufantworten erhalten. Rückweg und Datenvertrag: library.md.
+Keine Änderung am Jobmanifest, Zeitplan, Workspace oder Ausführungsverhalten.
