@@ -75,9 +75,16 @@ class SourceWork:
             return {"enabled": False, "entries": []}
         # atomic_write makes a read safe while a long verification holds the writer lock.
         state = json.loads(self.file.read_text())
-        return {"enabled": bool(state.get("repository")), "entries": [
+        result = {"enabled": bool(state.get("repository")), "entries": [
             {k: row[k] for k in ("id", "name", "status", "commit", "candidateCommit", "reason", "updatedAt") if k in row}
             for row in state["entries"]]}
+        release = self.directory.parent / "source-release/state.json"
+        if release.exists():
+            data = json.loads(release.read_text())
+            result["release"] = {"error": data.get("error"), "releases": [
+                {k: row[k] for k in ("target", "phase", "activationPhase", "reason") if k in row}
+                for row in data.get("releases", [])]}
+        return result
 
     def configure(self, repository, live_root):
         repository, live_root = Path(repository).resolve(), Path(live_root).resolve()

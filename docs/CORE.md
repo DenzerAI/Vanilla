@@ -170,3 +170,8 @@ Die lokale Bedeutungssuche und ihr Reparatur-/Installationsvertrag stehen in
 [OPERATIONS.md#lokale-suche](OPERATIONS.md#lokale-suche). Modellbereitschaft folgt
 einer erfolgreichen lokalen Berechnung; Textpassagen beachten das Tokenlimit.
 Vektoren mit alter Modell-/Passagenidentität werden aus den Originalen neu aufgebaut.
+
+Die Quellwartung verarbeitet ausdrücklich fertige Übergaben auch während anderer
+Chats; der Integrationslock schützt den Quellstand. Betriebspausen bleiben wirksam.
+Veröffentlichungsfehler und bestätigte Live-Versionen verwenden die vorhandenen
+Systemmitteilungen; Veröffentlichungsstatus bleibt getrennt vom Integrationsstatus.

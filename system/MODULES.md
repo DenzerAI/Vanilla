@@ -104,3 +104,9 @@ Backup- und Updatepausen behalten ihre unabhängigen Sperren. Die Prüfung wähl
 den App-Einstieg index.html ausdrücklich, auch bei zusätzlichem Design-Build.
 Bestehende Nutzerdaten und Aufträge bleiben erhalten; vor Rückkehr zu einem
 älteren Handlerbestand die Ladeprüfung deaktivieren. Ablauf: docs/OPERATIONS.md.
+
+Die Plattform wartet für ausdrücklich fertige Quellübergaben nicht auf fremde
+laufende Chats. Nur Betriebspausen sperren diese Wartung. Live-Aktivierungen
+behalten ihr eigenes Neustarttor. Der Quellstatus enthält optional den
+Veröffentlichungsstatus; Fehler und bestätigte Live-Stände erscheinen über
+die vorhandenen Systemmitteilungen. Vertrag: docs/CODE-SYNC.md.

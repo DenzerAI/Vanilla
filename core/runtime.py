@@ -309,11 +309,24 @@ class Runtime:
         service = SourceWork(self.config.data)
         while True:
             try:
-                if service.file.exists() and not self.frozen and not await self.has_active_work():
+                if service.file.exists() and not self.frozen:
                     task = asyncio.create_task(asyncio.to_thread(service.tick))
                     self.maintenance_tasks.add(task)
                     try:
                         result = await asyncio.shield(task)
+                        for row in result.get('release', {}).get('releases', []):
+                            if row['phase'] in {'live', 'checks-failed', 'activation-blocked'}:
+                                live = row['phase'] == 'live'
+                                self.notifications.system('source-release-' + row['target'] + '-' + row['phase'],
+                                    'update', row['target'], 'Änderungen sind live' if live else 'Veröffentlichung braucht Aufmerksamkeit',
+                                    ('Der geprüfte Stand ' + row['target'][:8] + ' läuft jetzt.' if live else
+                                     row.get('reason') or 'Die Versionsprüfung ist fehlgeschlagen. Änderungen bleiben gespeichert.'),
+                                    'completed' if live else 'failed')
+                        if result.get('release', {}).get('error'):
+                            import hashlib
+                            error = result['release']['error']
+                            self.notifications.system('source-release-error-' + hashlib.sha256(error.encode()).hexdigest()[:16],
+                                'update', 'source-release', 'Veröffentlichung braucht Aufmerksamkeit', error, 'failed')
                         if self.operations:
                             blocked = any(x['status'] == 'blocked' for x in result['entries'])
                             self.operations.record('source-work', 'error' if blocked else 'ok', result)

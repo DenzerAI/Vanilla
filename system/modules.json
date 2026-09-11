@@ -161,7 +161,9 @@
         "scripts/verify-source-adoption.mjs",
         "system/source-policy.json",
         "core/source_work.py",
-        "scripts/source-work.py"
+        "scripts/source-work.py",
+        "core/source_release.py",
+        "scripts/source-release.py"
       ],
       "entrypoints": [
         "GET /api/system/source-work"
@@ -172,7 +174,8 @@
       "verification": [
         "core/tests/test_source_privacy.py",
         "test/company-base.test.mjs",
-        "core/tests/test_source_work.py"
+        "core/tests/test_source_work.py",
+        "core/tests/test_source_release.py"
       ],
       "status": {
         "endpoint": "GET /api/system/modules",
@@ -180,8 +183,8 @@
       },
       "limits": "Lokales Prüfergebnis über npm run source:check; HTTP bestätigt nur den Katalog.",
       "command": "node system/capabilities.mjs",
-      "version": 4,
-      "migration": "Additives lokales source-work/state.json mit Format 1. Ohne lokale Einrichtung inaktiv. Arbeitskopien und Commits bleiben bei Abschaltung erhalten; unterbrochene Prüfungen werden blockiert, nicht automatisch wiederholt."
+      "version": 5,
+      "migration": "Additives lokales source-work/state.json mit Format 1. Ohne lokale Einrichtung inaktiv. Arbeitskopien und Commits bleiben bei Abschaltung erhalten; unterbrochene Prüfungen werden blockiert, nicht automatisch wiederholt. Additiver, ausdrücklich konfigurierter source-release-Status (Format 1). Push unabhängig von Sessions; Aktivierung über bestehenden lokalen Operator. Abschalten erhält Commits und Rückkehrjournale."
     },
     {
       "id": "inbox",
