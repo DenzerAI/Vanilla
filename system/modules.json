@@ -897,7 +897,7 @@
         "meaning": "Prozess, vollständige lokale Basis und tatsächliche Worker-Ausführbarkeit getrennt prüfen; Kundenanschlüsse werden nicht pauschal als bereit erklärt."
       },
       "limits": "Betriebszustand, Login, Backup und Restore-Nachweis separat prüfen.",
-      "version": 6,
+      "version": 7,
       "migration": "Alte Tresorformate 1/2 werden ausdrücklich nach .env migriert; vollständigen vorherigen Datenstand für den Rückweg erhalten. Details docs/VAULT.md. Fehlende oder fehlerhafte Suchberechnung bleibt als Einschränkung sichtbar; der Volltextindex bleibt nutzbar. Sicherungsschema 4; Schema 2/3 weiter lesbar. Restore setzt eine dauerhafte Betriebspause, quarantänisiert offene Übergaben und verhindert alte Zeitpläne. Details docs/OPERATIONS.md. Zugangsformat ENV: vorhandene verschlüsselte Zugänge vor neuen Schreibvorgängen offline mit core.vault_migrate übernehmen. .env bleibt privat und wird mit Daten kopiert. Rückweg benötigt vorherigen vollständigen Datenstand. Sicherungsschema 5 mit .env; Schema 2–4 werden bei Restore lokal konvertiert. Details docs/VAULT.md."
     },
     {
@@ -1060,7 +1060,7 @@
         "meaning": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen."
       },
       "limits": "Katalog ist Quellwissen. Live-Status des jeweiligen Moduls lesen.",
-      "version": 21,
+      "version": 22,
       "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Der bestehende Projektindex erhält abgeleitete Workspace-Metadaten. Jobkategorien werden aus dem optionalen Manifestfeld gelesen; keine Verschiebung von Dateien. Alte Tresorformate 1/2 werden ausdrücklich nach .env migriert; vollständigen vorherigen Datenstand für den Rückweg erhalten. Details docs/VAULT.md. Lokales MiniLM wird anhand der festgelegten Dateiprüfsummen geprüft und repariert; source.json allein bestätigt keine Bereitschaft. Bestehende Modellordner bleiben erhalten. Nach Restore gilt recovery/not-before als Zeitplangrenze. Normale Neustarts erhalten bestehende Wiederholungsregeln. Keine Tabellen entfernt. Gemeinsame Modellwahl und anbieterbezogene Profilprüfung ohne Datenmigration; vorhandene native Einstellungen und Übergabeverläufe bleiben erhalten. Streaming-Abgleiche erhalten sichtbare Inhalte und projizieren große Abschlussereignisse. Keine Datenmigration; ursprüngliche Worker-Verläufe bleiben erhalten. Modellwahl ohne Default-Rücksetzaktion; expliziter Denkaufwand bleibt pro Chat soweit unterstützt. Keine Datenmigration. Bestätigte konkrete Claude-Anfangsstufe pro nativer Sitzung, bestehende explizite Werte erhalten. Default-Modellalias wird nur bei exakter resolvedModel-Übereinstimmung visuell zugeordnet. Keine Datenmigration; ältere Stände lesen die native Einstellung. Zugangsformat ENV: vorhandene verschlüsselte Zugänge vor neuen Schreibvorgängen offline mit core.vault_migrate übernehmen. .env bleibt privat und wird mit Daten kopiert. Rückweg benötigt vorherigen vollständigen Datenstand. Sicherungsschema 5 mit .env; Schema 2–4 werden bei Restore lokal konvertiert. Details docs/VAULT.md."
     },
     {

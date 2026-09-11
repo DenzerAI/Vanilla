@@ -28,6 +28,10 @@
    lesen und die Zielinstallation feststellen. Dessen Entwicklungsregeln gelten
    auch für den Weiterbau hier. Ein Push ist keine Aktivierung und ein erfolgreicher
    Quellmerge noch kein geprüftes Produktupdate.
+   Eine Bauarbeit ist erst erledigt, wenn sie mit `ready` an die Kette übergeben ist;
+   eine Antwort endet nie mit „fertig“ oder „eingebaut“, solange `ready` fehlt. Blockt der
+   Commit-Hook, nennt seine Meldung die fehlende Vertragsdatei oder Registrierung; das
+   selbst nachziehen und erneut `ready` melden, nicht die Übergabe auslassen.
    Für Arbeiten am Frontend erst dessen AGENTS.md und Bereichsvertrag lesen,
    dann ändern, bauen und mit `node scripts/ui-check.mjs` kopflos prüfen
    (Desktop und `--viewport mobile`, Screenshot ansehen, Konsolenfehler lesen).

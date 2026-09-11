@@ -20,3 +20,14 @@ def test_finished_steps_forget_their_timer():
     stalled(20 * 60, [{"id": "a1", "name": "x", "status": "integrated"}], [], memory)
     assert memory == {}
     assert stalled(21 * 60, [{"id": "a1", "name": "x", "status": "checking"}], [], memory) == []
+
+
+def test_a_working_build_without_ready_is_reported_after_half_an_hour():
+    memory = {}
+    entries = [{"id": "w1", "name": "offen", "status": "working", "updatedAt": 1000}]
+    assert stalled(1000 + 20 * 60, entries, [], memory) == []
+    notices = stalled(1000 + 31 * 60, entries, [], memory)
+    assert [n[0] for n in notices] == ["bau-w1-working"] and "ready" in notices[0][2]
+    assert stalled(1000 + 60 * 60, entries, [], memory) == []
+    assert stalled(1000 + 61 * 60, [{"id": "w1", "name": "offen", "status": "integrated"}], [], memory) == []
+    assert memory == {}
