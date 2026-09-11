@@ -34,7 +34,7 @@
 .turn-meta { display: flex; align-items: center; gap: var(--space-8); color: var(--muted); font-size: var(--text-caption); margin: var(--space-12) 0 var(--space-32); font-variant-numeric: tabular-nums; }
 .turn-meta time { margin-left: auto; }
 .chat-turn > .agent-message { margin-bottom: var(--space-12); }
-.composer-area { padding-block: 0 var(--space-16); }
+.composer-area { padding-block: 0 var(--space-8); }
 .composer { padding: var(--space-16); }
 .composer textarea { padding: 0 0 var(--space-16); min-height: 48px; }
 .composer textarea::placeholder { color: var(--faint); opacity: 1; }
@@ -44,12 +44,12 @@
   .user-message-row .user-message { max-width: 92%; }
   .user-actions .icon-button { width: 36px; height: 36px; }
   .chat-day-divider { margin: var(--space-16) 0; }
-  .composer-area { padding-bottom: var(--space-12); }
+  .composer-area { padding-bottom: var(--space-8); }
   .composer-controls { flex-wrap: wrap; }
 }
 @media (prefers-reduced-motion: reduce) { .thinking-dot { animation: none; } }
 /* Conversation navigation stays quiet until a message is selected. */
-.message-index { position: absolute; left: var(--space-8); top: 20%; max-height: 45%; z-index: 5; display: flex; flex-direction: column; }
+.message-index { position: absolute; left: 0; top: 50%; transform: translateY(-50%); max-height: 45%; z-index: 5; display: flex; flex-direction: column; }
 .chat-turn { scroll-margin-top: var(--space-24); }
 .chat-turn:focus-visible { outline: 2px solid var(--blue); outline-offset: var(--space-4); }
 .chat-turn:focus-visible .user-message { outline: 2px solid var(--accent); outline-offset: 4px; }
@@ -125,10 +125,10 @@
 .composer-entry > .icon-button, .composer-entry .send-button { flex-shrink: 0; width: var(--control-target); height: var(--control-target); }
 .composer-send-actions { display: flex; align-items: center; gap: var(--space-4); }
 .composer-send-actions:has([aria-label="Antwort stoppen"]) .send-button:disabled { display: none; }
-.composer-options { display: flex; align-items: center; justify-content: flex-start; gap: var(--space-4); padding: var(--space-2) var(--space-12) 0; min-width: 0; }
+.composer-options { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); padding: 0 0 var(--space-4); min-width: 0; }
 .composer-options .model-trigger { display: inline-flex; align-items: center; justify-content: flex-start; gap: var(--space-4); min-height: var(--control-height); padding: var(--space-2) var(--space-8); border: 0; border-radius: var(--radius-button); background: transparent; color: var(--muted); font-size: var(--text-caption); font-weight: var(--weight-medium); line-height: var(--leading-normal); white-space: nowrap; }
 .composer-options .model-trigger:hover, .composer-options [aria-expanded="true"] { background: var(--hover); color: var(--text); }
-.composer-options .model-picker { min-width: 0; }
+.composer-options .model-picker { min-width: 0; margin-left: auto; max-width: 75%; }
 .composer-options .model-trigger { max-width: 100%; animation: none; }
 .composer-options .model-trigger .model-name { min-width: 0; max-width: none; }
 .composer-options .model-trigger > svg, .composer-options .model-effort { flex-shrink: 0; }
@@ -203,7 +203,7 @@
 .chat-workspace:has(> .floating-chat-topbar) { position: relative; }
 .floating-chat-topbar { position: absolute; inset: 0 0 auto; z-index: 8; pointer-events: none; }
 .floating-chat-topbar > .row { pointer-events: auto; }
-.chat-workspace:has(> .floating-chat-topbar) .chat-main > .conversation { --chat-top-clear: 0px; --chat-top-fade: calc(3 * var(--space-64)); padding-top: calc(var(--space-64) + var(--space-48)); scroll-padding-top: calc(var(--space-64) + var(--space-48)); }
+.chat-workspace:has(> .floating-chat-topbar) .chat-main > .conversation { --chat-top-clear: 0px; --chat-top-fade: calc(2.4 * var(--space-64)); padding-top: calc(var(--space-64) + var(--space-48)); scroll-padding-top: calc(var(--space-64) + var(--space-48)); }
 .composer-entry .dictation-control > .icon-button { width: var(--control-target); height: var(--control-target); flex-shrink: 0; }
 .composer-entry .dictation-control > .icon-button svg { width: 24px; height: 24px; }
 @media (pointer: coarse) { .composer-entry .dictation-control > .icon-button { width: var(--control-touch); height: var(--control-touch); } }
@@ -406,11 +406,12 @@
 }
 
 /* Bare message controls share the visual axis of the progress glyph. */
-.message-actions { --message-action-size: var(--control-target); }
+.message-actions { --message-action-size: var(--control-height); gap: 0; }
 .message-actions .icon-button {
   width: var(--message-action-size); height: var(--message-action-size);
   border-radius: 0; border-color: transparent; background: transparent; box-shadow: none;
 }
+.message-actions .icon-button:not(:disabled):not([aria-disabled="true"]):hover,
 .message-actions .icon-button:is(:hover, :active, .selected, [aria-pressed="true"], [aria-expanded="true"]) {
   border-color: transparent; background: transparent; box-shadow: none;
 }
@@ -422,3 +423,12 @@
 @media (pointer: coarse), (max-width: 650px) {
   .message-actions { --message-action-size: var(--control-touch); }
 }
+
+/* Identity and model share one calm row; the pill matches the sidebar bottom. */
+.chat-main > .composer-area { padding-bottom: max(var(--space-8), env(safe-area-inset-bottom)); }
+.composer-identity { display: inline-flex; align-items: center; gap: var(--space-8); min-width: 0; color: var(--muted); font-size: var(--text-caption); }
+.composer-identity > span:first-child { display: flex; flex: 0 0 auto; }
+.composer-identity .avatar { width: var(--space-20); height: var(--space-20); }
+.composer-identity-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.composer-options .model-trigger { padding-inline: 0; }
+.composer-options .model-trigger:hover, .composer-options [aria-expanded="true"] { background: transparent; }

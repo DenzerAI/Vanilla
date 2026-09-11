@@ -220,7 +220,7 @@
     margin-left: auto;
   }
   .composer-area {
-    padding-bottom: var(--space-12);
+    padding-bottom: var(--space-8);
   }
   .message-column {
     padding-block: var(--space-20);

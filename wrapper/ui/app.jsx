@@ -132,7 +132,7 @@ import "./styles.css";
 import "./chat.css";
 import "./multi-chat.css";
 import { createEventSubscription } from "./chat-events.mjs";
-import { ChatMenu, ChatTitle, LayoutPicker, PaneDivider, MessageActions } from "./chat-controls.jsx";
+import { ChatMenu, ChatTitle, LayoutPicker, PaneDivider, MessageActions, ComposerHeading } from "./chat-controls.jsx";
 import { readPaneLayout, readPaneSession, writePaneState } from "./pane-persistence.mjs";
 import { MIN_CHAT_WIDTH, visiblePanes, selectPaneCount, conversationText } from "./chat-layout.mjs";
 import { AgentWelcome } from "./avatar-picker.jsx";
@@ -140,7 +140,7 @@ import { Modal } from "./modal.jsx";
 import "./sidebar-refinement.css";
 import { appearanceOptions, projectIcons, projectColors, projectColor, relativeTime, projectChatList, chatDateGroup } from "./appearance.mjs";
 import { fonts, typography } from "./design-system.mjs";
-import { timestamp, relativeTimeLabel, dayLabel, durationLabel, activityLabel, groupItems, actionRowIndex } from "./chat-presentation.mjs";
+import { timestamp, dayLabel, durationLabel, activityLabel, groupItems, actionRowIndex } from "./chat-presentation.mjs";
 import { workerName } from "../../system/worker-catalog.mjs";
 import { AgentMenu } from "./agent-menu";
 import { Avatar } from "./avatar.jsx";
@@ -406,19 +406,6 @@ function MessageTime({ value }) {
     {new Date(ms).toLocaleTimeString("de-DE", {hour: "2-digit", minute: "2-digit"})}
   </time>;
 }
-function RelativeMessageTime({value, visible = true}) {
-  const [now, setNow] = useState(Date.now());
-  useEffect(() => {
-    if (!visible) return;
-    const update = () => { if (!document.hidden) setNow(Date.now()); };
-    update();
-    const timer = setInterval(update, 60000);
-    document.addEventListener('visibilitychange', update);
-    return () => { clearInterval(timer); document.removeEventListener('visibilitychange', update); };
-  }, [visible, value]);
-  const ms = timestamp(value);
-  return ms == null ? null : <time dateTime={new Date(ms).toISOString()} title={new Date(ms).toLocaleString('de-DE')}>{relativeTimeLabel(value, now)}</time>;
-}
 const ChatTurn = React.memo(function ChatTurn({ onForkTurn, onEditTurn, onRetryTurn, onDeleteTurn, turn, statisticsSnapshot, statisticsApi, running, waiting, visible, actionsDisabled, paneNumber = 0, workerId, chatId, ...actions }) {
   // Keep explicit reading choices when the status moves beneath the final answer.
   const [activityOpen, setActivityOpen] = useState(false);
@@ -437,15 +424,6 @@ const ChatTurn = React.memo(function ChatTurn({ onForkTurn, onEditTurn, onRetryT
   const firstReply = messages.findIndex(group => group.item.type !== "userMessage");
   const lastReply = messages.findLastIndex(group => group.item.type !== "userMessage");
   const actionRow = actionRowIndex(messages, running);
-  const header = <div className="turn-response-header">
-    <div className="turn-author">
-      <span className="agent-signature" aria-hidden="true"><Avatar avatar={actions.agentProfile?.avatar} color={actions.agentProfile?.avatarColor} /></span>
-      <span className="turn-author-meta">
-        <span className="turn-author-name">{actions.agentProfile?.name || "Agent"}</span>
-        <RelativeMessageTime value={turn.startedAt ?? turn.completedAt} visible={visible}/>
-      </span>
-    </div>
-  </div>;
   const artifacts = <ChatArtifacts items={turn.items} workspace={actions.workspace} directory={actions.directory} onFile={actions.onFile} api={api} />;
   const progress = <div className="turn-response-progress" data-mobile-complete={!running && turn.status === "completed" && !activity.some(item=>["failed", "inProgress"].includes(item.status))}>
     {(activity.length || collapseCommentary && history.length) ? <ActivityGroup items={activity} running={running} turn={turn} waiting={waiting} visible={visible} open={activityOpen} onOpenChange={setActivityOpen} seenSteps={seenSteps.current}>
@@ -455,10 +433,9 @@ const ChatTurn = React.memo(function ChatTurn({ onForkTurn, onEditTurn, onRetryT
 
   return <section className="chat-turn" id={`pane-${paneNumber}-turn-${turn.id}`} tabIndex={-1} aria-label="Nachricht und Antwort">
     {messages.map((group, index) => <React.Fragment key={group.id}>
-      {index === firstReply && header}
       {statisticsSnapshot && turn.id === 'briefing-'+statisticsSnapshot.id && group.item.type==='agentMessage'?<StatisticsDashboard data={statisticsSnapshot} api={statisticsApi} visible={visible} reduceMotion={actions.agentProfile?.reduceMotion==='on'}/>:<Item item={group.item} beforeActions={index === lastReply ? <>{progress}{artifacts}</> : null} showActions={index === actionRow} workerId={workerId} {...actions} running={actionsDisabled} sentAt={turn.startedAt} completedAt={!running && group.item.id === finalMessage?.id ? turn.completedAt : null} />}
     </React.Fragment>)}
-    {firstReply === -1 && !turn.deliveryOnly && <>{header}{progress}{artifacts}</>}
+    {firstReply === -1 && !turn.deliveryOnly && <>{progress}{artifacts}</>}
     {turn.error && <div className="inline-error">{icon(AlertCircle)}{turn.error.message}</div>}
   </section>;
 });
@@ -518,6 +495,7 @@ function Item({ item, detailLoading, detailError, onDetailRetry, beforeActions, 
           "agent-message " +
           (i.phase === "commentary" ? "commentary-message" : "")
         }
+        title={timestamp(completedAt ?? sentAt) == null ? undefined : new Date(timestamp(completedAt ?? sentAt)).toLocaleString("de-DE")}
       >
         {i.type === "plan" && <span className="eyebrow">Plan</span>}
         <Markdown text={i.text} onFile={onFile} workspace={workspace} directory={directory} />
@@ -2394,6 +2372,25 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       ))}
                     </div>
                   )}
+                  <ComposerHeading profile={boot.settings}>
+                      <ModelPicker
+                        workerSession={sameWorker ? thread?.workerSession : undefined}
+                        onSessionChange={async change => {
+                          const id = chatId;
+                          const r = await api("/worker-session", {id, ...change});
+                          if (chatRef.current === id) setThread(old => old ? {...old, workerSession:r.thread.workerSession} : old);
+                        }}
+                        mode={mode} onModeChange={setMode} modeDisabled={running || busy}
+                        planAvailable={boot.workers?.find(w => w.id === pickerWorker)?.capabilities?.plan !== false}
+                        models={pickerModels} model={pickerModel} effort={pickerEffort} reduceMotion={boot.settings.reduceMotion === "on"}
+                        workerId={pickerWorker} workers={boot.workers || []}
+                        hasConversation={!!chatId} disabled={busy} providerDisabled={!!current?.jobId || !!current?.channelOnly}
+                        running={running} serviceTier={sameWorker ? chatId ? current?.serviceTier : draftSpeed : null} onSpeedChange={sameWorker ? changeSpeed : undefined}
+                        onProviderChange={chooseProvider} onRefresh={refreshPickerWorkers}
+                        context={nextSelection ? "Nächste Nachricht" : running ? "Auswahl für die nächste Nachricht" : current?.fallbackFrom ? `${workerName(current.workerId)} übernimmt als Vertretung für ${workerName(current.fallbackFrom)}.` : undefined}
+                        onChange={changePickerSelection}
+                      />
+                  </ComposerHeading>
                   <ComposerFocus active={composerActive} multiple={embedded ? showPaneHeader : paneOrder.length > 1} visible={foreground && view === "chat" && readablePane} onActivate={activateComposer}>
                       <IconButton
                         label="Dateien anhängen"
@@ -2467,25 +2464,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       )}
                     </div>
                   </ComposerFocus>
-                  <div className="composer-options" role="group" aria-label="Nachrichtenoptionen">
-                      <ModelPicker
-                        workerSession={sameWorker ? thread?.workerSession : undefined}
-                        onSessionChange={async change => {
-                          const id = chatId;
-                          const r = await api("/worker-session", {id, ...change});
-                          if (chatRef.current === id) setThread(old => old ? {...old, workerSession:r.thread.workerSession} : old);
-                        }}
-                        mode={mode} onModeChange={setMode} modeDisabled={running || busy}
-                        planAvailable={boot.workers?.find(w => w.id === pickerWorker)?.capabilities?.plan !== false}
-                        models={pickerModels} model={pickerModel} effort={pickerEffort} reduceMotion={boot.settings.reduceMotion === "on"}
-                        workerId={pickerWorker} workers={boot.workers || []}
-                        hasConversation={!!chatId} disabled={busy} providerDisabled={!!current?.jobId || !!current?.channelOnly}
-                        running={running} serviceTier={sameWorker ? chatId ? current?.serviceTier : draftSpeed : null} onSpeedChange={sameWorker ? changeSpeed : undefined}
-                        onProviderChange={chooseProvider} onRefresh={refreshPickerWorkers}
-                        context={nextSelection ? "Nächste Nachricht" : running ? "Auswahl für die nächste Nachricht" : current?.fallbackFrom ? `${workerName(current.workerId)} übernimmt als Vertretung für ${workerName(current.fallbackFrom)}.` : undefined}
-                        onChange={changePickerSelection}
-                      />
-                  </div>
+
                 </form>
                 <input
                   hidden
