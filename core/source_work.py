@@ -146,23 +146,34 @@ class SourceWork:
         for relative in ["", "wrapper"]:
             folder = root / relative
             source = repository / relative
+            stamp = folder / ".cache/source-dependencies"
+            locked = hashlib.sha256((folder / "package-lock.json").read_bytes()).hexdigest()
+            if (folder / "node_modules").is_symlink() and (source / "package-lock.json").read_bytes() != (folder / "package-lock.json").read_bytes():
+                (folder / "node_modules").unlink()
+            if (folder / "node_modules").exists() and not (folder / "node_modules").is_symlink() and (not stamp.exists() or stamp.read_text() != locked):
+                command(folder, ["npm", "ci", "--ignore-scripts", "--cache", ".cache/npm", "--no-audit", "--no-fund"], log)
             if not (folder / "node_modules").exists():
                 if ((source / "node_modules").exists() and
                     (source / "package-lock.json").read_bytes() == (folder / "package-lock.json").read_bytes()):
                     (folder / "node_modules").symlink_to(source / "node_modules", target_is_directory=True)
                 else:
                     command(folder, ["npm", "ci", "--ignore-scripts", "--cache", ".cache/npm", "--no-audit", "--no-fund"], log)
+            atomic_write(stamp, locked)
         python = root / ".venv/bin/python"
         if not python.exists():
             command(root, ["python3", "-m", "venv", ".venv"], log)
+        stamp = root / ".venv/source-dependencies"
+        locked = hashlib.sha256((root / "requirements.lock").read_bytes()).hexdigest()
+        if not stamp.exists() or stamp.read_text() != locked:
             command(root, [str(python), "-m", "pip", "install", "-r", "requirements.lock", "pytest"], log)
+            atomic_write(stamp, locked)
         return python
 
     def verify(self, root, repository, log):
         python = self.dependencies(root, repository, log)
-        for args in [["npm", "run", "modules:verify"], ["npm", "test"],
-                     [str(python), "-m", "pytest", "-q"], ["npm", "run", "typecheck"],
-                     ["npm", "run", "ui:prepare"]]:
+        for args in [["npm", "run", "modules:verify"], ["npm", "run", "ui:prepare"],
+                     ["npm", "test"], [str(python), "-m", "pytest", "-q"],
+                     ["npm", "run", "typecheck"]]:
             command(root, args, log)
         if git(root, "status", "--porcelain"):
             raise ValueError("Die Prüfung hat Quelländerungen hinterlassen. Erneut prüfen und committen.")

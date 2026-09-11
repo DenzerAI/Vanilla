@@ -178,6 +178,8 @@ Quellmerge den exakten Kandidatencommit in den weiterhin unveränderten Zielzwei
 Abhängigkeiten werden aus Lockdateien installiert; Provider- und Runtime-Variablen
 erreichen weder Installation noch Tests. Private Arbeitsdateien bleiben außerhalb
 der Git-Quellpfade.
+Nach dem Kandidatenmerge werden geänderte Lockdateien erneut abgeglichen. Der
+UI-Build entsteht vor Tests, die dessen tatsächliche Auslieferungsdateien prüfen.
 
 Status: working, queued, checking, integrated, blocked. Ein Fehler erhält Grund
 und lokales Protokoll; Änderungen und Kandidaten bleiben erhalten. Konflikte
