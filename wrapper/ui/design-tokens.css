@@ -2,6 +2,7 @@
 :root {
   color-scheme: dark;
   --fan-blur: 48px;
+  --calendar-leading: 1;
   --font-root-size: 16px;
   --tracking-title: -0.65px;
   --tracking-heading: -0.35px;
@@ -59,6 +60,7 @@
   --font-ui: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
   --font-mono: "IBM Plex Mono", ui-monospace, monospace;
   --text-weather: 3.5rem;
+  --text-calendar: 3.5rem;
   --text-caption: 0.75rem;
   --text-small: 0.8125rem;
   --text-control: 0.875rem;

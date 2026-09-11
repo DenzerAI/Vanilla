@@ -1,0 +1,11 @@
+.calendar-card-content { display: flex; flex-direction: column; gap: var(--space-4); width: 100%; min-height: 0; height: 100%; }
+.calendar-weekday { font-size: var(--text-control); font-weight: var(--weight-medium); color: var(--brand-accent); }
+.calendar-date { font-size: var(--text-calendar); line-height: var(--calendar-leading); font-weight: var(--weight-regular); font-variant-numeric: tabular-nums; }
+.calendar-month { font-size: var(--text-caption); color: var(--muted); }
+.calendar-next { display: flex; flex-direction: column; margin-top: var(--space-4); gap: var(--space-2); font-size: var(--text-small); line-height: var(--leading-tight); }
+.calendar-countdown { font-size: var(--text-caption); color: var(--brand-accent); }
+.calendar-event-title { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; overflow-wrap: anywhere; }
+.calendar-status { color: var(--muted); font-size: var(--text-caption); line-height: var(--leading-tight); }
+.calendar-card-content[data-quiet="true"] .calendar-next { color: var(--muted); }
+.calendar-card-action { display: flex; justify-content: space-between; gap: var(--space-8); margin-top: auto; padding-top: var(--space-4); font-size: var(--text-caption); color: var(--muted); }
+.calendar-card-action svg { flex-shrink: 0; }

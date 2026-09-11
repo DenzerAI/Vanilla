@@ -996,8 +996,7 @@ reserviert oben 64 px und unten die gemessene Composerhöhe. Kein Nachrichten-Fa
 über den Startkarten; bei Platzmangel bleibt die Navigation scrollbar erreichbar.
 Wetter und Kalender stehen als letzte feste Karten direkt links neben der ersten
 Karte im umlaufenden Stapel, nach Statistik und Kontingenten. Der Kalender zeigt
-das lokale heutige Datum und öffnet die vorhandene Kalenderansicht, ohne Termine
-zu erfinden oder eine externe Synchronisierung zu behaupten.
+das lokale heutige Datum und öffnet den Tagesbericht mit vorhandenen Terminen.
 Keine automatische Rotation, Nachrichten oder zusätzlichen Abrufe. Bestehende
 Auswahl und Reihenfolge bleiben während der Nutzung stabil; neue ungelesene
 Antworten bleiben verfügbar. Keine Datenmigration; Rückkehr ist rein visuell.
@@ -1113,3 +1112,23 @@ Updates erscheinen ausschließlich im vorhandenen Einstellungsbereich. Ein inter
 KI-Aktualisierungen verwenden die bestehenden Hinweis-/Ergebniskarten des Startfächers.
 Pro Anbieter erscheint dessen neuester ungelesener Hinweis. Die Karte öffnet
 KI & Modelle; sie startet keine Installation und keinen Modellauftrag.
+## Kalenderkachel und Tageschat
+
+Im AttentionFan bleiben Wetter und Kalender als feste Karten erhalten. CalendarCardContent zeigt Wochentag, große Tageszahl,
+Monat und ISO-KW mit denselben Glasmaßen und zentraler Typografierolle calendar.
+Der nächste laufende oder kommende heutige Termin erhält Titel und Countdown;
+weitere Termine erscheinen erst im Tagesbericht. Countdown und Uhrzeit stehen
+gemeinsam über dem Titel. Ohne nächsten Termin ist nur der Leerhinweis unter
+Monat/KW gedämpft; Wochentag und Tageszahl behalten ihre Farben.
+Ganztägig und Läuft gerade sind eigene Angaben.
+Veraltete oder unvollständige Quellen werden als „Termine möglicherweise nicht
+aktuell“ erklärt, statt zum unklaren „Stand prüfen“ aufzufordern.
+Ohne weitere heutige Termine kein Countdown auf morgen. Datum und Countdown
+aktualisieren sich; Projektwechsel, Mitternacht und Abruffehler zeigen keinen
+vorherigen Tag als aktuellen. Fehlender Dienst ist kein terminfreier Tag.
+
+Klick öffnet explizit einen neuen Tageschat mit Datenbericht und kurzer Einordnung.
+Diese Aktion darf den Worker starten; bloßes Anzeigen der Kachel tut es nicht.
+Kalender öffnen im Tageschat führt zur bestehenden Kalenderansicht ohne neuen
+Hauptmenüpunkt. Eigene und angebundene Termine teilen dieselbe Projektion, bleiben
+nach Herkunft unterscheidbar. Kalenderdaten und Migrationsvertrag: docs/PLANNER.md.

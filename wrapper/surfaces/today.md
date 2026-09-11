@@ -115,4 +115,14 @@ Alte Direkteinstiege mit ?view=today oder ?view=pipeline öffnen den neuen Chats
 ?view=calendar öffnet weiterhin den Kalender.
 
 Kalenderprojektion, Zeitfenster, Fehler und Leserechte führt docs/PLANNER.md. Optik, Navigation und gemeinsame Komponenten bleiben erhalten.
-Die Kalenderkarte zeigt das lokale Datum und öffnet die vorhandene Kalenderansicht.
+
+## Eigene Termine und Einstieg
+
+Der vorhandene Kalender zeigt lokale Vanilla-Termine zusammen mit erfolgreich
+angebundenen externen Quellen. Termin hinzufügen ist ohne externes Konto nutzbar.
+Lokale Termine lassen sich im gemeinsamen Termindialog bearbeiten und nach
+Bestätigung löschen; externe Termine bleiben lesbar und beim Anbieter bearbeitbar.
+Der markierte Beispielmodus bleibt getrennt und ohne Speicherung. Speicherfehler
+und Versionskonflikte lassen Entwürfe bestehen. Der Chatstart erhält die gemeinsame
+Kalenderkachel und öffnet beim Klick den Tagesbericht; Kalender öffnen darin führt
+hierher. Kein zusätzlicher Hauptmenüpunkt. Grenzen und Datenmigration: docs/PLANNER.md.

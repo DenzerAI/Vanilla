@@ -10,6 +10,7 @@ export type PlannerEvent = {
   contactId?: string;
   sourceId?: string;
   source: string;
+  readOnly?:boolean; revision?:number;
 };
 export const demoContact = {
   id: "demo-contact",

@@ -1,6 +1,7 @@
 import {WorkspaceSettingsPreview} from './workspace-settings';
 
 import {AIMaintenancePreview} from "./ai-maintenance.tsx";
+import {CalendarPreview} from './calendar-card';
 import {ChatStartPreview} from './chat-start-preview';
 
 import {DeliveryChecks} from './delivery-checks';
@@ -85,6 +86,7 @@ export function DesignReference({ theme, tone, accent }) {
 
       <h3 className="section-heading">KI & Modelle · Beispiel</h3>
       <AIMaintenancePreview/>
+      <h3 className="section-heading">Kalender · Dein Tag</h3><CalendarPreview/>
       <h3 className="section-heading">Glasbutton · Beispiel</h3>
       <GlassButtonDemo/>
       <h3 className="section-heading">Erscheinungsbild · Beispiel</h3>

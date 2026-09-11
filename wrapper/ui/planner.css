@@ -475,3 +475,5 @@
     grid-row: 1 / 3;
   }
 }
+
+.planner-form > fieldset { display: grid; gap: var(--space-16); border: 0; margin: 0; padding: 0; min-width: 0; }

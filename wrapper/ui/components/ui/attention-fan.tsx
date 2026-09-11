@@ -1,6 +1,7 @@
 import {AllowanceBars} from '../../usage';
 import {StatisticsCard} from '../../statistics';
 import {WeatherCardContent} from './weather-scene';
+import {CalendarCardContent} from '../../calendar-card';
 import {MapPin} from 'lucide-react';
 import {LibraryThumbnail} from '../../library-thumbnail.jsx';
 "use client";
@@ -11,7 +12,7 @@ import {attentionFanMotion} from '../../design-system.mjs';
 import './attention-fan.css';
 import {reconcileFan} from '../../chat-start-feed.mjs';
 import {ReplyCardPreview} from '../../reply-card-preview';
-export interface AttentionItem {id:string;kind:string;title:string;description:string;prompt?:string;continuation?:boolean;threadId?:string;turnId?:string;noticeId?:string;entry?:any;job?:any;weather?:any;weatherConfigured?:boolean;statistics?:any;allowances?:any;}
+export interface AttentionItem {id:string;kind:string;title:string;description:string;prompt?:string;continuation?:boolean;threadId?:string;turnId?:string;noticeId?:string;entry?:any;job?:any;calendar?:any;weather?:any;weatherConfigured?:boolean;statistics?:any;allowances?:any;}
 export function AttentionFan({items,onOpen,onActiveChange,reduceMotion=false,disabled=false,api}:{items:AttentionItem[];onOpen:(item:AttentionItem)=>void;onActiveChange?:(item:AttentionItem)=>void;reduceMotion?:boolean;disabled?:boolean;api?:any}) {
   const signature=JSON.stringify(items.map(item=>item.id));
   const [order,setOrder]=useState(()=>({...reconcileFan({ids:[],selected:''},items),signature}));
@@ -67,7 +68,7 @@ export function AttentionFan({items,onOpen,onActiveChange,reduceMotion=false,dis
           onFocus={e=>{if(e.currentTarget.matches(':focus-visible')){setHovered(item.id);focusedCard.current=item.id;}}} onBlur={e=>{setHovered(null);if(e.relatedTarget)focusedCard.current=null;}}
           disabled={disabled} aria-label={item.title+(weatherReady?' · '+item.description:'')+(isActive||isHovered?(weatherReady?' · Wetterbericht in neuem Chat öffnen':' öffnen'):' auswählen')} aria-current={isActive?'true':undefined}
           onClick={()=>{if(Date.now()<ignoreClick.current)return;isActive||isHovered?onOpen(item):select(i);}}>
-          <>{weatherReady?<WeatherCardContent item={item} active={isActive||isHovered} reduceMotion={!!reduced}/>:<>
+          <>{item.kind==='calendar'?<CalendarCardContent data={item.calendar} preview={item.calendar?.preview}/>:weatherReady?<WeatherCardContent item={item} active={isActive||isHovered} reduceMotion={!!reduced}/>:<>
           <span className="attention-fan-kind"><Icon size={20} strokeWidth={undefined}/><span>{item.continuation?'Weitermachen':({calendar:'Kalender',allowances:'Kontingente',statistics:'Statistik',weather:'Wetter',artifact:'Zum Weitermachen',job:'Als Nächstes',request:'Braucht dich',notice:'Hinweis',report:'Für dich',chat:'Neue Antwort',prompt:'Mit dir'})[item.kind as 'request']}</span></span>
           {item.kind==='artifact'&&item.entry&&<LibraryThumbnail key={item.entry.id || item.entry.path} entry={item.entry} variant="card"/>}
           {item.kind==='allowances'?<AllowanceBars data={item.allowances} compact/>:item.kind==='statistics'?<StatisticsCard data={item.statistics} active={isActive||isHovered} reduceMotion={!!reduced}/>:<><strong>{item.title}</strong>{item.kind==='chat'&&!item.continuation&&item.turnId?<ReplyCardPreview api={api} item={item}/>:item.description&&<span className="attention-fan-description">{item.description}</span>}

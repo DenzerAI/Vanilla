@@ -4,9 +4,9 @@ export const conversationStarters = [
   {id:'file',kind:'prompt',title:'Eine Datei verstehen',description:'Das Wesentliche finden und besprechen.',prompt:'Ich möchte eine Datei mit dir besprechen. Bitte warte, bis ich sie angehängt habe.'},
   {id:'project',kind:'prompt',title:'Projekt erkunden',description:'Überblick gewinnen und weiterkommen.',prompt:'Gib mir einen kurzen Überblick über dieses Projekt und seine nächsten Schritte.'},
 ];
-/** @param {{requests?: any[], notifications?: any[], chats?: any[], projectId?: string, jobs?: any[], entries?: any[], reports?: any[], now?: number, includeWeather?: boolean, includeCalendar?: boolean, userProfile?: {name?:string,location?:string}, profileError?: boolean, weather?:any, includeStatistics?:boolean, statistics?:any,includeAllowances?:boolean,allowances?:any}} options
+/** @param {{requests?: any[], notifications?: any[], chats?: any[], projectId?: string, jobs?: any[], entries?: any[], reports?: any[], now?: number, includeWeather?: boolean, includeCalendar?: boolean, calendar?:any, userProfile?: {name?:string,location?:string}, profileError?: boolean, weather?:any, includeStatistics?:boolean, statistics?:any,includeAllowances?:boolean,allowances?:any}} options
  * @returns {any[]} */
-export function chatStartFeed({requests=[],notifications=[],chats=[],projectId='default',jobs:scheduledJobs=[],entries=[],reports=[],now=Date.now(),includeWeather=false,includeCalendar=false,userProfile={},profileError=false,weather=null,includeStatistics=false,statistics=null,includeAllowances=false,allowances=null}={}) {
+export function chatStartFeed({requests=[],notifications=[],chats=[],projectId='default',jobs:scheduledJobs=[],entries=[],reports=[],now=Date.now(),includeWeather=false,includeCalendar=false,calendar=null,userProfile={},profileError=false,weather=null,includeStatistics=false,statistics=null,includeAllowances=false,allowances=null}={}) {
   const result=[], seen=new Set();
   for(const request of requests) {
     const threadId=request.params?.threadId;
@@ -44,7 +44,7 @@ export function chatStartFeed({requests=[],notifications=[],chats=[],projectId='
   if(includeStatistics)chosen.push({id:"statistics",kind:"statistics",title:"Statistik",description:"Dein Arbeitsrhythmus mit deinem Agenten.",statistics});
   if(includeAllowances)chosen.push({id:'allowances',kind:'allowances',title:'Kontingente',description:'Deine verfügbaren Kontingente und Reset-Zeiten.',allowances});
   if(includeWeather)chosen.push({id:'weather',kind:'weather',title:userProfile.location||'Dein Wetter',weather:profileError?null:weather,weatherConfigured:!!userProfile.location,description:profileError?'Dein Wetterort konnte nicht geladen werden.':userProfile.location?weatherDescription(weather):'Dein Ort ist noch nicht eingerichtet.'});
-  if(includeCalendar)chosen.push({id:'calendar',kind:'calendar',title:new Date(now).toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long'}),description:'Tag, Woche und Monat öffnen. Termine sind noch nicht synchronisiert.'});
+  if(includeCalendar)chosen.push({id:'calendar',kind:'calendar',title:'Dein Tag',description:'Termine und freie Zeit gemeinsam planen',calendar});
   return chosen;
 }
 export function startHeadline(kind, fallback) {
@@ -60,7 +60,7 @@ export function friendlyFileTitle(name='') {
 }
 export function headlineForItem(item, fallback) {
  if(!item)return fallback;
- if(item.kind==='calendar')return 'Dein Kalender ist einen Klick entfernt.';
+ if(item.kind==='calendar')return 'Schauen wir auf deinen Tag.';
  if(item.kind==='allowances')return 'Deine Kontingente im Blick.';
  if(item.kind==='statistics')return item.statistics?.events?.length?'So sieht unsere Zusammenarbeit bisher aus.':'Hier entsteht unser gemeinsamer Arbeitsrhythmus.';
  if(item.continuation)return 'Hier können wir weitermachen.';
@@ -77,7 +77,7 @@ export function headlinesForItem(item, fallback, name='') {
  const personal=String(name).trim().split(/\s+/)[0].slice(0,32);
  const first=personal?`Hey ${personal}, ${line[0].toLocaleLowerCase('de')}${line.slice(1)}`:line;
  if(!item)return [first];
- const detail=({calendar:'Öffne die Kalenderansicht für Tag, Woche oder Monat.',allowances:'Hier siehst du alle Kontingente und Reset-Zeiten.',statistics:'Ein Klick öffnet deine Statistik im Chat.',request:'Mit deiner Antwort können wir weitermachen.',notice:'Den Hinweis findest du auf der Karte.',report:'Dein Ergebnis liegt hier zum Ansehen bereit.',artifact:'Der letzte Stand liegt hier für dich bereit.',job:'Die Einzelheiten findest du auf der Karte.',weather:item.weatherConfigured?'Ein Klick öffnet deinen Wetterbericht mit Sieben-Tage-Ausblick.':'Deinen Ort kannst du im Profil festlegen.',chat:'Wir können direkt daran anknüpfen.',prompt:'Wir können mit einer kleinen Idee anfangen.'})[item.kind];
+ const detail=({calendar:'Deine Termine und wo noch Luft ist.',allowances:'Hier siehst du alle Kontingente und Reset-Zeiten.',statistics:'Ein Klick öffnet deine Statistik im Chat.',request:'Mit deiner Antwort können wir weitermachen.',notice:'Den Hinweis findest du auf der Karte.',report:'Dein Ergebnis liegt hier zum Ansehen bereit.',artifact:'Der letzte Stand liegt hier für dich bereit.',job:'Die Einzelheiten findest du auf der Karte.',weather:item.weatherConfigured?'Ein Klick öffnet deinen Wetterbericht mit Sieben-Tage-Ausblick.':'Deinen Ort kannst du im Profil festlegen.',chat:'Wir können direkt daran anknüpfen.',prompt:'Wir können mit einer kleinen Idee anfangen.'})[item.kind];
  return detail&&detail!==first?[first,detail]:[first];
 }
 

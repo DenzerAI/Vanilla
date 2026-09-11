@@ -1231,8 +1231,7 @@ reserviert oben 64 px und unten die gemessene Composerhöhe. Kein Nachrichten-Fa
 über den Startkarten; bei Platzmangel bleibt die Navigation scrollbar erreichbar.
 Wetter und Kalender stehen als letzte feste Karten direkt links neben der ersten
 Karte im umlaufenden Stapel, nach Statistik und Kontingenten. Der Kalender zeigt
-das lokale heutige Datum und öffnet die vorhandene Kalenderansicht, ohne Termine
-zu erfinden oder eine externe Synchronisierung zu behaupten.
+das lokale heutige Datum und öffnet den Tagesbericht mit vorhandenen Terminen.
 Keine automatische Rotation, Nachrichten oder zusätzlichen Abrufe. Bestehende
 Auswahl und Reihenfolge bleiben während der Nutzung stabil; neue ungelesene
 Antworten bleiben verfügbar. Keine Datenmigration; Rückkehr ist rein visuell.
@@ -1319,3 +1318,17 @@ Freigabe und letzte Verbindungsprüfung erhalten getrennte Textzustände; keine
 Live-Verbindung durch einen lediglich gespeicherten Status behaupten. Die
 Fernbedienung nutzt die vorhandenen umbrechenden Aktionszeilen. Bildschirmbilder
 bleiben auf Dialogbreite und 60 vh begrenzt. Aufbau führt surfaces/connections.md.
+## Kalender im Glasfächer
+
+CalendarCardContent verwendet den vorhandenen AttentionFan ohne eigene Kartenmaße.
+Datum in der zentralen Rolle calendar (56 px), Wochentag und Countdown mit
+brand-accent, Monat/KW mit muted. Ohne weiteren heutigen Termin ist nur der
+Hinweis unter Monat/KW muted. Wochentag behält brand-accent, die Tageszahl
+behält die normale helle Textfarbe im dunklen Design.
+Nur der nächste Termin steht auf der Karte: Countdown und Uhrzeit zusammen,
+der Titel darunter maximal zweizeilig. Weitere Termine stehen im Tagesbericht.
+Unvollständige oder veraltete Daten heißen „Termine möglicherweise nicht aktuell“.
+Keine zusätzliche Daueranimation.
+Die Kalenderkachel folgt Fächerbewegung, Reduced Motion und Kontrastvorgaben.
+CalendarPreview zeigt denselben Produktionsbaustein mit markierten Beispieldaten in
+Unser Design und damit im gemeinsamen UI-Bauplan. Verhalten: surfaces/chat.md.

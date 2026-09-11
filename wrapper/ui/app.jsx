@@ -1394,6 +1394,13 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     weatherRequestRef.current=null;
     if(result.summaryError)notify(result.summaryError);
   }
+  const calendarRequestRef=useRef(null);
+  async function openCalendarReport() {
+    if(calendarRequestRef.current?.projectId!==projectRef.current)calendarRequestRef.current={projectId:projectRef.current,requestId:crypto.randomUUID()};
+    const result=await api('/calendar/chat',{...calendarRequestRef.current,worker:current?.workerId||draftWorker,model:pickerModel||model,serviceTier:current?.serviceTier||draftSpeed,mode});
+    await refreshChats();await openChat(result.thread.id,result.meta);calendarRequestRef.current=null;
+    if(result.summaryError)notify(result.summaryError);
+  }
   async function openChat(id, restoredMetadata, targetTurnId) {
     if (!embedded) {
       const existing = paneOrder.find(slot => sessions.current[slot].current?.id === id);
@@ -2265,6 +2272,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 ]}/>
               </div></div>}
               {chatLocked ? <LockedChat key={chatId} id={chatId} api={api} onDone={()=>void privacyUnlocked().catch(error=>notify(error.message))}/> : <>
+              {current?.calendarReportReady&&<div className="row"><button type="button" onClick={()=>{saveDraft();setView("calendar");}}>Kalender öffnen</button></div>}
               <ChapterScrubber className="message-index" reduceMotion={boot.settings.reduceMotion === "on"}
                 chapters={(thread?.turns || []).filter(t=>t.items?.some(i=>i.type === "userMessage")).map((t,n)=>({
                   id:t.id, title:`Eingabe ${n+1}`, meta:<MessageTime value={t.startedAt}/>,
@@ -2285,7 +2293,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 ) : !visibleTurns.length ? (
                   <ChatStart visible={foreground && view === "chat" && readablePane} api={api} routines={!!boot.features?.routines} revision={libraryRevision} composing={!!text.trim() || attachments.length>0} greeting={greeting} profile={boot.settings} requests={requests} notifications={notificationState.data?.items || []} chats={chats.filter(c=>!c.private)} projectId={projectId} error={notificationState.error}
                     onOpen={async item=>{
-                      if(item.kind==='calendar'){if(onOpenCalendar)onOpenCalendar();else setView('calendar');return;}
+                      if(item.kind==='calendar'){await openCalendarReport();return;}
                       if(item.kind==='statistics'){await openStatisticsReport();return;}
                       if(item.kind==='weather'){await openWeatherReport(item);return;}
                       if(item.prompt){setText(item.prompt);inputRef.current?.focus();return;}

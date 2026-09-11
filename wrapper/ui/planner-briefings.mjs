@@ -17,6 +17,7 @@ export function demoBriefings(today) {
 
 export function briefingText(item) {
   if(item.kind==='weather')return item.body;
+  if(item.kind==='calendar')return item.body;
   return '# ' + item.title + '\n\n' + new Date(item.created_at * 1000).toLocaleString('de-DE')
     + (item.demo ? ' · Beispielbericht' : ' · Routine-Ergebnis') + '\n\n' + item.body
     + (item.demo ? '\n\n**Quellen:** Fiktiver Kalender, verknüpfter Beispielkontakt und Beispielnachricht. Dieser Bericht zeigt einen früheren Stand; spätere Änderungen gehören zum aktuellen Tagesplan. Alle Angaben in diesem Beispiel sind erfunden.' : '');

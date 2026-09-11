@@ -1,5 +1,6 @@
 import {useAllowances,AllowanceDashboard} from './usage';
 import {useStatisticsData} from './statistics-client';
+import {useCalendarDay} from './calendar-card';
 import {useChatStartData} from './chat-start-data';
 import {useMemo,useState,useCallback,useRef} from 'react';
 import {AttentionFan,type AttentionItem} from './components/ui/attention-fan';
@@ -11,8 +12,9 @@ export function ChatStart({greeting,profile,requests,notifications,chats,project
   const [showAllowances,setShowAllowances]=useState(false);
   const data=useChatStartData(api,routines,revision,visible);
   const statistics=useStatisticsData(api,projectId,JSON.stringify(chats.map(c=>[c.id,c.updatedAt,c.lastCompletedTurnId])),false,visible);
+  const calendar=useCalendarDay(api,projectId);
   const firstCard=useRef('');
-  const items=useMemo(()=>chatStartFeed({requests,notifications,chats,projectId,...data,includeWeather:!data.profileLoading,includeCalendar:true,includeStatistics:true,statistics,includeAllowances:true,allowances}),[requests,notifications,chats,projectId,data,statistics,allowances]);
+  const items=useMemo(()=>chatStartFeed({requests,notifications,chats,projectId,...data,calendar,includeWeather:!data.profileLoading,includeCalendar:true,includeStatistics:true,statistics,includeAllowances:true,allowances}),[requests,notifications,chats,projectId,data,statistics,allowances,calendar]);
   const [selected,setSelected]=useState(''),[busy,setBusy]=useState(false),[failure,setFailure]=useState(''),[interacting,setInteracting]=useState(false);
   if(data.loaded&&!firstCard.current)firstCard.current=items[0]?.id||'';
   const choose=useCallback((item:AttentionItem)=>setSelected(item.id),[]);

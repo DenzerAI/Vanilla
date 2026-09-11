@@ -95,7 +95,7 @@ verhindern eine pauschale Zusicherung der Aktualität. Das Lesen eines CRM-Vorga
 prüft dessen aktuellen Stand, ersetzt aber keine Versionskontrolle bei späteren
 Aktionen. Bereits geladener Agentenkontext wird nicht rückwirkend entfernt.
 
-Noch offen: Kalender-Schreibaktionen und Einladungen, weitere Anbieter und Delta statt vollständigem Fensterabgleich, Wetterquelle/Ortswahl, fachlich typisierte
+Noch offen: Externe Kalender-Schreibaktionen und Einladungen, weitere Anbieter und Delta statt vollständigem Fensterabgleich, Wetterquelle/Ortswahl, fachlich typisierte
 Briefing-Zuordnung (die Liste zeigt aktuell alle abgeschlossenen Routine-Ergebnisse), produktive Kontakte-/Entscheidungsmasken, vollständige
 serverseitige Fälligkeitsabfrage statt begrenzter CRM-Leseseite. Die Inbox liefert echte Outlook-/Gmail-Nachrichten; ihre Quellenübergabe an CRM und Routinen führt MAIL.md.
 
@@ -113,3 +113,51 @@ Beim Entfernen oder Umhängen des Serviceanschlusses bleiben bereits empfangene
 Termine als historische Projektion erhalten und werden ausdrücklich als nicht mehr
 verbunden gekennzeichnet. Führend ist die vorhandene gemeinsame Verbindungsablage
 `control/state.json`; die Kalenderprojektion erzeugt keine zweite Kontoverwaltung.
+
+## Eigener Kalender und gemeinsamer Tageschat
+
+Version 2 erweitert den bestehenden Kalender um eigene Einzeltermine. Ohne einen
+externen Anbieter ist der lokale Vanilla-Kalender nutzbar. Termin hinzufügen und
+Termin bearbeiten verwenden denselben Dialog wie die markierte Beispielansicht;
+Beispiele schreiben weiterhin nichts. Löschen verlangt einen bewussten Klick und
+Bestätigung. Datums-/Zeitfehler, uneindeutige Zeitumstellung, Speicherfehler und
+Versionskonflikte halten den Entwurf offen. Änderungen gelten nur im gewählten
+Arbeitsbereich; UUID und Revision verhindern Fremdquellenänderungen und veraltetes
+Überschreiben. Löschmarkierungen verhindern verspätete Neuerstellung durch Retries.
+Ganztägige Termine bleiben Kalenderdaten, keine impliziten Arbeitsblockaden.
+
+calendar_local wird additiv und idempotent in der vorhandenen Datenbank angelegt.
+Die bestehende Datenbanksicherung umfasst eigene Termine, Revisionen und
+Löschmarkierungen. Kein Import oder Zurücksetzen von Profilen/Verbindungen.
+Zurückrollen auf Version 1 bewahrt diese Tabelle, blendet ihre Termine aber aus.
+Externe calendar_windows und ihre Abgleichsregeln bleiben erhalten. Getrennte
+Quellkennungen sind die Grundlage weiterer Anbieter; gleiche Titel werden nicht
+blind zusammengeführt. Synchronisierte Termine bleiben beim Anbieter bearbeitbar.
+Keine Synchronisierung in beide Richtungen, keine Einladungen und noch keine
+lokalen Terminserien. Trennen externer Anschlüsse löscht keine Vanilla-Termine.
+
+GET /api/calendar/day liefert heutigen Tag und Ortszeit der Installation samt
+Quellenstatus. POST /api/calendar/local/save und /delete ändern ausschließlich
+eigene Termine. Der interne Tagesleseanschluss dient POST /api/calendar/chat:
+ein expliziter Klick erzeugt eine neue Berichtssession im aktuellen Workspace.
+Wiederholungen derselben requestId öffnen denselben Bericht und senden die kurze
+Einordnung höchstens einmal. Daten werden serverseitig gelesen; Browsertexte sind
+keine Berichtsquelle. Fehler beim Lesen erzeugen keine leere Session. Bei einem
+Fehler des Workers bleibt der gespeicherte Datenbericht erreichbar.
+
+Ein Tagesbericht nennt Termine, Herkunft, Stand und Zeitzone. Verbleibende Lücken
+werden innerhalb des ausgewiesenen Betrachtungsfensters 08–18 Uhr gezeigt, ab
+jetzt und ab 15 Minuten. Überlappende Termine werden vor Berechnung vereinigt.
+Das Fenster ist keine persönliche Arbeitszeit. Fehlerhafte, nicht abgeglichene,
+veraltete oder unvollständige externe Quellen sowie ganztägige Einträge verhindern
+pauschale Freizeitaussagen. Vorbereitung nutzt nur passende belegte Angaben; keine
+erfundenen Wegezeiten, Aufgaben oder Teilnehmer. Kalender öffnen führt im gleichen
+App-Bereich zur vorhandenen Übersicht; der aktuelle Entwurf bleibt erhalten.
+
+Datum und Uhrzeiten der produktiven Kalenderansicht folgen der Installationszeitzone; die Zeitzone steht auch im lokalen Termindialog. Ein anderer Browserstandort ändert keine gespeicherten Terminzeiten.
+
+Die Tageskachel zeigt nur den nächsten heutigen Termin; weitere Termine bleiben im
+Tagesbericht. Bei terminfreien Tagen erscheint nur der Leerhinweis gedämpft;
+Wochentag und Tageszahl behalten ihre Farben. Unvollständige
+oder veraltete Quellen tragen den Hinweis „Termine möglicherweise nicht aktuell“
+und werden nicht als terminfreier Tag dargestellt.
