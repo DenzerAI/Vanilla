@@ -4,22 +4,26 @@ import {
   agentAvatar,
   avatarColor,
   avatarBackground,
+  avatarCutout,
 } from "./agent-avatars.mjs";
-import nori from "./assets/avatars/faces/nori.svg";
-import orbit from "./assets/avatars/faces/orbit.svg";
-import miko from "./assets/avatars/faces/miko.svg";
-import pixel from "./assets/avatars/faces/pixel.svg";
 import lumi from "./assets/avatars/faces/lumi.svg";
+import nori from "./assets/avatars/faces/nori.svg";
+import miko from "./assets/avatars/faces/miko.svg";
+import orbit from "./assets/avatars/faces/orbit.svg";
+import pixel from "./assets/avatars/faces/pixel.svg";
 import kibo from "./assets/avatars/faces/kibo.svg";
 import "./agent-profile.css";
-import pebble from "./assets/avatars/faces/pebble.svg";
-import pad from "./assets/avatars/faces/pad.svg";
-const artwork = { nori, orbit, miko, pixel, lumi, kibo, pebble, pad };
-export function Avatar({ avatar, color, large = false, motion = undefined }) {
+const artwork = { lumi, nori, miko, orbit, pixel, kibo };
+// Die Bühne zeigt Requisiten links und rechts; kompakte Avatare beschneiden auf die Figur.
+const STAGE_VIEWBOX = 'viewBox="-10 -8 31 25"';
+const COMPACT_VIEWBOX = 'viewBox="-1 0 18 16"';
+export const DEFAULT_AVATAR_SET = "ruhe";
+export function Avatar({ avatar, color, large = false, motion = undefined, set = DEFAULT_AVATAR_SET, stage = false }) {
   const { id } = agentAvatar(avatar);
   const ref = useRef();
   const [timing] = useState(avatarMotionTiming);
   useEffect(() => observeAvatarMotion(ref.current), []);
+  const markup = stage ? artwork[id] : artwork[id].replace(STAGE_VIEWBOX, COMPACT_VIEWBOX);
   return (
     <span
       ref={ref}
@@ -27,13 +31,15 @@ export function Avatar({ avatar, color, large = false, motion = undefined }) {
       aria-hidden="true"
       data-avatar={id}
       data-avatar-style={motion}
+      data-set={set}
+      data-stage={stage ? "true" : undefined}
       data-avatar-color={avatarColor(color)}
-      style={{ background: avatarBackground(color), ...timing }}
+      style={{ background: avatarBackground(color), "--avatar-cutout": avatarCutout(color), ...timing }}
     >
       <span
         className="agent-avatar-art"
-        // Only the eight trusted, bundled SVGs above can supply this markup.
-        dangerouslySetInnerHTML={{ __html: artwork[id] }}
+        // Only the six trusted, bundled SVGs above can supply this markup.
+        dangerouslySetInnerHTML={{ __html: markup }}
       />
     </span>
   );
