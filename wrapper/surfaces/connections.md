@@ -127,3 +127,14 @@ Schalter. Zentral verwaltete Installationen zeigen ihren Host-Betriebsweg.
 Technischer Vertrag, Modellgrenzen und Migration: [Geräte](../../docs/DEVICES.md).
 
 Die gemeinsame Zugangsablage verwendet die lokale .env im Installationsordner. Bestehende Secret-Referenzen und Verbindungsabläufe bleiben erhalten; gespeicherte Werte werden nicht in die Oberfläche zurückgegeben. Übernahme, Sicherung und Rückweg führt docs/VAULT.md.
+
+## Persönliche Messenger-Verbindungen
+
+`MessengerConnectionForm` verwendet den vorhandenen Modal, Field und Aktionszeilen.
+WhatsApp bekommt denselben Katalogplatz mit Inbox-/Agenten-Schreibrolle; Telegram
+ergänzt den persönlichen Kontoanschluss neben dem bestehenden Bot-Service.
+Eingerichtete Rollen bleiben fest. Adressen und Importpfad stehen unter Details.
+Telegram-App, Rufnummer und Code/Passwort werden ausschließlich hier eingegeben;
+keine Geheimnisse im Chat. Gespeichert, verbunden und abgeglichen bleiben getrennt.
+Trennen erhält lokale Verläufe. Keine Agenten-Gesprächsliste für Schreibkanäle.
+Technischer Bauplan: docs/MESSENGER.md und docs/TELEGRAM.md.

@@ -19,6 +19,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
+telegram = ["Telethon==1.44.0"]
 test = ["pytest>=8,<10", "pytest-asyncio>=1,<2"]
 embeddings = ["sentence-transformers>=3,<6"]
 

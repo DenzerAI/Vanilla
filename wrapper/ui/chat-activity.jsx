@@ -1,5 +1,6 @@
 import { AppLoader } from './app-loader';
 import {StepCount} from './step-count';
+import {TextShimmer} from './components/ui/text-shimmer';
 import './activity-motion.css';
 import {DiffStats, DiffView} from './chat-artifacts.jsx';
 import {activityDetailLabel} from './activity-detail.mjs';
@@ -92,7 +93,7 @@ export function TurnStatus({ turn, running, waiting, visible = true, compact = f
   const Tag = compact ? 'span' : 'div';
   return <Tag ref={ref} className={compact ? "turn-activity-status" : `turn-meta turn-progress${running ? ' working' : ''}`}>
     {running && !waiting && <AppLoader size={16} preview />}
-    {(running || !compact || ['failed', 'interrupted'].includes(turn.status)) && <span className="turn-status-label" role="status" aria-live="polite" aria-atomic="true">{label}</span>}
+    {(running || !compact || ['failed', 'interrupted'].includes(turn.status)) && <TextShimmer active={running && !waiting} className="turn-status-label" role="status" aria-live="polite" aria-atomic="true">{label}</TextShimmer>}
     {compact && <span className="turn-step-count">{count ? <><StepCount value={count} animate={awake}/> {count === 1 ? 'Schritt' : 'Schritte'}</> : 'Verlauf'}</span>}
     {elapsed != null && <span className="turn-duration">{compact ? '·' : running ? 'seit' : 'in'} {workingDurationLabel(elapsed)}</span>}
   </Tag>;

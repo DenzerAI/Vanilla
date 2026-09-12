@@ -662,7 +662,9 @@ Leerlaufschleifen und kein künstlicher Ladefortschritt. Die Iconsammlung unter
 Aussehen → Unser Design → Icons nutzt dieselben Komponenten und Zeitlinien,
 mit Suche, beschrifteter Auswahl und großer Vorschau im aktiven Theme.
 
-`IconButton` liegt gemeinsam in `ui/icon-button.tsx`. `CopyButton` zeigt erst nach
+`IconButton` liegt gemeinsam in `ui/icon-button.tsx`. `CopyButton` verwendet
+denselben direkten Button-Aufbau wie die anderen Nachrichtenaktionen;
+keine zusätzliche Hülle steuert dessen Sichtbarkeit. Er zeigt erst nach
 bestätigtem Schreiben in die Zwischenablage einen kurz erscheinenden Haken und
 eine zugängliche Kopiert-Meldung. Fehler zeigen keinen Haken und erlauben einen
 erneuten Versuch. Wiederholtes Kopieren, Textwechsel und Entfernen des Bausteins
@@ -1537,3 +1539,44 @@ Nur flüchtiger Browserzustand, keine Migration gespeicherter Chats oder Stimmen
 
 
 Der kompakte Agentenmenükopf zeigt Vanilla mit Version und Denzer AI. Verbindung, Engine und Antwortzeit teilen eine dezente Zeile. Commitkennung und Zeitpunkt stehen in einer Zeile; Push, Neustart und Laufzeit folgen ohne Leerzeilen. Zeitpunkte zeigen Tag, Monat und Uhrzeit, das vollständige Datum einschließlich Jahr bleibt im Tooltip. Die Serveradresse schließt den Statusblock ab. Der gemeinsame randlose IconButton für Neustart und ThemeToggle teilen den Menüfuß; Fokus und Touchfläche bleiben erhalten.
+
+
+### Sieben lebendige Startkarten
+
+Der vollständige Chatstart ergänzt die vorhandenen Themen bei Bedarf mit den
+bestehenden echten Gesprächseinstiegen auf sieben unterschiedliche Karten. Auf
+breiten Flächen stehen drei links und drei rechts der Mitte; kleinere Ansichten
+zeigen fünf oder drei. Auch bei weniger Einträgen bleibt die sichtbare Zahl ungerade.
+Automatischer Wechsel alle 6,5 Sekunden mit gemeinsamem Federübergang; Zeigerkontakt
+hebt eine Karte an, stoppt den Umlauf aber nicht dauerhaft. Pause/Play steht neben
+den Pfeilen. Tastaturfokus, Schreiben, verborgene Ansichten und reduzierte Bewegung
+pausieren. Der automatische Zähler bleibt für Screenreader still.
+
+Die Glasflächen tragen langsame gebrochene Lichtreflexe hinter feststehendem Text.
+Kalender: dunkle violette Glasbasis mit weißer Tageszahl in beiden Themes.
+Kontingente: bis zu vier echte Fenster, zuerst Woche und kurzes Fenster je Anbieter,
+danach weitere gemeldete Fenster,
+mit kräftigeren Restbalken und Lichtreflex. Resetzeiten stehen im Tooltip und
+vollständig unter Nutzung. Fehlende Werte werden nicht als Fortschritt gezeichnet.
+Gemeinsame Rollen fan-glass-light, fan-calendar-base, fan-glass-duration und
+attentionFanMotion steuern Material und Bewegung. Aussehen → Bewegung reduzieren
+schaltet die Bewegung ab; reduzierte Transparenz und Forced Colors bleiben lesbar.
+Bestehende AttentionFan-Referenzen verwenden dasselbe Material. Keine Datenmigration.
+
+## Messenger in der gemeinsamen Inbox
+
+InboxComposer verwendet dieselbe ComposerFocus-Pille, IconButton und Sendepfeil
+wie der Chat. Antwortbezug, Anhang und gesicherte Sprachaufnahme stehen darüber.
+InboxConversationRow und der mobile Vollbreitenwechsel bleiben unverändert.
+Verläufe ergänzen kompakte Antwortzitate, Medien mit nativen Steuerelementen und
+DeliveryChecks für tatsächliche Anbieterbelege. Reaktionsauswahl bleibt beschriftet.
+Alle Farben, Abstände, Rundungen und Schriften verwenden bestehende Tokens.
+InboxPatternPreview zeigt den gemeinsamen Composer mit fiktiven lokalen Daten.
+Verbindungen ergänzen MessengerConnectionForm im vorhandenen Modal-/Field-Muster.
+Datenhaltung, Aufnahmeerhalt und Versandgrenzen stehen in surfaces/inbox.md und
+docs/MESSENGER.md. Keine automatischen Antworten oder dekorativen Effekte.
+
+Messengerblasen verwenden inhaltsabhängige Breite bis 82 % und die bestehende
+surface-Fläche. Zeit, DeliveryChecks und ChatMenu-Mehraktion sitzen kompakt am
+unteren Rand; Gruppensender bleiben lesbar. Keine eigene Menü- oder Iconfamilie.
+QR-Kopplung liegt ausschließlich im bestehenden Verbindungsmodal.

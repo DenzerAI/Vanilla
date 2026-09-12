@@ -8,10 +8,10 @@ svg.ui-icon {
   align-items: center;
   max-width: 100%;
 }
-.copy-feedback > .icon-button {
+.icon-button.copy-feedback {
   flex-shrink: 0;
 }
-.copy-feedback .copy-notice {
+.copy-feedback + .copy-notice {
   margin-inline-start: var(--space-4);
   min-width: 0;
   overflow-wrap: anywhere;

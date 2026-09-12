@@ -18,7 +18,7 @@ export function connectionCategory(entry) {
   return known?.category || 'automation';
 }
 export function connectionBrand(entry) {
-  return crmDefinition(entry.provider)?.name || serviceDefinition(entry.provider)?.name ||
+  return ({whatsapp:'WhatsApp','telegram-user':'Telegram'})[entry.provider] || crmDefinition(entry.provider)?.name || serviceDefinition(entry.provider)?.name ||
     connectionCatalog.find(s=>s.provider===entry.provider && entry.provider)?.name || entry.name;
 }
 export function groupConnections(entries) {
@@ -33,6 +33,8 @@ export function matchesConnection(service, search) {
 }
 const service = (id,icon,category) => {const s=serviceDefinition(id);return {name:s.name,description:s.description,provider:id,kind:'service',icon,category};};
 export const connectionCatalog = [
+  {name:'WhatsApp',provider:'whatsapp',category:'messaging',icon:'message',description:'Privater Verlauf oder Agenten-Schreibkanal',kind:'messenger'},
+  {name:'Telegram',provider:'telegram-user',category:'messaging',icon:'message',description:'Persönliche Chats und Bots in der Inbox',kind:'messenger'},
   {name:'GitHub',provider:'github',category:'automation',icon:'plug',description:'Updates und privater Codeaustausch',kind:'github'},
   {name:'Android (ADB)',provider:'android-adb',category:'devices',icon:'plug',description:'Android-Geräte per USB oder Netzwerk steuern',kind:'device'},
   {name:'Samsung TV',provider:'samsung-tv',category:'devices',icon:'plug',description:'Fernseher im Netzwerk fernbedienen',kind:'device'},
@@ -59,7 +61,7 @@ export const audioServices=connectionCatalog.filter(s=>s.kind==='audio');
 // The static UI can be rebuilt while older server processes finish active chats.
 export function catalogForFeatures(features={}) {
   const catalog = connectionCatalog.map(s=>features.mailInbox && s.provider==='calendar'?{...s,provider:'microsoft-graph',kind:'service',description:'Microsoft-Termine mit dem Kalender abgleichen'}:features.mailInbox && ['gmail','microsoft-graph'].includes(s.provider)?{...s,name:s.provider==='gmail'?'Gmail':'Outlook',provider:s.provider==='gmail'?'gmail':'outlook',kind:'mail',description:'Postfach mit der Inbox verbinden'}:s);
-  const available = catalog.filter(service => (service.kind !== 'device' || features.deviceConnections) && (service.kind !== 'github' || features.github) && (service.kind !== 'crm' || features.crmConnections) && (service.kind !== 'system' || features.operations));
+  const available = catalog.filter(service => (service.kind !== 'messenger' || features.messengerInbox) && (service.kind !== 'device' || features.deviceConnections) && (service.kind !== 'github' || features.github) && (service.kind !== 'crm' || features.crmConnections) && (service.kind !== 'system' || features.operations));
   if(features.serviceConnections)return available;
   return available.flatMap(s=>s.kind!=='service'?[s]:s.provider==='microsoft-graph'?[{name:'Outlook',provider:'outlook',category:'office',icon:'mail',description:'E-Mail über einen Workflow anbinden',kind:'webhook'}]:s.provider==='whatsapp-local'?[{name:'WhatsApp',provider:'whatsapp',category:'messaging',icon:'message',description:'Bestehende Bridge oder Workflow anbinden',kind:'webhook'}]:[]);
 }

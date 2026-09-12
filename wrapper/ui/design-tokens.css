@@ -2,6 +2,9 @@
 :root {
   color-scheme: dark;
   --fan-blur: 48px;
+  --fan-glass-light: #ffffff;
+  --fan-calendar-base: #271b2d;
+  --fan-glass-duration: 12s;
   --calendar-leading: 1;
   --font-root-size: 16px;
   --tracking-title: -0.65px;
@@ -127,6 +130,7 @@
   --motion-feedback-duration: 160ms;
   --motion-progress-duration: 1000ms;
   --motion-skeleton-duration: 1600ms;
+  --motion-status-shimmer-duration: 2400ms;
   --leading-tight: 1.2;
   --leading-compact: 1.4;
   --leading-normal: 1.5;

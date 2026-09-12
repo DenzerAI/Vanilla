@@ -8,7 +8,7 @@ export function CopyButton({ text, label = 'Kopieren', size = 15, disabled = fal
   { text: string; label?: string; size?: number; disabled?: boolean }) {
   const [state, setState] = useState<'idle' | 'pending' | 'copied' | 'error'>('idle');
   const [success, setSuccess] = useState(0);
-  const root = useRef<HTMLSpanElement>(null);
+  const root = useRef<HTMLButtonElement>(null);
   const busy = useRef(false);
   const revision = useRef(0);
   const timer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -42,12 +42,12 @@ export function CopyButton({ text, label = 'Kopieren', size = 15, disabled = fal
       if (current === revision.current) busy.current = false;
     }
   }
-  return <span ref={root} className="copy-feedback" data-icon-feedback={state}>
-    <IconButton label={state === 'copied' ? 'Kopiert' : label} onClick={copy} disabled={disabled || state === 'pending'} aria-busy={state === 'pending'}>
+  return <>
+    <IconButton ref={root} className="copy-feedback" data-icon-feedback={state} label={state === 'copied' ? 'Kopiert' : label} onClick={copy} disabled={disabled || state === 'pending'} aria-busy={state === 'pending'}>
       {state === 'copied' ? <Check size={size} /> : <Copy size={size} />}
     </IconButton>
     <span className={state === 'error' ? 'copy-notice' : 'sr-only'} role="status">
       {state === 'copied' ? 'Kopiert.' : state === 'error' ? 'Kopieren nicht möglich. Bitte erneut versuchen.' : ''}
     </span>
-  </span>;
+  </>;
 }

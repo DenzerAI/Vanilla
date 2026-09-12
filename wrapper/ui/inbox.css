@@ -52,3 +52,27 @@
   .inbox-compose textarea { font-size: var(--text-reading); }
   .inbox-tabs button { min-height: var(--control-touch); }
 }
+
+.inbox-compose .composer-entry { width: 100%; }
+.inbox-compose .composer-entry textarea { flex: 1; width: 0; border: 0; background: transparent; border-radius: 0; padding: var(--space-12) var(--space-8); }
+.inbox-compose { padding-bottom: max(var(--space-8), env(safe-area-inset-bottom)); }
+.inbox-reply { display: flex; align-items: center; gap: var(--space-8); padding: var(--space-8); font-size: var(--text-small); }
+.inbox-reply > span { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.inbox-media { display: block; max-width: 100%; max-height: 420px; margin-top: var(--space-8); border-radius: var(--radius-control); }
+.inbox-quote { margin: var(--space-8) 0; padding: var(--space-8) var(--space-12); border-left: 2px solid var(--border-strong); font-size: var(--text-small); color: var(--muted); }
+.inbox-quote p { margin: var(--space-4) 0 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+.inbox-reactions, .inbox-message-actions { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); margin-top: var(--space-4); }
+.inbox-reactions > span { padding: var(--space-4) var(--space-8); border-radius: var(--radius-pill); background: var(--raised); }
+.inbox-message-actions select { width: auto; font-size: var(--text-caption); }
+.inbox-message details { font-size: var(--text-small); margin-top: var(--space-8); }
+.inbox-message details p { white-space: pre-wrap; overflow-wrap: anywhere; }
+.messenger-pairing { display: block; width: 256px; max-width: 100%; margin: var(--space-16) auto; }
+
+.inbox-page[data-messenger="true"] .inbox-message { width: fit-content; max-width: min(82%, 660px); margin-bottom: var(--space-12); padding: var(--space-8) var(--space-12); border-radius: var(--radius-control); background: var(--surface); position: relative; }
+.inbox-page[data-messenger="true"] .inbox-message-outgoing { margin-left: auto; }
+.inbox-page[data-messenger="true"] .inbox-message > p { margin-top: 0; }
+.inbox-page[data-messenger="true"] .inbox-message-meta { justify-content: flex-end; margin-top: var(--space-4); padding-right: var(--space-32); }
+.inbox-page[data-messenger="true"][data-group="false"] .inbox-message-meta > strong { display: none; }
+.inbox-page[data-messenger="true"] .inbox-message-actions { position: absolute; right: 0; bottom: 0; margin: 0; }
+.inbox-page[data-messenger="true"] .inbox-message .inbox-media { margin-bottom: var(--space-8); }
+.inbox-page[data-messenger="true"] .inbox-message .muted { font-size: var(--text-small); }

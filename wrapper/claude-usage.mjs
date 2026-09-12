@@ -11,6 +11,6 @@ export async function readClaudeUsage({dataRoot,cwd,queryFactory,environment=pro
  const abortController=new AbortController();
  const q=query({prompt:input(),options:{cwd,env,persistSession:false,settingSources:[],tools:[],mcpServers:{},abortController}});
  let timer;
- try{return await Promise.race([(async()=>{await q.initializationResult();return q.usage_EXPERIMENTAL_MAY_CHANGE_DO_NOT_RELY_ON_THIS_API_YET();})(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Nutzungsabfrage hat zu lange gedauert.')),15000);})]);}
+ try{return await Promise.race([(async()=>{await q.initializationResult();const result=await q.usage_EXPERIMENTAL_MAY_CHANGE_DO_NOT_RELY_ON_THIS_API_YET();return !result.rate_limits_available&&env.CLAUDE_CODE_OAUTH_TOKEN?{...result,unavailableReason:"profile_required"}:result;})(),new Promise((_,reject)=>{timer=setTimeout(()=>reject(Error('Nutzungsabfrage hat zu lange gedauert.')),15000);})]);}
  finally{clearTimeout(timer);release();abortController.abort();q.close();}
 }

@@ -473,3 +473,13 @@ Nutzung in den Einstellungen und die Chatstart-Kachel verwenden denselben
 Kontingentabruf für Codex und Claude. Die Kachel navigiert zur vollständigen
 Anbieteransicht unter Einstellungen → Nutzung; keine Modellantwort oder neue
 Sitzung. Darstellung und Aktualisierung: surfaces/settings.md, Nutzung.
+
+Die Startkachel zeigt bis zu vier Kontingente, Hauptfenster zuerst, als Restbalken, einschließlich
+Wochen- und Kurzfenster beider Anbieter. Details behalten alle Resetzeiten und
+Nebenfenster. Keine Migration von Anbieterwerten oder Zugangsdaten.
+
+Wenn der native SDK-Abruf mit dem gebundenen OAuth-Diensttoken keine Abo-Werte
+liefert, meldet er profile_required. Die UI erklärt die nötige native
+Abo-Anmeldung für diese Installation; der Modellzugang bleibt unverändert.
+Der Diensttoken allein ist keine belegte Berechtigung zum Lesen des Abo-Profils.
+Keine automatischen Logins, Kopien fremder Profile oder erfundenen Prozentwerte.

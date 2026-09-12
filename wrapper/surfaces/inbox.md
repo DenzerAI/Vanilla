@@ -38,3 +38,32 @@ Abnahme: Designprüfung, TypeScript, Build, Portal-Einbindung, Navigation zurüc
 Die bestehende Antwortzeile speichert serialisiert pro Gespräch mit Entwurfs- und Nachrichtenrevision. Ein Konflikt stoppt weitere Schreibversuche; der eigene Text bleibt zur Sicherung sichtbar. Offene Schreibvorgänge warnen vor einem vollständigen Seitenwechsel. Normales Öffnen eines anderen Gesprächs ändert keine noch laufende Speicheradresse. Kein Versand beim Tippen, Lesen, Erledigen oder Kontoverbinden. Versand ist eine getrennte, ausdrücklich beauftragte Aktion über die gemeinsamen Inbox-Werkzeuge.
 
 Laden, leerer Eingang und Fehler verwenden die vorhandenen Flächen. Nachrichten-HTML wird als bereinigter Text ausgegeben, keine externen Bilder. Der Konzeptdialog erklärt die vorhandenen Wege; keine zusätzliche Navigation, Sendeleiste oder optische Überarbeitung.
+
+## Persönliche Messenger und direkter Composer
+
+Der Nutzerauftrag erweitert die bisher reine Entwurfszeile: `InboxComposer`
+verwendet ComposerFocus, IconButton und den vorhandenen Sendepfeil. Speichern
+bleibt automatisch, Versand erfolgt ausdrücklich per Pfeil oder Enter;
+Shift+Enter erzeugt eine Zeile. Nachrichten werden kontogebunden gespeichert.
+WhatsApp und Telegram ergänzen denselben Portal-/Sidebar-/Mobilwechsel.
+Agenten-Schreibkanäle werden bereits serverseitig aus der Inbox ausgeschlossen.
+
+InboxComposer zeigt über der Pille höchstens Antwortbezug, Anhang und eine
+wiederherstellbare Aufnahme. Plus fügt eine Datei hinzu, das Mikrofon startet eine
+Sprachnachricht, Stop sichert sie ohne Versand. Der Gesprächswechsel beendet eine
+laufende Aufnahme und erhält sie im ursprünglichen Gespräch. Fehler erhalten den
+Text und dieselbe Sendeauftragskennung. Bekannte unklare Aufträge nicht wiederholen.
+
+Verläufe zeigen Bilder, Audio/Video mit nativen Steuerelementen, Datei-Downloads,
+Antwortzitate und vorhandene Reaktionen. DeliveryChecks bezeichnet nur gelieferte
+Anbieterbelege, Lesestatus bleibt zusätzlich im Tooltip. Reaktionen verwenden eine
+beschriftete Auswahl, Antworten denselben IconButton. Ältere Nachrichten werden
+schrittweise vorgeladen; manuelles Scrollen stoppt Mitlaufen. Bestehende Mailtexte
+bleiben bereinigter Text. Grenzen und Migration: docs/MESSENGER.md, docs/MAIL.md.
+
+Nachrichtenaktionen verwenden das gemeinsame ChatMenu hinter dem Mehr-Icon.
+Antworten und die Emoji-Auswahl bleiben dadurch in einer kleinen erreichbaren
+Fläche. Messengerblasen wachsen nach Inhalt bis 82 % der Spalte; eigene stehen
+rechts. Zeit und Anbieterbeleg liegen kompakt unten. In Gruppengesprächen bleibt
+der Absender sichtbar. Auf Mobilgeräten wird erst beim sichtbaren Öffnen des
+Verlaufs gelesen; die automatisch vorgeladene Auswahl in der Liste zählt nicht.

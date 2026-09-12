@@ -30,11 +30,11 @@ export function AllowanceBars({data,compact=false}:{data:any;compact?:boolean}){
    {featured.map((r:any)=>{
     const left=remainingPercent(r,now);
     return <span className="allowance-row" key={r.provider+r.id} data-level={left===null?'unknown':left<=10?'low':left<=25?'warn':'ok'}>
-     <span className="allowance-label"><span>{r.label}</span><span>{left===null?'–':`${formatStat(left)} % übrig`}</span></span>
+     <span className="allowance-label" title={resetLabel(r.resetAt,now)}><span>{r.label.replace(/^GPT-[^ ]+-Codex-Spark/,'Spark')}</span><span>{left===null?'–':`${formatStat(left)} % übrig`}</span></span>
      <span className="allowance-track" role={left===null?'img':'meter'} aria-label={`${r.label}, übrig${r.stale?', letzter bekannter Stand':''}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={left??undefined} aria-valuetext={left===null?'Neuer Stand ausstehend':`${left} Prozent übrig`}><span style={{width:`${left??0}%`}}/></span>
-     <span className="usage-note">{r.stale?'Letzter Stand · ':''}{resetLabel(r.resetAt,now)}</span>
+     <span className="usage-note allowance-reset">{r.stale?'Letzter Stand · ':''}{resetLabel(r.resetAt,now)}</span>
     </span>;})}
-   {(data.providers||[]).filter((p:any)=>p.status!=='ready').map((p:any)=><span key={p.id} className="usage-note">{p.name}: {p.status==='error'?'Aktualisierung fehlgeschlagen':'Abo-Kontingent nicht verfügbar'}</span>)}
+   {(data.providers||[]).filter((p:any)=>p.status!=='ready').map((p:any)=><span key={p.id} className="usage-note" title={p.unavailableReason==='profile_required'?'Der Claude-Dienstzugang erlaubt Modellaufrufe, aber keine Abo-Abfrage. Claude Code für diese Installation mit deinem Abo anmelden.':undefined}>{p.name}: {p.unavailableReason==='profile_required'?'Für Abo-Werte erneut anmelden':p.status==='error'?'Aktualisierung fehlgeschlagen':'Abo-Kontingent nicht verfügbar'}</span>)}
    {!data.providers?.length&&<span className="usage-note">Noch kein Anbieter für Kontingente eingerichtet.</span>}
    {!!featured.length&&rows.length>featured.length&&<span className="usage-note">+ {rows.length-featured.length} weitere Kontingente</span>}
   </span>;
@@ -46,7 +46,7 @@ export function AllowanceBars({data,compact=false}:{data:any;compact?:boolean}){
    <span className="allowance-track" role={r.expired||r.resetAt!==null&&r.resetAt<=now?"img":"meter"} aria-label={`${r.label}, verbraucht${r.stale?', letzter bekannter Stand':''}`} aria-valuemin={0} aria-valuemax={100} aria-valuenow={r.expired||r.resetAt!==null&&r.resetAt<=now?undefined:Math.min(r.usedPercent,100)} aria-valuetext={r.expired||r.resetAt!==null&&r.resetAt<=now?'Neuer Stand ausstehend':`${r.usedPercent} Prozent verbraucht`}><span style={{width:`${r.expired||r.resetAt!==null&&r.resetAt<=now?0:Math.min(r.usedPercent,100)}%`}}/></span>
    <span className="usage-note">{r.stale?'Letzter Stand · ':''}{resetLabel(r.resetAt,now)}</span>
   </span>)}
-  {(data.providers||[]).filter((p:any)=>p.status!=='ready').map((p:any)=><span key={p.id} className="usage-note">{p.name}: {p.status==='error'?'Aktualisierung fehlgeschlagen':'Abo-Kontingent nicht verfügbar'}</span>)}
+  {(data.providers||[]).filter((p:any)=>p.status!=='ready').map((p:any)=><span key={p.id} className="usage-note" title={p.unavailableReason==='profile_required'?'Der Claude-Dienstzugang erlaubt Modellaufrufe, aber keine Abo-Abfrage. Claude Code für diese Installation mit deinem Abo anmelden.':undefined}>{p.name}: {p.unavailableReason==='profile_required'?'Für Abo-Werte erneut anmelden':p.status==='error'?'Aktualisierung fehlgeschlagen':'Abo-Kontingent nicht verfügbar'}</span>)}
   {!data.providers?.length&&<span className="usage-note">Noch kein Anbieter für Kontingente eingerichtet.</span>}
  </span>;
 }

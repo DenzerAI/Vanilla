@@ -10,6 +10,8 @@ export function ConnectionsContent({api, projectId="default", features, integrat
   const [github,setGitHub]=useState(null),[githubError,setGitHubError]=useState('');
   useEffect(()=>{let alive=true;if(features.github)api('/github/status').then(s=>{if(alive){setGitHub(s);setGitHubError('');}}).catch(e=>{if(alive)setGitHubError(e.message);});return()=>{alive=false;};},[features.github,integrations]);
   const [network,setNetwork]=useState(null),[devices,setDevices]=useState([]),[deviceError,setDeviceError]=useState('');
+  const [messengers,setMessengers]=useState([]);
+  useEffect(()=>{let alive=true;if(features.messengerInbox)api('/messenger/connections?projectId='+encodeURIComponent(projectId)).then(r=>{if(alive)setMessengers(r.connections);}).catch(e=>{if(alive)setMailError(e.message);});return()=>{alive=false;};},[features.messengerInbox,projectId,integrations]);
   const [mailAccounts,setMailAccounts]=useState([]),[mailError,setMailError]=useState('');
   useEffect(()=>{let alive=true;setMailAccounts([]);if(features.mailInbox) api('/mail/accounts?projectId='+encodeURIComponent(projectId)).then(result=>{if(alive){setMailAccounts(result.accounts);setMailError('');}}).catch(e=>{if(alive)setMailError(e.message);});return()=>{alive=false;};},[features.mailInbox,projectId,integrations]);
   useEffect(()=>{let alive=true;const refresh=()=>{if(features.operations)api(features.deviceConnections?'/network/status':'/system/tailscale').then(r=>{if(alive)setNetwork(r);}).catch(e=>{if(alive)setDeviceError(e.message);});if(features.deviceConnections)api('/devices').then(r=>{if(alive){setDevices(r.devices);setDeviceError('');}}).catch(e=>{if(alive)setDeviceError(e.message);});};refresh();window.addEventListener('device-connections-changed',refresh);return()=>{alive=false;window.removeEventListener('device-connections-changed',refresh);};},[features.operations,features.deviceConnections]);
@@ -18,6 +20,7 @@ export function ConnectionsContent({api, projectId="default", features, integrat
     ...(github?.account?[{name:'GitHub',provider:'github',kind:'github',category:'automation',description:github.error||(github.connected?github.account.login:'Erneut anmelden')}]:[]),
     ...(network?.connected?[{name:'Tailscale',provider:'tailscale',kind:'system',category:'devices',description:network.serving?'Privater HTTPS-Zugang verbunden':'Angemeldet · Serve einrichten'}]:[]),
     ...devices,
+    ...messengers.map(c=>({...c,kind:"messenger",category:"messaging",description:c.role==="agent-send"?"Schreibkanal im Hintergrund":c.error||c.status})),
     ...audioServices.filter(s=>audioConnections[s.name]).map(s=>({...s,id:'audio-'+s.name})),
     ...integrations.connections,
     ...mailAccounts.map(account=>({...account,kind:'mail',category:'office',name:account.provider==='gmail'?'Gmail':'Outlook',description:account.address})),
@@ -29,7 +32,7 @@ export function ConnectionsContent({api, projectId="default", features, integrat
 
     if(entry.kind==='device') {setModal({type:'device-connection',connection:entry});return;}
     if(entry.kind==='system') {setModal({type:'tailscale'});return;}
-    setModal(entry.kind==='audio'?{type:'audio-connection',name:entry.name}:{type:entry.kind==='mail'?'mail-connection':entry.kind==='crm'?'crm-connection':entry.kind==='service'?'service-connection':'connection',connection:entry});
+    setModal(entry.kind==='audio'?{type:'audio-connection',name:entry.name}:{type:entry.kind==='messenger'?'messenger-connection':entry.kind==='mail'?'mail-connection':entry.kind==='crm'?'crm-connection':entry.kind==='service'?'service-connection':'connection',connection:entry});
   }
   function groups(entries, adding) {
     return groupConnections(entries.filter(accepts)).map(group=>(
@@ -38,7 +41,7 @@ export function ConnectionsContent({api, projectId="default", features, integrat
         <div className="integration-grid">{group.entries.map(entry=>{
           const tool=entry.kind==='mcp', spec=toolNames[entry.sourceName];
           const fallback=entry.provider==='calendar'?Calendar:entry.kind==='device'||entry.provider==='tailscale'?Plug:spec?.[2]||Workflow;
-          const content=<><BrandIcon name={tool?spec?.[1]:connectionBrand(entry)} fallback={fallback}/><div><strong>{entry.name}</strong><p>{adding||['audio','system','github'].includes(entry.kind)?entry.description:tool?`${Object.keys(entry.tools||{}).length} Werkzeuge · vom Worker bereitgestellt`:entry.kind==='device'?(entry.enabled?'Für Agenten freigegeben':'Für Agenten gesperrt'):entry.kind==='mail'?(entry.enabled?(entry.error||entry.status==='error'?'Verbindung prüfen':entry.status==='connected'&&entry.synced?'Postfach verbunden':'Abgleich ausstehend'):'Getrennt'):entry.kind==='crm'?crmStatus(entry):entry.kind==='service'?connectionStatus(entry):entry.kind==='webhook'?'Workflow-Webhook':'Link zum Dienst'}</p></div>{!tool&&(adding?<Plus size={20}/>:<ChevronRight size={17}/>)}</>;
+          const content=<><BrandIcon name={tool?spec?.[1]:connectionBrand(entry)} fallback={fallback}/><div><strong>{entry.name}</strong><p>{adding||['audio','system','github'].includes(entry.kind)?entry.description:tool?`${Object.keys(entry.tools||{}).length} Werkzeuge · vom Worker bereitgestellt`:entry.kind==='device'?(entry.enabled?'Für Agenten freigegeben':'Für Agenten gesperrt'):entry.kind==='messenger'?entry.description:entry.kind==='mail'?(entry.enabled?(entry.error||entry.status==='error'?'Verbindung prüfen':entry.status==='connected'&&entry.synced?'Postfach verbunden':'Abgleich ausstehend'):'Getrennt'):entry.kind==='crm'?crmStatus(entry):entry.kind==='service'?connectionStatus(entry):entry.kind==='webhook'?'Workflow-Webhook':'Link zum Dienst'}</p></div>{!tool&&(adding?<Plus size={20}/>:<ChevronRight size={17}/>)}</>;
           return tool?<div key={entry.id} className="integration-item" title={entry.sourceName}>{content}</div>:<button key={entry.id||entry.provider||entry.name} className="integration-item" onClick={()=>open(entry)} aria-label={`${entry.name} ${adding?'hinzufügen':'bearbeiten'}`}>{content}</button>;
         })}</div>
       </section>

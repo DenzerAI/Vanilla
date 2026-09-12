@@ -56,7 +56,7 @@ export function claudeAllowance(data,now=Date.now()) {
  }
  for(const [i,m] of (limits?.model_scoped||[]).entries()){const row=windowRow(`model:${i}`,`${label(m.display_name)} · Woche`,m,now,true,{period:'week'});if(row)rows.push(row);}
  const extra=limits?.extra_usage;
- return {id:'claw-code',name:'Claude Code',status:data.rate_limits_available&&rows.length?'ready':'unavailable',rows,experimental:true,updatedAt:now,extra:extra?{enabled:extra.is_enabled===true,limit:count(extra.monthly_limit),used:count(extra.used_credits),percent:count(extra.utilization),currency:label(extra.currency)||null}:null};
+ return {id:'claw-code',name:'Claude Code',status:data.rate_limits_available&&rows.length?'ready':'unavailable',rows,unavailableReason:data.unavailableReason==='profile_required'?'profile_required':null,experimental:true,updatedAt:now,extra:extra?{enabled:extra.is_enabled===true,limit:count(extra.monthly_limit),used:count(extra.used_credits),percent:count(extra.utilization),currency:label(extra.currency)||null}:null};
 }
 /** Coalesce all panes. Failed refreshes retain the last observation, marked stale. */
 export function allowanceReader({readCodex,readClaude,enabled,now=Date.now,ttl=60000}){
@@ -74,9 +74,9 @@ export function allowanceReader({readCodex,readClaude,enabled,now=Date.now,ttl=6
  };
 }
 
-/** The compact card shows the allowances that carry real work: one main window
- * per provider, the week first. Side buckets stay in the details. */
-export function featuredAllowances(providers=[],limit=3) {
+/** The compact card shows the allowances that carry real work: main windows
+ * per provider, the week first, then additional reported windows. */
+export function featuredAllowances(providers=[],limit=4) {
  // Older payloads from a running instance carry no classification yet.
  const isMain=r=>r.primary!==undefined?r.primary===true:/^(codex:|five_hour$|seven_day$)/.test(String(r.id));
  const periodOf=r=>r.period!==undefined?r.period:/Woche/.test(String(r.label))?'week':/5 Stunden/.test(String(r.label))?'short':null;
@@ -87,7 +87,9 @@ export function featuredAllowances(providers=[],limit=3) {
   for(const row of [week,short].filter(Boolean))picked.push(row);
  }
  const weeks=picked.filter(r=>r.period==='week'), rest=picked.filter(r=>r.period!=='week');
- return [...weeks,...rest].slice(0,limit);
+ const main=[...weeks,...rest];
+ const additional=providers.flatMap(p=>(p.rows||[]).filter(r=>!main.some(m=>m.provider===p.id&&m.id===r.id)).map(r=>({...r,provider:p.id})));
+ return [...main,...additional].slice(0,limit);
 }
 export function remainingPercent(row,now=Date.now()) {
  if(!row || row.expired || (row.resetAt!==null&&row.resetAt<=now))return null;

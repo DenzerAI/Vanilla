@@ -78,3 +78,38 @@ Offizielle Quellen:
 - https://learn.microsoft.com/en-us/graph/delta-query-messages
 
 Die gemeinsame Zugangsablage verwendet die lokale .env im Installationsordner. Bestehende Secret-Referenzen und Verbindungsabläufe bleiben erhalten; gespeicherte Werte werden nicht in die Oberfläche zurückgegeben. Übernahme, Sicherung und Rückweg führt docs/VAULT.md.
+
+## Gmail mit vorhandenem App-Passwort
+
+Auf ausdrücklichen Betreiberauftrag kann der geschützte interne Anschluss
+`POST /internal/mail/gmail-password` ein vorhandenes Gmail-App-Passwort verbinden
+(`projectId`, `address`, `password`). Er prüft Anmeldung und den Gmail-Spezialordner
+Alle Nachrichten vor der Speicherung. Kein normaler Kontopasswort-Login und keine
+automatische Suche in anderen Installationen. Zugang liegt im bestehenden Tresor;
+Konten bleiben unter Gmail in Verbindungen und Inbox sichtbar.
+
+Der zusätzliche Kontomodus `imap` nutzt ausschließlich imap.gmail.com:993 und
+smtp.gmail.com:465 mit TLS. IMAP öffnet Alle Nachrichten schreibgeschützt und
+verwendet BODY.PEEK; Abruf ändert keine Lesemarker. Der Erstabruf umfasst höchstens
+100 neueste Nachrichten aus 30 Tagen einschließlich gesendeter Nachrichten.
+Die Abgleichantwort enthält die tatsächliche Begrenzung als `coverage.initialLimited`.
+Anschließend folgen höchstens 100 neue UIDs pro Runde. Größere Rückstände werden
+in den nächsten Runden abgearbeitet. UIDVALIDITY-Wechsel beginnt einen neuen
+begrenzten Erstabruf. Gmail-Nachrichten- und Threadkennungen entsprechen den
+Hexkennungen des API-Anschlusses; Quellen verschiedener Konten bleiben getrennt.
+Keine vollständige Altpostfachmigration oder Synchronisierung von Löschungen/Labels.
+
+MIME-Text und HTML-Textfallback verwenden den bestehenden Inbox-Datensatz.
+Anhänge werden auf Abruf geladen, bis 8 MB. Nachrichten über 25 MB werden nur
+mit Kopfzeilen und einem ausdrücklichen Hinweis übernommen. Antworten verwenden
+SMTP mit Message-ID, In-Reply-To und References und dieselben Entwürfe,
+Versionsprüfungen und dauerhaften Versandreservierungen wie OAuth. Verbindungs-
+oder SMTP-Fehler nach Versandbeginn bleiben unklar und werden nicht wiederholt.
+Es gibt keinen automatischen Testversand. Trennen entfernt das App-Passwort aus
+dem Tresor und hält die lokale Historie vor; in Google selbst wird nichts gelöscht.
+
+Keine Schemaänderung: zusätzlicher mode und eigener Cursor im bestehenden Konto.
+Vor Rückkehr zu Code ohne IMAP-Unterstützung solche Konten trennen/deaktivieren;
+Zugänge und lokale Historie mit dem vollständigen Datenbackup sichern.
+Tests: core/tests/test_mail_imap.py und core/tests/test_mail.py.
+Protokollreferenz: https://developers.google.com/workspace/gmail/imap/imap-extensions.

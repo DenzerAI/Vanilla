@@ -13,7 +13,7 @@ export function ChatStart({greeting,profile,requests,notifications,chats,project
   const statistics=useStatisticsData(api,projectId,JSON.stringify(chats.map(c=>[c.id,c.updatedAt,c.lastCompletedTurnId])),false,visible);
   const calendar=useCalendarDay(api,projectId);
   const firstCard=useRef('');
-  const items=useMemo(()=>chatStartFeed({requests,notifications,chats,projectId,...data,calendar,includeWeather:!data.profileLoading,includeCalendar:true,includeStatistics:true,statistics,includeAllowances:true,allowances}),[requests,notifications,chats,projectId,data,statistics,allowances,calendar]);
+  const items=useMemo(()=>chatStartFeed({requests,notifications,chats,projectId,...data,calendar,includeWeather:true,includeCalendar:true,includeStatistics:true,statistics,includeAllowances:true,allowances}),[requests,notifications,chats,projectId,data,statistics,allowances,calendar]);
   const [selected,setSelected]=useState(''),[busy,setBusy]=useState(false),[failure,setFailure]=useState(''),[interacting,setInteracting]=useState(false);
   if(data.loaded&&!firstCard.current)firstCard.current=items[0]?.id||'';
   const choose=useCallback((item:AttentionItem)=>setSelected(item.id),[]);
@@ -23,7 +23,7 @@ export function ChatStart({greeting,profile,requests,notifications,chats,project
     <Avatar avatar={profile.avatar} color={profile.avatarColor} large/>
     <ChatStartHeading paused={composing || busy} pauseAdvance={interacting} texts={headlinesForItem(items.find(item=>item.id===selected) || items[0],greeting,(!selected||selected===firstCard.current)?data.userProfile.name:'')} reduceMotion={profile.reduceMotion==='on'}/>
     </div>
-    <AttentionFan api={api} items={items} onOpen={open} onActiveChange={choose} reduceMotion={profile.reduceMotion==='on'} disabled={busy} autoplay={!composing&&!busy}/>
+    <AttentionFan api={api} items={items} onOpen={open} onActiveChange={choose} reduceMotion={profile.reduceMotion==='on'||!visible} disabled={busy} autoplay={visible&&!composing&&!busy}/>
     {(failure || error || data.error)&&<p role="alert" className="chat-start-error">{failure || data.error || 'Neue Hinweise konnten gerade nicht geladen werden. Die Glocke bleibt erreichbar.'}</p>}
   </div>;
 }

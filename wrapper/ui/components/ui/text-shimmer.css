@@ -1,0 +1,21 @@
+/* A single travelling highlight over muted status text. The motion has one purpose:
+   it shows that work is still running. The text itself stays real, selectable and readable. */
+.text-shimmer { --shimmer-base: var(--muted); --shimmer-highlight: var(--text); min-width: 0; }
+.text-shimmer[data-shimmer="on"] {
+  background: linear-gradient(100deg, var(--shimmer-base) 0%, var(--shimmer-base) 38%, var(--shimmer-highlight) 50%, var(--shimmer-base) 62%, var(--shimmer-base) 100%);
+  background-size: 260% 100%;
+  background-position: 150% 0;
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+  animation: text-shimmer-sweep var(--motion-status-shimmer-duration) linear infinite;
+}
+@keyframes text-shimmer-sweep { from { background-position: 150% 0; } to { background-position: -50% 0; } }
+/* Without motion the line keeps its normal muted colour and says the same thing. */
+@media (prefers-reduced-motion: reduce) {
+  .text-shimmer[data-shimmer="on"] { animation: none; background: none; color: var(--shimmer-base); }
+}
+:root[data-reduce-motion="on"] .text-shimmer[data-shimmer="on"] { animation: none; background: none; color: var(--shimmer-base); }
+@media (forced-colors: active) {
+  .text-shimmer[data-shimmer="on"] { animation: none; background: none; color: CanvasText; forced-color-adjust: none; }
+}

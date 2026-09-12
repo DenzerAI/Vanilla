@@ -4,6 +4,7 @@ import {PageHeading} from './page-heading';
 import {submitMessage} from "./message-submit.mjs";
 import {ProductUpdates} from "./product-updates";
 import {GitHubConnectionForm} from "./github-connection";
+import {MessengerConnectionForm} from "./messenger-connection";
 import {MailConnectionForm} from "./mail-connection";
 
 import {createLatestRead} from './latest-read.mjs';
@@ -3438,7 +3439,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         <CrmConnectionForm key={modal.connection.id || modal.connection.provider} connection={modal.connection} api={api} notify={notify} Field={Field} onChanged={async()=>setIntegrations(await api('/integrations?view=settings'))} onSaved={async message=>{setIntegrations(await api('/integrations?view=settings'));setModal(null);notify(message);}}/>
       </Modal>}
       {modal?.type==='github-connection' && <Modal title="GitHub verbinden" onClose={()=>setModal(null)}><GitHubConnectionForm api={api} onSaved={async()=>{await refreshConnections(true);}}/></Modal>}
-      {modal?.type==='mail-connection' && <Modal title={modal.connection.id?'Verbindung bearbeiten':'Verbindung hinzufügen'} onClose={()=>setModal(null)}>
+      {modal?.type==='messenger-connection' && <Modal title={modal.connection.id?'Verbindung bearbeiten':'Verbindung hinzufügen'} onClose={()=>setModal(null)}><MessengerConnectionForm connection={modal.connection} api={api} projectId={projectId} Field={Field} onSaved={async()=>{await refreshConnections(true);setModal(null);}}/></Modal>}
+      {modal?.type==='mail-connection'  && <Modal title={modal.connection.id?'Verbindung bearbeiten':'Verbindung hinzufügen'} onClose={()=>setModal(null)}>
         <MailConnectionForm connection={modal.connection} api={api} projectId={projectId} onSaved={async()=>{await refreshConnections(true);setModal(null);}} onHelp={message=>{setText(previous=>(previous?previous+'\n\n':'')+message);setModal(null);setView('chat');inputRef.current?.focus();}}/>
       </Modal>}
       {modal?.type==='service-connection'&&<Modal title={modal.connection.id?'Verbindung bearbeiten':'Verbindung hinzufügen'} onClose={()=>setModal(null)}>

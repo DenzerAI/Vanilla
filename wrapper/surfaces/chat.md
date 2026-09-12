@@ -67,7 +67,7 @@ Aufnahmearchiv, Anbieterwahl, Geräte und Stimmen gehören unter **Einstellungen
 
 ## Werkzeuge und Ergebnisse
 
-Werkzeuggruppen bleiben kompakt und aufklappbar. Eine gedämpfte Tätigkeitszeile mit passendem Linienicon fasst zusammen, was passiert ist, etwa „Dateien gelesen und Befehle ausgeführt“. Überlegungen werden nicht zusätzlich in die Zusammenfassung aufgenommen, wenn konkrete Werkzeugaktivitäten vorliegen; sie bleiben in den Details zugänglich. Der Aufklapppfeil folgt unmittelbar dem Text. Die Zusammenfassung verwendet die kleine Beschriftungsrolle und einen engen Abstand zum Gespräch. Fehlgeschlagene Schritte stehen mit Anzahl in derselben gedämpften Textfarbe direkt im Lesefluss; rote Fehlerdetails erscheinen erst beim Öffnen des betroffenen Schritts. Ein fehlgeschlagener Gesamtauftrag bleibt als solcher sichtbar. Workername und technische Herkunft stehen ausschließlich in den geöffneten Schrittdetails, nie rechts in der Zusammenfassung. Auch die einzelnen Schrittzeilen bleiben einspaltig; ihr Chevron folgt dem Text. Unvollständige Schritte dürfen nicht als abgeschlossen erscheinen. Antworten beginnen direkt mit dem Inhalt; die Identität bleibt im Seitenleistenkopf. Der genaue Antwortzeitpunkt bleibt im Tooltip des Antwortblocks erhalten. Der kompakte Arbeitsstatus steht direkt unter dem neuesten Antworttext vor der einblendbaren Aktionszeile (Vorlesen, Kopieren, Verzweigen, Erneut ausführen). Die Reihenfolge ist Text → Schritte/Laufzeit → Ergebnisse → Nachrichtenaktionen und etwaige Fehler; ausgeblendete Aktionen erzeugen keine Lücke zwischen Text und Status. Er wandert während des Schreibens nach unten und bleibt beim automatischen Mitlaufen über dem Composer sichtbar; manuelles Hochscrollen bleibt möglich. Bei Werkzeugaktivität bildet die aufklappbare Zusammenfassung denselben Status samt Schrittanzahl, Zeit und gewähltem AppLoader während laufender Arbeit. Nach Abschluss bleibt die Zusammenfassung mit Dauer unten am Antwortblock; Fehler und Abbruch bleiben sichtbar. Der Sekundentakt aktualisiert nur diese Komponente, ohne wiederholte Screenreader-Ansage der Zeit. Vorliegende Diffs zeigen hinzugefügte und entfernte Zeilen mit Plus/Minus und semantischen Farben. Große Ausgaben werden begrenzt und auf Nachfrage erweitert. Fehlgeschlagene Schritte dürfen nicht als erfolgreiche Dateierstellung erscheinen.
+Werkzeuggruppen bleiben kompakt und aufklappbar. Eine gedämpfte Tätigkeitszeile mit passendem Linienicon fasst zusammen, was passiert ist, etwa „Dateien gelesen und Befehle ausgeführt“. Überlegungen werden nicht zusätzlich in die Zusammenfassung aufgenommen, wenn konkrete Werkzeugaktivitäten vorliegen; sie bleiben in den Details zugänglich. Der Aufklapppfeil folgt unmittelbar dem Text. Die Zusammenfassung verwendet die kleine Beschriftungsrolle und einen engen Abstand zum Gespräch. Fehlgeschlagene Schritte stehen mit Anzahl in derselben gedämpften Textfarbe direkt im Lesefluss; rote Fehlerdetails erscheinen erst beim Öffnen des betroffenen Schritts. Ein fehlgeschlagener Gesamtauftrag bleibt als solcher sichtbar. Workername und technische Herkunft stehen ausschließlich in den geöffneten Schrittdetails, nie rechts in der Zusammenfassung. Auch die einzelnen Schrittzeilen bleiben einspaltig; ihr Chevron folgt dem Text. Unvollständige Schritte dürfen nicht als abgeschlossen erscheinen. Antworten beginnen direkt mit dem Inhalt; die Identität bleibt im Seitenleistenkopf. Der genaue Antwortzeitpunkt bleibt im Tooltip des Antwortblocks erhalten. Der kompakte Arbeitsstatus steht direkt unter dem neuesten Antworttext vor der einblendbaren Aktionszeile (Vorlesen, Kopieren, Verzweigen, Erneut ausführen). Die Reihenfolge ist Text → Schritte/Laufzeit → Ergebnisse → Nachrichtenaktionen und etwaige Fehler; ausgeblendete Aktionen erzeugen keine Lücke zwischen Text und Status. Er wandert während des Schreibens nach unten und bleibt beim automatischen Mitlaufen über dem Composer sichtbar; manuelles Hochscrollen bleibt möglich. Bei Werkzeugaktivität bildet die aufklappbare Zusammenfassung denselben Status samt Schrittanzahl, Zeit und gewähltem AppLoader während laufender Arbeit. Die Statusbeschriftung verwendet den gemeinsamen TextShimmer (`components/ui/text-shimmer`) mit der Rolle `motion-status-shimmer-duration`: Ein wanderndes Licht läuft ausschließlich, solange tatsächlich gearbeitet wird. Warten auf eine Antwort, Abschluss, Fehlschlag und Abbruch bleiben unbewegt, damit Bewegung genau „läuft noch“ bedeutet. Der Text bleibt echter, auswählbarer Text; bei reduzierter Bewegung und in Kontrastmodi zeigt dieselbe Zeile die gedämpfte Schriftfarbe ohne Animation. Nach Abschluss bleibt die Zusammenfassung mit Dauer unten am Antwortblock; Fehler und Abbruch bleiben sichtbar. Der Sekundentakt aktualisiert nur diese Komponente, ohne wiederholte Screenreader-Ansage der Zeit. Vorliegende Diffs zeigen hinzugefügte und entfernte Zeilen mit Plus/Minus und semantischen Farben. Große Ausgaben werden begrenzt und auf Nachfrage erweitert. Fehlgeschlagene Schritte dürfen nicht als erfolgreiche Dateierstellung erscheinen.
 
 Bestätigte Leserartefakte stehen unmittelbar unter dem Arbeitsverlauf und über den Nachrichtenaktionen in ChatArtifacts. Bilder sind direkt sichtbar, Dokumente hinter einer kompakten aufklappbaren Ergebnisse-Zeile. Quelldateien und technische Änderungen verbleiben in den Werkzeugdetails. Dateiname öffnet die gemeinsame Vorschau, Download bleibt erreichbar. Bereits inline sichtbare Bilder und ausdrücklich verlinkte Dokumente werden nicht verdoppelt. Umfang, Klassifikation und Zustände führt unten „Ergebnisse für den Leser“.
 
@@ -213,6 +213,9 @@ Nachrichtenaktionen erscheinen bei Hover oder Tastaturfokus; auf Touch bleiben s
 Beim Verlassen einer Desktop-Nachricht werden zusätzlich die SVG-Symbole verborgen,
 damit auch animierte Kopiersymbole vollständig verschwinden. Die Schaltflächen
 bleiben per Tab erreichbar und zeigen bei Tastaturfokus ihre Symbole wieder.
+CopyButton ist selbst der direkte IconButton in der Aktionszeile. Er verwendet
+dieselbe Sichtbarkeit und Trefferfläche wie Vorlesen und Verzweigen, ohne
+zusätzliche umschließende Ebene. Die zugängliche Kopierrückmeldung steht daneben.
 Keine Datenmigration; die Korrektur betrifft ausschließlich die Darstellung.
 Je Antwortblock trägt genau die abgeschlossene letzte Agentenantwort die Aktionszeile.
 Zwischenmeldungen und die noch laufende Antwort erhalten keine; sie sind keine
@@ -1507,3 +1510,26 @@ Nur flüchtiger Browserzustand, keine Migration gespeicherter Chats oder Stimmen
 
 
 Der kompakte Agentenmenükopf zeigt Vanilla mit Version und Denzer AI. Verbindung, Engine und Antwortzeit teilen eine dezente Zeile. Commitkennung und Zeitpunkt stehen in einer Zeile; Push, Neustart und Laufzeit folgen ohne Leerzeilen. Zeitpunkte zeigen Tag, Monat und Uhrzeit, das vollständige Datum einschließlich Jahr bleibt im Tooltip. Die Serveradresse schließt den Statusblock ab. Der gemeinsame randlose IconButton für Neustart und ThemeToggle teilen den Menüfuß; Fokus und Touchfläche bleiben erhalten.
+
+
+### Sieben lebendige Startkarten
+
+Der vollständige Chatstart ergänzt die vorhandenen Themen bei Bedarf mit den
+bestehenden echten Gesprächseinstiegen auf sieben unterschiedliche Karten. Auf
+breiten Flächen stehen drei links und drei rechts der Mitte; kleinere Ansichten
+zeigen fünf oder drei. Auch bei weniger Einträgen bleibt die sichtbare Zahl ungerade.
+Automatischer Wechsel alle 6,5 Sekunden mit gemeinsamem Federübergang; Zeigerkontakt
+hebt eine Karte an, stoppt den Umlauf aber nicht dauerhaft. Pause/Play steht neben
+den Pfeilen. Tastaturfokus, Schreiben, verborgene Ansichten und reduzierte Bewegung
+pausieren. Der automatische Zähler bleibt für Screenreader still.
+
+Die Glasflächen tragen langsame gebrochene Lichtreflexe hinter feststehendem Text.
+Kalender: dunkle violette Glasbasis mit weißer Tageszahl in beiden Themes.
+Kontingente: bis zu vier echte Fenster, zuerst Woche und kurzes Fenster je Anbieter,
+danach weitere gemeldete Fenster,
+mit kräftigeren Restbalken und Lichtreflex. Resetzeiten stehen im Tooltip und
+vollständig unter Nutzung. Fehlende Werte werden nicht als Fortschritt gezeichnet.
+Gemeinsame Rollen fan-glass-light, fan-calendar-base, fan-glass-duration und
+attentionFanMotion steuern Material und Bewegung. Aussehen → Bewegung reduzieren
+schaltet die Bewegung ab; reduzierte Transparenz und Forced Colors bleiben lesbar.
+Bestehende AttentionFan-Referenzen verwenden dasselbe Material. Keine Datenmigration.

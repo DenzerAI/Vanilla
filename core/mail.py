@@ -106,6 +106,12 @@ class Setup(BaseModel):
     clientSecret: str = Field(default="", max_length=16000, repr=False)
 
 
+class GmailPassword(BaseModel):
+    projectId: str = "default"
+    address: str = Field(min_length=3, max_length=320)
+    password: str = Field(min_length=1, max_length=1000, repr=False)
+
+
 class Start(BaseModel):
     provider: str
     projectId: str = "default"
@@ -395,6 +401,17 @@ class Mail:
         self.db.event("mail.changed", account, {})
         return {"id": account}
 
+    async def gmail_password(self, b):
+        from .mail_imap import mailbox
+        self.project(b.projectId)
+        if not re.fullmatch(r"[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+", b.address):
+            raise ValueError("Bitte eine gültige Postfachadresse eingeben.")
+        def check():
+            with mailbox(b.address, b.password):
+                pass
+        await asyncio.to_thread(check)
+        return await self.connect(b.projectId, "gmail", b.address.lower(), "imap", {"password": b.password})
+
     async def admin(self, b):
         self.project(b.projectId)
         if not re.fullmatch(r"[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+", b.mailbox):
@@ -575,6 +592,12 @@ class Mail:
             if not a["enabled"]:
                 raise ValueError("Postfach ist getrennt. Bitte erneut verbinden.")
             try:
+                if a["mode"] == "imap":
+                    from .mail_imap import sync
+                    credential = json.loads(self.vault.read(a["secret_id"]))
+                    messages, cursor = await asyncio.to_thread(sync, a["address"], credential["password"], json.loads(a["cursor"]))
+                    self.ingest(a, messages, cursor)
+                    return {"ok": True, "received": len(messages), "coverage": cursor}
                 token = await self.obtain(a)
                 headers = {
                     "Authorization": "Bearer " + token,
@@ -871,7 +894,7 @@ class Mail:
                 raise ValueError(
                     "Ein früherer Versand ist ungeklärt. Bitte zuerst im Anbieterpostfach prüfen."
                 )
-            token = await self.obtain(a)
+            token = "" if a["mode"] == "imap" else await self.obtain(a)
             sid = identifier(b.id, b.version)
             with self.db.transaction() as cx:
                 current = cx.execute(
@@ -915,19 +938,24 @@ class Mail:
                         message["In-Reply-To"] = original["messageId"]
                         message["References"] = original["messageId"]
                     message.set_content(d["text"])
-                    await self.json(
-                        "POST",
-                        "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
-                        headers=headers,
-                        json={
-                            "raw": b64(message.as_bytes()),
-                            **(
-                                {"threadId": original["thread"]}
-                                if not composition
-                                else {}
-                            ),
-                        },
-                    )
+                    if a["mode"] == "imap":
+                        from .mail_imap import send
+                        credential = json.loads(self.vault.read(a["secret_id"]))
+                        await asyncio.to_thread(send, a["address"], credential["password"], message)
+                    else:
+                        await self.json(
+                            "POST",
+                            "https://gmail.googleapis.com/gmail/v1/users/me/messages/send",
+                            headers=headers,
+                            json={
+                                "raw": b64(message.as_bytes()),
+                                **(
+                                    {"threadId": original["thread"]}
+                                    if not composition
+                                    else {}
+                                ),
+                            },
+                        )
                 elif composition:
                     await self.json(
                         "POST",
@@ -988,6 +1016,14 @@ class Mail:
         if not a["enabled"]:
             raise ValueError("Postfach ist getrennt.")
         async with self.lock(a["id"]):
+            if a["mode"] == "imap":
+                if attachment is None:
+                    return m["attachments"]
+                if not any(item["id"] == attachment for item in m["attachments"]):
+                    raise ValueError("Anhang nicht gefunden.")
+                from .mail_imap import attachment as read_attachment
+                credential = json.loads(self.vault.read(a["secret_id"]))
+                return await asyncio.to_thread(read_attachment, a["address"], credential["password"], m["external"], attachment)
             token = await self.obtain(a)
             headers = {
                 "Authorization": "Bearer " + token,
@@ -1106,6 +1142,10 @@ def routes(mail):
             + "</p></html>",
             headers={"Cache-Control": "no-store", "Referrer-Policy": "no-referrer"},
         )
+
+    @router.post("/internal/mail/gmail-password")
+    async def gmail_password(b: GmailPassword):
+        return await mail.gmail_password(b)
 
     @router.post("/api/mail/admin")
     async def admin(b: Admin):

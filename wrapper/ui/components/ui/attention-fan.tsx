@@ -7,7 +7,7 @@ import {LibraryThumbnail} from '../../library-thumbnail.jsx';
 "use client";
 import {useState,useEffect,useLayoutEffect,useRef} from 'react';
 import {AnimatePresence,motion,useReducedMotion,useIsPresent} from 'motion/react';
-import {ArrowUpRight,Calendar,Bell,FileText,MessageCircle,BrainCircuit,ChevronLeft,ChevronRight,Clock,Inbox,Activity,Zap} from '../../icons.jsx';
+import {ArrowUpRight,Calendar,Bell,FileText,MessageCircle,BrainCircuit,ChevronLeft,ChevronRight,Clock,Inbox,Activity,Zap,Pause,Play} from '../../icons.jsx';
 import {attentionFanMotion} from '../../design-system.mjs';
 import './attention-fan.css';
 import {reconcileFan,entryTime,inboxAction,inboxKindLabel} from '../../chat-start-feed.mjs';
@@ -16,6 +16,8 @@ export interface AttentionItem {id:string;kind:string;title:string;description:s
 export function AttentionFan({items,onOpen,onActiveChange,reduceMotion=false,disabled=false,autoplay=false,api}:{items:AttentionItem[];onOpen:(item:AttentionItem)=>void;onActiveChange?:(item:AttentionItem)=>void;reduceMotion?:boolean;disabled?:boolean;autoplay?:boolean;api?:any}) {
   const signature=JSON.stringify(items.map(item=>item.id));
   const [order,setOrder]=useState(()=>({...reconcileFan({ids:[],selected:''},items),signature}));
+  const [paused,setPaused]=useState(false),[focused,setFocused]=useState(false),[hidden,setHidden]=useState(typeof document!=="undefined"&&document.hidden);
+  useEffect(()=>{const sync=()=>setHidden(document.hidden);document.addEventListener("visibilitychange",sync);return()=>document.removeEventListener("visibilitychange",sync);},[]);
   const [hovered,setHovered]=useState<string|null>(null);
   if(order.signature!==signature)setOrder({...reconcileFan(order,items),signature});
   const byId=new Map(items.map(item=>[item.id,item]));
@@ -48,16 +50,16 @@ export function AttentionFan({items,onOpen,onActiveChange,reduceMotion=false,dis
   const step=useRef((_:number)=>{});
   step.current=(direction:number)=>{if(!disabled&&items.length>1)setOrder(old=>({...old,selected:items[(index+direction+items.length)%items.length].id}));};
   useEffect(()=>{
-    if(!autoplay||reduced||disabled||hovered||items.length<2)return;
+    if(!autoplay||reduced||disabled||paused||focused||hidden||items.length<2)return;
     const timer=setInterval(()=>{if(!document.hidden)step.current(1);},attentionFanMotion.autoplayInterval);
     return()=>clearInterval(timer);
-  },[autoplay,reduced,disabled,hovered,signature,items.length]);
+  },[autoplay,reduced,disabled,paused,focused,hidden,signature,items.length]);
   if(!active)return null;
   const select=(i:number)=>{if(!disabled){setHovered(null);setOrder(old=>({...old,selected:items[(i+items.length)%items.length].id}));}};
-  const count=Math.min(items.length,veryWide?7:wide?5:3),left=Math.floor((count-1)/2);
+  const availableCount=Math.min(items.length,veryWide?7:wide?5:3),count=availableCount%2?availableCount:Math.max(1,availableCount-1),left=Math.floor((count-1)/2);
   const visible=Array.from({length:count},(_,n)=>({i:(index+n-left+items.length)%items.length,side:n-left}));
   const spread=compact?attentionFanMotion.compactSpread:veryWide?attentionFanMotion.veryWideSpread:wide?attentionFanMotion.wideSpread:attentionFanMotion.spread;
-  return <section ref={track} onPointerLeave={()=>setHovered(null)} data-autoplay={autoplay&&!reduced&&!disabled&&!hovered&&items.length>1?"on":"off"} className="attention-fan" aria-label="Anknüpfungspunkte für dein Gespräch" aria-roledescription="Karussell"
+  return <section ref={track} onPointerLeave={()=>setHovered(null)} data-motion={!reduced&&!hidden&&!disabled?"on":"off"} data-autoplay={autoplay&&!reduced&&!disabled&&!paused&&!focused&&!hidden&&items.length>1?"on":"off"} className="attention-fan" aria-label="Anknüpfungspunkte für dein Gespräch" aria-roledescription="Karussell"
     onWheel={e=>{const delta=Math.abs(e.deltaX)>Math.abs(e.deltaY)?e.deltaX:e.shiftKey?e.deltaY:0;if(!delta)return;const now=Date.now(),state=wheel.current;if(now-state.at>180||Math.sign(delta)!==Math.sign(state.sum))state.sum=0;state.at=now;state.sum+=delta*(e.deltaMode===1?16:1);if(Math.abs(state.sum)>=attentionFanMotion.wheelThreshold&&now-state.last>=attentionFanMotion.wheelCooldown){select(index+(state.sum>0?1:-1));state.sum=0;state.last=now;}}}
     onKeyDown={e=>{if(e.key==='ArrowRight'||e.key==='ArrowLeft'){e.preventDefault();select(index+(e.key==='ArrowRight'?1:-1));}}}
     onTouchStart={e=>{touch.current={x:e.touches[0].clientX,y:e.touches[0].clientY};ignoreClick.current=0;}}
@@ -72,7 +74,7 @@ export function AttentionFan({items,onOpen,onActiveChange,reduceMotion=false,dis
           initial={reduced?false:{opacity:0,y:attentionFanMotion.arrivalY,scale:attentionFanMotion.arrivalScale,x:side*width*spread}} exit={reduced?{opacity:0,transition:{duration:0}}:{opacity:0,y:attentionFanMotion.departureY,scale:attentionFanMotion.departureScale,transition:{duration:attentionFanMotion.exitDuration,ease:attentionFanMotion.ease}}} animate={{opacity:1,x:side*width*spread,rotate:isHovered?0:far?Math.sign(side)*attentionFanMotion.farRotation:outer?Math.sign(side)*attentionFanMotion.outerRotation:side*(compact?attentionFanMotion.compactRotation:attentionFanMotion.rotation),y:isHovered?attentionFanMotion.hoverLift:isActive?0:far?attentionFanMotion.farDepth:outer?attentionFanMotion.outerDepth:attentionFanMotion.depth,scale:isHovered?attentionFanMotion.hoverScale:isActive?1:far?attentionFanMotion.farScale:outer?attentionFanMotion.outerScale:attentionFanMotion.scale}}
           transition={reduced||!measured.current?{duration:0}:{type:'spring',...attentionFanMotion.spring,opacity:{duration:attentionFanMotion.enterDuration,ease:attentionFanMotion.ease}}}
           onPointerEnter={e=>{if(e.pointerType==='mouse'&&!disabled)setHovered(item.id);}}
-          onFocus={e=>{if(e.currentTarget.matches(':focus-visible')){setHovered(item.id);focusedCard.current=item.id;}}} onBlur={e=>{setHovered(null);if(e.relatedTarget)focusedCard.current=null;}}
+          onFocus={e=>{if(e.currentTarget.matches(':focus-visible')){setHovered(item.id);focusedCard.current=item.id;setFocused(true);}}} onBlur={e=>{setFocused(false);setHovered(null);if(e.relatedTarget)focusedCard.current=null;}}
           disabled={disabled} aria-label={item.title+(weatherReady?' · '+item.description:'')+(isActive||isHovered?(weatherReady?' · Wetterbericht in neuem Chat öffnen':' öffnen'):' auswählen')} aria-current={isActive?'true':undefined}
           onClick={()=>{if(Date.now()<ignoreClick.current)return;isActive||isHovered?onOpen(item):select(i);}}>
           <>{item.kind==='calendar'?<CalendarCardContent data={item.calendar} preview={item.calendar?.preview}/>:weatherReady?<WeatherCardContent item={item} active={isActive||isHovered} reduceMotion={!!reduced}/>:<>
@@ -85,7 +87,7 @@ export function AttentionFan({items,onOpen,onActiveChange,reduceMotion=false,dis
         </FanCard>;
       })}
     </AnimatePresence></div>
-    {<div className="attention-fan-navigation">{items.length>1&&<><button type="button" className="icon-button" aria-label="Vorherige Karte" disabled={disabled} onClick={()=>select(index-1)}><ChevronLeft size={16} strokeWidth={undefined}/></button><span aria-live="polite">{index+1} / {items.length}</span><button type="button" className="icon-button" aria-label="Nächste Karte" disabled={disabled} onClick={()=>select(index+1)}><ChevronRight size={16} strokeWidth={undefined}/></button></>}</div>}
+    {<div className="attention-fan-navigation">{items.length>1&&<><button type="button" className="icon-button" aria-label="Vorherige Karte" disabled={disabled} onClick={()=>select(index-1)}><ChevronLeft size={16} strokeWidth={undefined}/></button><span aria-live={autoplay&&!paused?"off":"polite"}>{index+1} / {items.length}</span><button type="button" className="icon-button" aria-label="Nächste Karte" disabled={disabled} onClick={()=>select(index+1)}><ChevronRight size={16} strokeWidth={undefined}/></button>{autoplay&&!reduced&&<button type="button" className="icon-button" aria-label={paused?"Automatischen Wechsel fortsetzen":"Automatischen Wechsel pausieren"} aria-pressed={paused} onClick={()=>setPaused(!paused)}>{paused?<Play size={14}/>:<Pause size={14}/>}</button>}</>}</div>}
     <div className="attention-fan-credit">{active.kind==='weather'&&active.weather?.status==='ready'&&!active.weather.preview&&<a href="https://open-meteo.com/" target="_blank" rel="noreferrer" title="Wetterdaten von Open-Meteo">Open-Meteo</a>}</div>
   </section>;
 }

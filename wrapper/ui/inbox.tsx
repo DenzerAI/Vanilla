@@ -1,11 +1,15 @@
 import {inboxDraftStore, inboxConversation} from './inbox-data.mjs';
 import React, { useEffect, useLayoutEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, Check, FileText, Inbox, Search } from "./icons.jsx";
+import { ArrowLeft, Check, FileText, Inbox, Search, MoreHorizontal } from "./icons.jsx";
 import { BrandIcon } from "./brand-icon.jsx";
 import { FilterPicker } from "./filter-picker.jsx";
 import { Modal } from "./modal.jsx";
 import "./inbox.css";
+import {InboxComposer} from './inbox-composer';
+import {DeliveryChecks} from './delivery-checks';
+import {ChatMenu} from './chat-controls.jsx';
+
 
 type Conversation = {
   id: string; revision?: number; sender: string; initials: string; provider: string; account: string;
@@ -46,7 +50,7 @@ export function InboxConversationRow({ conversation, selected = false, onOpen }:
 
 export function InboxPatternPreview() {
   const [selected, setSelected] = useState(false);
-  return <div className="inbox-pattern-preview"><InboxConversationRow conversation={examples[0]} selected={selected} onOpen={() => setSelected(value => !value)}/></div>;
+  return <div className="inbox-pattern-preview"><InboxConversationRow conversation={examples[0]} selected={selected} onOpen={() => setSelected(value => !value)}/><div className="inbox-compose"><InboxComposer threadId="example-inbox" text="" onText={()=>{}} onSend={()=>{}} onFile={()=>{}} disabled busy={false} messenger={false}/></div></div>;
 }
 
 type Props = {
@@ -70,6 +74,13 @@ export function InboxPage({ PageHeading, sidebarHost, sidebarVisible, onShowSide
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(true);
   const [detail, setDetail] = useState<any>(null);
+  const [uploading,setUploading]=useState(false);
+  const [sending,setSending]=useState(false),[reply,setReply]=useState<any>(null),[attachments,setAttachments]=useState<Record<string,any>>({});
+  const sendAttempts=useRef(new Map<string,string>());
+  const messageList=useRef<HTMLDivElement>(null);
+  const follow=useRef(true);
+  const [refreshDetail,setRefreshDetail]=useState(0);
+  const route=(id:string,action:string)=>`${id.startsWith("msg:")?"/messenger":"/inbox"}/${action}`;
   const drafts = useRef(inboxDraftStore(api, projectId, () => redraw(n => n + 1))).current;
   useEffect(() => {
     let alive = true, busy = false;
@@ -85,9 +96,12 @@ export function InboxPage({ PageHeading, sidebarHost, sidebarVisible, onShowSide
           if(result.conversations.length>=10000 && offset!=null)throw Error('Mehr als 10.000 Gespräche: gezielt über den Agenten mit inbox_threads weiterlesen.');
         }while(offset!=null);
         if (!alive) return;
+        let messengerError='';
+        try {const messenger=await api('/messenger/threads?'+new URLSearchParams({projectId}));result.conversations.push(...messenger.conversations);}catch(e:any){messengerError=String(e.message).includes('404')?'Messenger wird nach dem nächsten Serverneustart verfügbar.':e.message;}
+        result.conversations.sort((a:any,b:any)=>String(b.updated).localeCompare(String(a.updated)));
         setConversations(result.conversations.map((row: any) => inboxConversation(row)));
         setSelectedId(previous => previous || result.conversations[0]?.id || '');
-        setError('');
+        setError(messengerError);
       } catch (e: any) {if (alive) setError(e.message);}
       finally {busy = false; if (alive) setLoading(false);}
     }
@@ -101,20 +115,56 @@ export function InboxPage({ PageHeading, sidebarHost, sidebarVisible, onShowSide
   useEffect(() => {
     if (!selectedId) return;
     let alive = true;
-    setDetail(null);
-    api('/inbox/thread?id=' + encodeURIComponent(selectedId) + '&projectId=' + encodeURIComponent(projectId))
+    setDetail((old:any)=>old?.thread?.id===selectedId?old:null);
+    api(route(selectedId,'thread')+'?id=' + encodeURIComponent(selectedId) + '&projectId=' + encodeURIComponent(projectId))
       .then(async (result: any) => {
         if (!alive) return;
-        drafts.load(selectedId, result.draft);setDetail(result);
-        await api('/inbox/mark', {id:selectedId, projectId, revision:result.thread.revision});
+        drafts.load(selectedId, result.draft);setDetail((old:any)=>{
+          if(old?.thread?.id!==result.thread.id||old.messages.length<=100)return result;
+          const merged=new Map(old.messages.map((m:any)=>[m.id,m]));for(const m of result.messages)merged.set(m.id,m);
+          return {...result,messages:[...merged.values()].sort((a:any,b:any)=>a.time.localeCompare(b.time)),nextBefore:old.nextBefore};
+        });
+        if(window.matchMedia('(max-width: 650px)').matches&&sidebarVisible)return;
+        await api(route(selectedId,'mark'), {id:selectedId, projectId, revision:result.thread.revision});
         if (alive) setConversations(items => items.map(item => item.id === selectedId ? {...item, unread:false} : item));
       }).catch((e: Error) => {if (alive) setError(e.message);});
     return () => {alive = false;};
-  }, [selectedId, selectedRevision, projectId, api, drafts]);
+  }, [selectedId, selectedRevision, projectId, api, drafts, refreshDetail, sidebarVisible]);
+  useEffect(()=>{const timer=setInterval(()=>setRefreshDetail(n=>n+1),10000);return()=>clearInterval(timer);},[]);
+  useEffect(()=>{follow.current=true;setReply(null);},[selectedId]);
+  useLayoutEffect(()=>{if(follow.current&&messageList.current)messageList.current.scrollTop=messageList.current.scrollHeight;},[detail,selectedId,sidebarVisible]);
+  async function send(){
+    const id=selectedId,record=drafts.records.get(id);if(!record||sending||uploading)return;
+    setSending(true);setError('');
+    try{
+      await record.serial;if(record.error)throw Error(record.error);
+      const sent=record.text;
+      const key=id+':'+record.version+':'+(attachments[id]?.id||'');
+      if(!sendAttempts.current.has(key))sendAttempts.current.set(key,crypto.randomUUID());
+      await api(route(id,'send'),{id,projectId,version:record.version,revision:record.revision,requestId:sendAttempts.current.get(key),replyTo:reply?.external||'',attachmentId:attachments[id]?.id||''});
+      // Preserve typing that happened during the send. Only the sent text is cleared.
+      const fresh=await api(route(id,'thread')+'?'+new URLSearchParams({id,projectId}));
+      if(record.text===sent){drafts.records.delete(id);drafts.load(id,fresh.draft);}else{record.saved=fresh.draft.text;record.version=fresh.draft.version;record.revision=fresh.draft.revision;void drafts.edit(id,record.text);}
+      setAttachments(old=>{const copy={...old};delete copy[id];return copy;});setReply(null);follow.current=true;setRefreshDetail(n=>n+1);redraw(n=>n+1);
+    }catch(e:any){setError(e.message);}finally{setSending(false);}
+  }
+  async function attach(file:File,voice=false){
+    const id=selectedId;if(file.size>20*1024*1024)throw Error('Datei darf höchstens 20 MB groß sein.');
+    setUploading(true);try {
+    const base64=await new Promise<string>((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=()=>reject(Error('Datei nicht lesbar.'));reader.readAsDataURL(file);});
+    const result=await api('/messenger/upload',{id,projectId,name:file.name,mime:file.type||'application/octet-stream',base64,voice});
+    setAttachments(old=>({...old,[id]:result}));
+    return result;
+    } finally {setUploading(false);}
+  }
+  async function earlier(){
+    if(!detail?.nextBefore)return;
+    const id=selectedId,list=messageList.current,oldHeight=list?.scrollHeight||0;
+    try{const previous=await api(route(id,'thread')+'?'+new URLSearchParams({id,projectId,before:detail.nextBefore}));follow.current=false;setDetail((current:any)=>current?.thread?.id===id?{...current,messages:[...previous.messages,...current.messages],nextBefore:previous.nextBefore}:current);requestAnimationFrame(()=>{if(list)list.scrollTop+=list.scrollHeight-oldHeight;});}catch(e:any){setError(e.message);}
+  }
   const [conceptOpen, setConceptOpen] = useState(false);
   const detailHeading = useRef<HTMLHeadingElement>(null);
   const list = useRef<HTMLDivElement>(null);
-  const draftField = useRef<HTMLTextAreaElement>(null);
   const row = conversations.find(item => item.id === selectedId);
   const selected = row ? {...row, messages: detail?.messages || []} : null;
   const draftRecord = drafts.records.get(selectedId);
@@ -124,32 +174,8 @@ export function InboxPage({ PageHeading, sidebarHost, sidebarVisible, onShowSide
     return (provider === "all" || item.provider === provider) &&
       (filter === "done" ? item.done : !item.done && (filter !== "unread" || item.unread)) && text.includes(query.toLocaleLowerCase("de").trim());
   });
-  useLayoutEffect(() => {
-    const field = draftField.current;
-    if (!field) return;
-    let lastWidth = 0;
-    const resize = () => {
-      if (!field.clientWidth || !field.getClientRects().length) return;
-      const limit = parseFloat(getComputedStyle(field).maxHeight);
-      field.style.overflowY = "hidden";
-      field.style.height = "0px";
-      const height = field.scrollHeight;
-      field.style.height = `${Math.min(height, limit)}px`;
-      field.style.overflowY = height > limit ? "auto" : "hidden";
-    };
-    resize();
-    const observer = new ResizeObserver(entries => {
-      const width = entries[0]?.contentRect.width;
-      if (width !== lastWidth) { lastWidth = width; resize(); }
-    });
-    observer.observe(field);
-    // Font size and appearance can change while this field stays mounted.
-    const appearance = new MutationObserver(resize);
-    appearance.observe(document.documentElement, { attributes: true });
-    document.fonts.addEventListener("loadingdone", resize);
-    return () => { observer.disconnect(); appearance.disconnect(); document.fonts.removeEventListener("loadingdone", resize); };
-  }, [draft, selectedId, sidebarVisible]);
   function openConversation(item: Conversation) {
+    follow.current=true;
     setSelectedId(item.id);
     if (window.matchMedia("(max-width: 650px)").matches) onHideSidebar();
     requestAnimationFrame(() => detailHeading.current?.focus({ preventScroll: true }));
@@ -165,40 +191,47 @@ export function InboxPage({ PageHeading, sidebarHost, sidebarVisible, onShowSide
       <div className="inbox-list-tools">
         <div className="search-box"><Search strokeWidth={1.55} size={18}/><input aria-label="Nachrichten suchen" placeholder="Suchen" value={query} onChange={event => setQuery(event.target.value)}/></div>
         <div className="inbox-tabs" role="group" aria-label="Nachrichtenstatus">{[["all", "Offen"], ["unread", "Ungelesen"], ["done", "Erledigt"]].map(([value, label]) => <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>)}</div>
-        <FilterPicker label="Kanal" value={provider} onChange={setProvider} disabled={false} options={[{ value: "all", label: "Alle Kanäle" }, ...["Outlook", "Gmail", "WhatsApp"].map(value => ({ value, label: value }))]}/>
+        <FilterPicker label="Kanal" value={provider} onChange={setProvider} disabled={false} options={[{ value: "all", label: "Alle Kanäle" }, ...["Outlook", "Gmail", "WhatsApp", "Telegram"].map(value => ({ value, label: value }))]}/>
       </div>
       <div className="inbox-list" ref={list} aria-label="Gespräche">
         {results.map(item => <InboxConversationRow key={item.id} conversation={item} selected={item.id === selectedId} onOpen={() => openConversation(item)}/>)}
         {!results.length && <div className="inbox-empty" role="status"><Inbox strokeWidth={1.55} size={24}/><p>{query ? "Keine Treffer" : filter === "done" ? "Noch nichts erledigt" : filter === "unread" ? "Alles gelesen" : "Keine passenden Gespräche"}</p></div>}
       </div>
     </div>, sidebarHost)}
-    <section className="inbox-page" data-capability="inbox.messages" aria-label="Nachrichtenverlauf">
+    <section className="inbox-page" data-capability="inbox.messages" data-messenger={selectedId.startsWith("msg:")} data-group={!!detail?.thread?.external?.endsWith("@g.us")} aria-label="Nachrichtenverlauf">
       {(error || draftRecord?.error) && <p role="alert">{error || draftRecord.error} {draftRecord?.error && 'Dein Text bleibt hier erhalten. Bitte vor dem Verlassen kopieren und den aktuellen Entwurf neu laden.'}</p>}
       {!selected ? <div className="inbox-empty" role="status"><Inbox size={24}/><p>{loading ? 'Nachrichten werden geladen …' : 'Noch keine Nachrichten. Postfach unter Verbindungen einrichten.'}</p></div> : <>
       <header className="inbox-detail-head">
         {!sidebarVisible && <button className="icon-button" type="button" aria-label="Zur Gesprächsliste" onClick={backToList}><ArrowLeft strokeWidth={1.55} size={18}/></button>}
         <BrandIcon name={selected.provider}/>
         <h2 ref={detailHeading} tabIndex={-1} title={`${selected.provider} · ${selected.account}`}>{selected.sender}</h2>
-        <button className="icon-button" type="button" aria-label={selected.done ? "Wieder öffnen" : "Als erledigt markieren"} title={selected.done ? "Wieder öffnen" : "Als erledigt markieren"} aria-pressed={selected.done} onClick={async () => {try {await api('/inbox/mark',{id:selectedId,projectId,done:!selected.done});setConversations(items=>items.map(item=>item.id===selectedId?{...item,done:!selected.done}:item));}catch(e:any){setError(e.message);}}}><Check strokeWidth={1.55} size={18}/></button>
+        <button className="icon-button" type="button" aria-label={selected.done ? "Wieder öffnen" : "Als erledigt markieren"} title={selected.done ? "Wieder öffnen" : "Als erledigt markieren"} aria-pressed={selected.done} onClick={async () => {try {await api(route(selectedId,'mark'),{id:selectedId,projectId,done:!selected.done});setConversations(items=>items.map(item=>item.id===selectedId?{...item,done:!selected.done}:item));}catch(e:any){setError(e.message);}}}><Check strokeWidth={1.55} size={18}/></button>
       </header>
-      <div className="inbox-messages" key={selectedId}>
+      <div className="inbox-messages" key={selectedId} ref={messageList} onScroll={()=>{const el=messageList.current;if(el)follow.current=el.scrollHeight-el.scrollTop-el.clientHeight<60;}}>
         <div className="inbox-message-column">
-          <p className="inbox-thread-subject">{selected.subject}</p>
-          {selected.messages.map((message: any, index: number) => <article key={index} className={"inbox-message " + (message.outgoing ? "inbox-message-outgoing" : "")}>
-            <div className="inbox-message-meta"><strong>{message.sender}</strong><span>{message.time}</span></div>
+          {detail?.nextBefore&&<button type="button" onClick={()=>void earlier()}>Ältere Nachrichten</button>}
+          {selected.subject&&<p className="inbox-thread-subject">{selected.subject}</p>}
+          {selected.messages.map((message: any, index: number) => <article key={message.id||index} className={"inbox-message " + (message.outgoing ? "inbox-message-outgoing" : "")}>
+
+            {message.quoted&&<blockquote className="inbox-quote"><strong>{message.quoted.sender}</strong><p>{message.quoted.text}</p></blockquote>}
+            {message.media?.url&&(message.media.mime.startsWith('image/')?<a href={message.media.url} target="_blank" rel="noreferrer"><img className="inbox-media" src={message.media.url} alt={message.text||'Bild'} loading="lazy"/></a>:message.media.mime.startsWith('audio/')?<audio className="inbox-media" controls preload="none" src={message.media.url}/>:message.media.mime.startsWith('video/')?<video className="inbox-media" controls preload="metadata" src={message.media.url}/>:<a href={message.media.url} download>{message.media.name||'Datei herunterladen'}</a>)}
+            {message.missingMedia&&<p className="muted">Originaldatei nicht im übernommenen Verlauf vorhanden.</p>}
             <p>{message.text}</p>
+            {!selectedId.startsWith('msg:')&&message.attachments?.map((attachment:any)=><p key={attachment.id}><a href={'/api/inbox/attachment?'+new URLSearchParams({id:message.id,attachmentId:attachment.id,projectId})} download>{attachment.name||'Anhang herunterladen'}</a></p>)}
+            {message.transcript&&<details><summary>Transkript</summary><p>{message.transcript}</p></details>}
+            {!!message.reactions?.length&&<div className="inbox-reactions">{message.reactions.map((reaction:any,n:number)=><span key={n} title={reaction.sender}>{reaction.emoji}{reaction.count>1?' '+reaction.count:''}</span>)}</div>}
+            <div className="inbox-message-meta"><strong>{message.outgoing?"Du":selectedId.startsWith("msg:")?(detail?.thread?.external?.endsWith("@g.us")?message.sender.split("@")[0]:selected.sender):message.sender}</strong><span>{new Date(message.time).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span>{message.outgoing&&message.ack!=null&&<span title={message.ack>=3?'Gelesen':message.ack>=2?'Zugestellt':'Gesendet'}><DeliveryChecks double={message.ack>=2}/></span>}</div>
+            {selectedId.startsWith('msg:')&&<div className="inbox-message-actions"><ChatMenu selected={undefined} footer={undefined} label="Nachrichtenaktionen" className="icon-button" items={[{id:'reply',label:'Antworten',icon:<ArrowLeft size={16}/>,action:()=>setReply(message)},...['👍','❤️','😂','😮','😢','🙏',''].map(emoji=>({id:emoji||'remove',label:emoji||'Reaktion entfernen',action:async()=>{try{await api('/messenger/react',{id:selectedId,projectId,messageId:message.id,emoji});setRefreshDetail(n=>n+1);}catch(error:any){setError(error.message);}}}))]}><MoreHorizontal size={16}/></ChatMenu></div>}
           </article>)}
         </div>
       </div>
-      <div className="inbox-compose"><div className="inbox-compose-inner">
-        <textarea ref={draftField} aria-label="Antwortentwurf" rows={1} wrap="soft" placeholder="Antwort schreiben …" value={draft} disabled={!detail || !!draftRecord?.error} onChange={event => {void drafts.edit(selectedId,event.target.value);}}/>
-      </div></div>
+      <div className="inbox-compose"><InboxComposer key={selectedId} threadId={selectedId} text={draft} onText={(text:string)=>void drafts.edit(selectedId,text)} onSend={()=>void send()} onFile={attach} disabled={!detail||!!draftRecord?.error} busy={sending||uploading} messenger={selectedId.startsWith('msg:')} attachment={attachments[selectedId]} reply={reply} onClearAttachment={()=>setAttachments(old=>{const copy={...old};delete copy[selectedId];return copy;})} onClearReply={()=>setReply(null)}/></div>
       </>}
     </section>
     {conceptOpen && <Modal title="Eine Inbox für alle Nachrichten" onClose={() => setConceptOpen(false)} wide={false} className="inbox-concept">
       <p>Outlook und Gmail werden unter Verbindungen eingerichtet. Die Inbox zeigt ausschließlich Nachrichten aus deinen ausdrücklich verbundenen Konten.</p>
-      <p>Lesen, Erledigen und Antwortentwürfe werden lokal gespeichert. Die Antwortzeile sendet keine Nachricht. Im Agentenchat kannst du einen Entwurf prüfen und den Versand mit Empfänger und Inhalt ausdrücklich beauftragen.</p>
-      <p>WhatsApp bleibt bis zur gemeinsamen Anbindung in seinem vorhandenen Verbindungsdialog. Es gibt hier keine automatischen Antworten.</p>
+      <p>Lesen, Erledigen und Antwortentwürfe werden lokal gespeichert. Der Sendepfeil sendet deinen gespeicherten Entwurf. Eingehende Nachrichten lösen keine automatische Antwort aus.</p>
+      <p>Deine WhatsApp- und Telegram-Gespräche erscheinen hier nach der Einrichtung. Der separate Schreibkanal des Agenten bleibt im Hintergrund.</p>
     </Modal>}
   </>;
 }

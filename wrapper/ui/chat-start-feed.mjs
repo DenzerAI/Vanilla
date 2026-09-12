@@ -53,6 +53,12 @@ export function chatStartFeed({requests=[],notifications=[],chats=[],projectId='
   if(includeWeather)cards.push({id:'weather',kind:'weather',title:userProfile.location||'Dein Wetter',weather:profileError?null:weather,weatherConfigured:!!userProfile.location,description:profileError?'Dein Wetterort konnte nicht geladen werden.':userProfile.location?weatherDescription(weather):'Dein Ort ist noch nicht eingerichtet.'});
   if(includeStatistics)cards.push({id:"statistics",kind:"statistics",title:"Statistik",description:"Dein Arbeitsrhythmus mit deinem Agenten.",statistics});
   if(includeAllowances)cards.push({id:'allowances',kind:'allowances',title:'Kontingente',description:'Deine verfügbaren Kontingente und Reset-Zeiten.',allowances});
+  if(includeCalendar && includeWeather && includeStatistics && includeAllowances) {
+    for(const starter of conversationStarters) {
+      if(cards.length>=7)break;
+      if(!cards.some(card=>card.id===starter.id))cards.push(starter);
+    }
+  }
   return cards;
 }
 export function entryTime(at, now=Date.now()) {

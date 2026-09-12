@@ -75,17 +75,33 @@ test('the real ACP adapter forwards native turn counters and preserves context u
  assert.equal(thread.workerSession.usage.contextUsed,45);assert.equal(thread.workerSession.usage.cost,1.2);
 });
 
-test('the card features the working allowances, week first, and ignores side buckets',()=>{
+test('the card features the working allowances, week first, then fills spare rows with additional windows',()=>{
  const now=Date.now();
  const codex=codexAllowance({rateLimitsByLimitId:{
   codex:{limitName:'Codex',primary:{usedPercent:73,resetsAt:now/1000+600,windowDurationMins:10080},secondary:{usedPercent:12,resetsAt:now/1000+600,windowDurationMins:300}},
   codex_bengalfox:{limitName:'GPT-5.3-Codex-Spark',primary:{usedPercent:0,resetsAt:now/1000+600,windowDurationMins:300}}}},now);
  const claude=claudeAllowance({rate_limits_available:true,rate_limits:{seven_day:{utilization:40,resets_at:new Date(now+600000).toISOString()},seven_day_oauth_apps:{utilization:90,resets_at:new Date(now+600000).toISOString()}}},now);
  const featured=featuredAllowances([codex,claude]);
- assert.deepEqual(featured.map(r=>r.label),['Codex · Woche','Claude · Woche','Codex · 5 Stunden']);
- assert.ok(!featured.some(r=>/Spark|Apps/.test(r.label)));
+ assert.deepEqual(featured.map(r=>r.label),['Codex · Woche','Claude · Woche','Codex · 5 Stunden','GPT-5.3-Codex-Spark · 5 Stunden']);
+ assert.ok(!featured.some(r=>/Apps/.test(r.label)));
  assert.equal(remainingPercent(featured[0],now),27);
  assert.equal(remainingPercent({...featured[0],expired:true},now),null);
  const legacy=featuredAllowances([{id:'codex',rows:[{id:'codex_x:primary',label:'Spark · Woche',usedPercent:0},{id:'codex:primary',label:'Codex · Woche',usedPercent:50}]}]);
- assert.deepEqual(legacy.map(r=>r.label),['Codex · Woche']);
+ assert.deepEqual(legacy.map(r=>r.label),['Codex · Woche','Spark · Woche']);
+});
+
+test('Claude reports the missing subscription profile without exposing authentication data',()=>{
+ const result=claudeAllowance({rate_limits_available:false,unavailableReason:'profile_required'});
+ assert.equal(result.unavailableReason,'profile_required');
+ assert.equal(result.status,'unavailable');
+ assert.deepEqual(result.rows,[]);
+});
+
+test('four main windows keep both providers visible ahead of model-specific allowances',()=>{
+ const now=Date.now(),reset=new Date(now+600000).toISOString();
+ const codex=codexAllowance({rateLimitsByLimitId:{codex:{primary:{usedPercent:20,windowDurationMins:300},secondary:{usedPercent:40,windowDurationMins:10080}},spark:{primary:{usedPercent:0,windowDurationMins:300}}}},now);
+ const claude=claudeAllowance({rate_limits_available:true,rate_limits:{five_hour:{utilization:12,resets_at:reset},seven_day:{utilization:55,resets_at:reset}}},now);
+ const rows=featuredAllowances([codex,claude]);
+ assert.deepEqual(rows.map(r=>[r.provider,r.period]),[['codex','week'],['claw-code','week'],['codex','short'],['claw-code','short']]);
+ assert.deepEqual(rows.map(r=>remainingPercent(r,now)),[60,45,80,88]);
 });

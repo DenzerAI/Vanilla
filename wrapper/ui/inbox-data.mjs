@@ -1,5 +1,5 @@
 export function inboxConversation(row, messages = []) {
-  return {...row, account:row.address, provider:row.provider==='gmail'?'Gmail':'Outlook',
+  return {...row, sender:(row.sender||'').replace(/\s*<[^>]+>$/, '').replace(/^"|"$/g, '') || row.sender, account:row.address, provider:({gmail:'Gmail',outlook:'Outlook',whatsapp:'WhatsApp','telegram-user':'Telegram'})[row.provider]||row.provider,
     time:new Date(row.updated).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}),
     unread:row.revision>row.seen, done:!!row.done, messages};
 }
@@ -22,7 +22,7 @@ export class InboxDrafts {
       if (record.error || record.saved===record.text) return;
       const text=record.text;
       try {
-        const saved=await this.api('/inbox/draft',{id,projectId:this.projectId,text,version:record.version,revision:record.revision});
+        const saved=await this.api(id.startsWith('msg:')?'/messenger/draft':'/inbox/draft',{id,projectId:this.projectId,text,version:record.version,revision:record.revision});
         record.version=saved.version;record.saved=text;
       } catch(error) {record.error=error.message || 'Entwurf konnte nicht gespeichert werden.';}
       this.changed();

@@ -1,7 +1,7 @@
 .attention-fan { width: 100%; max-width: 640px; min-width: 0; container-type: inline-size; }
 .attention-fan-track { display: grid; justify-items: center; padding: var(--space-16) 0 var(--space-24); touch-action: pan-y; }
-.attention-fan-card { grid-area: 1 / 1; width: 62%; max-width: 230px; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-8); padding: var(--space-16); box-sizing: border-box; height: 14rem; min-height: 14rem; max-height: 14rem; overflow: hidden; text-align: left; border: 1px solid var(--border); border-radius: var(--radius-panel); background: color-mix(in srgb, var(--surface) 72%, transparent); background-image: var(--popover-glass-sheen); backdrop-filter: blur(var(--fan-blur)) saturate(1.5); -webkit-backdrop-filter: blur(var(--fan-blur)) saturate(1.5); color: var(--text); box-shadow: var(--popover-glass-shadow); position: relative;  transform-origin: center bottom; overflow-wrap: anywhere; }
-.attention-fan-card.is-active { background-color: color-mix(in srgb, var(--surface) 86%, transparent); }
+.attention-fan-card { grid-area: 1 / 1; width: 62%; max-width: 230px; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: var(--space-8); padding: var(--space-16); box-sizing: border-box; height: 14rem; min-height: 14rem; max-height: 14rem; overflow: hidden; text-align: left; border: 1px solid var(--border); border-radius: var(--radius-panel); background: color-mix(in srgb, var(--surface) 90%, transparent); background-image: var(--popover-glass-sheen); backdrop-filter: blur(var(--fan-blur)) saturate(1.5); -webkit-backdrop-filter: blur(var(--fan-blur)) saturate(1.5); color: var(--text); box-shadow: var(--popover-glass-shadow); position: relative;  transform-origin: center bottom; overflow-wrap: anywhere; }
+.attention-fan-card.is-active { background-color: color-mix(in srgb, var(--surface) 95%, transparent); }
 .attention-fan-kind { display: flex; align-items: center; gap: var(--space-8); font-size: var(--text-caption); color: var(--muted); }
 .attention-fan-kind svg { color: var(--brand-accent); flex-shrink: 0; }
 .attention-fan-card strong { font-size: var(--text-control); line-height: var(--leading-tight); font-weight: var(--weight-medium); }
@@ -27,7 +27,7 @@
 
 .attention-fan-card strong, .attention-fan-description { display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; }
 
-.attention-fan-card.is-hovered { z-index: 5; border-color: var(--border-strong); background-color: color-mix(in srgb, var(--surface) 86%, transparent); }
+.attention-fan-card.is-hovered { z-index: 5; border-color: var(--border-strong); background-color: color-mix(in srgb, var(--surface) 95%, transparent); }
 .chat-main > .conversation:has(> .chat-start) { display: flex; flex-direction: column; min-height: 0; }
 .welcome.agent-chat-welcome.chat-start { min-height: 0; flex: 0 0 auto; margin: 0 auto; padding-block: var(--space-24); gap: var(--space-16); }
 .chat-start-intro { display: flex; flex-direction: column; align-items: center; gap: var(--space-12); width: 100%; max-width: 640px; }
@@ -119,13 +119,13 @@
 .attention-fan-card[data-kind="inbox"], .attention-fan-card[data-kind="calendar"],
 .attention-fan-card[data-kind="allowances"], .attention-fan-card[data-kind="request"] {
  border-color: color-mix(in srgb, var(--fan-tint) 32%, var(--border));
- background-color: color-mix(in srgb, var(--fan-tint) 14%, color-mix(in srgb, var(--surface) 72%, transparent));
+ background-color: color-mix(in srgb, var(--fan-tint) 14%, color-mix(in srgb, var(--surface) 90%, transparent));
 }
 .attention-fan-card[data-kind="inbox"].is-active, .attention-fan-card[data-kind="calendar"].is-active,
 .attention-fan-card[data-kind="allowances"].is-active, .attention-fan-card[data-kind="request"].is-active,
 .attention-fan-card[data-kind="inbox"].is-hovered, .attention-fan-card[data-kind="calendar"].is-hovered,
 .attention-fan-card[data-kind="allowances"].is-hovered, .attention-fan-card[data-kind="request"].is-hovered {
- background-color: color-mix(in srgb, var(--fan-tint) 18%, color-mix(in srgb, var(--surface) 86%, transparent));
+ background-color: color-mix(in srgb, var(--fan-tint) 18%, color-mix(in srgb, var(--surface) 95%, transparent));
  border-color: color-mix(in srgb, var(--fan-tint) 48%, var(--border));
 }
 .attention-fan-card[data-kind="calendar"] .attention-fan-kind svg,
@@ -140,3 +140,37 @@
  .attention-fan-card[data-kind="allowances"], .attention-fan-card[data-kind="request"] { background: color-mix(in srgb, var(--fan-tint) 14%, var(--surface)); }
 }
 @media (forced-colors: active) { .attention-fan-card[data-kind] { background: Canvas; border-color: CanvasText; } }
+
+/* Refracted light stays behind content; card movement belongs to Motion. */
+.attention-fan-card:not(.weather-card) {
+ --fan-tint: var(--blue);
+ background-image: radial-gradient(ellipse at 0% 0%, color-mix(in srgb, var(--fan-tint) 24%, transparent), transparent 65%), radial-gradient(ellipse at 100% 100%, color-mix(in srgb, var(--fan-tint) 12%, transparent), transparent 60%), var(--popover-glass-sheen);
+ box-shadow: var(--popover-glass-shadow), inset 0 1px 0 color-mix(in srgb, var(--fan-glass-light) 35%, transparent), inset 0 -1px 0 color-mix(in srgb, var(--fan-tint) 25%, transparent);
+ isolation: isolate;
+}
+.attention-fan-card[data-kind="inbox"] { --fan-tint: var(--brand-accent); }
+.attention-fan-card[data-kind="allowances"], .attention-fan-card[data-kind="statistics"] { --fan-tint: var(--success); }
+.attention-fan-card[data-kind="request"] { --fan-tint: var(--warning); }
+.attention-fan-card:not(.weather-card)::before {
+ content: ''; position: absolute; inset: -60%; z-index: -1; pointer-events: none;
+ background: conic-gradient(from 35deg, transparent 0deg 80deg, color-mix(in srgb, var(--fan-glass-light) 14%, transparent) 110deg, transparent 140deg 260deg, color-mix(in srgb, var(--fan-tint) 20%, transparent) 300deg, transparent 335deg);
+ animation: fan-liquid-light var(--fan-glass-duration) ease-in-out infinite alternate;
+}
+.attention-fan-card[data-kind="calendar"], .attention-fan-card[data-kind="calendar"].is-active, .attention-fan-card[data-kind="calendar"].is-hovered {
+ --fan-tint: var(--brand-accent);
+ background-color: var(--fan-calendar-base);
+ color: var(--fan-glass-light);
+}
+.attention-fan-card[data-kind="calendar"] .calendar-date { color: var(--fan-glass-light); }
+.attention-fan-card[data-kind="calendar"] :is(.calendar-month,.calendar-status,.calendar-card-action) { color: color-mix(in srgb, var(--fan-glass-light) 78%, transparent); }
+.attention-fan-card[data-kind="calendar"] :is(.calendar-weekday,.calendar-countdown) { color: var(--fan-glass-light); }
+.attention-fan[data-motion="off"] .attention-fan-card::before { animation-play-state: paused; }
+@keyframes fan-liquid-light { from { transform: translate(-5%, -3%) rotate(-18deg); } to { transform: translate(5%, 3%) rotate(38deg); } }
+@media (prefers-reduced-motion: reduce) { .attention-fan-card:not(.weather-card)::before { animation: none; } }
+:root[data-reduce-motion="on"] .attention-fan-card:not(.weather-card)::before { animation: none; }
+@media (prefers-reduced-transparency: reduce) { .attention-fan-card:not(.weather-card)::before { display: none; } }
+@media (forced-colors: active) {
+ .attention-fan-card:not(.weather-card)::before { display: none; }
+ .attention-fan-card[data-kind="calendar"] { background: Canvas; color: CanvasText; }
+ .attention-fan-card[data-kind="calendar"] :is(.calendar-date,.calendar-month,.calendar-status,.calendar-card-action,.calendar-weekday,.calendar-countdown) { color: CanvasText; }
+}

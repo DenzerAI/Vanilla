@@ -46,6 +46,7 @@ from .api import routes as operations_routes
 from .routines import Routines, validate_schedule, instant
 from .mail import Mail, routes as mail_routes
 from .mail_workflow import MailWorkflow, routes as mail_workflow_routes
+from .messenger import Messenger, routes as messenger_routes
 from .calendar import Calendar, routes as calendar_routes
 from .github import GitHub
 from .contributions import Contributions
@@ -90,6 +91,7 @@ def create_app(config=None):
     routines = Routines(storage, runtime, memory)
     mail = Mail(db, config)
     mail.workflow = MailWorkflow(mail, crm, routines)
+    messenger = Messenger(db, config, mail.project)
     calendar = Calendar(db, config, runtime, mail.project)
     github = GitHub(db, config)
     contributions = Contributions(db, config, github)
@@ -107,11 +109,13 @@ def create_app(config=None):
         await runtime.start()
         if not runtime.restore_hold and not runtime.update_hold:
             mail.task = asyncio.create_task(mail.loop())
+            messenger.task = asyncio.create_task(messenger.loop())
             calendar.task = asyncio.create_task(calendar.loop())
         yield
         await updates.close()
         await github.close()
         await calendar.close()
+        await messenger.close()
         await mail.close()
         await runtime.close()
         await asyncio.to_thread(devices.close)
@@ -135,6 +139,7 @@ def create_app(config=None):
     app.state.operations = operations
     app.state.crm = crm
     app.state.mail = mail
+    app.state.messenger = messenger
     app.state.chat_privacy = privacy
 
     app.state.github, app.state.product_updates = github, updates
@@ -328,6 +333,7 @@ def create_app(config=None):
     app.include_router(operations_routes(operations, queue))
     app.include_router(crm_routes(crm, memory))
     app.include_router(mail_routes(mail))
+    app.include_router(messenger_routes(messenger))
     app.include_router(mail_workflow_routes(mail.workflow))
     app.include_router(calendar_routes(calendar))
     app.include_router(update_routes(github, updates, contributions))
@@ -351,10 +357,10 @@ def create_app(config=None):
             runtime.update_hold = runtime.frozen = True
             if await runtime.has_active_work():
                 raise ValueError("Aktive Arbeit verhindert die Umstellung.")
-            for task in [mail.task, calendar.task]:
+            for task in [mail.task, calendar.task, messenger.task]:
                 if task:
                     task.cancel()
-            await asyncio.gather(*[t for t in [mail.task, calendar.task] if t], return_exceptions=True)
+            await asyncio.gather(*[t for t in [mail.task, calendar.task, messenger.task] if t], return_exceptions=True)
             if Source(config).inventory(db)["hash"] != run["inventory"]["hash"]:
                 raise ValueError("Aufträge oder Konfiguration wurden verändert. Erneute Vorbereitung erforderlich.")
             if (await asyncio.to_thread(Source(config).read))["hash"] != run["sourceHash"] or await updates.releases.latest() != run["release"]:
@@ -390,6 +396,8 @@ def create_app(config=None):
             runtime.update_hold = runtime.frozen = False
             if mail.task is None or mail.task.done():
                 mail.task = asyncio.create_task(mail.loop())
+            if messenger.task is None or messenger.task.done():
+                messenger.task = asyncio.create_task(messenger.loop())
             if calendar.task is None or calendar.task.done():
                 calendar.task = asyncio.create_task(calendar.loop())
             updates.journal(run, state=state, phase="Aktualisiert" if action == "commit" else "Wiederhergestellt", error="")
@@ -422,6 +430,8 @@ def create_app(config=None):
         await asyncio.to_thread(knowledge.scan)
         if mail.task is None or mail.task.done():
             mail.task = asyncio.create_task(mail.loop())
+        if messenger.task is None or messenger.task.done():
+            messenger.task = asyncio.create_task(messenger.loop())
         if calendar.task is None or calendar.task.done():
             calendar.task = asyncio.create_task(calendar.loop())
         (config.data / "updates/maintenance.json").unlink(missing_ok=True)
@@ -748,6 +758,7 @@ def create_app(config=None):
             payload["features"] = {
                 **payload.get("features", {}),
                 "mailInbox": True,
+                "messengerInbox": True,
                 "chatPrivacy": True,
                 "knowledge": True,
                 "sqlite": True,

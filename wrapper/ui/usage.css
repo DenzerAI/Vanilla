@@ -22,3 +22,18 @@
 .allowance-bars.is-compact .allowance-row[data-level="warn"] .allowance-track > span { background: var(--warning); }
 .allowance-bars.is-compact .allowance-row[data-level="low"] .allowance-track > span { background: var(--danger); }
 .allowance-bars.is-compact .allowance-row[data-level="unknown"] .allowance-track > span { background: var(--muted); }
+
+.allowance-bars.is-compact { gap: var(--space-8); }
+.allowance-bars.is-compact .allowance-row { flex-shrink: 0; gap: var(--space-4); }
+.allowance-bars.is-compact .allowance-label { gap: var(--space-4); font-size: var(--text-small); }
+.allowance-bars.is-compact .allowance-label > span:first-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.allowance-bars.is-compact .allowance-track { height: var(--space-8); background: color-mix(in srgb, var(--success) 12%, var(--raised)); box-shadow: inset 0 1px 2px color-mix(in srgb, var(--text) 12%, transparent); }
+.allowance-bars.is-compact .allowance-track > span { position: relative; box-shadow: inset 0 1px 0 color-mix(in srgb, var(--fan-glass-light) 55%, transparent); transition: width var(--motion-progress-duration) ease; }
+.allowance-bars.is-compact .allowance-track > span::after { content: ''; position: absolute; inset: 0; background: linear-gradient(100deg, transparent, color-mix(in srgb, var(--fan-glass-light) 45%, transparent), transparent); background-size: 200% 100%; animation: allowance-reflection var(--fan-glass-duration) ease-in-out infinite; }
+.allowance-bars.is-compact .allowance-reset { display: none; }
+.attention-fan[data-motion="off"] .allowance-track > span::after { animation-play-state: paused; }
+@keyframes allowance-reflection { from { background-position: 200% 0; } to { background-position: -200% 0; } }
+@media (prefers-reduced-motion: reduce) { .allowance-bars.is-compact .allowance-track > span { transition: none; } .allowance-bars.is-compact .allowance-track > span::after { animation: none; } }
+:root[data-reduce-motion="on"] .allowance-bars.is-compact .allowance-track > span { transition: none; }
+:root[data-reduce-motion="on"] .allowance-bars.is-compact .allowance-track > span::after { animation: none; }
+@media (forced-colors: active) { .allowance-bars.is-compact .allowance-track > span::after { display: none; } .allowance-bars.is-compact .allowance-row .allowance-track { background: Canvas; } .allowance-bars.is-compact .allowance-row .allowance-track > span { background: Highlight; } }

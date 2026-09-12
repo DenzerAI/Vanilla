@@ -475,10 +475,13 @@ export const iconMotion = {
   }
 };
 
-export const motion = { 'avatar-blink-duration': `${avatarMotion.blink}s`, 'avatar-gaze-duration': `${avatarMotion.gaze}s`, 'avatar-expression-duration': `${avatarMotion.expression}s`, 'avatar-gesture-duration': `${avatarMotion.gesture}s`, 'avatar-easing': 'cubic-bezier(.4, 0, .2, 1)', 'picker-duration': '280ms', 'picker-easing': 'cubic-bezier(.16, 1, .3, 1)', 'panel-light-duration': '48s', 'panel-light-easing': 'ease-in-out', 'composer-focus-duration': '18s', 'activity-count-duration': '240ms', 'activity-step-duration': '180ms', 'feedback-duration': '160ms', 'progress-duration': '1000ms', 'skeleton-duration': '1600ms' };
+export const motion = { 'avatar-blink-duration': `${avatarMotion.blink}s`, 'avatar-gaze-duration': `${avatarMotion.gaze}s`, 'avatar-expression-duration': `${avatarMotion.expression}s`, 'avatar-gesture-duration': `${avatarMotion.gesture}s`, 'avatar-easing': 'cubic-bezier(.4, 0, .2, 1)', 'picker-duration': '280ms', 'picker-easing': 'cubic-bezier(.16, 1, .3, 1)', 'panel-light-duration': '48s', 'panel-light-easing': 'ease-in-out', 'composer-focus-duration': '18s', 'activity-count-duration': '240ms', 'activity-step-duration': '180ms', 'feedback-duration': '160ms', 'progress-duration': '1000ms', 'skeleton-duration': '1600ms', 'status-shimmer-duration': '2400ms' };
 export function renderDesignCSS() {
   const shared = Object.fromEntries([
     ["fan-blur", `${attentionFanMotion.blur}px`],
+    ["fan-glass-light", "#ffffff"],
+    ["fan-calendar-base", "#271b2d"],
+    ["fan-glass-duration", "12s"],
     ...Object.entries(typeMetrics),
     ...Object.entries(weatherArtwork),
     ...fonts.map((f) => [f.token, f.value]),
@@ -509,7 +512,7 @@ export function renderDesignCSS() {
 export const scrubberSprings = { pointer: { stiffness: 700, damping: 52, mass: .5 }, strength: { stiffness: 260, damping: 30, mass: .6 } };
 
 export const statisticsMotion = {shimmerDuration: 8,duration: .65, stagger: .28, pressDuration: .45, cell: 8, gap: 2, lift: 8};
-export const attentionFanMotion = {blur: 48,wideThreshold: 430, wideSpread: .12, veryWideThreshold: 560, veryWideSpread: .10, autoplayInterval: 9000, outerRotation: 10, outerDepth: 20, outerScale: .84, farRotation: 14, farDepth: 32, farScale: .78, wheelThreshold: 48, wheelCooldown: 360, hoverLift: -10, hoverScale: 1.02, rotation: 6, compactRotation: 4, depth: 10, scale: 0.94, spring: {stiffness: 170, damping: 29, mass: 1}, spread: .13, compactSpread: .09, arrivalY: 16, arrivalScale: .90, departureY: -8, departureScale: .96, enterDuration: .28, exitDuration: .18, ease: /** @type {[number, number, number, number]} */ ([.22, 1, .36, 1])};
+export const attentionFanMotion = {blur: 48,wideThreshold: 430, wideSpread: .12, veryWideThreshold: 560, veryWideSpread: .10, autoplayInterval: 6500, outerRotation: 10, outerDepth: 20, outerScale: .84, farRotation: 14, farDepth: 32, farScale: .78, wheelThreshold: 48, wheelCooldown: 360, hoverLift: -10, hoverScale: 1.02, rotation: 6, compactRotation: 4, depth: 10, scale: 0.94, spring: {stiffness: 145, damping: 23, mass: 1}, spread: .13, compactSpread: .09, arrivalY: 16, arrivalScale: .90, departureY: -8, departureScale: .96, enterDuration: .28, exitDuration: .18, ease: /** @type {[number, number, number, number]} */ ([.22, 1, .36, 1])};
 
 export const chatHeadingMotion = {character: 90, punctuation: 360, hold: 20000, fade: 900};
 

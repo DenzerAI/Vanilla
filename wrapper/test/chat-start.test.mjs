@@ -134,12 +134,12 @@ test('preview extracts only the requested completed final answer',()=>{
 test('calendar, weather, statistics and allowances always stay in the fan',()=>{
  const chats=Array.from({length:12},(_,i)=>({id:'c'+i,title:'Thema',projectId:'default',updatedAt:i,lastTurnStatus:'completed',lastCompletedTurnId:'t'+i}));
  const feed=chatStartFeed({chats,includeWeather:true,includeCalendar:true,includeStatistics:true,includeAllowances:true,now:new Date(2026,8,11,12).getTime()});
- assert.deepEqual(feed.map(i=>i.kind),['inbox','calendar','weather','statistics','allowances']);
+ assert.deepEqual(feed.map(i=>i.kind),['inbox','calendar','weather','statistics','allowances','prompt','prompt']);
  assert.equal(feed[1].title,'Dein Tag');
  assert.equal(feed[1].calendar,null);
  assert.equal(chatStartFeed({includeCalendar:true,calendar:{error:true}})[1].calendar.error,true);
  assert.equal(feed[1].prompt,undefined);
  assert.equal(new Set(feed.map(i=>i.id)).size,feed.length);
  const quiet=chatStartFeed({includeWeather:true,includeCalendar:true,includeStatistics:true,includeAllowances:true});
- assert.deepEqual(quiet.map(i=>i.kind),['prompt','calendar','weather','statistics','allowances']);
+ assert.deepEqual(quiet.map(i=>i.kind),['prompt','calendar','weather','statistics','allowances','prompt','prompt']);
 });
