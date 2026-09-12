@@ -511,6 +511,7 @@
 .calendar-date-button[aria-current="date"] { color: var(--accent); font-weight: var(--weight-semibold); }
 .calendar-date-button:hover { background: var(--surface); }
 .calendar-cell-events { display: grid; gap: 0; }
+.calendar-cell-events .calendar-event-chip { font-size: var(--text-small); }
 .calendar-event-chip { display: flex; align-items: center; justify-content: flex-start; gap: var(--space-4); width: 100%; height: var(--calendar-month-event-height); min-height: 0; min-width: 0; text-align: left; border: 0; border-radius: var(--radius-small); padding: var(--space-2) var(--space-4); background: transparent; font-size: var(--text-caption); line-height: var(--leading-tight); }
 .calendar-event-chip::before { content: ''; flex: 0 0 var(--space-4); width: var(--space-4); height: var(--space-4); border-radius: 50%; background: var(--accent); }
 .calendar-event-chip[data-external]::before { background: var(--muted); }

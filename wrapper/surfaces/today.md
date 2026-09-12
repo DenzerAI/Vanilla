@@ -50,7 +50,7 @@ Auf Desktop stehen Montag bis Freitag ausgeschrieben, auf schmalen Geräten verk
 Tageszahlen bleiben klein und ohne Kreis; Heute zeichnet eine feine Zellkontur.
 Termine sind einzeilig: Punkt, Zeit, Titel, ohne Blockfläche. Die sichtbare Anzahl
 folgt der tatsächlichen Zeilenhöhe; Mehr zeigt die vollständige Tagesagenda. Diese
-Agenda erscheint erst nach einer Tagesauswahl, nicht als dauerhafte weitere Überschrift.
+Agenda erscheint nur über Mehr, nicht als dauerhafte weitere Überschrift. Ein Klick auf die Tageszahl öffnet direkt die Tagesansicht dieses Datums und speichert diese Ansichtspräferenz.
 Die zentralen Rollen calendar-month-event-height, calendar-day-number-height und
 calendar-week-gutter halten Messung und Darstellung gemeinsam konsistent.
 
@@ -62,7 +62,7 @@ erscheint nur bei vorhandenen ganztägigen Terminen. Überlappungen erhalten sep
 Spalten, die Jetzt-Linie folgt der Installationszeitzone. Das Raster startet bei 7 Uhr
 und bleibt über alle 24 Stunden scrollbar. Mobil wählen Wochenköpfe das sichtbare
 Tagesraster; Monatsfelder zeigen kompakte Titel, die vollständige Agenda ist per
-Tageszahl erreichbar. Keine horizontalen Pflicht-Scrollflächen oder neuen Gesten.
+Mehr erreichbar; Tageszahlen öffnen die Tagesansicht. Keine horizontalen Pflicht-Scrollflächen oder neuen Gesten.
 
 ## Beispiele, Einstellungen und echte Daten
 
@@ -142,3 +142,5 @@ Der markierte Beispielmodus bleibt getrennt und ohne Speicherung. Speicherfehler
 und Versionskonflikte lassen Entwürfe bestehen. Der Chatstart erhält die gemeinsame
 Kalenderkachel und öffnet beim Klick den Tagesbericht; Kalender öffnen darin führt
 hierher. Der Hauptmenüpunkt Kalender öffnet dieselbe Ansicht. Grenzen und Datenmigration: docs/PLANNER.md.
+
+Monatstermine verwenden text-small und die zentrale 20-px-Zeilenhöhe. Zeit/Titel bleiben einzeilig; Tooltip und Terminöffnung zeigen weiterhin die vollständigen Details.

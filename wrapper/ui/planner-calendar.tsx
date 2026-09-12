@@ -6,7 +6,7 @@ import type {PlannerEvent} from './planner-demo';
 type Props = {
   date: string; today: string; mode: string; workweek: boolean; timezone: string;
   events: PlannerEvent[]; onDate: (date: string) => void;
-  onWeek?: (date: string) => void;
+  onWeek?: (date: string) => void; onDayOpen?: (date: string) => void;
   onOpen: (event: PlannerEvent) => void; onCreate: (date: string, hour?: number, minute?: number) => void;
 };
 const label = (day: string) => parseDay(day).toLocaleDateString('de-DE', {weekday:'long', day:'numeric', month:'long'});
@@ -17,7 +17,7 @@ function EventChip({event, onOpen}: {event: PlannerEvent; onOpen: () => void}) {
     {!event.allDay && <time>{event.start}</time>}<span>{event.title}</span>
   </button>;
 }
-export function PlannerCalendar({date,today,mode,workweek,timezone,events,onDate,onWeek,onOpen,onCreate}: Props) {
+export function PlannerCalendar({date,today,mode,workweek,timezone,events,onDate,onWeek,onDayOpen,onOpen,onCreate}: Props) {
   const scroll = useRef<HTMLDivElement>(null);
   const month = useRef<HTMLDivElement>(null);
   const [visibleCount,setVisibleCount] = useState(5);
@@ -39,8 +39,8 @@ export function PlannerCalendar({date,today,mode,workweek,timezone,events,onDate
   const clock = new Intl.DateTimeFormat('en-GB',{timeZone:timezone,hour:'2-digit',minute:'2-digit',hourCycle:'h23'}).format(new Date(now));
   const [hour,minute] = clock.split(':').map(Number);
   const weekday = (day: string) => parseDay(day).toLocaleDateString('de-DE',{weekday:'short'}).replace('.','');
-  const dayButton = (day: string) => <button type="button" className="calendar-date-button" aria-label={label(day)}
-    aria-current={day === today ? 'date' : undefined} aria-pressed={day === date} onClick={() => {onDate(day); if(mode === "month") setAgendaOpen(true);}}>{parseDay(day).getDate()}</button>;
+  const dayButton = (day: string) => <button type="button" className="calendar-date-button" aria-label={label(day) + (mode === "month" ? " in Tagesansicht öffnen" : "")}
+    aria-current={day === today ? 'date' : undefined} aria-pressed={day === date} onClick={() => {if(mode === "month" && onDayOpen) onDayOpen(day); else onDate(day);}}>{parseDay(day).getDate()}</button>;
   if (mode === 'month') return <>
     <div className="calendar-month-grid" ref={month} data-columns={workweek ? 5 : 7} data-weeks={monthGrid(date,workweek).length}>
       <div className="calendar-weekdays"><span>KW</span>{monthGrid(date,workweek)[0].map((day: string) => <span key={day}><span className="calendar-weekday-full">{parseDay(day).toLocaleDateString('de-DE',{weekday:'long'})}</span><span className="calendar-weekday-short">{weekday(day)}</span></span>)}</div>

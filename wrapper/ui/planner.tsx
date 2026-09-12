@@ -705,7 +705,7 @@ export function PlannerPage(props: Props) {
           </div>
           {!demo && /^(Kalenderstand prüfen|Kalender wird)/.test(calendarStatus) && <p className="planner-meta" role="status">{calendarStatus}</p>}
           <PlannerCalendar date={date} today={today} mode={mode} workweek={workweek} timezone={calendarTimezone}
-            events={visibleEvents} onDate={setDate} onWeek={(day) => {setDate(day); chooseMode("week");}} onOpen={setDetail} onCreate={create} />
+            events={visibleEvents} onDate={setDate} onDayOpen={(day) => {setDate(day); chooseMode("day");}} onWeek={(day) => {setDate(day); chooseMode("week");}} onOpen={setDetail} onCreate={create} />
         </>
       )}
       {detail && (

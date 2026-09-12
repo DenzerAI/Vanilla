@@ -1597,7 +1597,7 @@ werden als noch nicht verfügbar bezeichnet, nicht als fertige Erkennung.
 PlannerCalendar ist der gemeinsame Baustein in Produktion und Designreferenz.
 Großzügiges Monatsraster, schmale KW-Spalte links, ausgeschriebene Wochentage auf
 Desktop. Kleine Tageszahlen ohne Kreis, Heute mit feiner Zellkontur. Termine als
-kompakte einzeilige Punkt/Zeit/Titel-Zeilen ohne Kartenflächen; ihre Anzahl richtet
+kompakte einzeilige Punkt/Zeit/Titel-Zeilen in text-small ohne Kartenflächen; ihre Anzahl richtet
 sich nach dem verfügbaren Platz. Der Zeitraum ist der einzige Seitenkopf in text-section (mobil text-heading),
 darunter eine gemeinsame Werkzeugzeile. Neue Ansichten starten Mo–Fr. Keine dauerhaften
 Status-Unterzeilen oder Wochenenderklärungen; echte Lade-/Fehlerhinweise bleiben.
