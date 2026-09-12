@@ -260,6 +260,14 @@ def test_restart_button_with_idle_listener_and_rollback(integration_root):
             # save returns the public connection directly.
             id=connection['id']
             post('/services/start',{'id':id})
+            # Restore/backup remains strict even though ordinary restart pauses listeners.
+            strict=client.post('/system/backup-hold',json={'hold':True})
+            assert strict.status_code == 400, strict.text
+            presence='00000000-0000-0000-0000-000000000001'
+            post('/updates/presence',{'id':presence,'active':True})
+            busy=client.post('/system/restart',json={})
+            assert busy.status_code == 400, busy.text
+            post('/updates/presence',{'id':presence,'active':False})
             held=post('/system/update-hold',{'hold':True})
             rejected=client.post('/system/restart',json={})
             assert rejected.status_code == 400, rejected.text
