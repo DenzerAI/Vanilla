@@ -608,13 +608,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const [agentFolderTarget, setAgentFolderTarget] = useState(null);
   const [workspaceWidth, setWorkspaceWidth] = useState(null);
   const [workspaceExpanded, setWorkspaceExpanded] = useState(false);
-  const lastWorkspaceView = useRef(null);
   const shelfReturnFocus=useRef(null);
   function setPanel(next) {
-    if (next) {
-      lastWorkspaceView.current = next;
-      try { localStorage.setItem("workspace-last-view", next); } catch {}
-    }
     if (next && !panel) { setWorkspaceWidth(null); setWorkspaceExpanded(false); }
     setWorkspacePanel(next);
   }
@@ -2286,7 +2281,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               <div className="row">
                 {(mobileViewport || paneOrder.length === 1) && headerSession?.hasTitle && <ChatTitle session={headerSession} compact/>}
                 {!mobileViewport && <LayoutPicker count={paneOrder.length} onChange={changePaneCount}/>}
-                <IconButton label={panel ? "Ablage schließen" : "Ablage öffnen"} active={!!panel} aria-expanded={!!panel} aria-controls="workspace-panel" onClick={() => { if (!panel) {setSelectedFile(null);setSelectedShelfImage(null);} let last = lastWorkspaceView.current; try { last ||= localStorage.getItem("workspace-last-view"); } catch {} setPanel(panel ? null : (["chat", "files"].includes(last) ? last : "chat")); }}>{icon(PanelRight)}</IconButton>
+                <IconButton label={panel ? "Ablage schließen" : "Ablage öffnen"} active={!!panel} aria-expanded={!!panel} aria-controls="workspace-panel" onClick={() => { if (!panel) {setSelectedFile(null);setSelectedShelfImage(null);} setPanel(panel ? null : "chat"); }}>{icon(PanelRight)}</IconButton>
               </div>
             </header>}
 

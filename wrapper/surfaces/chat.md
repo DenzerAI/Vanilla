@@ -89,8 +89,10 @@ Workspace bezeichnet weiterhin den übergeordneten Arbeitsbereich mit seinen Cha
 Die rechte Leiste heißt **Ablage**. Ihr Kopf zeigt den Namen, Vergrößern/Verkleinern
 und Schließen; darunter wechselt die native Auswahl zwischen **Im Chat** und
 **Dateien**. Änderungen und Befehle entfallen in dieser Kundenauswahl. Vorhandene
-technische Anschlüsse bleiben erhalten. Frühere gespeicherte review/terminal-
-Ansichten fallen beim Öffnen auf Im Chat zurück.
+technische Anschlüsse bleiben erhalten. Jeder normale Öffnungsvorgang über den
+Ablage-Button startet mit Im Chat, unabhängig von der vorherigen Auswahl. Explizite
+„Dateien öffnen“-Aktionen am Workspace dürfen weiterhin direkt Dateien öffnen.
+Die frühere gespeicherte Ansichtspräferenz wird nicht mehr gelesen.
 
 Die Ablage startet mit 360 px und lässt sich ab 280 px ziehen. Vergrößern nutzt
 wie bisher die Chatfläche; die Dateivorschau bleibt dabei gemountet. Schließen
