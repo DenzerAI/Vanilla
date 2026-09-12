@@ -12,18 +12,23 @@ damit den Eigentümern. Die Chat-PIN bleibt der Schutz für persönliche Inhalte
 Eigentümern. Memory, CRM, Firmenbasis und Ergebnisse bleiben je Installation gemeinsam; Benutzer
 trennen Chats, nicht das Wissen. Das ist keine Mandantenfähigkeit und keine Sandbox.
 
-Solange kein Konto existiert, gilt allein der Zugangscode der Installation; er meldet als
-Eigentümer an. Das erste Konto lässt sich erst anlegen, wenn unter Zugang ein Zugangsschlüssel
-gesetzt ist: Er bleibt der Rückweg, falls der letzte Eigentümer sein Passwort verliert, und dient
-Skripten als Bearer. Eine Zugangscode-Sitzung erscheint als „Zugangscode“ mit Rolle Eigentümer.
+Solange kein Konto existiert, gilt allein der Rückweg-Schlüssel der Installation (bisher
+„Zugangscode“); er meldet als Eigentümer an. Das erste Konto ist ein Eigentümer und setzt den
+Rückweg-Schlüssel im selben Schritt (`accessKey`, mindestens 8 Zeichen, ein Schlüssel je
+Installation), falls noch keiner existiert; die Oberfläche schlägt einen zufälligen vor. Der
+Schlüssel bleibt der Weg hinein, falls der letzte Eigentümer sein Passwort verliert, und dient
+Skripten als Bearer. Ändern unter Benutzer meldet alle Geräte ab. Eine Schlüssel-Sitzung
+erscheint als „Zugangscode“ mit Rolle Eigentümer.
 
 ## Schnittstellen im Kern
 
 - `POST /api/auth/login` mit `{name, password}` für ein Konto oder `{token}` für den Zugangscode.
 - `GET /api/auth/session` liefert zusätzlich `user` und `accounts` (ob Konten existieren).
-- `GET /api/users`: alle Konten für Eigentümer, nur das eigene für Mitglieder, plus `me`.
-- `POST /api/users` `{name, password, role}`: nur Eigentümer. Name 2 bis 60 Zeichen, eindeutig
-  ohne Groß-/Kleinschreibung, Passwort mindestens 8 Zeichen.
+- `GET /api/users`: alle Konten für Eigentümer, nur das eigene für Mitglieder, plus `me` und
+  `accessConfigured`.
+- `POST /api/users` `{name, password, role, accessKey?}`: nur Eigentümer. Name 2 bis 60 Zeichen,
+  eindeutig ohne Groß-/Kleinschreibung, Passwort mindestens 8 Zeichen. Ohne konfigurierten
+  Schlüssel ist `accessKey` Pflicht und die Rolle Eigentümer.
 - `POST /api/users/{id}/password` `{password, current?}`: Eigentümer für alle, Mitglieder für
   sich selbst mit aktuellem Passwort. Beendet alle Sitzungen der Person.
 - `POST /api/users/{id}/role`, `POST /api/users/{id}/remove`: nur Eigentümer. Der letzte

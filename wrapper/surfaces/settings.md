@@ -247,10 +247,13 @@ Direkt nach Dein Profil steht Benutzer, sichtbar sobald der Kern das Feature `us
 Speicherzeile zeigt, als wer man angemeldet ist, daneben Abmelden. Die Gruppe Konten listet jede
 Person als SettingRow mit Rolle; Eigentümer sehen je Zeile Passwort, Rollenwechsel und Entfernen,
 Mitglieder nur Passwort für sich selbst. Konto anlegen öffnet das gemeinsame Modal mit Name,
-Passwort und Rolle. Entfernen bestätigt im gemeinsamen Bestätigungsdialog. Eine zweite Gruppe
-erklärt in drei Zeilen, was Benutzer bedeuten: Chats gehören der Person, private Chats schützt
-die PIN, Gedächtnis bleibt gemeinsam. Keine Avatare, keine Einladungslinks, keine eigene Seite
-je Person. Anmeldung und „Erneut anmelden“ tragen Name und Passwort; ein leerer Name meldet mit
+Passwort und Rolle; Fehler stehen im Modal. Das erste Konto ist ein Eigentümer und trägt ein
+zusätzliches Feld Rückweg-Schlüssel mit zufälligem Vorschlag; Speichern meldet direkt mit dem
+neuen Konto an. Die Gruppe Rückweg-Schlüssel erklärt den einen Installationsschlüssel und ändert
+ihn; unter Zugang verweist die Zeile Anmeldung nur noch hierher. Entfernen bestätigt im
+gemeinsamen Bestätigungsdialog. Eine weitere Gruppe erklärt in drei Zeilen, was Benutzer
+bedeuten: Chats gehören der Person, private Chats schützt die PIN, Gedächtnis bleibt gemeinsam.
+Keine Avatare, keine Einladungslinks, keine eigene Seite je Person. Anmeldung und „Erneut anmelden“ tragen Name und Passwort; ein leerer Name meldet mit
 dem Zugangscode an. Vertrag und Schnittstellen: [docs/USERS.md](../../docs/USERS.md).
 
 ## Dein Profil

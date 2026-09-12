@@ -34,12 +34,17 @@ test('durable message HTTP acknowledges, deduplicates new chats, reconciles nati
   assert.equal((await get('/deliveries?id='+receipt.chatId)).entries.length,1);
   let disk=JSON.parse(await readFile(state,'utf8'));
   assert.equal((await get('/chats')).chats.length,1);assert.equal(disk.calls.filter(c=>c.params.threadId===receipt.chatId).length,1);
+  const removedId='22345678-1234-1234-1234-123456789012';
+  const removed=await post('/delivery/action',{clientMessageId:removedId,id:receipt.chatId,action:'discard'});
+  assert.equal(removed.status,'cancelled');
+  assert.equal((await post('/delivery',{...payload,clientMessageId:removedId,id:receipt.chatId})).status,'cancelled');
   await stop();
   const saved=JSON.parse(await readFile(state,'utf8'));
   const bigTool={id:'large-tool',type:'commandExecution',status:'completed',command:'fixture',aggregatedOutput:'Synthetic result '.repeat(10000)};
   saved.threads[receipt.chatId].turns[0].items.push(bigTool);
   await writeFile(state,JSON.stringify(saved));
   await start();await post('/workers/connect',{id:'codex'});
+  assert.equal((await get('/delivery?clientMessageId='+removedId)).status,'cancelled');
   const full=await get('/thread?id='+receipt.chatId);
   const compact=await get('/thread?view=chat&id='+receipt.chatId);
   const findTool=result=>result.thread.turns[0].items.find(item=>item.id==='large-tool');

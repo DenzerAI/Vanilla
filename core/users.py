@@ -176,7 +176,7 @@ def chat_id_of(value, depth=0):
     return id if isinstance(id, str) else None
 
 
-def routes(users, code_configured=lambda: True):
+def routes(users, code_configured=lambda: True, set_access=None):
     router = APIRouter()
 
     def me(request):
@@ -189,15 +189,24 @@ def routes(users, code_configured=lambda: True):
     @router.get("/api/users")
     async def list_users(request: Request):
         user = me(request)
-        return {"users": users.list() if user["role"] == "owner" else [u for u in users.list() if u["id"] == user["id"]], "me": user}
+        return {"users": users.list() if user["role"] == "owner" else [u for u in users.list() if u["id"] == user["id"]], "me": user, "accessConfigured": bool(code_configured())}
 
     @router.post("/api/users")
     async def create_user(request: Request):
         owner_only(request)
-        if not code_configured():
-            # Ohne Zugangscode gäbe es keinen Rückweg, wenn der letzte Eigentümer sein Passwort verliert.
-            raise HTTPException(409, "Zuerst unter Zugang einen Zugangsschlüssel setzen. Er bleibt der Rückweg, falls ein Passwort verloren geht.")
         body = await request.json()
+        if not code_configured():
+            # Ohne Zugangsschlüssel gäbe es keinen Rückweg, wenn der letzte Eigentümer sein Passwort verliert.
+            key = body.get("accessKey")
+            if not isinstance(key, str) or len(key) < 8:
+                raise HTTPException(409, "Für das erste Konto braucht die Installation einen Rückweg-Schlüssel mit mindestens 8 Zeichen.")
+            if body.get("role", "member") != "owner":
+                raise HTTPException(409, "Das erste Konto muss ein Eigentümer sein.")
+            users.validate(body.get("name"), body.get("password"), "owner")
+            if set_access is None:
+                raise HTTPException(503, "Zugangsschlüssel können hier nicht gesetzt werden.")
+            import asyncio
+            await asyncio.to_thread(set_access, key)
         return users.create(body.get("name"), body.get("password"), body.get("role", "member"))
 
     @router.post("/api/users/{id}/password")

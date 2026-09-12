@@ -1274,8 +1274,8 @@ neuen Nutzen. Dringende Rückfragen behalten Vorrang.
 
 DeliveryMark verwendet vorhandene Check-, Clock- und AlertCircle-Icons in muted
 direkt unter der Nachrichtenblase. Zwei Checks stehen leicht versetzt als ein
-zusammenhängendes Symbol. Keine Statusfarben oder sichtbaren Erklärungstexte;
-Tooltip und zugänglicher Name bleiben vorhanden. Layout, Fehlerbedienung und
+zusammenhängendes Symbol. Keine Statusfarben; Fehler nennen zusätzlich „Nicht gesendet“ oder
+„Zustellung unklar“. Tooltip und zugänglicher Name bleiben vorhanden. Layout, Fehlerbedienung und
 Datenvertrag stehen in surfaces/chat.md.
 
 Alle SystemNotice-Zustände einschließlich Updates stehen oben rechts mit space-16

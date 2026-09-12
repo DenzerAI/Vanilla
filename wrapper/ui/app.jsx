@@ -933,7 +933,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   }
   async function refreshChats() {
     const r = await api("/chats?view=sidebar");
-    setChats([...r.chats,...messageOutbox.snapshot().filter(e=>!e.chatId).map(e=>({id:e.localId,projectId:e.projectId,title:e.text.slice(0,40)||"Neue Nachricht",updatedAt:e.createdAt}))]);
+    setChats([...r.chats,...messageOutbox.snapshot().filter(e=>!e.chatId && e.status !== 'cancelled').map(e=>({id:e.localId,projectId:e.projectId,title:e.text.slice(0,40)||"Neue Nachricht",updatedAt:e.createdAt}))]);
     for (const c of r.chats) if(c.locked && !locallyLocked(c.id)) privacyChanged(c.id);
     setActive(r.active);
   }
@@ -1318,7 +1318,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     return()=>outboxListeners.delete(setOutboxEntries);
   },[boot?.workspace,boot?.features?.messageDelivery]);
   useEffect(()=>{
-    const mapping=outboxEntries.map(e=>e.clientMessageId+":"+e.chatId).join("|");
+    const mapping=outboxEntries.map(e=>e.clientMessageId+":"+e.chatId+":"+e.status).join("|");
     if(deliveryChatList.current!==mapping){
       deliveryChatList.current=mapping;
       void refreshChats().catch(()=>{});

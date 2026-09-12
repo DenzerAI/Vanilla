@@ -361,7 +361,7 @@ def create_app(config=None):
     app.include_router(mail_workflow_routes(mail.workflow))
     app.include_router(calendar_routes(calendar))
     app.include_router(update_routes(github, updates, contributions))
-    app.include_router(user_routes(users, lambda: config.login_required))
+    app.include_router(user_routes(users, lambda: config.login_required, operations.configure_access))
 
     @app.post("/internal/update-operator")
     async def update_operator(request: Request):

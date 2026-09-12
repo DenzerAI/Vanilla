@@ -193,7 +193,7 @@ test('recovery refuses wrong chat, active dispatch, and restores state after a f
  let receipt=f.queue.get(input().clientMessageId);
  const action={clientMessageId:receipt.clientMessageId,id:'chat',action:'discard',revision:receipt.revision};
  await assert.rejects(f.queue.action({...action,id:'other'}),/anderen Chat/);
- await assert.rejects(f.queue.action(action),/Status/);
+ await assert.rejects(f.queue.action(action),/status/);
  finish({turn:{id:'turn'}});await flush();
  receipt=f.queue.entries[0];receipt.status='unknown';receipt.phase='dispatching';
  f.store.save=async()=>{throw Error('disk full');};

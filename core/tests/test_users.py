@@ -164,12 +164,24 @@ def test_member_cannot_read_foreign_chat_files_or_create_accounts_without_code(c
         assert client.get("/api/file/text?path=notes/a.md").status_code == 503
 
 
-def test_first_account_requires_access_code(config):
+def test_first_account_sets_access_key_in_one_step(config):
     app = create_app(config)
     with TestClient(app) as client:
         headers = csrf(client)
+        assert client.get("/api/users").json()["accessConfigured"] is False
         response = client.post("/api/users", headers=headers, json={"name": "Christian", "password": "geheim123", "role": "owner"})
-        assert response.status_code == 409 and "Zugangsschlüssel" in response.json()["error"]
+        assert response.status_code == 409 and "Rückweg" in response.json()["error"]
+        assert client.post("/api/users", headers=headers, json={"name": "Christian", "password": "geheim123", "role": "member", "accessKey": "rueckweg-1234"}).status_code == 409
+        assert client.post("/api/users", headers=headers, json={"name": "C", "password": "geheim123", "role": "owner", "accessKey": "rueckweg-1234"}).status_code == 400
+        assert client.get("/api/users").json()["accessConfigured"] is False
+        created = client.post("/api/users", headers=headers, json={"name": "Christian", "password": "geheim123", "role": "owner", "accessKey": "rueckweg-1234"})
+        assert created.status_code == 200 and created.json()["role"] == "owner"
+        # Ab jetzt ist die Anmeldung Pflicht; Konto und Rückweg-Schlüssel funktionieren beide.
+        assert client.get("/api/core/status").status_code == 401
+        assert login(client, name="Christian", password="geheim123").status_code == 200
+        assert client.get("/api/users").json()["accessConfigured"] is True
+        client.post("/api/auth/logout", headers=csrf(client))
+        assert login(client, token="rueckweg-1234").status_code == 200
 
 
 def test_nested_request_events_and_paths_are_recognized():
