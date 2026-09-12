@@ -481,6 +481,7 @@
 /* Calendar: generous canvas, compact content and a shared ISO-week gutter. */
 .planner-full-calendar { max-width: none; }
 .planner-full-calendar .page-heading { margin-bottom: var(--space-8); }
+.planner-full-calendar .page-heading h1 { font-size: var(--text-section); line-height: var(--leading-tight); }
 .planner-full-calendar .planner-calendar-toolbar { display: flex; align-items: center; gap: var(--space-12); margin: 0 0 var(--space-12); }
 .planner-full-calendar .planner-period { flex: 0 0 auto; gap: var(--space-4); }
 .planner-full-calendar .planner-calendar-toolbar .tabs { order: 1; margin: 0 auto; }
@@ -551,6 +552,7 @@
   .calendar-weekday-short { display: inline; }
 }
 @media (max-width: 650px) {
+  .planner-full-calendar .page-heading h1 { font-size: var(--text-heading); }
   .planner-full-calendar .planner-calendar-toolbar { gap: var(--space-8); }
   .planner-full-calendar .planner-period { flex-basis: auto; }
   .planner-full-calendar .planner-date-jump { flex: 0 1 132px; margin-left: auto; order: 0; }
