@@ -28,6 +28,8 @@ def classify(messages):
         return result('focus', 'Möglicher Zahlungs-, Sicherheits- oder Fristfall. Bleibt im Fokus.')
     if any(x.get('outgoing') for x in ordered) or re.match(r'\s*(?:re|aw|fwd|wg)\s*:', subject):
         return result('focus', 'Antwort oder bestehender Austausch. Bleibt im Fokus.')
+    if re.match(r'\s*(?:frage|rückfrage|anfrage|bitte|question|request)\b', subject):
+        return result('focus', 'Mögliche persönliche Anfrage. Bleibt im Fokus.')
     if m.get('oversized'):
         return result('focus', 'Nachricht nicht vollständig vorhanden. Bleibt im Fokus.')
     if re.search(r'\b(?:rechnung|invoice|receipt|zahlungsbeleg|bestellbestätigung|auftragsbestätigung|order confirmation|versandbestätigung|shipping confirmation|lieferbestätigung)\b', subject):

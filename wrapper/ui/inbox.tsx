@@ -3,7 +3,6 @@ import React, { useEffect, useLayoutEffect, useRef, useState, type ComponentType
 import { createPortal } from "react-dom";
 import { ArrowLeft, Check, FileText, Inbox, Search, MoreHorizontal, SlidersHorizontal, ChevronDown } from "./icons.jsx";
 import { BrandIcon } from "./brand-icon.jsx";
-import { FilterPicker } from "./filter-picker.jsx";
 import { Modal } from "./modal.jsx";
 import "./inbox.css";
 import {inboxCategories, inboxSections} from './inbox-triage.mjs';
@@ -251,10 +250,10 @@ export function InboxPage({ PageHeading, sidebarHost, sidebarVisible, onShowSide
     </section>
     {filterOpen&&<Modal title="Inbox filtern" onClose={()=>setFilterOpen(false)}>
       <div className="inbox-filter-fields">
-        <FilterPicker label="Kanal" value={provider} onChange={setProvider} disabled={false} options={[{value:'all',label:'Alle Kanäle'},...['Gmail','Outlook','WhatsApp','Telegram'].map(value=>({value,label:value}))]}/>
-        <FilterPicker label="Postfach" value={account} onChange={setAccount} disabled={false} options={[{value:'all',label:'Alle Postfächer'},...accounts.map(a=>({value:a.id,label:a.address}))]}/>
-        <FilterPicker label="Status" value={filter} onChange={setFilter} disabled={false} options={[{value:'open',label:'Offen'},{value:'unread',label:'Ungelesen'},{value:'done',label:'Erledigt'},{value:'all',label:'Alle Status'}]}/>
-        <FilterPicker label="Einordnung" value={category} onChange={setCategory} disabled={false} options={[{value:'all',label:'Alle Einordnungen'},...inboxCategories]}/>
+        <label className="field"><span>Kanal</span><select value={provider} onChange={e=>setProvider(e.target.value)}><option value="all">Alle Kanäle</option>{['Gmail','Outlook','WhatsApp','Telegram'].map(value=><option key={value} value={value}>{value}</option>)}</select></label>
+        <label className="field"><span>Postfach</span><select value={account} onChange={e=>setAccount(e.target.value)}><option value="all">Alle Postfächer</option>{accounts.map(a=><option key={a.id} value={a.id}>{a.address}</option>)}</select></label>
+        <label className="field"><span>Status</span><select value={filter} onChange={e=>setFilter(e.target.value)}>{[['open','Offen'],['unread','Ungelesen'],['done','Erledigt'],['all','Alle Status']].map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
+        <label className="field"><span>Einordnung</span><select value={category} onChange={e=>setCategory(e.target.value)}><option value="all">Alle Einordnungen</option>{inboxCategories.map(c=><option key={c.value} value={c.value}>{c.label}</option>)}</select></label>
       </div>
       <p className="muted">Die Grundtriage bündelt eindeutige Werbung, Belege und Routinemeldungen. Unklare Nachrichten bleiben im Fokus. Die Originalpostfächer bleiben unverändert.</p>
       <div className="modal-actions"><button type="button" onClick={()=>{setProvider('all');setAccount('all');setFilter('open');setCategory('all');}}>Zurücksetzen</button><button type="button" className="primary" onClick={()=>setFilterOpen(false)}>Anzeigen</button></div>
