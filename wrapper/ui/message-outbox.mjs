@@ -63,8 +63,7 @@ export function createMessageOutbox({storage, api, changed = () => {}, now = Dat
         ? await api('/delivery',entry.payload)
         : await api('/delivery?clientMessageId='+encodeURIComponent(entry.clientMessageId)+(entry.chatId?'&id='+encodeURIComponent(entry.chatId):''));
       if (!receipt?.clientMessageId) return; // Locked private receipt, never infer delivery.
-      Object.assign(entry,receipt,{error:receipt.error || ''});
-      save(); publish();
+      merge([receipt]);
     } catch(error) {
       if (entry.status === 'sending' || entry.status === 'offline') {
         entry.status = [400,401,403,404,413,423].includes(error.status) ? 'failed' : 'offline';
@@ -100,7 +99,10 @@ export function createMessageOutbox({storage, api, changed = () => {}, now = Dat
   function merge(receipts) {
     for (const receipt of receipts) {
       const old = entries.find(e=>e.clientMessageId===receipt.clientMessageId);
-      if (old) Object.assign(old,receipt,{mappingOnly:false});
+      if (old) {
+        if (old.status === 'cancelled' || (old.revision || 0) > (receipt.revision || 0)) continue;
+        Object.assign(old,receipt,{mappingOnly:false});
+      }
       else entries.push(receipt);
     }
     save(); publish();

@@ -165,3 +165,50 @@ test('stale entries from an older page get their workspace back and phantom chat
  assert.equal(memory.size,0);assert.deepEqual(published,[]);
  assert.equal(second.discard('outbox-xyz'),false);
 });
+
+test('explicit recovery preserves attachments, deduplicates concurrent retries and old confirmations',async()=>{
+ const sent=[];const f=await fixture(async(id,payload)=>{sent.push(structuredClone(payload));throw Error('lost');});
+ await f.queue.accept({...input(),attachments:[{path:'input/document.pdf'}]});await flush();
+ const receipt=f.queue.get(input().clientMessageId);
+ const action={clientMessageId:receipt.clientMessageId,id:'chat',action:'retry',revision:receipt.revision,text:'Geändert'};
+ await assert.rejects(f.queue.action(action),/bestätigen/);
+ await Promise.all([f.queue.action({...action,confirmed:true}),f.queue.action({...action,confirmed:true})]);await flush();
+ assert.equal(sent.length,2);assert.equal(sent[1].text,'Geändert');assert.deepEqual(sent[1].attachments,[{path:'input/document.pdf'}]);
+ await f.queue.action({...action,confirmed:true});await flush();assert.equal(sent.length,2);
+});
+test('discard persists across restart and stale submissions cannot resurrect a message',async()=>{
+ const f=await fixture(async()=>{throw Error('lost');});await f.queue.accept(input());await flush();
+ const old=f.queue.get(input().clientMessageId);
+ await f.queue.action({clientMessageId:old.clientMessageId,id:'chat',action:'discard',revision:old.revision});
+ const restored=await new MessageDelivery({store:f.store}).init();
+ assert.equal(restored.get(old.clientMessageId).status,'cancelled');
+ assert.equal((await restored.accept(input())).status,'cancelled');
+ assert.equal(deliveryView({turns:[]},restored.list('chat')).length,0);
+ const local=input('22345678-1234-1234-1234-123456789012');
+ await restored.action({clientMessageId:local.clientMessageId,id:'chat',action:'discard'});
+ assert.equal((await restored.accept(local)).status,'cancelled');
+});
+test('recovery refuses wrong chat, active dispatch, and restores state after a failed save',async()=>{
+ let finish;const f=await fixture(()=>new Promise(r=>finish=r));await f.queue.accept(input());await flush();
+ let receipt=f.queue.get(input().clientMessageId);
+ const action={clientMessageId:receipt.clientMessageId,id:'chat',action:'discard',revision:receipt.revision};
+ await assert.rejects(f.queue.action({...action,id:'other'}),/anderen Chat/);
+ await assert.rejects(f.queue.action(action),/Status/);
+ finish({turn:{id:'turn'}});await flush();
+ receipt=f.queue.entries[0];receipt.status='unknown';receipt.phase='dispatching';
+ f.store.save=async()=>{throw Error('disk full');};
+ await assert.rejects(f.queue.action({...action,revision:receipt.revision}),/disk full/);
+ assert.equal(receipt.status,'unknown');
+});
+test('browser recovery retains a durable tombstone and clears a late confirmed error',async t=>{
+ const memory=new Map(),storage={getItem:k=>memory.get(k),setItem:(k,v)=>memory.set(k,v),removeItem:k=>memory.delete(k),keys:()=>[...memory.keys()]};
+ const f=await fixture(async()=>{throw Error('lost');});await f.queue.accept(input());await flush();
+ const api=async(url,body)=>body?f.queue.action(body):f.queue.get(input().clientMessageId);
+ const sender=createMessageOutbox({storage,api});t.after(()=>sender.stop());sender.start('test');sender.merge(f.queue.list('chat'));
+ await sender.recover(input().clientMessageId,'discard');sender.stop();
+ const next=createMessageOutbox({storage,api});t.after(()=>next.stop());next.start('test');await flush();
+ assert.equal(next.snapshot()[0].status,'cancelled');assert.equal(deliveryView({},next.snapshot()).length,0);
+ const confirmed={...input(),status:'started',turnId:'turn',revision:100,error:''};
+ next.merge([{...confirmed,clientMessageId:'late',status:'unknown',revision:99,error:'lost'}]);next.merge([{...confirmed,clientMessageId:'late'}]);
+ assert.equal(next.snapshot().find(e=>e.clientMessageId==='late').error,'');
+});

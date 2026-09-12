@@ -1647,3 +1647,13 @@ mit 360 px, Ziehen bleibt ab 280 px möglich; mobile Schließen-Aktion bleibt si
 Bei sichtbarem Update-/Neustarthinweis reservieren Chat-Kopfaktionen und
 Ablage-Kopf darunter die vorhandene Touchhöhe plus space-16, damit der schwebende
 Hinweis Öffnen, Vergrößern und Schließen nicht überdeckt.
+
+
+### Aktionen für nicht bestätigte Nachrichten
+
+Fehlerbelege nutzen die vorhandene Nachrichtenaktionszeile mit IconButton und
+CopyButton. Wiederholen, Bearbeiten und Löschen bleiben bei Fehlern auch ohne
+Hover sichtbar, die Zeile darf auf schmalen Ansichten umbrechen. Der Status nennt
+„Nicht gesendet“ oder „Zustellung unklar“. Der gemeinsame Modal erläutert vor
+Wiederholung eines unklaren Versands die mögliche doppelte Ausführung; Bearbeiten
+verwendet Field und textarea, Löschen den vorhandenen danger-Button.

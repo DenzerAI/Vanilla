@@ -1144,8 +1144,7 @@ sichtbaren Arm, sodass er hinter dem ersten liegt statt ihn zu kreuzen.
 Einzelzeichen 10 × 10 px, Doppelzeichen 15 × 10 px, feine gerundete Konturen
 mit 1.5 SVG-Einheiten Strichstärke. Uhrzeit und Status bilden eine vertikal
 zentrierte, nicht umbrechende Gruppe mit 4 px Abstand, Status direkt hinter der Zeit.
-Diese Gruppe bleibt auch vor dem Workerstart sichtbar; nur die noch nicht
-verfügbaren Nachrichtenaktionen fehlen.
+Diese Gruppe bleibt auch vor dem Workerstart sichtbar. Fehlernachrichten bieten die unten beschriebenen Wiederherstellungsaktionen.
 Fehleraktionen behalten ihre zugängliche Bedienfläche. Unser Design zeigt beide
 Bestätigungen am produktiven Bubblelayout. Reine Darstellung, keine Datenmigration.
 Nachricht, Zeit und bestehende Aktionen bleiben erhalten.
@@ -1605,3 +1604,28 @@ IconButton, VoiceStatus und bestehende Tokens gelten auch mobil; RecordingPrevie
 zeigt das Muster unter Unser Design. Rückfragen bleiben an die konkrete Frage
 gebunden. Keine Datenmigration. Wiederherstellung und Hintergrundgrenzen führt
 [DICTATION.md](../DICTATION.md#aufnahme-beim-navigieren).
+
+
+### Fehlernachrichten wiederherstellen · Version 1.1.0
+
+Nicht bestätigte Nachrichten zeigen „Nicht gesendet“ beziehungsweise „Zustellung
+unklar“. In ihrer vorhandenen Aktionszeile bleiben IconButtons für erneutes Senden,
+Bearbeiten, Kopieren und Löschen ohne Hover erreichbar. Der gemeinsame Modal zeigt
+bei unbekanntem Ausgang vor Wiederholung den Hinweis auf mögliche doppelte
+Ausführung. Bearbeiten ändert den Text für den erneuten Versand, erhält alle
+Anhänge und überschreibt keinen Composerentwurf. Löschen entfernt nur den offenen
+Beleg, keinen Folgeverlauf; bereits ausgeführte Arbeit bleibt bestehen.
+
+POST /api/delivery/action verwendet die bestehende Kennung, Chat-ID und revision.
+Explizite Wiederholung verlangt bei unknown confirmed=true. Veraltete Aktionen
+liefern nur den aktuellen Beleg; laufende Übergaben werden nicht erneut gestartet
+oder entfernt. cancelled bleibt dauerhaft als Wiederholungsschutz gespeichert,
+auch für zuvor nur lokal abgewiesene Nachrichten. Browser und Verlauf blenden
+solche Belege aus, ältere Statusantworten dürfen sie nicht wiederherstellen.
+Unklare Belege werden automatisch abgefragt, niemals automatisch erneut gesendet.
+Bestätigte Starts entfernen den Fehlerhinweis. Fehlertexte werden nicht automatisch
+gelöscht. Zusatzfelder sind additiv in Version 1; ältere UIs können cancelled
+falsch darstellen, deshalb UI und Server zusammen zurücksetzen beziehungsweise
+vor Rückkehr die betroffenen Belege berücksichtigen. Keine Änderung nativer Chats.
+Prüfung: Wiederholungsrennen, Anhänge, falscher Chat, Speicherfehler, Neustart,
+Browserwiederherstellung sowie Desktop und mobile Emulation.
