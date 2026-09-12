@@ -38,6 +38,13 @@ def iso(value):
         return value
     return datetime.fromtimestamp(float(value or 0),timezone.utc).isoformat()
 
+# Classify by provider type, never by text or @lid: real messages can contain IDs.
+WHATSAPP_INTERNAL_TYPES = frozenset({
+    'e2e_notification', 'protocol', 'message_history_notice',
+    'status_notification', 'debug',
+})
+VISIBLE_MESSAGE_SQL = "COALESCE(json_extract(data,'$.internal'),0)=0"
+
 class Connection(BaseModel):
     id: str = ''
     projectId: str = 'default'
@@ -192,19 +199,21 @@ class Messenger:
         _,chats,messages,reactions=self.read_source(c['source_db'])
         by_reaction={}
         for r in reactions:by_reaction.setdefault(r['msg_id'],[]).append({'sender':r['sender_jid'],'emoji':r['emoji']})
-        threads=[{'external':r['id'],'sender':r['name'] or r['id'].split('@')[0],'updated':iso(r['last_message_ts']),'unread':bool(r['unread_count'])} for r in chats]
+        threads=[{'external':r['id'],'sender':r['name'] or r['id'].split('@')[0],'updated':iso(0),'unread':bool(r['unread_count'])} for r in chats]
         known={r['external'] for r in threads}
         normalized=[]
         for m in messages:
             if m['chat_id'] not in known:
-                threads.append({'external':m['chat_id'],'sender':m['chat_id'].split('@')[0],'updated':iso(m['ts']),'unread':False});known.add(m['chat_id'])
+                threads.append({'external':m['chat_id'],'sender':m['chat_id'].split('@')[0],'updated':iso(0),'unread':False});known.add(m['chat_id'])
             media=self.copy_media(c,m['media_path'],m['id'],m['media_mime'])
-            normalized.append({'external':m['id'],'chat_id':m['chat_id'],'sender':m['sender_jid'] or '', 'text':m['body'] or '', 'time':iso(m['ts']),'outgoing':bool(m['from_me']),'type':m['type'],'replyTo':m['quoted_msg_id'],'ack':m['ack'],'media':media,'missingMedia':bool(m['has_media']) and not media,'transcript':m['transcript'] or '', 'reactions':by_reaction.get(m['id'],[]),'providerMetadata':m.get('raw_json') or ''})
+            normalized.append({'external':m['id'],'chat_id':m['chat_id'],'sender':m['sender_jid'] or '', 'text':m['body'] or '', 'time':iso(m['ts']),'outgoing':bool(m['from_me']),'type':m['type'],'internal':m['type'] in WHATSAPP_INTERNAL_TYPES,'replyTo':m['quoted_msg_id'],'ack':m['ack'],'media':media,'missingMedia':bool(m['has_media']) and not media,'transcript':m['transcript'] or '', 'reactions':by_reaction.get(m['id'],[]),'providerMetadata':m.get('raw_json') or ''})
         self.ingest(c,threads,normalized)
         return {'chats':len(threads),'messages':len(normalized),'media':sum(bool(m['media']) for m in normalized)}
 
     def ingest(self,c,threads,messages):
         with self.db.transaction() as cx:
+            if c['provider']=='whatsapp':
+                self.repair_whatsapp_activity(cx,c['id'])
             initial=set()
             for t in threads:
                 id=ident(c['id'],t['external'])
@@ -217,12 +226,36 @@ class Messenger:
                 old=cx.execute('SELECT data FROM messenger_messages WHERE id=?',(mid,)).fetchone()
                 if old and old[0]==data:continue
                 cx.execute('INSERT INTO messenger_messages(id,thread_id,external,time,data) VALUES(?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data,time=excluded.time',(mid,tid,m['external'],m['time'],data))
-                if not old:
+                if not old and not m.get('internal'):
                     cx.execute('UPDATE messenger_threads SET revision=revision+1,done=0,updated=MAX(updated,?) WHERE id=?',(m['time'],tid))
                 changed.add(tid)
+            if c['provider']=='whatsapp':
+                # Source chat timestamps include encryption/protocol events. Recompute
+                # from locally retained visible messages, including pending source echoes.
+                cx.execute(f"UPDATE messenger_threads SET updated=COALESCE((SELECT MAX(time) FROM messenger_messages WHERE thread_id=messenger_threads.id AND {VISIBLE_MESSAGE_SQL}),?) WHERE connection_id=?",(iso(0),c['id']))
             for tid in initial:cx.execute('UPDATE messenger_threads SET seen=revision WHERE id=?',(tid,))
             cx.execute('UPDATE messenger_connections SET updated=? WHERE id=?',(time(),c['id']))
         if changed:self.db.event('messenger.changed',c['id'],{})
+
+    @staticmethod
+    def repair_whatsapp_activity(cx,connection_id):
+        """Reclassify legacy imports once without deleting source/provider records.
+
+        Revision counted inserts, so rowid order reconstructs the old seen boundary.
+        Keep genuine unread contributions while removing only previously counted events.
+        """
+        for t in cx.execute('SELECT id,revision,seen FROM messenger_threads WHERE connection_id=?',(connection_id,)).fetchall():
+            rows=cx.execute('SELECT id,data FROM messenger_messages WHERE thread_id=? ORDER BY rowid',(t['id'],)).fetchall()
+            counted=[(r,json.loads(r['data'])) for r in rows if not json.loads(r['data']).get('internal')]
+            removed=removed_seen=0
+            for index,(r,m) in enumerate(counted):
+                if m.get('type') not in WHATSAPP_INTERNAL_TYPES:continue
+                m['internal']=True
+                cx.execute('UPDATE messenger_messages SET data=? WHERE id=?',(dump(m),r['id']))
+                removed+=1
+                if index<t['seen']:removed_seen+=1
+            if removed:
+                cx.execute('UPDATE messenger_threads SET revision=MAX(0,revision-?),seen=MAX(0,seen-?) WHERE id=?',(removed,removed_seen,t['id']))
 
     async def sync(self,id,project):
         async with self.lock(id):
@@ -252,7 +285,7 @@ class Messenger:
 
     def detail(self,id,project,before=''):
         t=self.thread(id,project)
-        rows=self.db.rows('SELECT * FROM messenger_messages WHERE thread_id=? AND (?=\'\' OR (time || id) < ?) ORDER BY time DESC,id DESC LIMIT 101',(id,before,before))
+        rows=self.db.rows(f"SELECT * FROM messenger_messages WHERE thread_id=? AND {VISIBLE_MESSAGE_SQL} AND (?='' OR (time || id) < ?) ORDER BY time DESC,id DESC LIMIT 101",(id,before,before))
         more=len(rows)>100;rows=rows[:100]
         messages=[]
         for r in reversed(rows):

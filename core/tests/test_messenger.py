@@ -163,3 +163,52 @@ def test_unknown_send_stays_blocked_after_client_reload(service,tmp_path):
     for request in ['before-reload-request','after-reload-request']:
         with pytest.raises(ValueError):asyncio.run(service.send(Send(id=t['id'],version=1,requestId=request)))
     assert len(calls)==1
+
+
+def test_whatsapp_internal_events_do_not_move_or_reopen_chat(service,tmp_path):
+    from core.messenger import iso
+    c,t=setup(service,tmp_path)
+    service.mark(Action(id=t['id'],revision=t['revision']))
+    service.mark(Action(id=t['id'],done=True))
+    with sqlite3.connect(c['source_db']) as cx:
+        for n in range(105):
+            cx.execute('INSERT INTO messages VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                       (f'security-{n}','peer@c.us','internal',0,200+n,'e2e_notification','123@lid',None,0,None,None,'',0))
+        cx.execute('UPDATE chats SET last_message_ts=400,unread_count=105')
+    for _ in range(2):
+        service.import_whatsapp(c)
+        current=service.thread(t['id'],'default')
+        assert current['updated']==iso(101)
+        assert current['revision']==current['seen']==2
+        assert current['done']==1
+        detail=service.detail(t['id'],'default')
+        assert len(detail['messages'])==2 and detail['nextBefore'] is None
+    # An actual text message containing an LID is still a message.
+    with sqlite3.connect(c['source_db']) as cx:
+        cx.execute('INSERT INTO messages VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?)',
+                   ('real','peer@c.us','person@lid',0,500,'chat','123@lid',None,0,None,None,'',0))
+    service.import_whatsapp(c)
+    current=service.thread(t['id'],'default')
+    assert current['updated']==iso(500) and current['revision']==3
+    assert current['seen']==2 and current['done']==0
+    assert service.detail(t['id'],'default')['messages'][-1]['text']=='123@lid'
+
+
+@pytest.mark.parametrize('seen,expected_seen',[(2,2),(3,2),(4,3)])
+def test_legacy_system_entries_repair_sorting_and_keep_real_unread(service,tmp_path,seen,expected_seen):
+    from core.messenger import iso
+    c,t=setup(service,tmp_path)
+    # Simulate old importer counting an internal event followed by a real message.
+    service.ingest(c,[],[
+        {'external':'legacy','chat_id':'peer@c.us','type':'e2e_notification','text':'123@lid','time':iso(900),'outgoing':False,'sender':'internal'},
+        {'external':'real','chat_id':'peer@c.us','type':'chat','text':'Hi','time':iso(300),'outgoing':False,'sender':'person'},
+    ])
+    service.mark(Action(id=t['id'],revision=seen))
+    for _ in range(2):
+        service.import_whatsapp(c)
+        current=service.thread(t['id'],'default')
+        assert current['updated']==iso(300)
+        assert current['revision']==3 and current['seen']==expected_seen
+        assert len(service.detail(t['id'],'default')['messages'])==3
+    # The provider record survives for diagnosis; it is not a chat bubble.
+    assert len(service.db.rows('SELECT id FROM messenger_messages WHERE thread_id=?',(t['id'],)))==4
