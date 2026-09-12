@@ -3100,7 +3100,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
           {modal.action === 'discard' ? <p>Diese nicht bestätigte Nachricht wird aus dem Postausgang entfernt. Bereits gestartete Arbeit wird dadurch nicht rückgängig gemacht.</p> : <>
             {modal.receipt.status === 'unknown' && <p role="alert">Die Nachricht könnte bereits angekommen sein. Erneutes Senden kann den Auftrag doppelt ausführen.</p>}
             {modal.action === 'edit' ? <Field label="Nachricht"><textarea name="text" defaultValue={modal.receipt.text || ''} rows={5} autoFocus/></Field> : <p>{modal.receipt.text || 'Nachricht mit Anhang'}</p>}
-            {!!modal.receipt.attachments?.length && <p className="form-help">{modal.receipt.attachments.length} Anhänge werden erneut mitgesendet.</p>}
+            {!!modal.receipt.attachments?.length && <p className="form-help">Anhänge bleiben beim erneuten Senden erhalten.</p>}
           </>}
           <div className="row"><button type="button" disabled={busy} onClick={()=>setModal(null)}>Abbrechen</button>
             <button type="submit" disabled={busy} className={modal.action === 'discard' ? 'danger' : 'primary'}>{modal.action === 'discard' ? 'Nachricht löschen' : 'Erneut senden'}</button></div>

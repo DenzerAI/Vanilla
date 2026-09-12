@@ -332,7 +332,7 @@
      descendants must not leave a painted copy behind after pointer exit. Keep
      the buttons themselves focusable so Tab can reveal the action row. */
   .agent-message:not([data-pointer-hover]):not(:has(:focus-visible)) .agent-actions > :is(button, .copy-feedback):not([aria-pressed="true"]) svg,
-  .user-message-row:not([data-pointer-hover]):not(:has(:focus-visible)) .user-actions > :is(button, .copy-feedback) svg { visibility: hidden; }
+  .user-message-row:not([data-pointer-hover]):not(:has(:focus-visible)):not(:has(.message-delivery button)) .user-actions > :is(button, .copy-feedback) svg { visibility: hidden; }
 }
 @media (pointer: coarse) {
   .message-actions .icon-button { min-width: var(--control-touch); min-height: var(--control-touch); }
