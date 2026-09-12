@@ -44,9 +44,7 @@ function RecordingHost({store,control}) {
   },[floating]);
   if(!source)return null;
   const renderSurface=content=>createPortal(floating ? <div ref={capsule} className="recording-capsule" role="group" aria-label={state.phase==='paused'?'Pausierte Aufnahme':'Laufende Aufnahme'} data-capability="chat.dictation.persistent" data-phase={state.phase}>
-    <button type="button" className="recording-origin" title={`Zurück zu ${source.title}`} onClick={source.onReturn}>
-      <span className="recording-dot" aria-hidden="true"/><span>{source.title}</span>
-    </button>{content}
+    <IconButton className="recording-origin" label={`Zum ursprünglichen Entwurf: ${source.title}`} data-icon-motion="off" onClick={source.onReturn}><Mic size={16}/></IconButton>{content}
   </div> : content,anchor?.node || document.body);
   return <Dictation {...source.props} autoStart controlRef={control} onDone={()=>store.done()} onPhaseChange={phase=>store.phase(phase)}
     floating={floating} renderSurface={renderSurface} onText={text=>{
@@ -98,13 +96,31 @@ export function DictationComposer({sourceKey,title,visible,onReturn,controlRef,.
   </div>;
 }
 
+function RecordingMark({phase}) {
+  const label=phase==='recording'?'Aufnahme läuft':phase==='paused'?'Aufnahme pausiert':'Diktat wird vorbereitet';
+  return <span className="recording-mark" data-phase={phase} data-icon-motion="off" role="img" aria-label={label} title={label}>
+    {phase==='paused'?<Pause size={12}/>:<span className="recording-symbol" aria-hidden="true"/>}
+  </span>;
+}
+
+export function RecordingIndicator({chatId,paneNumber}) {
+  const {store}=useContext(RecordingContext);
+  const state=useSyncExternalStore(store.subscribe,store.snapshot);
+  if(!state.source || state.source.props.chatId!==chatId || paneNumber!==undefined && state.source.props.paneNumber!==paneNumber)return null;
+  return <RecordingMark phase={state.phase}/>;
+}
+
 export function RecordingPreview() {
   const [paused,setPaused]=useState(false),[stopped,setStopped]=useState(false);
-  return <div className="recording-capsule recording-preview" data-phase={stopped?'idle':paused?'paused':'recording'} role="group" aria-label="Aufnahmekapsel-Beispiel">
-    <button type="button" className="recording-origin" onClick={()=>{setStopped(false);setPaused(false);}}><span className="recording-dot" aria-hidden="true"/><span>Entwurf · Projektplanung</span></button>
-    <div className="voice-strip" data-capturing={!stopped}><span className="voice-phase" role="status">{stopped?'Im Entwurf':paused?'Pausiert':'Diktat'}</span><span className="voice-time">1:24</span>
-      <IconButton label={paused?'Fortsetzen':'Pause'} disabled={stopped} onClick={()=>setPaused(!paused)}>{paused?<Play size={18}/>:<Pause size={18}/>}</IconButton>
-      <IconButton label="Aufnahme beenden" disabled={stopped} onClick={()=>setStopped(true)}><Square size={18}/></IconButton>
+  const phase=stopped?'idle':paused?'paused':'recording';
+  return <div className="recording-example">
+    <div className="row"><span>Projektplanung</span>{!stopped&&<RecordingMark phase={phase}/>}</div>
+    <div className="recording-capsule recording-preview" data-phase={phase} role="group" aria-label="Aufnahmepille-Beispiel">
+      <IconButton className="recording-origin" label="Zum Entwurf · Beispiel zurücksetzen" data-icon-motion="off" onClick={()=>{setStopped(false);setPaused(false);}}><Mic size={16}/></IconButton>
+      <div className="voice-strip" data-capturing={!stopped}><span className="voice-phase" role="status">{stopped?'Im Entwurf':paused?'Pausiert':'Diktat'}</span><span className="voice-time">1:24</span>
+        <IconButton label={paused?'Fortsetzen':'Pause'} disabled={stopped} onClick={()=>setPaused(!paused)}>{paused?<Play size={18}/>:<Pause size={18}/>}</IconButton>
+        <IconButton label="Aufnahme beenden und in Entwurf übernehmen" disabled={stopped} onClick={()=>setStopped(true)}><Square size={18}/></IconButton>
+      </div>
     </div>
   </div>;
 }

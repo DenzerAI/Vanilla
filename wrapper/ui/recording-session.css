@@ -1,9 +1,6 @@
 .dictation-anchor { display: flex; align-items: center; }
-.recording-capsule { position: fixed; top: max(var(--space-16), env(safe-area-inset-top)); right: max(var(--space-16), env(safe-area-inset-right)); z-index: 100; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: var(--space-8); width: min(360px, calc(100vw - var(--space-32))); padding: var(--space-8) var(--space-12); border: 1px solid var(--border); border-radius: var(--radius-large); background: var(--surface); color: var(--text); box-shadow: var(--popover-glass-shadow); }
-.recording-origin { display: flex; align-items: center; justify-content: flex-start; gap: var(--space-8); min-height: var(--control-touch); min-width: 0; width: 100%; padding: 0; text-align: left; font-size: var(--text-small); color: var(--text); }
-.recording-origin > span:last-child { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.recording-dot { flex: 0 0 var(--space-8); width: var(--space-8); height: var(--space-8); border-radius: var(--radius-pill); background: var(--danger); }
-.recording-capsule:not([data-phase="recording"]) .recording-dot { background: var(--muted); }
+.recording-capsule { position: fixed; top: max(var(--space-16), env(safe-area-inset-top)); right: max(var(--space-16), env(safe-area-inset-right)); z-index: 100; display: grid; grid-template-columns: auto auto; align-items: center; gap: 0; width: max-content; max-width: calc(100vw - var(--space-32)); padding: 0 var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-pill); background: var(--surface); color: var(--text); box-shadow: var(--shadow-small); }
+.recording-capsule .recording-origin { color: var(--muted); flex-shrink: 0; }
 .recording-capsule .dictation-control, .recording-capsule .voice-strip { width: auto; }
 .recording-capsule .voice-strip { flex-wrap: nowrap; justify-content: flex-start; }
 .recording-capsule .voice-wave-slot { display: none; }
@@ -21,3 +18,11 @@
 
 .recording-capsule .voice-strip[data-capturing="true"] :is(.voice-status, .voice-phase) { display: none; }
 .recording-capsule:has(.voice-issue) { grid-template-columns: minmax(0, 1fr); }
+
+.recording-mark { display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; width: var(--space-16); height: var(--space-16); color: var(--danger); }
+.recording-mark:not([data-phase="recording"]) { color: var(--muted); }
+.recording-symbol { display: flex; width: var(--space-12); height: var(--space-12); padding: var(--space-2); border: 1px solid currentColor; border-radius: var(--radius-pill); }
+.recording-symbol::after { content: ""; width: 100%; height: 100%; border-radius: var(--radius-pill); background: currentColor; }
+.recording-example { display: grid; gap: var(--space-12); }
+.recording-capsule .voice-strip { gap: var(--space-4); }
+.recording-capsule:has(.voice-issue) { width: min(320px, calc(100vw - var(--space-32))); padding: var(--space-8) var(--space-12); border-radius: var(--radius-large); }

@@ -152,7 +152,7 @@ import { Avatar } from "./avatar.jsx";
 import { AvatarMotionSetting } from "./avatar-motion-setting.jsx";
 import { WelcomeParticles } from "./welcome-particles";
 import { nextChatGreeting } from "./chat-greetings.mjs";
-import { DictationComposer, RecordingProvider } from "./recording-session.jsx";
+import { DictationComposer, RecordingProvider, RecordingIndicator } from "./recording-session.jsx";
 import { appendDictation } from "./recording-session.mjs";
 import { SettingRow } from "./settings-row.jsx";
 import { ModelPicker } from "./model-picker.jsx";
@@ -2180,6 +2180,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                     >
                       <span className="project-glyph" style={{color:projectColor(modal?.type === "project" && modal.project?.id === space.id ? modal.color ?? space.color : space.color)}}>{icon(projectGlyphs[space.icon] || Folder, 17)}</span>
                       <span>{space.name}</span>
+                      <RecordingIndicator chatId={`draft:${space.id}`}/>
                       {icon(expandedProject === space.id ? ChevronDown : ChevronRight, 12)}
                     </button>
                     <ChatMenu label={"Workspace verwalten: " + space.name} className="icon-button" items={[
@@ -2208,6 +2209,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                         >
                           <button title={`${c.title} · ${relativeTime(c.updatedAt, listClock)}`} onClick={guard(() => openChat(c.id))}>
                             <span className="chat-row-title">{c.title}</span>
+                            <RecordingIndicator chatId={c.id}/>
                             {c.pinned && <span className="chat-pin" title="Angepinnt">{icon(Pin, 16)}</span>}
                             <span className="chat-age">{relativeTime(c.updatedAt, listClock)}</span>
                             {c.private && <span className="chat-row-lock" role="img" aria-label={c.locked ? "Gesperrt" : "Privat, entsperrt"}>{icon(Lock,15)}</span>}
@@ -2289,7 +2291,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
             </header>}
 
             {!embedded && !mobileViewport && paneOrder.length > 1 && (visible.length < paneOrder.length || maximizedPane) && <div className="pane-tabs" role="tablist" aria-label="Offene Chats">
-              {paneOrder.map((id,index) => { const session=sessions.current[id].current; return <button key={id} role="tab" tabIndex={activePane===id ? 0 : -1} onKeyDown={e=>{const offset=e.key==="ArrowRight"?1:e.key==="ArrowLeft"?-1:0;if(offset){e.preventDefault();const next=paneOrder[(paneOrder.indexOf(id)+offset+paneOrder.length)%paneOrder.length];activatePane(next);requestAnimationFrame(()=>panesRef.current?.parentElement.querySelector(`[aria-controls="chat-pane-${next}"]`)?.focus())}}} aria-selected={activePane===id} aria-controls={`chat-pane-${id}`} onClick={()=>activatePane(id)}>{session?.running ? <AppLoader /> : session?.unread ? icon(Check,14) : icon(MessageCircle,14)}<span>{session?.title || `Chat ${index+1}`}</span></button> })}
+              {paneOrder.map((id,index) => { const session=sessions.current[id].current; return <button key={id} role="tab" tabIndex={activePane===id ? 0 : -1} onKeyDown={e=>{const offset=e.key==="ArrowRight"?1:e.key==="ArrowLeft"?-1:0;if(offset){e.preventDefault();const next=paneOrder[(paneOrder.indexOf(id)+offset+paneOrder.length)%paneOrder.length];activatePane(next);requestAnimationFrame(()=>panesRef.current?.parentElement.querySelector(`[aria-controls="chat-pane-${next}"]`)?.focus())}}} aria-selected={activePane===id} aria-controls={`chat-pane-${id}`} onClick={()=>activatePane(id)}>{session?.running ? <AppLoader /> : session?.unread ? icon(Check,14) : icon(MessageCircle,14)}<span>{session?.title || `Chat ${index+1}`}</span><RecordingIndicator paneNumber={id} chatId={session?.id || `draft:${session?.projectId}`}/></button> })}
               {maximizedPane && <IconButton label="Aufteilung wiederherstellen" onClick={()=>setMaximizedPane(false)}>{icon(PanelLeft,16)}</IconButton>}
             </div>}
             <div className={"chat-panes " + (!embedded && visible.length > 1 ? "multiple" : "")} ref={embedded ? undefined : panesRef}>
@@ -2311,6 +2313,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
             >
               {draggingFiles && <div className="chat-file-drop" role="status">{icon(Paperclip,24)}<span>Dateien hier anhängen</span></div>}
               {!mobileViewport && (embedded ? showPaneHeader : paneOrder.length > 1) && <div className="pane-header"><div className="row">
+                <RecordingIndicator paneNumber={paneNumber} chatId={chatId || `draft:${projectId}`}/>
                 <ChatTitle session={localSession} compact extraItems={[
                   {id:"maximize-panel", label:(embedded ? isMaximized : maximizedPane) ? "Aufteilung wiederherstellen" : `Chat ${paneLabel} maximieren`, icon:icon(Maximize,16), action:()=>embedded ? onMaximize?.() : (activatePane(0),setMaximizedPane(v=>!v))},
                   {id:"close-panel", label:`Chat ${paneLabel} schließen`, icon:icon(X,16), action:()=>embedded ? onClosePane?.() : closePane(0)},
@@ -2468,7 +2471,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       }
                     }}
                   />
-                      <DictationComposer sourceKey={`${paneNumber}:${chatId || "new:"+projectId}:${questionState.request?.id || ""}:${questionState.question?.id || ""}`}
+                      <DictationComposer paneNumber={paneNumber} sourceKey={`${paneNumber}:${chatId || "new:"+projectId}:${questionState.request?.id || ""}:${questionState.question?.id || ""}`}
                         title={chatTitle} visible={view === "chat" && readablePane && selectedPane && !chatLocked}
                         onReturn={()=>window.dispatchEvent(new CustomEvent("wrapper/recording-return",{detail:{paneNumber,chatId,projectId}}))}
                         canSend={()=>draftKey()===(chatId || `new:${projectId}`) && !chatLocked}
