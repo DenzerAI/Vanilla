@@ -139,8 +139,8 @@
         "meaning": "Gespeicherte Termine, letzter erfolgreicher Abgleich, Fehler und abgedeckter Zeitraum je Anschluss. Keine Feeds bedeutet noch keinen erfolgreichen Kalenderabgleich."
       },
       "limits": "Eigene Einzeltermine anlegen, ändern und löschen. Externe Quellen getrennt zusammen anzeigen; Microsoft liest vollständig abgeglichene Fenster, keine externen Schreibaktionen. Weitere Anbieter benötigen eigene Adapter. Lücken sind Kalenderlücken innerhalb des ausdrücklich genannten Fensters 08–18 Uhr, keine Verfügbarkeitsgarantie.",
-      "version": 3,
-      "migration": "Version 2 legt calendar_local additiv und idempotent an. Eigene Termine und Löschmarkierungen bleiben in der vorhandenen SQLite-Sicherung erhalten; externe calendar_windows unverändert. Rückkehr zu Version 1 lässt lokale Termine auf Disk bestehen, zeigt sie aber nicht. Neuinstallation, Wiederöffnung, Projekttrennung und Versionskonflikte sind geprüft. Version 3 ersetzt die Kalenderlisten durch Monatsraster und Stundenraster. Bestehende Termine, APIs und Browserpräferenzen bleiben kompatibel; keine Datenmigration. Rückkehr zeigt dieselben Daten als Listen. UI-Vertrag wrapper/surfaces/today.md.",
+      "version": 4,
+      "migration": "Version 2 legt calendar_local additiv und idempotent an. Eigene Termine und Löschmarkierungen bleiben in der vorhandenen SQLite-Sicherung erhalten; externe calendar_windows unverändert. Rückkehr zu Version 1 lässt lokale Termine auf Disk bestehen, zeigt sie aber nicht. Neuinstallation, Wiederöffnung, Projekttrennung und Versionskonflikte sind geprüft. Version 3 ersetzt die Kalenderlisten durch Monatsraster und Stundenraster. Bestehende Termine, APIs und Browserpräferenzen bleiben kompatibel; keine Datenmigration. Rückkehr zeigt dieselben Daten als Listen. UI-Vertrag wrapper/surfaces/today.md. Version 4: Mo–Fr ist der Standard ohne gespeicherte Auswahl. Bestehende Browserpräferenzen und Termine bleiben erhalten; KW-Navigation und Halbstundenentwürfe verwenden die bestehenden APIs. Keine Datenmigration, Rückkehr zeigt Stundenraster und bisherigen Monatsaufbau.",
       "keywords": [
         "Microsoft",
         "Outlook",
@@ -926,7 +926,8 @@
       "verification": [
         "core/tests/test_operations.py",
         "core/tests/test_provider_vault.py",
-        "core/tests/test_recovery.py"
+        "core/tests/test_recovery.py",
+        "core/tests/test_integration.py"
       ],
       "status": {
         "endpoint": "GET /api/system/readiness",
@@ -934,7 +935,7 @@
       },
       "limits": "Betriebszustand, Login, Backup und Restore-Nachweis separat prüfen.",
       "version": 8,
-      "migration": "Alte Tresorformate 1/2 werden ausdrücklich nach .env migriert; vollständigen vorherigen Datenstand für den Rückweg erhalten. Details docs/VAULT.md. Fehlende oder fehlerhafte Suchberechnung bleibt als Einschränkung sichtbar; der Volltextindex bleibt nutzbar. Sicherungsschema 4; Schema 2/3 weiter lesbar. Restore setzt eine dauerhafte Betriebspause, quarantänisiert offene Übergaben und verhindert alte Zeitpläne. Details docs/OPERATIONS.md. Zugangsformat ENV: vorhandene verschlüsselte Zugänge vor neuen Schreibvorgängen offline mit core.vault_migrate übernehmen. .env bleibt privat und wird mit Daten kopiert. Rückweg benötigt vorherigen vollständigen Datenstand. Sicherungsschema 5 mit .env; Schema 2–4 werden bei Restore lokal konvertiert. Details docs/VAULT.md."
+      "migration": "Alte Tresorformate 1/2 werden ausdrücklich nach .env migriert; vollständigen vorherigen Datenstand für den Rückweg erhalten. Details docs/VAULT.md. Fehlende oder fehlerhafte Suchberechnung bleibt als Einschränkung sichtbar; der Volltextindex bleibt nutzbar. Sicherungsschema 4; Schema 2/3 weiter lesbar. Restore setzt eine dauerhafte Betriebspause, quarantänisiert offene Übergaben und verhindert alte Zeitpläne. Details docs/OPERATIONS.md. Zugangsformat ENV: vorhandene verschlüsselte Zugänge vor neuen Schreibvorgängen offline mit core.vault_migrate übernehmen. .env bleibt privat und wird mit Daten kopiert. Rückweg benötigt vorherigen vollständigen Datenstand. Sicherungsschema 5 mit .env; Schema 2–4 werden bei Restore lokal konvertiert. Details docs/VAULT.md. Neustart merkt zuvor aktive Empfangskanäle additiv in channels.json.restartChannels; Rückkehr zu älterem Code benötigt manuelles Starten dieser Kanäle. Keine Nachrichtenwiederholung. Details docs/OPERATIONS.md."
     },
     {
       "id": "platform",

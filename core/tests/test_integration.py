@@ -254,7 +254,7 @@ def test_restart_button_with_idle_listener_and_rollback(integration_root):
             return response.json()
         try:
             first=ready()
-            connection=post('/services/save',{'provider':'a2a','worker':'hermes','projectId':'default',
+            connection=post('/services/save',{'provider':'a2a','worker':'auto','projectId':'default',
                 'config':{'mode':'server','host':'127.0.0.1','port':listener_port},
                 'credentials':{'token':'synthetic-token-at-least-24-chars'}})
             # save returns the public connection directly.

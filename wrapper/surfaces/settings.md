@@ -252,11 +252,11 @@ Archivierte Chats). Gruppenüberschriften verwenden `sidebar-section-label`; Ein
 
 ## Konto
 
-Konto ersetzt die früheren Seiten Dein Profil und Benutzer. Oben steht unverändert das Profil
-(Anzeigename, Wetterort, siehe Dein Profil unten), darunter die Gruppe Anmeldung mit der Zeile,
-als wer man angemeldet ist, und Abmelden. Die Gruppe Konten listet jede Person als SettingRow mit
-Rolle; Eigentümer sehen je Zeile Passwort, Rollenwechsel und Entfernen, Mitglieder nur Passwort
-für sich selbst. Konto anlegen öffnet das gemeinsame Modal mit Name,
+Konto ersetzt die früheren Seiten Dein Profil und Benutzer. Reihenfolge: **Du** (eigenes Konto
+mit Rolle, Passwort, Abmelden; ohne Konto der Einstieg Konto anlegen), dann das Profil mit
+**Anrede** (optionaler Alias, Platzhalter ist der Kontoname) und Wetter, dann **Weitere Personen**
+als SettingRow mit Rolle; Eigentümer sehen je Zeile Passwort, eine Rollenauswahl (Eigentümer,
+Entwickler, Mitarbeiter) und Entfernen, andere Rollen nur ihr eigenes Passwort. Konto anlegen öffnet das gemeinsame Modal mit Name,
 Passwort und Rolle; Fehler stehen im Modal. Das erste Konto ist ein Eigentümer und trägt ein
 zusätzliches Feld Rückweg-Schlüssel mit zufälligem Vorschlag; Speichern meldet direkt mit dem
 neuen Konto an. Die Gruppe Rückweg-Schlüssel erklärt den einen Installationsschlüssel und ändert

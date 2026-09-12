@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS memory_sources(id TEXT PRIMARY KEY, chat_id TEXT NOT 
 CREATE INDEX IF NOT EXISTS memory_project ON memory_sources(project_id,created_at);
 CREATE TABLE IF NOT EXISTS memory_changes(id TEXT PRIMARY KEY, path TEXT NOT NULL, before_version TEXT, after_version TEXT NOT NULL, kind TEXT NOT NULL, created_at REAL NOT NULL);
 CREATE TABLE IF NOT EXISTS maintenance(name TEXT PRIMARY KEY, status TEXT NOT NULL, checked_at REAL NOT NULL, details TEXT NOT NULL);
-CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE COLLATE NOCASE, role TEXT NOT NULL CHECK(role IN ('owner','member')), salt TEXT NOT NULL, hash TEXT NOT NULL, created_at REAL NOT NULL, disabled INTEGER NOT NULL DEFAULT 0);
+CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE COLLATE NOCASE, role TEXT NOT NULL CHECK(role IN ('owner','developer','member')), salt TEXT NOT NULL, hash TEXT NOT NULL, created_at REAL NOT NULL, disabled INTEGER NOT NULL DEFAULT 0);
 """
 
 
@@ -79,6 +79,15 @@ class Database:
                 self.connection.execute(f"ALTER TABLE {table} ADD COLUMN {name} {definition}")
         self.connection.execute("CREATE INDEX IF NOT EXISTS chats_owner ON chats(owner_id)")
         self.connection.execute("INSERT OR IGNORE INTO schema_versions VALUES(3,?)", (time(),))
+        # Version 4: Rolle Entwickler. SQLite kann CHECK nicht ändern, also Tabelle neu aufbauen.
+        definition = self.connection.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='users'").fetchone()
+        if definition and "'developer'" not in definition["sql"]:
+            self.connection.executescript(
+                "BEGIN; ALTER TABLE users RENAME TO users_v3;"
+                "CREATE TABLE users(id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE COLLATE NOCASE, role TEXT NOT NULL CHECK(role IN ('owner','developer','member')), salt TEXT NOT NULL, hash TEXT NOT NULL, created_at REAL NOT NULL, disabled INTEGER NOT NULL DEFAULT 0);"
+                "INSERT INTO users SELECT id,name,role,salt,hash,created_at,disabled FROM users_v3; DROP TABLE users_v3; COMMIT;"
+            )
+        self.connection.execute("INSERT OR IGNORE INTO schema_versions VALUES(4,?)", (time(),))
 
     @contextmanager
     def transaction(self):

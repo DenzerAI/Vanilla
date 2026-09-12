@@ -23,3 +23,10 @@ test('nested events remain individually reachable and all-day items stay outside
   assert.equal(result[2].start,615);
   assert.equal(result[2].end,630);
 });
+
+
+test('workweek month omits rows made solely of neighboring-month weekdays', () => {
+  const weeks = monthGrid('2026-08-01', true);
+  assert.equal(weeks[0][0], '2026-08-03');
+  assert.ok(weeks.every(week => week.some(day => day.startsWith('2026-08'))));
+});

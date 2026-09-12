@@ -425,8 +425,18 @@ Der bestehende Systemschalter `system.frontend_check` und die Pause im Systemauf
 
 Die Modulprüfung (`scripts/verify-modules.py`) nennt bei einem Fehler die geänderten Quelldateien und die konkrete Abhilfe: Modulversion in `system/modules.json` erhöhen oder den Vertrag ergänzen, Anschlüsse unter `entrypoints`, Quelldateien unter `sources` eintragen. Reine Oberflächendateien unter `wrapper/ui/` verlangen keine neue Modulversion; ihr Vertrag ist `wrapper/DESIGN.md` mit der Designprüfung. Verhalten, Anschlüsse und Datenwege benötigen weiterhin Versionssprung oder Vertragsänderung.
 
-Lehnt der Adapter die Neustartpause wegen aktiver Eingangskanäle ab, liefert
-der Kern eine strukturierte JSON-Fehlermeldung mit HTTP 400. Die vorhandene
-Rücknahme der Wartungspause bleibt erhalten. Empfang unter Verbindungen
-stoppen und nach dem Neustart wieder starten; laufende Kanalaufträge zuerst
-beenden. Eine Ablehnung setzt keinen Neustartmarker.
+Ein normaler Neustart pausiert ruhende Nachrichtenkanäle automatisch über den
+bestehenden backup-hold-Anschluss mit `restart: true`. Laufende Gespräche,
+Kanalaufträge, Aufnahmen und gerade startende Kanäle bleiben geschützt.
+`channels.json.restartChannels` merkt die zuvor aktiven Anschluss-IDs vor dem
+Stoppen. Nach Wiederanlauf oder Rücknahme der Pause werden nur diese Anschlüsse
+wieder gestartet; keine Aufträge oder Sendungen werden wiederholt. Fehlgeschlagene
+Wiederverbindungen bleiben für den nächsten Start vorgemerkt, ohne den Chat zu
+sperren. Entfernte Anschlüsse werden aus der Vormerkung entfernt. Das Feld ist
+additiv; ältere Versionen ignorieren es und benötigen manuelles Starten des Empfangs.
+Sicherung und Restore behalten ihre strengere Prüfung sowie die ausdrückliche
+Betriebsfreigabe. Während Update- oder Restorepausen erfolgt kein automatischer
+Kanalstart. Die Rücknahme von backup-hold bleibt während einer Updatepause erreichbar,
+ohne die Updatepause aufzuheben. Eine abgelehnte Pause setzt keinen Neustartmarker
+und darf keine neue dauerhafte Kernsperre hinterlassen. Prüfungen: test_recovery.py,
+test_integration.py (echter Neustartknopf über Kern und Adapter), service-platform.test.mjs.

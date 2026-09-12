@@ -71,7 +71,8 @@ export function monthGrid(key, workweek = false) {
   const last = addDays(shiftMonth(first, 1), -1);
   const rows = [];
   for (let start = monday(first); start <= last; start = addDays(start, 7)) {
-    rows.push(Array.from({length: workweek ? 5 : 7}, (_, index) => addDays(start, index)));
+    const days = Array.from({length: workweek ? 5 : 7}, (_, index) => addDays(start, index));
+    if (days.some(day => day >= first && day <= last)) rows.push(days);
   }
   return rows;
 }

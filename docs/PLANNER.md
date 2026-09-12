@@ -174,3 +174,16 @@ bestehenden bestätigten Dialog. Es entstehen weder neue Tabellen noch neue
 Kalender-Schreibrechte. Rückkehr zeigt denselben Bestand in der älteren Listenansicht.
 Mobil: Monatsraster plus Tagesagenda, Wochenköpfe plus ausgewähltes Tagesraster.
 Gestaltung und Bedienvertrag: wrapper/surfaces/today.md und wrapper/DESIGN.md.
+
+
+## Kompakte Kalenderbedienung, Version 4
+
+Der Kalender nutzt einen gemeinsamen Zeitraumkopf, links anklickbare ISO-KWs im
+Monat, kleine Tageszahlen und kompakte einzeilige Termine. Neue Browser verwenden
+Mo–Fr; bestehende bewusst gespeicherte Ansichtswünsche bleiben bestehen. Die
+sichtbaren Terminzeilen werden anhand der verfügbaren Rasterhöhe berechnet.
+Das 24-Stundenraster enthält 48 anklickbare Halbstundenabschnitte. Entwürfe übernehmen
+Stunde und Minute; ab 23 Uhr wird das Ende auf 23:59 begrenzt. Der vorhandene
+Speicherdialog, Zeitvalidierung, Datenbestand und externe Leserechte bleiben führend.
+Normaler Quellenstand steht im Verknüpfungsdialog, Fehler bleiben in der Ansicht.
+Keine Tabellenmigration; Rückkehr erhält Termine und Präferenzen.

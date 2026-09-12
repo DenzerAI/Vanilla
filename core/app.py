@@ -343,7 +343,7 @@ def create_app(config=None):
         return {
             "backend": "FastAPI",
             "storage": "SQLite",
-            "schema": 3,
+            "schema": 4,
             "knowledgeDocuments": db.rows("SELECT count(*) n FROM documents")[0]["n"],
             "embeddings": knowledge.embeddings.status(),
             "runtimeError": runtime.error,

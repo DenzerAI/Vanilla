@@ -14,7 +14,8 @@ from time import time
 
 from fastapi import APIRouter, HTTPException, Request
 
-ROLES = ("owner", "member")
+# Rollen sind vorerst Titel: Eigentümer verwalten und sehen alles, Entwickler und Mitarbeiter sehen ihre eigenen Chats.
+ROLES = ("owner", "developer", "member")
 CODE_USER = {"id": "owner", "name": "Zugangscode", "role": "owner"}
 NAME = re.compile(r"[^\s]{1}[^\r\n\t]{0,58}[^\s]{1}|[^\s]{2}")
 

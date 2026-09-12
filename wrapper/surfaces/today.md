@@ -35,31 +35,34 @@ bisheriger Freigabe-/Lesestatuslogik. Öffnen von Heute markiert nichts als gele
 
 ## Kalender
 
-Tag, Woche, Monat als gemeinsame Tabs. Zeitraum rückwärts/vorwärts, Heute und
-natives Datumsfeld bleiben erreichbar. Woche beginnt Montag, KW nach ISO.
-Monatswechsel klemmen den gewählten Tag auf das Monatsende. Lokale Datumsrechnung
-verhindert UTC-Tagesverschiebung; Uhrzeiten folgen der Installationszeitzone.
+Der gemeinsame PageHeading nennt den angezeigten Zeitraum statt eines zweiten
+Kalendertitels. Darunter genau eine Werkzeugzeile mit Vor/Heute/Zurück, Tag/Woche/Monat,
+Datumswahl und kompaktem Mo–Fr-Schalter. Neue Browser starten mit Mo–Fr; eine bewusst
+gespeicherte Auswahl bleibt erhalten. Der erklärende Wochenendabsatz entfällt.
+Normaler Quellenstand und Zeitzone stehen im Verknüpfungsdialog; Lade- und Fehlerstatus
+bleiben bei Bedarf sichtbar. Die Woche beginnt Montag, KWs folgen ISO einschließlich
+Jahreswechsel. Monatswechsel klemmen auf das Monatsende; lokale Datumsrechnung bleibt.
 
-PlannerCalendar ist der gemeinsame Kalenderbaustein, auch in der Designreferenz.
-Der Monat zeigt ein echtes Raster mit vollständigen Wochen einschließlich
-angrenzender Monatstage, maximal drei Terminzeilen pro Feld und einen Mehr-Link.
-Ein Klick auf die Tageszahl wählt den Tag; darunter stehen sämtliche Termine des
-gewählten Tages und Termin hinzufügen. Heute trägt einen Akzentkreis, die Auswahl
-eine dezente Fläche. Auf dem Handy stehen Terminanzahlen statt gequetschter Titel
-in den Monatsfeldern; die vollständigen Termine bleiben darunter bedienbar.
+PlannerCalendar wird auch in der Designreferenz verwendet. Der Monat nutzt die
+verfügbare Höhe mit vollständigen Wochen und einer schmalen KW-Spalte links. Eine
+KW öffnet die betreffende Woche. In Mo–Fr entfallen Wochen ohne einen Monatstag.
+Auf Desktop stehen Montag bis Freitag ausgeschrieben, auf schmalen Geräten verkürzt.
+Tageszahlen bleiben klein und ohne Kreis; Heute zeichnet eine feine Zellkontur.
+Termine sind einzeilig: Punkt, Zeit, Titel, ohne Blockfläche. Die sichtbare Anzahl
+folgt der tatsächlichen Zeilenhöhe; Mehr zeigt die vollständige Tagesagenda. Diese
+Agenda erscheint erst nach einer Tagesauswahl, nicht als dauerhafte weitere Überschrift.
+Die zentralen Rollen calendar-month-event-height, calendar-day-number-height und
+calendar-week-gutter halten Messung und Darstellung gemeinsam konsistent.
 
-Tag und Woche zeigen ein scrollbareres 24-Stundenraster, beim Öffnen ab 7 Uhr.
-Ganztägige Einträge stehen darüber. Termine werden nach Zeit und Dauer platziert;
-zeitlich überlappende Termine bekommen getrennte Spalten. Die Jetzt-Linie folgt
-minütlich der Installationszeitzone. Ein Klick auf eine freie Stunde öffnet den
-vorhandenen Termindialog mit Datum und Stunde. Um 23 Uhr endet der Entwurf 23:59.
-Öffnen allein schreibt keine Daten. Terminblöcke öffnen den bestehenden Detaildialog.
-Auf dem Handy bleibt die Woche als sieben/fünf auswählbare Tagesköpfe sichtbar;
-darunter erscheint das Stundenraster des gewählten Tages. Kein horizontaler
-Pflichtscroll. Nur Mo–Fr blendet Wochenenden in Woche und Monat aus; der Tag bleibt
-explizit erreichbar und Termine bleiben gespeichert. Kalenderflächen lösen keinen
-Heute/Kalender-Wischwechsel beim Scrollen aus. Die Kalenderseite führt direkt zur
-Ansichtsteuerung, ohne den zusätzlichen Heute/Kalender-Tabstreifen.
+Tag und Woche verwenden ein 24-Stundenraster mit halbstündlichen, anklickbaren
+Abschnitten. Ganze Stunden sind durchgezogen, halbe Stunden gestrichelt. Ein Klick
+öffnet den vorhandenen Dialog mit Stunde und Minute, einschließlich 23:30–23:59.
+Speichern bleibt ausdrücklich. Kompakte einzeilige Tagesköpfe; die Ganztagszeile
+erscheint nur bei vorhandenen ganztägigen Terminen. Überlappungen erhalten separate
+Spalten, die Jetzt-Linie folgt der Installationszeitzone. Das Raster startet bei 7 Uhr
+und bleibt über alle 24 Stunden scrollbar. Mobil wählen Wochenköpfe das sichtbare
+Tagesraster; Monatsfelder zeigen kompakte Titel, die vollständige Agenda ist per
+Tageszahl erreichbar. Keine horizontalen Pflicht-Scrollflächen oder neuen Gesten.
 
 ## Beispiele, Einstellungen und echte Daten
 

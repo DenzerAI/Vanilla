@@ -1594,15 +1594,17 @@ werden als noch nicht verfügbar bezeichnet, nicht als fertige Erkennung.
 
 ## Kalender: Monat und Stundenraster
 
-Der Kalender verwendet PlannerCalendar aus planner-calendar.tsx, gemeinsam in
-Produktion und Designreferenz. Monat als ruhiges Raster mit feinen Trennlinien,
-Heute als Akzentkreis, Auswahl als dezente Fläche; vollständige Tagesagenda darunter.
-Tag/Woche mit Ganztagszeile, scrollbarerer Stundenfläche und zeitgerecht platzierten
-Terminen. Überschneidungen stehen nebeneinander; Jetzt-Linie im bestehenden Akzent.
-Die zentrale Rolle calendar-hour-height bestimmt die Stundenhöhe. Keine neue Palette
-oder Animation. Mobil Monatsraster mit Terminanzahlen und Tagesagenda; Wochenköpfe
-wählen das darunter sichtbare Tagesraster. Führendes Verhalten: surfaces/today.md.
-
+PlannerCalendar ist der gemeinsame Baustein in Produktion und Designreferenz.
+Großzügiges Monatsraster, schmale KW-Spalte links, ausgeschriebene Wochentage auf
+Desktop. Kleine Tageszahlen ohne Kreis, Heute mit feiner Zellkontur. Termine als
+kompakte einzeilige Punkt/Zeit/Titel-Zeilen ohne Kartenflächen; ihre Anzahl richtet
+sich nach dem verfügbaren Platz. Der Zeitraum ist der einzige Seitenkopf, darunter
+eine gemeinsame Werkzeugzeile. Neue Ansichten starten Mo–Fr. Keine dauerhaften
+Status-Unterzeilen oder Wochenenderklärungen; echte Lade-/Fehlerhinweise bleiben.
+Tag/Woche: flache Tagesköpfe und Halbstundenraster mit bestehenden Terminblöcken.
+Die Ganztagszeile erscheint nur mit Inhalt. Zentral: calendar-hour-height,
+calendar-month-event-height, calendar-day-number-height, calendar-week-gutter.
+Verhalten, mobile Anpassung und Grenzen: surfaces/today.md.
 
 ### Beständige Diktataufnahme
 

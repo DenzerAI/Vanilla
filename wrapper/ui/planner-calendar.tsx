@@ -1,5 +1,6 @@
 import React, {useEffect, useRef, useState} from 'react';
 import {addDays, monday, parseDay, monthGrid, timedLayout, isoWeek} from './planner-dates.mjs';
+import {typeMetrics} from './design-system.mjs';
 import type {PlannerEvent} from './planner-demo';
 
 type Props = {
@@ -25,7 +26,7 @@ export function PlannerCalendar({date,today,mode,workweek,timezone,events,onDate
     if (mode !== 'month' || !month.current) return;
     const row = month.current.querySelector('.calendar-month-row');
     if (!row) return;
-    const observer = new ResizeObserver(() => setVisibleCount(Math.max(1, Math.floor((row.getBoundingClientRect().height - 28) / 22))));
+    const observer = new ResizeObserver(() => setVisibleCount(Math.max(1, Math.floor((row.getBoundingClientRect().height - parseFloat(typeMetrics['calendar-day-number-height']) - 4) / parseFloat(typeMetrics['calendar-month-event-height'])))));
     observer.observe(row);
     return () => observer.disconnect();
   }, [mode,date,workweek]);

@@ -193,3 +193,30 @@ def test_nested_request_events_and_paths_are_recognized():
     assert path_chat_id("workspace/chats/abc.md") == "abc"
     assert path_chat_id("notes/chats.md") is None
     assert path_chat_id("chats") is None
+
+
+def test_roles_developer_and_member_and_schema_upgrade(config, tmp_path):
+    import sqlite3
+    from core.database import Database
+    # Eine Datenbank aus Schemaversion 3 mit der alten Rollenprüfung.
+    file = tmp_path / "old.sqlite3"
+    old = sqlite3.connect(file)
+    old.executescript("CREATE TABLE users(id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE COLLATE NOCASE, role TEXT NOT NULL CHECK(role IN ('owner','member')), salt TEXT NOT NULL, hash TEXT NOT NULL, created_at REAL NOT NULL, disabled INTEGER NOT NULL DEFAULT 0); INSERT INTO users VALUES('a','Christian','owner','00','00',1,0);")
+    old.close()
+    db = Database(file)
+    db.connection.execute("INSERT INTO users(id,name,role,salt,hash,created_at,disabled) VALUES('b','Lena','developer','00','00',2,0)")
+    assert [r["role"] for r in db.rows("SELECT role FROM users ORDER BY created_at")] == ["owner", "developer"]
+    assert db.rows("SELECT version FROM schema_versions WHERE version=4")
+    db.close()
+    app = make(config)
+    with TestClient(app) as client:
+        login(client, token=config.access_token)
+        headers = csrf(client)
+        dev = client.post("/api/users", headers=headers, json={"name": "Dev", "password": "dev-geheim-1", "role": "developer"}).json()
+        assert dev["role"] == "developer"
+        assert client.post("/api/users", headers=headers, json={"name": "X", "password": "xxxxxxxxx", "role": "admin"}).status_code == 400
+        client.post("/api/auth/logout", headers=headers)
+        login(client, name="Dev", password="dev-geheim-1")
+        headers = csrf(client)
+        # Entwickler verwalten keine Konten.
+        assert client.post("/api/users", headers=headers, json={"name": "Y", "password": "yyyyyyyyy"}).status_code == 403

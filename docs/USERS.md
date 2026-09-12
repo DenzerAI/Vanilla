@@ -1,13 +1,15 @@
 # Benutzer
 
-Modul `users`, Version **1.0.0**, Datenformat **3** (SQLite `users`, `sessions.user_id`, `chats.owner_id`).
+Modul `users`, Version **1.1.0**, Datenformat **4** (SQLite `users` mit Rollen owner/developer/member, `sessions.user_id`, `chats.owner_id`).
 Einstieg: Einstellungen → Konto. Anmeldung über die vorhandene Login-Seite und den Dialog „Erneut anmelden“.
 
 ## Vertrag
 
-Eine Installation hat Personen mit eigenem Konto: Name, Passwort, Rolle. Zwei Rollen reichen.
-**Eigentümer** verwalten Konten und sehen alle Chats. **Mitglieder** sehen nur die Chats, die sie
-selbst begonnen haben. Kanalgespräche, Aufträge und Firma-Arbeitschats gehören der Installation und
+Eine Installation hat Personen mit eigenem Konto: Name, Passwort, Rolle. Drei Rollen, vorerst als
+Titel: **Eigentümer** (`owner`) verwalten Konten und sehen alle Chats. **Entwickler** (`developer`)
+und **Mitarbeiter** (`member`) haben dieselben Rechte: sie sehen nur die Chats, die sie selbst
+begonnen haben. Der Kontoname ist der Name der Person; die Anrede im Profil (`soul/USER.md`) ist
+ein optionaler Alias und wird beim ersten Konto mit dem Kontonamen vorbelegt. Kanalgespräche, Aufträge und Firma-Arbeitschats gehören der Installation und
 damit den Eigentümern. Die Chat-PIN bleibt der Schutz für persönliche Inhalte, auch gegenüber
 Eigentümern. Memory, CRM, Firmenbasis und Ergebnisse bleiben je Installation gemeinsam; Benutzer
 trennen Chats, nicht das Wissen. Das ist keine Mandantenfähigkeit und keine Sandbox.
@@ -50,7 +52,8 @@ Besitzer gehören der Installation. Der Adapter kennt keine Namen und keine Pass
 
 ## Migration
 
-Additiv. Bestehende Chats haben keinen Besitzer und bleiben für Eigentümer sichtbar. Bestehende
+Additiv. Version 4 baut die Tabelle `users` einmalig neu auf, weil SQLite die Rollenprüfung nicht
+ändern kann; Inhalte bleiben erhalten. Bestehende Chats haben keinen Besitzer und bleiben für Eigentümer sichtbar. Bestehende
 Sitzungen ohne `user_id` laufen als Zugangscode-Sitzungen mit Eigentümerrolle weiter, bis sie
 ablaufen. Ältere Codestände ignorieren die neuen Spalten; ein Rückweg löscht keine Konten. Sicherungen enthalten
 die Benutzertabelle mit Hashes, nie Klartext.

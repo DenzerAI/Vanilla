@@ -5,7 +5,7 @@ import {userProfilePath,readUserProfile,saveUserProfile} from './user-profile.mj
 import {loadWeather,weatherDescription} from './weather-client.mjs';
 type Point={latitude:number;longitude:number};
 type Profile={name:string;location:string;point?:Point};
-export function UserPreferences({api}:{api:any}) {
+export function UserPreferences({api,accountName}:{api:any;accountName?:string}) {
  const [source,setSource]=useState<string|null>(null),[draft,setDraft]=useState<Profile>({name:'',location:''}),[error,setError]=useState(''),[busy,setBusy]=useState(false),[message,setMessage]=useState(''),[revision,setRevision]=useState(0);
  const [places,setPlaces]=useState<(Point&{id:number;label:string})[]>([]),[searchState,setSearchState]=useState(''),[searchRevision,setSearchRevision]=useState(0),[weather,setWeather]=useState<any>(null),[weatherRevision,setWeatherRevision]=useState(0);
  useEffect(()=>{let alive=true;api('/file/text?path='+encodeURIComponent(userProfilePath)).then((data:any)=>{if(alive){setSource(data.text);setDraft(readUserProfile(data.text));setError('');}}).catch((e:Error)=>{if(alive)setError(e.message);});return()=>{alive=false;};},[api,revision]);
@@ -27,7 +27,7 @@ export function UserPreferences({api}:{api:any}) {
   <div className="settings-save-row"><span role="status">{dirty?'Ungespeicherte Änderungen':message||'Keine Änderungen'}</span><button className="primary" disabled={busy||!dirty||needsPlace} type="submit">{busy?'Wird gespeichert …':'Speichern'}</button></div>
   {error&&<p className="inline-error" role="alert">{error}</p>}
   <fieldset className="agent-form-fields" disabled={busy}>
-   <h3 className="section-heading">Über dich</h3><div className="settings-group"><SettingRow title={<label htmlFor="user-name">Dein Name</label>} description="So möchtest du angesprochen werden."><input id="user-name" className="agent-name-input" autoComplete="nickname" maxLength={100} value={draft.name} onChange={e=>setDraft({...draft,name:e.target.value})}/></SettingRow></div>
+   <h3 className="section-heading">Anrede</h3><div className="settings-group"><SettingRow title={<label htmlFor="user-name">{accountName?'Anrede (optional)':'Dein Name'}</label>} description={accountName?`Leer lassen, dann spricht dich dein Agent mit ${accountName} an. Ein Alias ist erlaubt.`:'So möchtest du angesprochen werden.'}><input id="user-name" className="agent-name-input" autoComplete="nickname" maxLength={100} placeholder={accountName||''} value={draft.name} onChange={e=>setDraft({...draft,name:e.target.value})}/></SettingRow></div>
    <h3 className="section-heading">Wetter</h3><div className="settings-group">
     <SettingRow title={<label htmlFor="user-weather-location">Dein Ort</label>} description="Stadt oder Postleitzahl eingeben und einen Treffer mit Region und Land auswählen."><input id="user-weather-location" className="agent-name-input" autoComplete="off" maxLength={100} aria-describedby="weather-search-status" value={draft.location} onChange={e=>setDraft({...draft,location:e.target.value,point:undefined})}/></SettingRow>
     <SettingRow title="Ortsauswahl" description={<span id="weather-search-status" role="status">{draft.point?'Ort bestätigt. Beim Speichern wird das Wetter geladen.':searchState||'Gib mindestens zwei Zeichen ein.'}</span>}/>

@@ -63,6 +63,9 @@ test("planner renders both integrated views and keeps examples out of the real-d
     assert.equal((today.match(/class="planner-briefing-row"/g) || []).length, 4);
     const month = render("calendar");
     assert.match(month, /calendar-month-grid/);
+    assert.match(month, /data-columns="5"/);
+    assert.match(month, /calendar-week-number/);
+    assert.doesNotMatch(month, /Wochenenden werden|Uhrzeiten:/);
     assert.match(month, /Termine am ausgewählten Tag/);
     assert.match(month, /Nur Mo/);
     globalThis.localStorage = {
@@ -80,10 +83,11 @@ test("planner renders both integrated views and keeps examples out of the real-d
           "planner.workweek": "true",
         })[key] ?? null,
     };
-    assert.equal(
-      (render("calendar").match(/class="calendar-time-column"/g) || []).length,
-      5,
-    );
+    const week = render("calendar");
+    assert.equal((week.match(/class="calendar-time-column"/g) || []).length,5);
+    assert.equal((week.match(/class="calendar-hour-slot"/g) || []).length,240);
+    assert.match(week, /09:30 hinzufügen/);
+    assert.match(week, /23:30 hinzufügen/);
     globalThis.localStorage = {
       getItem: (key) =>
         ({ "planner.demo": "true", "planner.view": "day" })[key] ?? null,
