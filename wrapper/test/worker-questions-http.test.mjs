@@ -49,7 +49,7 @@ createInterface({input:process.stdin}).on('line',line=>{
  if(m.id!==undefined)reply({});
 });`;
 
-test('HTTP → pending native RPC → reply → completed turn and persistent question receipt', {timeout:process.env.QUESTION_UI_CHECK ? 180000 : 15000},async t=>{
+test('HTTP native and async questions: replies, active steering, completion, receipts and cancellation', {timeout:process.env.QUESTION_UI_CHECK ? 180000 : 15000},async t=>{
  const dir=await mkdtemp(fileURLToPath(new URL('../.test-question-http-',import.meta.url)));
  let child,exited;
  t.after(async()=>{if(child&&child.exitCode===null){child.kill();await exited;}await rm(dir,{recursive:true,force:true});});
@@ -90,7 +90,7 @@ test('HTTP → pending native RPC → reply → completed turn and persistent qu
    for(const viewport of ['desktop','mobile']) {
     const args=['scripts/ui-check.mjs','--base',base.replace(/\/api$/,''),'--viewport',viewport,
       '--out','workspaces/default/output/async-questions-ui','--path','/?chat='+asyncThread.id,
-      '--wait','css=.composer-question','--sleep','500','--click','css=.composer-question-option:nth-child(2) input','--shot','after-click-'+viewport,'--eval',`(()=>{const e=document.querySelector('.composer-question-option:nth-child(2) input'),r=e.getBoundingClientRect();return {hit:document.elementFromPoint(r.x+r.width/2,r.y+r.height/2)?.outerHTML,checked:e.checked,modals:document.querySelectorAll('[role=dialog]').length}})()`,'--eval',`document.querySelector('.composer-question-option:nth-child(2) input').click()`,'--wait','css=.composer-question input:checked',
+      '--wait','css=.composer-question','--eval',`document.querySelector('.composer-question-option:nth-child(2) input').click()`,'--wait','css=.composer-question input:checked',
       '--eval',`({question:document.querySelector('.composer-question-title').textContent,selected:document.querySelectorAll('.composer-question input:checked').length,overflow:document.documentElement.scrollWidth>innerWidth})`,
       '--shot','async-question-'+viewport];
     await new Promise((resolve,reject)=>{
