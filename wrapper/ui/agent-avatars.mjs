@@ -1,15 +1,15 @@
 // Stable keys shared by the interface and identity storage.
+// Sechs Pixelfiguren auf einem 16er-Raster; Lumi ist der Maßstab, die anderen
+// fünf sind nach Tamagotchi-Klassikern gezeichnete Entwürfe.
 export const agentAvatars = [
-  { id: "nori", name: "Nori", description: "Rund mit kleiner Antenne" },
-  { id: "orbit", name: "Orbit", description: "Mit weitem Visier" },
-  { id: "miko", name: "Miko", description: "Mit neugierigen Ohren" },
-  { id: "pixel", name: "Pixel", description: "Ein Gesicht aus einem Pixelraster" },
-  { id: "lumi", name: "Lumi", description: "Mit einem Blatt im Haar" },
-  { id: "kibo", name: "Kibo", description: "Ein weiches, kompaktes Gesicht" },
-  { id: "pebble", name: "Pebble", description: "Ein ruhiger, runder Kiesel" },
-  { id: "pad", name: "Pad", description: "Ein breites Gesicht aus einem Pixelraster" },
+  { id: "lumi", name: "Lumi", description: "Ein Ei mit Spross" },
+  { id: "nori", name: "Nori", description: "Bohne mit Ohren und großen Augen" },
+  { id: "miko", name: "Miko", description: "Mit langen Hasenohren" },
+  { id: "orbit", name: "Orbit", description: "Breit, mit Schnabelkante" },
+  { id: "pixel", name: "Pixel", description: "Ein hohes, schmales Ei" },
+  { id: "kibo", name: "Kibo", description: "Kleine Kugel mit Krempe" },
 ];
-export const DEFAULT_AGENT_AVATAR = "nori";
+export const DEFAULT_AGENT_AVATAR = "lumi";
 export const validAgentAvatar = (value) =>
   agentAvatars.some(({ id }) => id === value);
 export const agentAvatar = (value) =>
@@ -28,3 +28,6 @@ export const avatarColor = (value) =>
   validAvatarColor(value) ? value : "neutral";
 export const avatarBackground = (value) =>
   avatarColor(value) === "neutral" ? "transparent" : `var(--avatar-${value})`;
+// Augen sind Ausschnitte: sie tragen die Farbe der Fläche hinter der Figur.
+export const avatarCutout = (value) =>
+  avatarColor(value) === "neutral" ? "var(--surface)" : `var(--avatar-${value})`;
