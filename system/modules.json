@@ -1566,7 +1566,7 @@
       "stage": "implemented",
       "contract": "docs/USERS.md",
       "setup": "docs/CUSTOMER-SETUP.md#users",
-      "data": "SQLite users (scrypt-Hashes), sessions.user_id, chats.owner_id in data/control/agent.sqlite3; keine Klartextpasswörter.",
+      "data": "SQLite users (Rollen owner/developer/member, scrypt-Hashes), sessions.user_id, chats.owner_id in data/control/agent.sqlite3; keine Klartextpasswörter.",
       "sources": [
         "core/users.py",
         "wrapper/users.mjs",
@@ -1598,8 +1598,8 @@
         "meaning": "Angemeldete Person mit Rolle und ob Konten existieren; ohne Konto gilt der Zugangscode als Eigentümer."
       },
       "limits": "Anwendungsregel, keine Betriebssystemgrenze: Worker mit Hostzugriff lesen Dateien fremder Chats. Memory, CRM und Firmenbasis bleiben gemeinsam. Keine Einladungslinks, keine Zwei-Faktor-Anmeldung.",
-      "version": 1,
-      "migration": "Additive Schemaversion 3. Bestehende Chats ohne Besitzer bleiben Eigentümern sichtbar, alte Sitzungen laufen als Zugangscode-Sitzungen weiter. Älterer Code ignoriert die neuen Spalten; ein Rückweg löscht keine Konten."
+      "version": 2,
+      "migration": "Additive Schemaversion 4 (Tabelle users einmalig neu aufgebaut für die Rolle Entwickler, Inhalte bleiben). Bestehende Chats ohne Besitzer bleiben Eigentümern sichtbar, alte Sitzungen laufen als Zugangscode-Sitzungen weiter. Älterer Code ignoriert die neuen Spalten; ein Rückweg löscht keine Konten."
     }
   ]
 }
