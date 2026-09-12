@@ -19,7 +19,8 @@ werden dabei nicht aktiviert. Die Sprachpakete und Modellprüfsummen führen
 Modelle und Laufzeiten werden einmal pro Installation gespeichert.
 
 `npm start` öffnet den Kern auf Loopback-Port 1989. Unter **Zugang** einen
-eigenen Anmeldeschlüssel setzen. HTTPS und Tailscale werden über den dokumentierten
+eigenen Anmeldeschlüssel setzen, unter **Benutzer** danach persönliche Konten mit
+Rolle anlegen ([USERS.md](USERS.md)). HTTPS und Tailscale werden über den dokumentierten
 Operator-Weg in README.md eingerichtet; die Web-App verändert keine Hostdienste.
 
 Unter **Speicher & Sicherung** einen erreichbaren Ordner und einen eigenen

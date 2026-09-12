@@ -198,6 +198,7 @@ const SkillDetails = lazySurface(() => import('./skill-details.jsx'), 'SkillDeta
 const SkillHub = lazySurface(() => import('./skill-details.jsx'), 'SkillHub', 'list');
 const CreateSkillForm = lazySurface(() => import('./skill-details.jsx'), 'CreateSkillForm', 'list');
 const UserPreferences = lazySurface(() => import('./user-preferences'), 'UserPreferences', 'list');
+const UsersSettings = lazySurface(() => import('./users-settings'), 'UsersSettings', 'list');
 const AgentPreferences = lazySurface(() => import('./agent-preferences.jsx'), 'AgentPreferences', 'list');
 const DesignReference = lazySurface(() => import('./design-reference.jsx'), 'DesignReference', 'list');
 const LocalWorkers = lazySurface(() => import('./local-workers.jsx'), 'LocalWorkers', 'list');
@@ -1996,6 +1997,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     ["voice", Mic, "Stimme"],
     ["identity", User, "Dein Agent"],
     ["user", User, "Dein Profil"],
+    ...(boot?.features?.users ? [["users", User, "Benutzer"]] : []),
     ["service", ShieldCheck, "Service"],
     ["connections", Plug, "Verbindungen"],
     ["skills", Sparkles, "Skills"],
@@ -2058,7 +2060,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       <div className={embedded ? "app embedded-chat" : undefined}>
         {bootError || toast ? <div className="boot-screen"><p role="alert">{bootError || toast}</p><button onClick={guard(refresh)}>Erneut versuchen</button></div> : <Skeleton variant={embedded ? "chat-panel" : "shell"} label={embedded ? "Gespräch wird geladen …" : "Schaltzentrale wird geöffnet …"}/>}
         {!embedded && <ChatAudioControls Button={IconButton}/>}
-      {!embedded && <SystemNotice ref={systemNoticeRef} onBusyChange={setServerRestartBusy} api={api} message={toast} onDismiss={()=>setToast("")} />}
+      {!embedded && <SystemNotice ref={systemNoticeRef} onBusyChange={setServerRestartBusy} api={api} user={boot?.user} message={toast} onDismiss={()=>setToast("")} />}
       </div>
     );
   return (
@@ -2957,6 +2959,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               <><button className="design-back" onClick={()=>setSettingsTab("appearance")}>{icon(ArrowLeft,16)}Aussehen</button><DesignReference theme={boot.settings.theme} tone={boot.settings.designTone} accent={boot.settings.highlightColor}/></>
             ) : settingsTab === "user" ? (
               <UserPreferences api={api}/>
+            ) : settingsTab === "users" ? (
+              <UsersSettings api={api} user={boot.user || {id:"owner",name:"Zugangscode",role:"owner"}}/>
             ) : settingsTab === "identity" ? (
               <>
                 <AgentPreferences api={api} onSaved={profile=>{setBoot(old=>({...old,settings:{...old.settings,name:profile.name,avatar:profile.avatar,avatarColor:profile.avatarColor,avatarConfigured:true}}));notify("Dein Agent wurde gespeichert.")}} />
@@ -3121,7 +3125,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         )}
       </MainSurface>
       {!embedded && <ChatAudioControls Button={IconButton}/>}
-      {!embedded && <SystemNotice ref={systemNoticeRef} onBusyChange={setServerRestartBusy} api={api} message={toast} onDismiss={()=>setToast("")} />}
+      {!embedded && <SystemNotice ref={systemNoticeRef} onBusyChange={setServerRestartBusy} api={api} user={boot?.user} message={toast} onDismiss={()=>setToast("")} />}
       {welcome && !embedded && <AgentWelcome api={api} initialName={boot.settings.name} onClose={() => setWelcome(false)} onSaved={profile => {
         setBoot(old => ({...old, settings: {...old.settings, name:profile.name, avatar:profile.avatar, avatarColor:profile.avatarColor, avatarConfigured:true}}));
         setWelcome(false);

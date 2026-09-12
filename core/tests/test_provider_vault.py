@@ -115,7 +115,7 @@ def test_login_change_failure_preserves_both_keys_and_sessions(config, db, monke
     _,_,_,ops,_,_,runtime = services(config,db)
     ops.configure_access('original-login-value')
     previous_api = config.access_token
-    db.connection.execute("INSERT INTO sessions VALUES('synthetic-session','csrf',9999999999)")
+    db.connection.execute("INSERT INTO sessions(digest,csrf,expires_at) VALUES('synthetic-session','csrf',9999999999)")
     def fail(path,text): raise OSError('synthetic write failure')
     monkeypatch.setattr(module,'atomic_write',fail)
     with pytest.raises(OSError): ops.configure_access('replacement-login-value')

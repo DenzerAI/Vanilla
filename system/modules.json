@@ -1543,6 +1543,48 @@
       "limits": "Vorhandene lokale WhatsApp-Bridge und expliziter Verlaufspfad erforderlich; kein eigener Bridge-Daemon. Telegram benötigt API-App und persönliche Anmeldung. Versand nur ausdrücklich, kein Testversand.",
       "version": 1,
       "migration": "Additive messenger_* Tabellen, kopierte Medien unter data/control/messenger. Expliziter Import mit Online-Backup und stabilen Kennungen. Quelle nur lesend. Trennen erhält Verlauf; Rückkehr zu altem Code blendet Messenger aus."
+    },
+    {
+      "id": "users",
+      "title": "Benutzer",
+      "purpose": "Personen mit eigenem Konto und Rolle je Installation; Chats gehören der Person, die sie begonnen hat.",
+      "stage": "implemented",
+      "contract": "docs/USERS.md",
+      "setup": "docs/CUSTOMER-SETUP.md#users",
+      "data": "SQLite users (scrypt-Hashes), sessions.user_id, chats.owner_id in data/control/agent.sqlite3; keine Klartextpasswörter.",
+      "sources": [
+        "core/users.py",
+        "wrapper/users.mjs",
+        "wrapper/ui/users-settings.tsx",
+        "wrapper/public/login.js",
+        "wrapper/public/login.css"
+      ],
+      "entrypoints": [
+        "GET /api/auth/session",
+        "POST /api/auth/login",
+        "POST /api/auth/logout",
+        "GET /api/users",
+        "POST /api/users",
+        "POST /api/users/{id}/password",
+        "POST /api/users/{id}/role",
+        "POST /api/users/{id}/remove"
+      ],
+      "dependencies": [
+        "platform",
+        "chat",
+        "chat-privacy"
+      ],
+      "verification": [
+        "core/tests/test_users.py",
+        "wrapper/test/users.test.mjs"
+      ],
+      "status": {
+        "endpoint": "GET /api/auth/session",
+        "meaning": "Angemeldete Person mit Rolle und ob Konten existieren; ohne Konto gilt der Zugangscode als Eigentümer."
+      },
+      "limits": "Anwendungsregel, keine Betriebssystemgrenze: Worker mit Hostzugriff lesen Dateien fremder Chats. Memory, CRM und Firmenbasis bleiben gemeinsam. Keine Einladungslinks, keine Zwei-Faktor-Anmeldung.",
+      "version": 1,
+      "migration": "Additive Schemaversion 3. Bestehende Chats ohne Besitzer bleiben Eigentümern sichtbar, alte Sitzungen laufen als Zugangscode-Sitzungen weiter. Älterer Code ignoriert die neuen Spalten; ein Rückweg löscht keine Konten."
     }
   ]
 }
