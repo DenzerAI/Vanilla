@@ -1,3 +1,5 @@
+import {IconButton} from './icon-button';
+import {ChatMenu} from './chat-controls.jsx';
 import {PlannerCalendar} from './planner-calendar';
 import {calendarClock} from './calendar-day.mjs';
 import React, { useCallback, useEffect, useRef, useState } from "react";
@@ -9,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
+  MoreHorizontal,
   Sun,
   Bell,
   RefreshCw,
@@ -128,9 +131,19 @@ export function BriefingRow({item, today, busy = false, disabled = false, onOpen
     <ChevronRight size={16} strokeWidth={undefined} />
   </button>;
 }
+export function CalendarHeaderActions({demo,onCreate,onSources,onToggleDemo,onDetails}: {demo:boolean;onCreate:()=>void;onSources:()=>void;onToggleDemo:()=>void;onDetails:()=>void}) {
+  return <div className="planner-header-actions" role="group" aria-label="Kalenderaktionen">
+    <IconButton label="Termin hinzufügen" onClick={onCreate}><Plus size={18} strokeWidth={undefined}/></IconButton>
+    <ChatMenu label="Kalenderoptionen" className="icon-button" selected={undefined} footer={null} items={[
+      {id:'sources',label:'Kalenderquellen',action:onSources},
+      {id:'examples',label:demo ? 'Beispieldaten ausblenden' : 'Beispieldaten anzeigen',action:onToggleDemo},
+      {id:'details',label:'Kalenderdetails & Routinen',action:onDetails},
+    ]}><MoreHorizontal size={18} strokeWidth={undefined}/></ChatMenu>
+  </div>;
+}
 export function PlannerPatternPreview() {
   return (
-    <><PlannerCalendar date={dateKey(new Date())} today={dateKey(new Date())} mode="month" workweek={true} timezone="Europe/Berlin" events={demoEvents(dateKey(new Date()))} onDate={() => {}} onOpen={() => {}} onCreate={() => {}} /><BriefingRow item={demoBriefings(dateKey(new Date()))[0]} today={dateKey(new Date())} onOpen={() => {}} /><AgendaRow event={demoEvents(dateKey(new Date()))[0]} onOpen={() => {}} /></>
+    <><CalendarHeaderActions demo={true} onCreate={()=>{}} onSources={()=>{}} onToggleDemo={()=>{}} onDetails={()=>{}} /><PlannerCalendar date={dateKey(new Date())} today={dateKey(new Date())} mode="month" workweek={true} timezone="Europe/Berlin" events={demoEvents(dateKey(new Date()))} onDate={() => {}} onOpen={() => {}} onCreate={() => {}} /><BriefingRow item={demoBriefings(dateKey(new Date()))[0]} today={dateKey(new Date())} onOpen={() => {}} /><AgendaRow event={demoEvents(dateKey(new Date()))[0]} onOpen={() => {}} /></>
   );
 }
 export function PlannerPage(props: Props) {
@@ -373,28 +386,13 @@ export function PlannerPage(props: Props) {
       }}
     >
       <PageHeading
-        title={section === "today" ? "Heute" : mode === "day" ? formatDay(date) : mode === "week"
+        title={<span className="planner-heading-copy"><span>{section === "today" ? "Heute" : mode === "day" ? formatDay(date) : mode === "week"
           ? `KW ${isoWeek(date).week} · ${formatDay(monday(date), {day:"numeric", month:"short"})}–${formatDay(addDays(monday(date), workweek ? 4 : 6), {day:"numeric",month:"short"})}`
-          : formatDay(date, {month:"long", year:"numeric"})}
+          : formatDay(date, {month:"long", year:"numeric"})}</span>{section === "calendar" && demo && <span className="planner-example-label">Beispielansicht</span>}</span>}
         onShowSidebar={onShowSidebar}
       >
-        <button
-          type="button"
-          className="small-button"
-          onClick={() => setModal("concept")}
-        >
-          Verknüpfungen
-        </button>
-        {section === "calendar" && (
-          <button
-            type="button"
-            className="small-button primary"
-            onClick={() => create()}
-          >
-            <Plus size={16} strokeWidth={undefined} />
-            {demo ? "Beispieltermin" : "Termin hinzufügen"}
-          </button>
-        )}
+        {section === "calendar" ? <CalendarHeaderActions demo={demo} onCreate={() => create()} onSources={props.onConnections}
+          onToggleDemo={toggleDemo} onDetails={() => setModal("concept")} /> : <IconButton label="Verknüpfungen" onClick={() => setModal("concept")}><Link size={18} strokeWidth={undefined}/></IconButton>}
       </PageHeading>
       {section === "today" && <div className="planner-topline">
         <div className="tabs" aria-label="Tagesübersicht">

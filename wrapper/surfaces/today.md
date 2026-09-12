@@ -144,3 +144,18 @@ Kalenderkachel und öffnet beim Klick den Tagesbericht; Kalender öffnen darin f
 hierher. Der Hauptmenüpunkt Kalender öffnet dieselbe Ansicht. Grenzen und Datenmigration: docs/PLANNER.md.
 
 Monatstermine verwenden text-small und die zentrale 20-px-Zeilenhöhe. Zeit/Titel bleiben einzeilig; Tooltip und Terminöffnung zeigen weiterhin die vollständigen Details.
+
+
+## Kompakte Kopfaktionen
+
+Rechts vom Zeitraum stehen ausschließlich zwei gleich große runde IconButtons:
+Plus (Termin hinzufügen) und MoreHorizontal (Kalenderoptionen). Die dezente Fläche
+verwendet popover-glass, border und radius-pill, Bedienziel control-touch.
+CalendarHeaderActions wird auch in der Designreferenz verwendet. Das gemeinsame
+ChatMenu öffnet Kalenderquellen über den bestehenden Verbindungseinstieg, schaltet
+Beispieldaten um und erhält Kalenderdetails & Routinen im bestehenden Dialog.
+Escape, Außenklick, Tastaturnavigation und Fokusrückgabe folgen dem gemeinsamen Menü.
+Bei aktivem Beispielmodus steht klein Beispielansicht direkt neben dem Zeitraum;
+Plus behält immer die zugängliche Beschriftung Termin hinzufügen. Der Termindialog
+kennzeichnet Beispielwirkung weiterhin ausdrücklich. Die Werkzeugzeile darunter
+bleibt für Datum und Ansicht. Keine Datenmigration oder neuen Kalenderanschlüsse.

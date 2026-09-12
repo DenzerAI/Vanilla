@@ -576,3 +576,9 @@
   .calendar-time-column:not([data-active]), .calendar-all-day > div:not([data-active]) { display: none; }
   .calendar-time-scroll { height: calc(100dvh - 280px); min-height: 340px; }
 }
+
+.planner-heading-copy { display: inline-flex; align-items: baseline; flex-wrap: wrap; gap: var(--space-8); }
+.planner-example-label { font-size: var(--text-small); line-height: var(--leading-normal); font-weight: var(--weight-regular); letter-spacing: normal; color: var(--muted); }
+.planner-header-actions { display: flex; align-items: center; gap: var(--space-8); }
+.planner-header-actions > .icon-button { width: var(--control-touch); height: var(--control-touch); border-radius: var(--radius-pill); background: var(--popover-glass); border: 1px solid var(--border); }
+.planner-header-actions > .icon-button:hover, .planner-header-actions > .icon-button[aria-expanded="true"] { background: var(--selected); }

@@ -1665,3 +1665,13 @@ Hover sichtbar, die Zeile darf auf schmalen Ansichten umbrechen. Der Status nenn
 „Nicht gesendet“ oder „Zustellung unklar“. Der gemeinsame Modal erläutert vor
 Wiederholung eines unklaren Versands die mögliche doppelte Ausführung; Bearbeiten
 verwendet Field und textarea, Löschen den vorhandenen danger-Button.
+
+
+### Kalender-Kopfaktionen
+
+CalendarHeaderActions verwendet zwei gleich große IconButtons mit Plus und
+MoreHorizontal rechts vom Zeitraum. Transparente popover-glass-Fläche, feine
+border-Kontur, radius-pill und control-touch. Das gemeinsame ChatMenu öffnet Quellen,
+Beispielumschaltung und Details. Beispielansicht steht in text-small und muted beim
+Zeitraum statt als Aktionsbeschriftung. Produktion und Designreferenz teilen den
+Baustein; Navigation bleibt in der darunterliegenden Werkzeugzeile.
