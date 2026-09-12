@@ -158,7 +158,7 @@ Der Impeccable-Scan meldet Inter als verbreitete Schrift sowie die bestehende Zi
 
 ## Chat und Personalisierung
 
-Eine schmale Eingabenavigation mit Vorschau springt zu Nutzernachrichten. Uhrzeit und Nachrichtenaktionen bleiben außerhalb der Bubble; Löschen liegt im Mehr-Menü. Bildanhänge stehen als Vorschauen über dem Text. Der Sprung zur neuesten Nachricht erscheint beim Lesen älterer Inhalte. Allgemeine Auswahlzustände und Schalter sind neutral; Orange ist keine Standardfarbe für Bedienelemente. Ein-/Aus-Einstellungen und Zeitpläne verwenden denselben Schalter. „Dein Agent“ zeigt das Profilbild, bearbeitet Name und persönliche Arbeitswünsche direkt und bietet acht Avatare im gemeinsamen Auswahlfenster an; letztere werden in einem abgegrenzten Abschnitt der vorhandenen Identitätsdatei gespeichert. Ein Versionsvergleich verhindert das Überschreiben zwischenzeitlicher Dateiänderungen beim Speichern.
+Eine schmale Eingabenavigation mit Vorschau springt zu Nutzernachrichten. Uhrzeit und Nachrichtenaktionen bleiben außerhalb der Bubble; Löschen liegt im Mehr-Menü. Bildanhänge stehen als Vorschauen über dem Text. Der Sprung zur neuesten Nachricht erscheint beim Lesen älterer Inhalte. Allgemeine Auswahlzustände und Schalter sind neutral; Orange ist keine Standardfarbe für Bedienelemente. Ein-/Aus-Einstellungen und Zeitpläne verwenden denselben Schalter. „Dein Agent“ zeigt die Figur, bearbeitet Name und persönliche Arbeitswünsche direkt und bietet sechs Pixelfiguren im gemeinsamen Auswahlfenster an; letztere werden in einem abgegrenzten Abschnitt der vorhandenen Identitätsdatei gespeichert. Ein Versionsvergleich verhindert das Überschreiben zwischenzeitlicher Dateiänderungen beim Speichern.
 
 ## Mehrfachansicht und Chat-Kopf
 

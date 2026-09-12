@@ -54,7 +54,7 @@ test("profile updates preserve role, replace avatar and reject invalid or stale 
   for (const avatar of ["bad", "https://example.com/x.svg", "<svg/>"])
     assert.throws(
       () => updateAgentProfile(original, { ...p, avatar }),
-      /Profilbilder/,
+      /Figuren/,
     );
   assert.throws(
     () => updateAgentProfile(original, { ...p, name: "Ada\nAvatar: pixel" }),
