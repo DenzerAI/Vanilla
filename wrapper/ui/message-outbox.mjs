@@ -76,7 +76,7 @@ export function createMessageOutbox({storage, api, changed = () => {}, now = Dat
   }
   async function pump() {
     if (!active) return;
-    await Promise.all(entries.filter(e=>['sending','offline','accepted'].includes(e.status) && !inflight.has(e.clientMessageId)).map(transmit));
+    await Promise.all(entries.filter(e=>['sending','offline','accepted','unknown'].includes(e.status) && !inflight.has(e.clientMessageId)).map(transmit));
   }
   function retry(id) {
     const entry = entries.find(e=>e.clientMessageId===id);
@@ -85,15 +85,27 @@ export function createMessageOutbox({storage, api, changed = () => {}, now = Dat
     if (entry.status !== 'unknown') entry.status = 'sending';
     save(); publish(); void transmit(entry);
   }
+  async function recover(id, action, {text, confirmed = false, revision} = {}) {
+    const entry = entries.find(e=>e.clientMessageId===id);
+    if (!entry || inflight.has(id)) throw Error('Nachrichtenstatus wird gerade geprüft. Bitte kurz erneut versuchen.');
+    inflight.add(id);
+    try {
+      const receipt = await api('/delivery/action', {clientMessageId:id, id:entry.chatId || null,
+        localId:entry.localId, action, revision:revision ?? entry.revision ?? 0, text, confirmed, payload:entry.payload});
+      if (!receipt?.clientMessageId) throw Error('Nachrichtenstatus konnte nicht bestätigt werden.');
+      merge([receipt]);
+      return receipt;
+    } finally { inflight.delete(id); }
+  }
   function merge(receipts) {
     for (const receipt of receipts) {
       const old = entries.find(e=>e.clientMessageId===receipt.clientMessageId);
       if (old) Object.assign(old,receipt,{mappingOnly:false});
       else entries.push(receipt);
     }
-    publish();
+    save(); publish();
   }
-  return {start,enqueue,retry,discard,merge,pump,snapshot:()=>entries, stop:()=>{active=false;clearInterval(timer);}};
+  return {start,enqueue,retry,discard,recover,merge,pump,snapshot:()=>entries, stop:()=>{active=false;clearInterval(timer);}};
 }
 
 // Match each receipt once, within the acknowledged turn, including repeated identical messages.
@@ -103,7 +115,7 @@ export function deliveryView(thread, receipts) {
   const annotations = new Map();
   const used = new Set();
   for (const receipt of receipts) {
-    if(receipt.mappingOnly)continue;
+    if(receipt.mappingOnly || receipt.status === 'cancelled')continue;
     let match;
     const matches = item => {
       const content=item.content || [];

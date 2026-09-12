@@ -449,12 +449,12 @@ const ChatTurn = React.memo(function ChatTurn({ onForkTurn, onEditTurn, onRetryT
 function DeliveryMark({receipt}) {
   if (!receipt) return null;
   const status=receipt.status;
-  const labels={sending:"Wird übertragen",offline:"Wartet auf Verbindung",accepted:"Sicher angekommen",started:"Verarbeitung begonnen",failed:"Übertragung fehlgeschlagen. Erneut versuchen",unknown:"Übergabestatus unklar. Status prüfen"};
+  const labels={sending:"Wird übertragen",offline:"Wartet auf Verbindung",accepted:"Sicher angekommen",started:"Verarbeitung begonnen",failed:"Nicht gesendet. Erneut versuchen",unknown:"Übergabestatus unklar. Status prüfen"};
   const failed=["failed","unknown"].includes(status);
   const glyph=status==="started"?<DeliveryChecks double/>:status==="accepted"?<DeliveryChecks/>:failed?icon(AlertCircle,12):icon(Clock,12);
-  return <span className="message-delivery">{failed?<button type="button" title={receipt.error || labels[status]} aria-label={labels[status]} onClick={()=>messageOutbox.retry(receipt.clientMessageId)}>{glyph}</button>:<span role="status" aria-label={labels[status]} title={labels[status]}>{glyph}</span>}</span>;
+  return <span className="message-delivery">{failed?<button type="button" title={receipt.error || labels[status]} aria-label={labels[status]} onClick={()=>messageOutbox.retry(receipt.clientMessageId)}>{glyph}<span>{status === "unknown" ? "Zustellung unklar" : "Nicht gesendet"}</span></button>:<span role="status" aria-label={labels[status]} title={labels[status]}>{glyph}</span>}</span>;
 }
-function Item({ chatId, chatTitle, item, detailLoading, detailError, onDetailRetry, beforeActions, showActions = false, agentProfile, workerId, onFork, onEdit, onRetry, onDelete, onFile, running, sentAt, completedAt, workspace, directory, toolOpen, onToolToggle }) {
+function Item({ chatId, chatTitle, item, detailLoading, detailError, onDetailRetry, beforeActions, showActions = false, agentProfile, workerId, onFork, onEdit, onRetry, onDelete, onRecover, onFile, running, sentAt, completedAt, workspace, directory, toolOpen, onToolToggle }) {
   const i = item;
   const UserActions = i.delivery && !i.delivery.turnId ? "div" : MessageActions;
   const disclosure = {open:!!toolOpen?.[i.id], onToggle:event=>{if(event.target === event.currentTarget) onToolToggle?.(i.id,event.currentTarget.open);}};
@@ -478,7 +478,14 @@ function Item({ chatId, chatTitle, item, detailLoading, detailError, onDetailRet
         )}
         </div>}
         <UserActions className={UserActions === "div" ? "message-actions user-actions" : "user-actions"}>
-          {!i.delivery?.turnId && i.delivery ? null : <>
+          {!i.delivery?.turnId && i.delivery ? <>
+          {['failed','unknown'].includes(i.delivery.status) && <>
+            <IconButton label="Erneut senden" disabled={running} onClick={()=>onRecover(i.delivery,'retry')}>{icon(RotateCcw,14)}</IconButton>
+            <IconButton label="Nachricht bearbeiten" disabled={running} onClick={()=>onRecover(i.delivery,'edit')}>{icon(SquarePen,14)}</IconButton>
+            <IconButton label="Nachricht löschen" onClick={()=>onRecover(i.delivery,'discard')}>{icon(Trash2,14)}</IconButton>
+          </>}
+          <CopyButton label="Nachricht kopieren" size={14} text={i.delivery.text || ''}/>
+          </> : <>
           <IconButton label="Nachricht erneut ausführen" disabled={running} onClick={onRetry}>{icon(RotateCcw, 14)}</IconButton>
 
           <IconButton
@@ -1875,6 +1882,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const forkTurn=useLiveAction(guard(fork));
   const editTurn=useLiveAction(guard(revise));
   const retryTurn=useLiveAction(guard(turn=>revise(turn,true)));
+  const recoverDelivery=useLiveAction((receipt,action)=>setModal({type:"delivery-recovery",receipt:{...receipt},action}));
   const deleteTurn=useLiveAction(turn=>setModal({type:"delete-message",turn}));
   const openTurnFile=useLiveAction(guard(openFile));
   const linkOpened = useRef(false);
@@ -2361,7 +2369,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       return <React.Fragment key={t.id}>
                         {date && date !== previous && <div className="chat-day-divider"><span>{date}</span></div>}
                         <ChatTurn chatTitle={chatTitle} chatId={chatId} statisticsApi={api} statisticsSnapshot={current?.statisticsSnapshot} agentProfile={boot.settings} paneNumber={paneNumber} workerId={current?.workerId || "codex"} workspace={boot.workspace} directory={current?.cwd || boot.workspace} turn={t} running={running && t.id === active[chatId]} onForkTurn={forkTurn} onEditTurn={editTurn} onRetryTurn={retryTurn}
-                          onDeleteTurn={deleteTurn}
+                          onDeleteTurn={deleteTurn} onRecover={recoverDelivery}
                           actionsDisabled={running || busy} waiting={requests.some(r => r.params?.threadId === chatId)} visible={foreground && view === "chat" && readablePane} onFile={openTurnFile} />
                       </React.Fragment>;
                     })}
@@ -3076,6 +3084,28 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         setWelcome(false);
       }} />}
       {modal?.type === 'chat-privacy' && <ChatPrivacyDialog id={chatId} action={modal.action} api={api} onClose={()=>setModal(null)} onDone={()=>{setModal(null);void refreshChats();}}/>}
+      {modal?.type === "delivery-recovery" && <Modal title={modal.action === 'discard' ? 'Nachricht löschen?' : modal.action === 'edit' ? 'Nachricht bearbeiten' : 'Erneut senden?'} onClose={()=>{if(!busy)setModal(null);}}>
+        <form onSubmit={guard(async event=>{
+          event.preventDefault();
+          if(busy)return;
+          const text=modal.action === 'edit' ? new FormData(event.currentTarget).get('text') : modal.receipt.text;
+          setBusy(true);
+          try {
+            const result=await messageOutbox.recover(modal.receipt.clientMessageId,modal.action === 'discard' ? 'discard' : 'retry',
+              {text,confirmed:true,revision:modal.receipt.revision || 0});
+            setModal(null);
+            if(result.status === 'unknown' || result.status === 'failed')notify('Der Nachrichtenstatus hat sich geändert. Bitte erneut prüfen.');
+          } finally {setBusy(false);}
+        })}>
+          {modal.action === 'discard' ? <p>Diese nicht bestätigte Nachricht wird aus dem Postausgang entfernt. Bereits gestartete Arbeit wird dadurch nicht rückgängig gemacht.</p> : <>
+            {modal.receipt.status === 'unknown' && <p role="alert">Die Nachricht könnte bereits angekommen sein. Erneutes Senden kann den Auftrag doppelt ausführen.</p>}
+            {modal.action === 'edit' ? <Field label="Nachricht"><textarea name="text" defaultValue={modal.receipt.text || ''} rows={5} autoFocus/></Field> : <p>{modal.receipt.text || 'Nachricht mit Anhang'}</p>}
+            {!!modal.receipt.attachments?.length && <p className="form-help">{modal.receipt.attachments.length} Anhänge werden erneut mitgesendet.</p>}
+          </>}
+          <div className="row"><button type="button" disabled={busy} onClick={()=>setModal(null)}>Abbrechen</button>
+            <button type="submit" disabled={busy} className={modal.action === 'discard' ? 'danger' : 'primary'}>{modal.action === 'discard' ? 'Nachricht löschen' : 'Erneut senden'}</button></div>
+        </form>
+      </Modal>}
       {modal?.type === "delete-message" && (
         <Modal title="Nachricht löschen?" onClose={() => setModal(null)}>
           <p>Diese Nachricht, die zugehörige Antwort und alle folgenden Nachrichten werden aus dem Gespräch gelöscht. Bereits ausgeführte Dateiänderungen bleiben bestehen.</p>

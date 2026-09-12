@@ -26,8 +26,8 @@ export class MessageDelivery {
     return next;
   }
   receipt(entry) {
-    const {clientMessageId, chatId, localId, status, turnId, itemId, createdAt, error, payload} = entry;
-    return {clientMessageId, chatId, localId, status, turnId, itemId, createdAt, error,
+    const {clientMessageId, chatId, localId, status, turnId, itemId, createdAt, error, payload, revision = 0} = entry;
+    return {clientMessageId, chatId, localId, status, turnId, itemId, createdAt, error, revision,
       text:payload.text, attachments:payload.attachments || [], projectId:payload.chat?.projectId};
   }
   get(key) {
@@ -44,6 +44,7 @@ export class MessageDelivery {
       const digest = createHash('sha256').update(JSON.stringify(payload)).digest('hex');
       const existing = this.entries.find(e => e.clientMessageId === input.clientMessageId);
       if (existing) {
+        if (existing.status === 'cancelled') return this.receipt(existing);
         if (existing.digest !== digest) throw Error('Diese Nachrichtenkennung gehört zu einem anderen Inhalt.');
         return this.receipt(existing);
       }
@@ -62,6 +63,48 @@ export class MessageDelivery {
     this.kick();
     return receipt;
   }
+  async action(body) {
+    const {clientMessageId, action, revision = 0} = body;
+    if (!/^[a-zA-Z0-9-]{16,96}$/.test(clientMessageId || '') || !['retry','discard'].includes(action))
+      throw Error('Ungültige Nachrichtenaktion.');
+    // A locally rejected request has no server receipt yet. Acceptance still deduplicates races.
+    if (action === 'retry' && !this.entries.some(e => e.clientMessageId === clientMessageId)) {
+      if (!body.payload || body.payload.clientMessageId !== clientMessageId || body.payload.id !== body.id)
+        throw Error('Die ursprüngliche Nachricht fehlt.');
+      return this.accept({...body.payload, text:body.text ?? body.payload.text});
+    }
+    const result = await this.transaction(async () => {
+      let entry = this.entries.find(e => e.clientMessageId === clientMessageId);
+      if (entry && (entry.chatId || null) !== (body.id || null)) throw Error('Nachricht gehört zu einem anderen Chat.');
+      if (body.id) this.store.chat(body.id);
+      if (!entry) {
+        entry = {clientMessageId, chatId:body.id || null, localId:body.localId,
+          status:'cancelled', phase:'done', revision:1, createdAt:Date.now(), payload:{text:'',attachments:[]}};
+        this.entries.push(entry);
+        try { await this.store.save(); } catch (error) { this.entries.splice(this.entries.indexOf(entry),1); throw error; }
+        return this.receipt(entry);
+      }
+      if (entry.status === 'cancelled' || (entry.revision || 0) !== revision) return this.receipt(entry);
+      if (this.inflight.has(clientMessageId) || !['unknown','failed'].includes(entry.status))
+        throw Error('Der Nachrichtenstatus hat sich geändert. Bitte erneut prüfen.');
+      if (action === 'retry' && entry.status === 'unknown' && body.confirmed !== true)
+        throw Error('Die Nachricht könnte bereits ausgeführt worden sein. Erneutes Senden bitte bestätigen.');
+      const before = structuredClone(entry);
+      if (action === 'retry') {
+        const text = body.text ?? entry.payload.text;
+        if (typeof text !== 'string' || text.length > 200000 || (!text.trim() && !entry.payload.attachments?.length)) throw Error('Nachricht ist leer oder zu lang.');
+        entry.payload = {...entry.payload, text};
+        entry.digest = createHash('sha256').update(JSON.stringify(entry.payload)).digest('hex');
+        Object.assign(entry, {status:'accepted', phase:'queued', error:''});
+      } else Object.assign(entry, {status:'cancelled', phase:'done', error:''});
+      entry.revision = (entry.revision || 0) + 1;
+      try { await this.store.save(); } catch (error) { Object.assign(entry, before); throw error; }
+      return this.receipt(entry);
+    });
+    this.emit({method:'wrapper/delivery', params:{threadId:result.chatId, clientMessageId}});
+    this.kick();
+    return result;
+  }
   kick() {
     if (this.paused()) return;
     for (const entry of this.entries) {
@@ -74,6 +117,7 @@ export class MessageDelivery {
   async update(entry, values) {
     await this.transaction(async () => {
       Object.assign(entry, values);
+      entry.revision = (entry.revision || 0) + 1;
       await this.store.save();
     });
     this.emit({method:'wrapper/delivery', params:{threadId:entry.chatId, clientMessageId:entry.clientMessageId}});

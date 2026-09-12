@@ -1112,6 +1112,7 @@ messageDelivery = await new BrowserMessageDelivery({
   paused:()=>restartGate.restarting, locked:(id, payload)=>turnLocks.has(id) || !!payload?.nextSelection && (active.has(id) || finishing.has(id)),
 }).init();
 route("POST", "/api/delivery", b => messageDelivery.accept(b));
+route("POST", "/api/delivery/action", b => messageDelivery.action(b));
 route("GET", "/api/delivery", (b,u) => messageDelivery.transaction(() => messageDelivery.get(u.searchParams.get("clientMessageId"))));
 route("GET", "/api/deliveries", (b,u) => messageDelivery.transaction(() => ({entries:messageDelivery.list(u.searchParams.get("id"))})));
 setInterval(()=>messageDelivery.kick(),500).unref();

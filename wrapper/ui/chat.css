@@ -438,3 +438,10 @@
 @media (pointer: coarse) {
   .composer-options { padding-inline: calc(var(--space-8) + var(--control-touch) / 2); }
 }
+
+/* Delivery failures keep recovery actions reachable without hover. */
+.user-message-row:has(.message-delivery button) .user-actions { flex-wrap: wrap; }
+.user-message-row:has(.message-delivery button) .user-actions > button,
+.user-message-row:has(.message-delivery button) .user-actions > .copy-feedback { opacity: 1; pointer-events: auto; }
+.user-message-row:has(.message-delivery button) .user-actions > button svg { visibility: visible; }
+.message-delivery > button { gap: var(--space-4); font-size: var(--text-caption); }
