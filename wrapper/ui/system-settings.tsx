@@ -130,7 +130,7 @@ export function SystemSettings({api, section, chats, onJobs, onLibrary, onConnec
     {section==='access'&&<>
       <Group title="Zugang">
         <SettingRow title="Schlüsselablage" description={status.vault?.message || 'Status wird geprüft.'}/>
-        <SettingRow title="Anmeldung" description={status.access.enabled?'Konten und Rückweg-Schlüssel verwaltest du unter Benutzer.':'Lege unter Benutzer dein Konto an; dabei entsteht der Rückweg-Schlüssel.'}/>
+        <SettingRow title="Anmeldung" description={status.access.enabled?'Konten und Rückweg-Schlüssel verwaltest du unter Konto.':'Lege unter Konto dein Konto an; dabei entsteht der Rückweg-Schlüssel.'}/>
         <SettingRow title="Mobil mit Tailscale" description="Private HTTPS-Verbindung zwischen deinen angemeldeten Geräten. Die App bleibt an localhost gebunden."><button onClick={onConnections}>Verbindung einrichten</button></SettingRow>
         {status.access.origin&&<SettingRow title="Mobile Adresse" description={status.access.origin}><a href={status.access.origin} target="_blank" rel="noreferrer">Öffnen</a></SettingRow>}
       </Group>

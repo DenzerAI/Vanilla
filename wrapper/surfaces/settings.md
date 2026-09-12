@@ -241,24 +241,35 @@ Unbekannte Werte verwenden die ruhige aktivierte Voreinstellung; Speicherfehler
 bleiben sichtbar. Reduzierte Bewegung in App oder System hat Vorrang.
 
 
-## Benutzer
+## Navigation nach iOS-Vorbild
 
-Direkt nach Dein Profil steht Benutzer, sichtbar sobald der Kern das Feature `users` meldet. Die
-Speicherzeile zeigt, als wer man angemeldet ist, daneben Abmelden. Die Gruppe Konten listet jede
-Person als SettingRow mit Rolle; Eigentümer sehen je Zeile Passwort, Rollenwechsel und Entfernen,
-Mitglieder nur Passwort für sich selbst. Konto anlegen öffnet das gemeinsame Modal mit Name,
+Die Einstellungsnavigation ist gruppiert wie die iOS-Einstellungen: zuerst ohne Überschrift das
+Konto, dann die Gruppen **Dein Agent** (Dein Agent, Stimme, KI & Modelle, Skills, Memory),
+**Verbindungen** (Verbindungen, Secrets, Zugang), **System** (Allgemein, Aussehen, Datenschutz,
+Speicher & Sicherung, Updates, System, Service, Nutzung) und **Weiteres** (Tastaturkürzel,
+Archivierte Chats). Gruppenüberschriften verwenden `sidebar-section-label`; Einträge bleiben
+`nav-item`. Eine neue Seite wird der passenden Gruppe zugeordnet, nie als neue Gruppe angelegt.
+
+## Konto
+
+Konto ersetzt die früheren Seiten Dein Profil und Benutzer. Oben steht unverändert das Profil
+(Anzeigename, Wetterort, siehe Dein Profil unten), darunter die Gruppe Anmeldung mit der Zeile,
+als wer man angemeldet ist, und Abmelden. Die Gruppe Konten listet jede Person als SettingRow mit
+Rolle; Eigentümer sehen je Zeile Passwort, Rollenwechsel und Entfernen, Mitglieder nur Passwort
+für sich selbst. Konto anlegen öffnet das gemeinsame Modal mit Name,
 Passwort und Rolle; Fehler stehen im Modal. Das erste Konto ist ein Eigentümer und trägt ein
 zusätzliches Feld Rückweg-Schlüssel mit zufälligem Vorschlag; Speichern meldet direkt mit dem
 neuen Konto an. Die Gruppe Rückweg-Schlüssel erklärt den einen Installationsschlüssel und ändert
 ihn; unter Zugang verweist die Zeile Anmeldung nur noch hierher. Entfernen bestätigt im
-gemeinsamen Bestätigungsdialog. Eine weitere Gruppe erklärt in drei Zeilen, was Benutzer
+gemeinsamen Bestätigungsdialog. Eine weitere Gruppe erklärt in drei Zeilen, was Konten
 bedeuten: Chats gehören der Person, private Chats schützt die PIN, Gedächtnis bleibt gemeinsam.
-Keine Avatare, keine Einladungslinks, keine eigene Seite je Person. Anmeldung und „Erneut anmelden“ tragen Name und Passwort; ein leerer Name meldet mit
+Keine Avatare, keine Einladungslinks, keine eigene Seite je Person. Ohne Kern (Feature `users`
+fehlt) zeigt Konto nur das Profil. Anmeldung und „Erneut anmelden“ tragen Name und Passwort; ein leerer Name meldet mit
 dem Zugangscode an. Vertrag und Schnittstellen: [docs/USERS.md](../../docs/USERS.md).
 
 ## Dein Profil
 
-Direkt nach Dein Agent steht Dein Profil mit der vorhandenen Speicherzeile und SettingRow-Gruppen. Über dich enthält den Anzeigenamen des Nutzers; Wetter verwendet das vorhandene Eingabefeld mit einer um 400 ms verzögerten Open-Meteo-Ortssuche. Treffer stehen als SettingRow mit Stadt, Region, Land und nativem Auswählen-Button darunter. Veraltete Suchantworten werden verworfen. Speichern erfordert bei gesetztem Ort einen bestätigten Treffer und erhält dessen Koordinaten in USER.md. Löschen des Orts entfernt die Koordinaten. Der Wetterabruf startet nach erfolgreicher Speicherung und zeigt Erfolg oder Fehler getrennt vom Speicherstatus. Aktualisieren wiederholt den Abruf. Quellenlinks nennen Open-Meteo und GeoNames sowie die übermittelten Ortsdaten; keine amtliche Adressprüfung. Eine nicht eingerichtete Wetterkarte öffnet diesen Bereich direkt; die eingerichtete Wetterkarte öffnet einen neuen Wetterbericht im Chat. Leere Werte sind erlaubt, maximal 100 Zeichen je Feld.
+Dein Profil ist der obere Teil der Seite Konto, mit der vorhandenen Speicherzeile und SettingRow-Gruppen. Über dich enthält den Anzeigenamen des Nutzers; Wetter verwendet das vorhandene Eingabefeld mit einer um 400 ms verzögerten Open-Meteo-Ortssuche. Treffer stehen als SettingRow mit Stadt, Region, Land und nativem Auswählen-Button darunter. Veraltete Suchantworten werden verworfen. Speichern erfordert bei gesetztem Ort einen bestätigten Treffer und erhält dessen Koordinaten in USER.md. Löschen des Orts entfernt die Koordinaten. Der Wetterabruf startet nach erfolgreicher Speicherung und zeigt Erfolg oder Fehler getrennt vom Speicherstatus. Aktualisieren wiederholt den Abruf. Quellenlinks nennen Open-Meteo und GeoNames sowie die übermittelten Ortsdaten; keine amtliche Adressprüfung. Eine nicht eingerichtete Wetterkarte öffnet diesen Bereich direkt; die eingerichtete Wetterkarte öffnet einen neuen Wetterbericht im Chat. Leere Werte sind erlaubt, maximal 100 Zeichen je Feld.
 
 UserPreferences liest und speichert soul/USER.md über die vorhandenen Workspace-Dateiendpunkte. Der Agentenname bleibt in IDENTITY.md. Andere Markdown-Abschnitte in USER.md werden erhalten. Vor jedem Speichern wird der geladene Text verglichen; bei Konflikt oder Fehler bleibt der Entwurf erhalten. Browser mit Web Locks koordinieren gleichzeitige Profil-Speicherungen desselben Ursprungs. Der allgemeine Datei-Endpunkt bietet keine atomare Versionsprüfung gegen externe Dateieditoren. Neue Arbeitsbereiche erhalten eine leere USER.md ohne erfundene Nutzerdaten.
 

@@ -45,7 +45,7 @@ Die vollständigen OAuth-, Entwurfs-, Fehler- und Wiederherstellungsregeln: MAIL
 
 ## users
 
-Unter Einstellungen → Benutzer das eigene Konto als Eigentümer anlegen; dabei entsteht der
+Unter Einstellungen → Konto das eigene Konto als Eigentümer anlegen; dabei entsteht der
 Rückweg-Schlüssel der Installation, den man notiert. Danach für jede weitere Person ein Konto
 mit Rolle Mitglied. Ab dem ersten Konto meldet sich jede Person mit
 Name und Passwort an; Mitglieder sehen nur ihre eigenen Chats, Eigentümer alle. Persönliche

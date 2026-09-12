@@ -1,7 +1,7 @@
 # Benutzer
 
 Modul `users`, Version **1.0.0**, Datenformat **3** (SQLite `users`, `sessions.user_id`, `chats.owner_id`).
-Einstieg: Einstellungen → Benutzer. Anmeldung über die vorhandene Login-Seite und den Dialog „Erneut anmelden“.
+Einstieg: Einstellungen → Konto. Anmeldung über die vorhandene Login-Seite und den Dialog „Erneut anmelden“.
 
 ## Vertrag
 
