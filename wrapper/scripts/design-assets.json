@@ -88,28 +88,28 @@
     "reason": "Vanilla application icon derived from bundled avatars/faces/nori.svg, static neutral expression on existing light surface/text colors. PNG variants rasterized locally from public/app-icon.svg; no external artwork or private content."
   },
   "ui/assets/avatars/faces/pixel.svg": {
-    "sha256": "0fa6908b762d4725ff022ae3832fb907f54335c0d6616c6dac8aa3363fd5f209",
-    "reason": "Original monochrome pixel figure on a 16px grid with arms and feet; eyes are cutouts in the background colour, props (laptop, book, snack, balls, broom, speech bubble, notes, z) are separate opacity layers. No masks, no external content, no third-party artwork."
+    "sha256": "050f89a325ac2dca8209cb1a08d4c8c4ec13aebe57537da5b211dbe4043d8fd3",
+    "reason": "Original monochrome pixel figure on a 16px grid with arms and feet; eyes are cutouts in the background colour, props (laptop, book, snack, balls, broom, speech bubble, notes, z) are separate opacity layers. No masks, no external content, no third-party artwork. Face holes are permanently painted into the solid silhouette; only the two open or closed eyes move. Closed Nori eyes stay separate."
   },
   "ui/assets/avatars/faces/miko.svg": {
-    "sha256": "8236239e48e1dfb1e0ef5d8e97d0ba7a6cf7384805660cc211f103f5aa14013e",
-    "reason": "Original monochrome pixel figure on a 16px grid with arms and feet; eyes are cutouts in the background colour, props (laptop, book, snack, balls, broom, speech bubble, notes, z) are separate opacity layers. No masks, no external content, no third-party artwork."
+    "sha256": "4154e5ebc7f9b9f5a2be314a5f2a0c592f817a138c970853f7c38f9e3fecbb92",
+    "reason": "Original monochrome pixel figure on a 16px grid with arms and feet; eyes are cutouts in the background colour, props (laptop, book, snack, balls, broom, speech bubble, notes, z) are separate opacity layers. No masks, no external content, no third-party artwork. Face holes are permanently painted into the solid silhouette; only the two open or closed eyes move. Closed Nori eyes stay separate."
   },
   "ui/assets/avatars/faces/orbit.svg": {
-    "sha256": "16054c4000ffe354b1b342f6a739352b284079320962e7bc967e4cff8a430ccd",
-    "reason": "Original monochrome pixel figure on a 16px grid with arms and feet; eyes are cutouts in the background colour, props (laptop, book, snack, balls, broom, speech bubble, notes, z) are separate opacity layers. No masks, no external content, no third-party artwork."
+    "sha256": "72163634ca8abdab683b2b812a5f824baf85f517f0a29db3fd65bba25cab04a8",
+    "reason": "Original monochrome pixel figure on a 16px grid with arms and feet; eyes are cutouts in the background colour, props (laptop, book, snack, balls, broom, speech bubble, notes, z) are separate opacity layers. No masks, no external content, no third-party artwork. Face holes are permanently painted into the solid silhouette; only the two open or closed eyes move. Closed Nori eyes stay separate."
   },
   "ui/assets/avatars/faces/kibo.svg": {
-    "sha256": "6b65d5a678b14a483ad72814095d06b8e3383fcdb45de7e54b8b6d38d6c93852",
-    "reason": "Original monochrome pixel figure on a 16px grid with arms and feet; eyes are cutouts in the background colour, props (laptop, book, snack, balls, broom, speech bubble, notes, z) are separate opacity layers. No masks, no external content, no third-party artwork."
+    "sha256": "d91cdbda0577569ce6587e3e99f2841cb7772a16e80260eaba55de6acef2ce9e",
+    "reason": "Original monochrome pixel figure on a 16px grid with arms and feet; eyes are cutouts in the background colour, props (laptop, book, snack, balls, broom, speech bubble, notes, z) are separate opacity layers. No masks, no external content, no third-party artwork. Face holes are permanently painted into the solid silhouette; only the two open or closed eyes move. Closed Nori eyes stay separate."
   },
   "ui/assets/avatars/faces/lumi.svg": {
-    "sha256": "ac35e3bcf67190ef90f1436373fb74cb11b3b60f75b820aa4b997cc317a6a422",
-    "reason": "Original monochrome pixel figure on a 16px grid with arms and feet; eyes are cutouts in the background colour, props (laptop, book, snack, balls, broom, speech bubble, notes, z) are separate opacity layers. No masks, no external content, no third-party artwork."
+    "sha256": "20b356a7e6a4f7c9af0974bd4ed6d7d209f20471259d9a7cc073963045973cd0",
+    "reason": "Original monochrome pixel figure on a 16px grid with arms and feet; eyes are cutouts in the background colour, props (laptop, book, snack, balls, broom, speech bubble, notes, z) are separate opacity layers. No masks, no external content, no third-party artwork. Face holes are permanently painted into the solid silhouette; only the two open or closed eyes move. Closed Nori eyes stay separate."
   },
   "ui/assets/avatars/faces/nori.svg": {
-    "sha256": "7e57d54deceed6cad3159e5976d83f9c7fe84f2c8e6625016c6045852ecc23f6",
-    "reason": "Original monochrome pixel figure on a 16px grid with arms and feet; eyes are cutouts in the background colour, props (laptop, book, snack, balls, broom, speech bubble, notes, z) are separate opacity layers. No masks, no external content, no third-party artwork."
+    "sha256": "b9e71ffd7fc765a9bc79fcc1013338e3992bd6be8c26f26ae3578e7ab1885d53",
+    "reason": "Original monochrome pixel figure on a 16px grid with arms and feet; eyes are cutouts in the background colour, props (laptop, book, snack, balls, broom, speech bubble, notes, z) are separate opacity layers. No masks, no external content, no third-party artwork. Face holes are permanently painted into the solid silhouette; only the two open or closed eyes move. Closed Nori eyes stay separate."
   },
   "public/app-icon-512.png": {
     "sha256": "80af497fe41c1fcdf582904c2a247b7474a9b1fab63682af68d1aa35ca35b61f",

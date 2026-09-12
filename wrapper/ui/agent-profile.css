@@ -14,9 +14,7 @@
    eigene Ebenen. Der Zustand kommt über data-set am Avatar, die Bewegungsstufe
    über data-avatar-style an der Wurzel (off, calm, sonst lebendig). */
 .agent-avatar-art .bg, .agent-avatar-art .eye { fill: var(--avatar-cutout, var(--surface)); }
-.agent-avatar-art .eye.pupil, [data-avatar="orbit"] .agent-avatar-art .eyec { fill: currentColor; }
 .agent-avatar-art .eyec { fill: var(--avatar-cutout, var(--surface)); opacity: 0; }
-.agent-avatar-art .eyefill { opacity: 0; }
 .agent-avatar-art .shadow { opacity: .1; }
 .agent-avatar-art .props > g { opacity: 0; }
 .agent-avatar-art .char, .agent-avatar-art .props, .agent-avatar-art .bodyg, .agent-avatar-art .armL, .agent-avatar-art .armR, .agent-avatar-art .legL, .agent-avatar-art .legR { transform-origin: 8px 8px; }
@@ -42,7 +40,7 @@
 .agent-avatar-art .bodyg { animation-name: px-breathe; animation-duration: 3.2s; }
 .agent-avatar-art .armL { animation-name: px-armbob; animation-duration: 6s; }
 .agent-avatar-art .armR { animation-name: px-armbob; animation-duration: 6s; animation-delay: calc(var(--avatar-delay, 2s) + .4s); }
-.agent-avatar-art .char { animation-name: px-idlechar; animation-duration: 14s; }
+.agent-avatar-art .char { animation-name: none; }
 [data-avatar="lumi"] .agent-avatar-art .detail { animation-name: px-wiggle; animation-duration: 7s; }
 .agent-avatar-art .tip { animation-name: px-tip; animation-duration: 5s; }
 .agent-avatar-art .ear { animation-name: px-ear; animation-duration: 6.5s; }
@@ -158,7 +156,6 @@
 @keyframes px-hop { 0%, 40% { transform: translateY(0); } 41%, 50% { transform: translateY(-2px); } 51%, 70% { transform: translateY(-3px); } 71%, 80% { transform: translateY(-2px); } 81%, 100% { transform: translateY(0); } }
 @keyframes px-hopshadow { 0%, 40%, 81%, 100% { transform: scaleX(1); } 41%, 80% { transform: scaleX(.6); } }
 /* Wartet auf dich: Rücken zum Betrachter, Blick über die Schulter */
-[data-set="wartet"] .agent-avatar-art .eyefill { opacity: 1; }
 [data-set="wartet"] .agent-avatar-art .eye { animation-name: px-glance; animation-duration: 6s; animation-delay: 0s; }
 [data-set="wartet"] .agent-avatar-art .eyes { animation-name: none; transform: translateX(2px); }
 [data-set="wartet"] .agent-avatar-art .armL, [data-set="wartet"] .agent-avatar-art .armR { animation-name: none; transform: translateY(1px); }
@@ -192,7 +189,6 @@
 /* Nickt ein: Augen fallen als Striche zu, ein Z, dann ein Ruck */
 [data-set="nickt"] .agent-avatar-art .eye { animation-name: px-nickeye; animation-duration: 4s; animation-delay: 0s; }
 [data-set="nickt"] .agent-avatar-art .eyec { animation-name: px-nickline; animation-duration: 4s; animation-delay: 0s; }
-[data-set="nickt"] .agent-avatar-art .eyefill { animation-name: px-nickline; animation-duration: 4s; animation-delay: 0s; }
 [data-set="nickt"] .agent-avatar-art .eyes { animation-name: none; }
 [data-set="nickt"] .agent-avatar-art .bodyg { animation-name: px-dozebody; animation-duration: 4s; animation-delay: 0s; }
 [data-set="nickt"] .agent-avatar-art .armL, [data-set="nickt"] .agent-avatar-art .armR { animation-name: px-dozearm; animation-duration: 4s; animation-delay: 0s; }
@@ -207,7 +203,7 @@
 /* Schläft: Augen als Striche, Körper sitzt tiefer, drei Z */
 [data-set="schlaeft"] .agent-avatar-art .p-zz { opacity: 1; }
 [data-set="schlaeft"] .agent-avatar-art .eye { animation-name: none; opacity: 0; }
-[data-set="schlaeft"] .agent-avatar-art .eyec, [data-set="schlaeft"] .agent-avatar-art .eyefill { animation-name: none; opacity: 1; }
+[data-set="schlaeft"] .agent-avatar-art .eyec { animation-name: none; opacity: 1; }
 [data-set="schlaeft"] .agent-avatar-art .eyes { animation-name: none; }
 [data-set="schlaeft"] .agent-avatar-art .bodyg { animation-name: px-sleepbreathe; animation-duration: 4.4s; }
 [data-set="schlaeft"] .agent-avatar-art .armL, [data-set="schlaeft"] .agent-avatar-art .armR { animation-name: none; transform: translateY(1px); }
@@ -228,6 +224,33 @@
 @keyframes px-bob { 0%, 24%, 50%, 74% { transform: translateY(0); } 25%, 49%, 75%, 100% { transform: translateY(-1px); } }
 @keyframes px-swing { 0%, 49% { transform: translateY(-1px); } 50%, 100% { transform: translateY(1px); } }
 @keyframes px-stroll { 0%, 12% { transform: translateX(0); } 13%, 24% { transform: translateX(1px); } 25%, 37% { transform: translateX(2px); } 38%, 49% { transform: translateX(1px); } 50%, 62% { transform: translateX(0); } 63%, 74% { transform: translateX(-1px); } 75%, 87% { transform: translateX(-2px); } 88%, 100% { transform: translateX(-1px); } }
+/* Idle gestures share a complete eight-second cycle and return to standing.
+   Face and silhouette move together; the feet retain their baseline. */
+[data-set="atmet"] .agent-avatar-art :is(.bodyg, .armL, .armR) { animation-name: px-deepbreath; }
+[data-set="hockt"] .agent-avatar-art :is(.bodyg, .armL, .armR) { animation-name: px-crouch; }
+[data-set="streckt"] .agent-avatar-art .bodyg { animation-name: px-stretchbody; }
+[data-set="streckt"] .agent-avatar-art :is(.armL, .armR) { animation-name: px-stretcharms; }
+[data-set="streckt"] .agent-avatar-art :is(.legL, .legR) { transform-box: fill-box; transform-origin: center bottom; animation-name: px-stretchlegs; }
+[data-set="wippt"] .agent-avatar-art :is(.bodyg, .armL, .armR) { animation-name: px-weightshift; }
+[data-set="schaut"] .agent-avatar-art .eyes { animation-name: px-lookaround; }
+[data-set="nicktzu"] .agent-avatar-art .bodyg { animation-name: px-nodhello; }
+[data-set="nicktzu"] .agent-avatar-art .eyes { animation-name: none; }
+[data-set="ruhe"] .agent-avatar-art .char { animation-name: none; }
+[data-set="atmet"] .agent-avatar-art :is(.bodyg, .armL, .armR),
+[data-set="hockt"] .agent-avatar-art :is(.bodyg, .armL, .armR),
+[data-set="streckt"] .agent-avatar-art :is(.bodyg, .armL, .armR, .legL, .legR),
+[data-set="wippt"] .agent-avatar-art :is(.bodyg, .armL, .armR),
+[data-set="schaut"] .agent-avatar-art .eyes,
+[data-set="nicktzu"] .agent-avatar-art .bodyg { animation-duration: var(--motion-avatar-idle-duration); animation-delay: 0s; }
+@keyframes px-deepbreath { 0%, 12%, 75%, 100% { transform: translateY(0); } 25%, 62% { transform: translateY(-1px); } }
+@keyframes px-crouch { 0%, 12%, 80%, 100% { transform: translateY(0); } 20%, 28%, 70%, 78% { transform: translateY(1px); } 30%, 68% { transform: translateY(2px); } }
+@keyframes px-stretchbody { 0%, 12%, 78%, 100% { transform: translateY(0); } 25%, 65% { transform: translateY(-1px); } }
+@keyframes px-stretcharms { 0%, 12%, 78%, 100% { transform: translateY(0); } 18%, 24%, 66%, 76% { transform: translateY(-2px); } 25%, 65% { transform: translateY(-4px); } }
+@keyframes px-stretchlegs { 0%, 12%, 78%, 100% { transform: scaleY(1); } 25%, 65% { transform: scaleY(1.5); } }
+@keyframes px-weightshift { 0%, 12%, 42%, 52%, 82%, 100% { transform: translateX(0); } 20%, 40% { transform: translateX(-1px); } 60%, 80% { transform: translateX(1px); } }
+@keyframes px-lookaround { 0%, 12%, 82%, 100% { transform: translate(0, 0); } 20%, 38% { transform: translate(-1px, 0); } 46%, 60% { transform: translate(0, -1px); } 68%, 80% { transform: translate(1px, 0); } }
+@keyframes px-nodhello { 0%, 12%, 30%, 40%, 58%, 100% { transform: translateY(0); } 18%, 28%, 46%, 56% { transform: translateY(1px); } }
+
 /* Bewegungsstufen: Still zeigt die Pose, Ruhig lässt Hüpfer und Drehung weg */
 :root[data-avatar-style="calm"] .agent-avatar-art .char { animation-name: none; }
 :root[data-avatar-style="off"] .agent-avatar-art * { animation: none; }

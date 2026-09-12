@@ -384,7 +384,7 @@ export const colorRoles = {
   warning: "Hinweis",
   danger: "Fehler",
 };
-export const avatarMotion = { blink: 26, blinkVariance: 6, gaze: 38, gazeVariance: 8, expression: 32, expressionVariance: 8, gesture: 29, delay: 2, delayVariance: 4 };
+export const avatarMotion = { idleGesture: 8, blink: 26, blinkVariance: 6, gaze: 38, gazeVariance: 8, expression: 32, expressionVariance: 8, gesture: 29, delay: 2, delayVariance: 4 };
 export const voiceWaveGeometry = {width:240, samples:60, spacing:4, height:7, rest:0.5, stroke:1.25, gain:36};
 // Shared, finite icon feedback. Values never represent measured progress.
 export const iconMotion = {
@@ -475,7 +475,7 @@ export const iconMotion = {
   }
 };
 
-export const motion = { 'avatar-blink-duration': `${avatarMotion.blink}s`, 'avatar-gaze-duration': `${avatarMotion.gaze}s`, 'avatar-expression-duration': `${avatarMotion.expression}s`, 'avatar-gesture-duration': `${avatarMotion.gesture}s`, 'avatar-easing': 'cubic-bezier(.4, 0, .2, 1)', 'picker-duration': '280ms', 'picker-easing': 'cubic-bezier(.16, 1, .3, 1)', 'panel-light-duration': '48s', 'panel-light-easing': 'ease-in-out', 'composer-focus-duration': '18s', 'activity-count-duration': '240ms', 'activity-step-duration': '180ms', 'feedback-duration': '160ms', 'progress-duration': '1000ms', 'skeleton-duration': '1600ms', 'status-shimmer-duration': '2400ms' };
+export const motion = { 'avatar-idle-duration': `${avatarMotion.idleGesture}s`, 'avatar-blink-duration': `${avatarMotion.blink}s`, 'avatar-gaze-duration': `${avatarMotion.gaze}s`, 'avatar-expression-duration': `${avatarMotion.expression}s`, 'avatar-gesture-duration': `${avatarMotion.gesture}s`, 'avatar-easing': 'cubic-bezier(.4, 0, .2, 1)', 'picker-duration': '280ms', 'picker-easing': 'cubic-bezier(.16, 1, .3, 1)', 'panel-light-duration': '48s', 'panel-light-easing': 'ease-in-out', 'composer-focus-duration': '18s', 'activity-count-duration': '240ms', 'activity-step-duration': '180ms', 'feedback-duration': '160ms', 'progress-duration': '1000ms', 'skeleton-duration': '1600ms', 'status-shimmer-duration': '2400ms' };
 export function renderDesignCSS() {
   const shared = Object.fromEntries([
     ["fan-blur", `${attentionFanMotion.blur}px`],
