@@ -75,6 +75,7 @@ export class Library {
     try{return await this.refreshing;}finally{this.refreshing=null;}
   }
   entries(){return Object.values(this.state.entries).sort((a,b)=>b.createdAt-a.createdAt);}
+  snapshot(){const entries=this.entries();return {entries,categories:jobCategoryOptions(entries),warnings:[],truncated:false,cached:true};}
   async resolve(file,scope){if(!this.entries().some(e=>e.path===file&&e.scope===scope))throw Error('Datei ist nicht unter Ergebnisse registriert.');return inside(scope==='artifacts'?this.artifactRoot:this.store.root,file);}
   async favorite(id,value){return this.exclusive(async()=>{const e=this.state.entries[id];if(!e)throw Error('Ergebnis nicht gefunden.');e.favorite=value===true;await atomic(this.file,this.state);return e;});}
   async category(id,value) {
@@ -104,7 +105,8 @@ export class Library {
   }
 }
 export function installLibraryRoutes({route,library,services}) {
-  route('GET','/api/library',()=>library.refresh());
+  // ?fast=1 liefert den letzten bekannten Stand sofort (kein Dateiscan); die App holt den vollen Stand danach im Hintergrund.
+  route('GET','/api/library',(_b,u)=>u?.searchParams?.get('fast')==='1'?library.snapshot():library.refresh());
   route('POST','/api/library/category',b=>library.category(b.id,b.category));
   route('POST','/api/library/favorite',b=>library.favorite(b.id,b.favorite));
   route('POST','/api/library/reuse',b=>library.reuse(b.id,b.projectId));
