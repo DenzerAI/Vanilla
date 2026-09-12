@@ -211,7 +211,9 @@
         "core/mail_imap.py",
         "wrapper/ui/inbox-composer.tsx",
         "wrapper/ui/inbox-recording.mjs",
-        "wrapper/ui/inbox-voice-message.tsx"
+        "wrapper/ui/inbox-voice-message.tsx",
+        "core/inbox_triage.py",
+        "wrapper/ui/inbox-triage.mjs"
       ],
       "entrypoints": [
         "GET /api/inbox/attachment",
@@ -238,7 +240,8 @@
         "POST /api/mail/sync",
         "POST /internal/inbox/tool",
         "POST /internal/provider-secrets",
-        "POST /internal/mail/gmail-password"
+        "POST /internal/mail/gmail-password",
+        "POST /api/inbox/triage"
       ],
       "dependencies": [
         "crm-core",
@@ -248,15 +251,17 @@
       "verification": [
         "core/tests/test_customer_workflows.py",
         "core/tests/test_mail.py",
-        "core/tests/test_mail_imap.py"
+        "core/tests/test_mail_imap.py",
+        "core/tests/test_inbox_triage.py",
+        "wrapper/test/inbox-triage.test.mjs"
       ],
       "status": {
         "endpoint": "GET /api/mail/setup",
         "meaning": "OAuth-App bereit ist noch kein verbundenes Postfach. Zusätzlich /api/mail/accounts und letzten Sync prüfen."
       },
       "limits": "Gmail und Outlook: Lesen, Entwürfe und expliziter Versand. CRM-Übergabe erzeugt Belege und Vorschläge; Entscheidungen bleiben separat. Kalender nutzt den eigenen Microsoft-Serviceanschluss. Weitere Messenger sind keine Mailpostfächer. Schlüsselablage setzt eine erreichbare native OS-Schlüsselverwaltung voraus; siehe docs/VAULT.md.",
-      "version": 4,
-      "migration": "Additiver Gmail-Modus imap mit eigenem Tresorzugang und bestehenden Mailtabellen. Vor Rückkehr zu altem Code IMAP-Konten deaktivieren. Bestehende OAuth-Konten und Nachrichten bleiben erhalten. Composer sendet nur auf ausdrückliche Aktion."
+      "version": 5,
+      "migration": "Additiver Gmail-Modus imap mit eigenem Tresorzugang und bestehenden Mailtabellen. Vor Rückkehr zu altem Code IMAP-Konten deaktivieren. Bestehende OAuth-Konten und Nachrichten bleiben erhalten. Composer sendet nur auf ausdrückliche Aktion. Grundtriage: additive lokale inbox_triage_overrides und optionale triageSignals im Nachrichten-JSON. Keine Anbieteränderung. Rückkehr blendet Einordnungen aus, erhält Daten."
     },
     {
       "id": "chat",

@@ -80,3 +80,27 @@ IconButton, echte suchbare Fortschrittsleiste und Zeitangaben, kein Autoplay.
 mit rechtsstehendem Chevron klappt ihn per Maus, Touch oder Tastatur ein.
 Keine Datei-Symbole oder nativen Disclosure-Dreiecke. Fehlende Transkripte
 werden als noch nicht verfügbar bezeichnet, nicht als fertige Erkennung.
+
+## Grundtriage der Inbox
+
+Fokus und Alle ersetzen die bisherige ständig sichtbare Statusleiste. Fokus
+zeigt Gespräche und darunter aufklappbare Gruppen für Werbung & Newsletter,
+Belege & Bestellungen und Benachrichtigungen. Keine Zähler in farbigen Badges;
+Anzahlen stehen neutral rechts. Alle zeigt die flache Liste des gewählten
+Status. Suche öffnet Treffer aus allen Gruppen, ohne ihre Einordnung zu ändern.
+
+Ein Filter-Icon öffnet den bestehenden Modal mit gemeinsamen Field-Labels und
+nativen Selects für Kanal, einzelnes Postfach, Status und Einordnung. Standard:
+alle Konten, alle Kanäle, offene Gespräche, Fokus. Der aktive Filter wird kurz
+angezeigt, Zurücksetzen bleibt im Dialog. Kein zusätzlicher Einstellungsbereich.
+Postfach-/Kanalwechsel hebt die Gesprächsauswahl auf; Entwürfe bleiben erhalten.
+Es wird kein Gespräch automatisch geöffnet oder dadurch als gelesen markiert.
+
+Gesprächszeilen enthalten einen einzeiligen Absender, bei Mail darunter einen
+einzeiligen Betreff, rechts Uhrzeit und lokalen Lesestatus. Das Kanalicon bleibt
+klein. Vollständige Namen und Inhalte stehen im geöffneten Gespräch.
+
+Das Einordnungs-Icon im Mailkopf öffnet Grund und Kategorienauswahl. Die bewusste
+Auswahl gilt dauerhaft für dieses Gespräch, bis „Automatisch einordnen“ gewählt
+wird. Keine automatische Absenderregel. Die Grundtriage ist lokal regelbasiert,
+ohne KI-Anbieter oder CRM-Voraussetzung; unklare Eingänge bleiben im Fokus.

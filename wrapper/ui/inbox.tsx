@@ -109,7 +109,6 @@ export function InboxPage({ PageHeading, sidebarHost, sidebarVisible, onShowSide
         try {const messenger=await api('/messenger/threads?'+new URLSearchParams({projectId}));result.conversations.push(...messenger.conversations);}catch(e:any){messengerError=String(e.message).includes('404')?'Messenger wird nach dem nächsten Serverneustart verfügbar.':e.message;}
         result.conversations.sort((a:any,b:any)=>String(b.updated).localeCompare(String(a.updated)));
         setConversations(result.conversations.map((row: any) => inboxConversation(row)));
-        setSelectedId(previous => previous || result.conversations.find((r:any)=>(r.triage?.category||'focus')==='focus')?.id || '');
         setError(messengerError);
       } catch (e: any) {if (alive) setError(e.message);}
       finally {busy = false; if (alive) setLoading(false);}
@@ -219,7 +218,7 @@ export function InboxPage({ PageHeading, sidebarHost, sidebarVisible, onShowSide
     </div>, sidebarHost)}
     <section className="inbox-page" data-capability="inbox.messages" data-messenger={selectedId.startsWith("msg:")} data-group={!!detail?.thread?.external?.endsWith("@g.us")} aria-label="Nachrichtenverlauf">
       {(error || draftRecord?.error) && <p role="alert">{error || draftRecord.error} {draftRecord?.error && 'Dein Text bleibt hier erhalten. Bitte vor dem Verlassen kopieren und den aktuellen Entwurf neu laden.'}</p>}
-      {!selected ? <div className="inbox-empty" role="status"><Inbox size={24}/><p>{loading ? 'Nachrichten werden geladen …' : 'Noch keine Nachrichten. Postfach unter Verbindungen einrichten.'}</p></div> : <>
+      {!selected ? <div className="inbox-empty" role="status"><Inbox size={24}/><p>{loading ? 'Nachrichten werden geladen …' : conversations.length?'Wähle ein Gespräch aus der Inbox.':'Noch keine Nachrichten. Postfach unter Verbindungen einrichten.'}</p></div> : <>
       <header className="inbox-detail-head">
         {!sidebarVisible && <button className="icon-button" type="button" aria-label="Zur Gesprächsliste" onClick={backToList}><ArrowLeft strokeWidth={1.55} size={18}/></button>}
         <BrandIcon name={selected.provider}/>
@@ -250,8 +249,8 @@ export function InboxPage({ PageHeading, sidebarHost, sidebarVisible, onShowSide
     </section>
     {filterOpen&&<Modal title="Inbox filtern" onClose={()=>setFilterOpen(false)}>
       <div className="inbox-filter-fields">
-        <label className="field"><span>Kanal</span><select value={provider} onChange={e=>setProvider(e.target.value)}><option value="all">Alle Kanäle</option>{['Gmail','Outlook','WhatsApp','Telegram'].map(value=><option key={value} value={value}>{value}</option>)}</select></label>
-        <label className="field"><span>Postfach</span><select value={account} onChange={e=>setAccount(e.target.value)}><option value="all">Alle Postfächer</option>{accounts.map(a=><option key={a.id} value={a.id}>{a.address}</option>)}</select></label>
+        <label className="field"><span>Kanal</span><select value={provider} onChange={e=>{setProvider(e.target.value);setSelectedId('');}}><option value="all">Alle Kanäle</option>{['Gmail','Outlook','WhatsApp','Telegram'].map(value=><option key={value} value={value}>{value}</option>)}</select></label>
+        <label className="field"><span>Postfach</span><select value={account} onChange={e=>{setAccount(e.target.value);setSelectedId('');}}><option value="all">Alle Postfächer</option>{accounts.map(a=><option key={a.id} value={a.id}>{a.address}</option>)}</select></label>
         <label className="field"><span>Status</span><select value={filter} onChange={e=>setFilter(e.target.value)}>{[['open','Offen'],['unread','Ungelesen'],['done','Erledigt'],['all','Alle Status']].map(([value,label])=><option key={value} value={value}>{label}</option>)}</select></label>
         <label className="field"><span>Einordnung</span><select value={category} onChange={e=>setCategory(e.target.value)}><option value="all">Alle Einordnungen</option>{inboxCategories.map(c=><option key={c.value} value={c.value}>{c.label}</option>)}</select></label>
       </div>

@@ -113,3 +113,37 @@ Vor Rückkehr zu Code ohne IMAP-Unterstützung solche Konten trennen/deaktiviere
 Zugänge und lokale Historie mit dem vollständigen Datenbackup sichern.
 Tests: core/tests/test_mail_imap.py und core/tests/test_mail.py.
 Protokollreferenz: https://developers.google.com/workspace/gmail/imap/imap-extensions.
+
+## Lokale Grundtriage
+
+`core/inbox_triage.py` ergänzt jede Seite von inbox_threads um category, label,
+reason, source und Regelversion sowie eine begrenzte Textvorschau. Die Einordnung
+wird aus der zuletzt eingegangenen Nachricht und vorhandenem Austausch bestimmt.
+Antworten, möglicher Zahlungs-/Sicherheits-/Fristbedarf und unvollständige Mails
+bleiben im Fokus. Beleg-/Bestellbetreffe gehen zu receipts, bekannte Routinethemen
+zu updates; Anbieter-Promotions oder Rundmail-/Abmeldesignale zu promotion.
+Alles Übrige bleibt focus. Ein no-reply-Absender allein reicht nicht zum Filtern.
+Das ist eine überprüfbare Grundheuristik, kein semantischer KI-Klassifikator und
+keine Garantie fehlerfreier Zuordnung. Es werden keine fremden Firmenprofile
+oder hart codierten Kunden-/Shoplisten verwendet.
+
+Gmail und Gmail-IMAP speichern bei künftigem Abruf boolesche List-Unsubscribe-/
+List-ID-Signale; Gmail-API außerdem vorhandene Anbieterlabels. Historische
+Nachrichten ohne diese Signale werden anhand der vorhandenen Texte eingestuft.
+Outlook verwendet zunächst ebenfalls die vorhandenen normalisierten Texte.
+Es entsteht keine zusätzliche Anbieterabfrage bei der Triage.
+
+POST /api/inbox/triage {id,projectId,category} schreibt ausschließlich nach
+inbox_triage_overrides. Zulässig: focus, promotion, receipts, updates; auto
+löscht die manuelle Einordnung. Konto-/Projektgrenzen und CSRF gelten wie bisher.
+Die Einordnung gilt für den gesamten Thread, auch bei neuen Beiträgen, und wird
+als manuell erklärt. Keine Lesestatus-, Erledigungs-, Entwurfs-, Versand- oder
+Originalpostfachänderung. Messenger bleiben in der Grundtriage im Fokus; der
+CRM-Abgleich und eine spätere semantische Einordnung sind separate Erweiterungen.
+
+Standardansicht Fokus bündelt Routinekategorien. Alle ist eine flache Ansicht
+mit weiterhin sichtbarer Statusfilterung. Postfachfilter verwendet eindeutige
+Konto-IDs, nicht nur Gmail/Outlook. Suche berücksichtigt auch Gruppeninhalte
+(Absender, Betreff und begrenzte Vorschau, keine vollständige Volltextsuche).
+Filter bleiben während der geöffneten Inbox bestehen; manuelle Einordnungen
+bleiben dauerhaft lokal gespeichert. Additive Tabelle, keine Provider-Migration.

@@ -1,7 +1,6 @@
 """Local, conservative inbox triage. No provider writes or model requests."""
 import json
 import re
-from email.utils import parseaddr
 from time import time
 from fastapi import APIRouter
 from pydantic import BaseModel
@@ -21,7 +20,6 @@ def classify(messages):
     subject = (m.get('subject') or '').casefold()
     raw = m.get('text') or ''
     body = (raw[:16000] + '\n' + raw[-8000:]).casefold()
-    sender = parseaddr(m.get('sender') or '')[1].casefold()
     signals = m.get('triageSignals') or {}
     labels = set(signals.get('labels') or [])
     # A bulk sender can also report a real problem. These exceptions win.
