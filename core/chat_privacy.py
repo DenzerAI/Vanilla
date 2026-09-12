@@ -20,6 +20,13 @@ class ChatPrivacy:
         self.db, self.memory = db, memory
         self.grants = {}
         self.lock = threading.RLock()
+        # Snapshot of the privacy records while one payload is being filtered; None outside.
+        self._snapshot = None
+        try:
+            with db.transaction() as cx:
+                cx.execute("CREATE INDEX IF NOT EXISTS chats_briefing_id ON chats(json_extract(data,'$.briefingId'))")
+        except Exception:
+            pass
 
     def records(self):
         return {r['key'].removeprefix('chat-privacy/'): json.loads(r['value'])
@@ -27,6 +34,8 @@ class ChatPrivacy:
                 if r['value'] != 'null'}
 
     def record(self, id):
+        if self._snapshot is not None:
+            return self._snapshot['records'].get(str(id))
         return self.db.get('chat-privacy/' + str(id))['value']
 
     def allowed(self, id, client):
@@ -121,7 +130,7 @@ class ChatPrivacy:
             return False
         # Covers raw transcripts, daily notes, continuations and chat-owned artifacts.
         paths = {path}
-        workspace = self.memory.config.workspace.resolve()
+        workspace = self._snapshot['workspace'] if self._snapshot is not None else self.memory.config.workspace.resolve()
         for base in (workspace, self.memory.config.root):
             try:
                 candidate = (base / path).resolve()
@@ -130,7 +139,7 @@ class ChatPrivacy:
             if candidate.is_relative_to(workspace):
                 paths.add(candidate.relative_to(workspace).as_posix())
         parts = [part for candidate in paths for part in re.split(r'[/\\]', candidate)]
-        records = self.records()
+        records = self._snapshot['records'] if self._snapshot is not None else self.records()
         if any(paths.intersection(r.get('pendingPaths', [])) for r in records.values()):
             return True
         if any(part == id or part.startswith(id + '.') for id in records for part in parts):
@@ -139,8 +148,19 @@ class ChatPrivacy:
 
     def sanitize(self, value, client='', omit=False):
         """Filter mixed lists and streams at delivery time, including queued events."""
+        if self._snapshot is not None:
+            return self._filter(value, client, omit)
+        # Large payloads (the library lists thousands of files) must not re-read the
+        # privacy records and re-resolve the workspace for every single entry.
+        self._snapshot = {'records': self.records(), 'workspace': self.memory.config.workspace.resolve()}
+        try:
+            return self._filter(value, client, omit)
+        finally:
+            self._snapshot = None
+
+    def _filter(self, value, client, omit):
         if isinstance(value, list):
-            return [v for item in value if (v := self.sanitize(item, client, omit)) is not None]
+            return [v for item in value if (v := self._filter(item, client, omit)) is not None]
         if not isinstance(value, dict):
             return value
         id = value.get('threadId') or value.get('chatId') or value.get('chat_id') or value.get('thread_id')
@@ -168,7 +188,7 @@ class ChatPrivacy:
             if key == 'active' and isinstance(item, dict):
                 result[key] = {k: v for k, v in item.items() if self.allowed(k, client)}
             else:
-                result[key] = self.sanitize(item, client, omit)
+                result[key] = self._filter(item, client, omit)
         return result
 
     async def stream(self, frames, client):
