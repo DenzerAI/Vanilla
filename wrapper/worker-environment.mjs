@@ -43,13 +43,20 @@ export async function installationEnvironment(dataRoot, workerId, environment = 
     const info = await stat(target);
     return info.isFile() && Boolean(info.mode & 0o111);
   }
+  async function swiftShim(file, target) {
+    // SwiftPM links its config and cache folders from XDG_CONFIG_HOME into the
+    // user's Library on every build (Xcode, xcodebuild). Neither holds credentials.
+    const relative = path.relative(path.join(root, folders.HOME, '.config', 'swiftpm'), file).split(path.sep).join('/');
+    if (!['configuration', 'cache', 'security'].includes(relative)) return false;
+    return /\/Library\/(org\.swift\.swiftpm|Caches\/org\.swift\.swiftpm)(\/|$)/.test(target);
+  }
   async function verify(dir) {
     if (!inside(await realpath(dir))) throw Error('Worker-Profil verweist außerhalb dieser Installation. Bitte ein eigenes Profil einrichten.');
     for (const e of await readdir(dir, {withFileTypes:true})) {
       const file = path.join(dir,e.name);
       if (e.isSymbolicLink()) {
         const target = await realpath(file);
-        if (!inside(target) && !boundLink(file, target) && !await nativeShim(file, target)) throw Error('Worker-Profil enthält einen fremden Anschluss. Bitte ein eigenes Profil einrichten.');
+        if (!inside(target) && !boundLink(file, target) && !await nativeShim(file, target) && !await swiftShim(file, target)) throw Error('Worker-Profil enthält einen fremden Anschluss. Bitte ein eigenes Profil einrichten.');
       }
       if (e.isDirectory()) await verify(file);
     }
