@@ -530,6 +530,7 @@ class Mail:
                 int(message.get("internalDate", 0)) / 1000, timezone.utc
             ).isoformat(),
             "outgoing": "SENT" in message.get("labelIds", []),
+            "triageSignals": {"labels": message.get("labelIds", []), "listUnsubscribe": bool(headers.get("list-unsubscribe")), "listId": bool(headers.get("list-id"))},
             "attachments": attachments,
         }
 
@@ -753,6 +754,7 @@ class Mail:
             "SELECT t.*,a.provider,a.address,a.enabled FROM mail_threads t JOIN mail_accounts a ON a.id=t.account WHERE a.project=? ORDER BY t.updated DESC,t.id LIMIT 101 OFFSET ?",
             (project, offset),
         )
+        if getattr(self, "triage", None):self.triage.annotate(rows[:100])
         return {"conversations": rows[:100], "more": len(rows) > 100, "nextOffset":offset+100 if len(rows)>100 else None}
 
     def thread(self, id, project):

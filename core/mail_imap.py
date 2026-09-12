@@ -92,7 +92,7 @@ def normalize(address, mid, tid, raw, oversized=False):
         date = (date if date.tzinfo else date.replace(tzinfo=timezone.utc)).isoformat()
     except (ValueError, TypeError, OverflowError):
         date = '1970-01-01T00:00:00+00:00'
-    return {'external': mid, 'thread': tid, 'subject': str(msg.get('Subject', '')), 'sender': str(msg.get('From', '')), 'to': str(msg.get('To', '')), 'replyTo': str(msg.get('Reply-To') or msg.get('From', '')), 'messageId': str(msg.get('Message-ID', '')), 'time': date, 'text': ('Nachricht über 25 MB. Bitte direkt in Gmail öffnen.' if oversized else ('\n'.join(texts) or plain('\n'.join(htmls)))[:100000]), 'outgoing': parseaddr(str(msg.get('From', '')))[1].lower() == address.lower(), 'attachments': attachments, 'hasAttachments': bool(attachments), 'oversized': oversized}
+    return {'external': mid, 'thread': tid, 'subject': str(msg.get('Subject', '')), 'sender': str(msg.get('From', '')), 'to': str(msg.get('To', '')), 'replyTo': str(msg.get('Reply-To') or msg.get('From', '')), 'messageId': str(msg.get('Message-ID', '')), 'time': date, 'text': ('Nachricht über 25 MB. Bitte direkt in Gmail öffnen.' if oversized else ('\n'.join(texts) or plain('\n'.join(htmls)))[:100000]), 'outgoing': parseaddr(str(msg.get('From', '')))[1].lower() == address.lower(), 'attachments': attachments, 'hasAttachments': bool(attachments), 'oversized': oversized, 'triageSignals': {'listUnsubscribe': bool(msg.get('List-Unsubscribe')), 'listId': bool(msg.get('List-Id'))}}
 
 
 def sync(address, password, cursor):

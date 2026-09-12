@@ -47,6 +47,7 @@ from .api import routes as operations_routes
 from .routines import Routines, validate_schedule, instant
 from .mail import Mail, routes as mail_routes
 from .mail_workflow import MailWorkflow, routes as mail_workflow_routes
+from .inbox_triage import InboxTriage, routes as triage_routes
 from .messenger import Messenger, routes as messenger_routes
 from .calendar import Calendar, routes as calendar_routes
 from .github import GitHub
@@ -92,6 +93,7 @@ def create_app(config=None):
     runtime = Runtime(config, queue, knowledge, operations)
     routines = Routines(storage, runtime, memory)
     mail = Mail(db, config)
+    mail.triage = InboxTriage(db, mail)
     mail.workflow = MailWorkflow(mail, crm, routines)
     messenger = Messenger(db, config, mail.project)
     calendar = Calendar(db, config, runtime, mail.project)
@@ -357,6 +359,7 @@ def create_app(config=None):
     app.include_router(operations_routes(operations, queue))
     app.include_router(crm_routes(crm, memory))
     app.include_router(mail_routes(mail))
+    app.include_router(triage_routes(mail.triage))
     app.include_router(messenger_routes(messenger))
     app.include_router(mail_workflow_routes(mail.workflow))
     app.include_router(calendar_routes(calendar))
