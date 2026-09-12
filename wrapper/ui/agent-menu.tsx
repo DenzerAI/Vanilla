@@ -6,6 +6,8 @@ import { IconButton } from "./icon-button";
 import { ThemeToggle } from "./components/ui/theme-toggle";
 
 type Props = {
+  companionHidden?: boolean;
+  onShowCompanion?: () => void;
   theme?: "dark" | "light";
   onThemeChange?: (theme: "dark" | "light") => void | Promise<void>;
   name: string;
@@ -105,7 +107,7 @@ function ServerDetails({ connectionState, preview }: Pick<Props, "connectionStat
   </div>;
 }
 
-export function AgentMenu({ theme, onThemeChange, name, avatar, avatarColor, connectionState, restartBusy = false, onNavigate, onRestart, preview = false }: Props) {
+export function AgentMenu({ theme, onThemeChange, name, avatar, avatarColor, connectionState, restartBusy = false, onNavigate, onRestart, preview = false, companionHidden = false, onShowCompanion }: Props) {
   const state = restartBusy ? "Startet neu …" : connectionState === "online" ? "Verbunden" : ["connecting", "reconnecting"].includes(connectionState) ? "Verbindet …" : "Verbindung unterbrochen";
   return <ChatMenu
     label={`${name || "Vanilla"} · Agent-Menü · ${state}`}
@@ -115,6 +117,7 @@ export function AgentMenu({ theme, onThemeChange, name, avatar, avatarColor, con
     footer={(close: () => void) => <span className="agent-theme-row"><IconButton role="menuitem" label={restartBusy ? "Server startet neu …" : "Server neu starten"} className="agent-restart-button" disabled={restartBusy} onClick={() => { close(); onRestart(); }}><RotateCcw size={18} strokeWidth={1.55}/></IconButton><ThemeToggle theme={theme} onThemeChange={onThemeChange} menuItem /></span>}
     header={<ServerDetails connectionState={connectionState} preview={preview} />}
     items={[
+      ...(companionHidden && onShowCompanion ? [{ id: "companion", label: `${name || "Figur"} auf der Schreibzeile zeigen`, icon: <Avatar avatar={avatar} color={avatarColor} />, action: onShowCompanion }] : []),
       { id: "usage", label: "Nutzung", icon: <Activity size={18} strokeWidth={1.55} />, action: () => onNavigate("usage") },
       { id: "settings", label: "Einstellungen", icon: <Settings size={18} strokeWidth={1.55} />, action: () => onNavigate("general") },
     ]}

@@ -3,7 +3,7 @@ import { loaderOptions } from './loader-options.mjs';
 export const appearanceOptions = {
   iconAnimation: { default: "hover", options: [["hover", "Hover und Drücken"], ["press", "Nur beim Drücken"], ["off", "Aus"]] },
   ...loaderOptions,
-  avatarMotion: { default: "lively", options: [["off", "Still"], ["calm", "Ruhig"], ["lively", "Lebendig"]] },
+  avatarMotion: { default: "lively", options: [["off", "Still"], ["calm", "Ruhig"], ["lively", "Lebendig"], ["hidden", "Ausgeblendet"]] },
   designTone: {default:'balanced', options:designTones.map(({id,label})=>[id,label])},
   highlightColor: {default:'terracotta', options:designAccents.map(({id,label})=>[id,label])},
   panelLight: { default: 'animated', options: [['off', 'Aus'], ['static', 'Ruhend'], ['animated', 'Sanft bewegt']] },
@@ -15,7 +15,7 @@ export const appearanceOptions = {
 export const projectIcons = [['folder','Ordner'], ['code','Code'], ['briefcase','Arbeit'], ['globe','Web'], ['idea','Ideen'], ['calendar','Planung'], ['message','Gespräche'], ['files','Dokumente']];
 // Frühere Gesichtsstile (Sanftes Gesicht, Zwinkern …) laufen als Lebendig weiter.
 export function normalizeAvatarMotion(value) {
-  if (value === "off") return "off";
+  if (value === "off" || value === "hidden") return value;
   if (value === "calm" || value === "eyes") return "calm";
   return "lively";
 }

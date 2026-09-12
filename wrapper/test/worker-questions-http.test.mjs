@@ -89,7 +89,7 @@ test('HTTP → pending native RPC → reply → completed turn and persistent qu
    for(const viewport of ['desktop','mobile']) {
     const args=['scripts/ui-check.mjs','--base',base.replace(/\/api$/,''),'--viewport',viewport,
       '--out','workspaces/default/output/async-questions-ui','--click','text=Async question fixture',
-      '--wait','css=.composer-question','--click','css=.composer-question-option:nth-child(2)',
+      '--sleep','800','--shot','before-question-'+viewport,'--text','--eval',`fetch('/api/bootstrap').then(r=>r.json()).then(b=>({requests:b.requests,active:b.active}))`,'--wait','css=.composer-question','--click','css=.composer-question-option:nth-child(2)',
       '--eval',`({question:document.querySelector('.composer-question-title').textContent,selected:document.querySelectorAll('.composer-question input:checked').length,overflow:document.documentElement.scrollWidth>innerWidth})`,
       '--shot','async-question-'+viewport];
     await new Promise((resolve,reject)=>{
