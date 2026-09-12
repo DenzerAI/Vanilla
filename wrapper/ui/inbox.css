@@ -90,3 +90,19 @@
 .inbox-transcript[open] summary svg { transform: rotate(0); }
 .inbox-message .inbox-transcript p { margin: 0 0 var(--space-8); font-size: var(--text-reading); line-height: var(--leading-reading); }
 .inbox-transcript-pending { margin: var(--space-8) 0; color: var(--muted); font-size: var(--text-small); }
+
+.inbox-view-bar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); margin-top: var(--space-8); }
+.inbox-view-bar .inbox-tabs { margin: 0; }
+.inbox-filter-summary { max-width: 100%; padding: var(--space-4); background: transparent; font-size: var(--text-caption); color: var(--muted); text-align: left; overflow-wrap: anywhere; }
+.inbox-row-copy { display: flex; flex-direction: column; flex: 1; min-width: 0; gap: var(--space-4); }
+.inbox-row-copy .inbox-row-name { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: var(--text-small); }
+.inbox-row-preview { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: var(--text-caption); color: var(--muted); }
+.inbox-row .app-icon, .inbox-row .app-icon img { width: 20px; height: 20px; }
+.inbox-bundle-toggle { display: flex; align-items: center; gap: var(--space-8); width: 100%; min-height: var(--control-touch); padding: var(--space-12) var(--space-8); background: transparent; text-align: left; font-size: var(--text-small); color: var(--muted); }
+.inbox-bundle-toggle > svg { flex-shrink: 0; transform: rotate(-90deg); }
+.inbox-bundle-toggle[aria-expanded="true"] > svg { transform: rotate(0); }
+.inbox-bundle-count { margin-left: auto; font-size: var(--text-caption); font-variant-numeric: tabular-nums; }
+.inbox-filter-fields, .inbox-triage-options { display: grid; gap: var(--space-8); }
+.inbox-triage-options button { text-align: left; }
+.inbox-triage-options button[aria-pressed="true"] { background: var(--selected); }
+.inbox-focus-empty { padding: var(--space-8); color: var(--muted); font-size: var(--text-caption); }

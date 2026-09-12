@@ -1,11 +1,12 @@
 import {inboxDraftStore, inboxConversation} from './inbox-data.mjs';
 import React, { useEffect, useLayoutEffect, useRef, useState, type ComponentType, type ReactNode } from "react";
 import { createPortal } from "react-dom";
-import { ArrowLeft, Check, FileText, Inbox, Search, MoreHorizontal } from "./icons.jsx";
+import { ArrowLeft, Check, FileText, Inbox, Search, MoreHorizontal, SlidersHorizontal, ChevronDown } from "./icons.jsx";
 import { BrandIcon } from "./brand-icon.jsx";
 import { FilterPicker } from "./filter-picker.jsx";
 import { Modal } from "./modal.jsx";
 import "./inbox.css";
+import {inboxCategories, inboxSections} from './inbox-triage.mjs';
 import {InboxComposer} from './inbox-composer';
 import {InboxVoiceMessage, InboxTranscript} from './inbox-voice-message';
 import {DeliveryChecks} from './delivery-checks';
@@ -13,7 +14,7 @@ import {ChatMenu} from './chat-controls.jsx';
 
 
 type Conversation = {
-  id: string; revision?: number; sender: string; initials: string; provider: string; account: string;
+  id: string; revision?: number; accountId?: string; preview?: string; triage?: {category:string;label:string;reason:string;source:string}; sender: string; initials: string; provider: string; account: string;
   subject: string; time: string; unread: boolean; done: boolean;
   messages: { sender: string; time: string; text: string; outgoing?: boolean }[];
 };
@@ -42,7 +43,7 @@ export function InboxConversationRow({ conversation, selected = false, onOpen }:
   return <button type="button" className="inbox-row" aria-current={selected ? "true" : undefined}
     aria-label={`${conversation.sender}, ${conversation.provider}, ${conversation.time}${conversation.unread ? ", ungelesen" : ""}${conversation.done ? ", erledigt" : ""}`} onClick={onOpen}>
     <BrandIcon name={conversation.provider}/>
-    <strong className="inbox-row-name">{conversation.sender}</strong>
+    <span className="inbox-row-copy"><strong className="inbox-row-name">{conversation.sender}</strong>{conversation.subject&&<span className="inbox-row-preview">{conversation.subject}</span>}</span>
     <span className="inbox-row-status"><span className="inbox-time">{conversation.time}</span>
       {conversation.unread && <span className="inbox-unread" aria-hidden="true"/>}
       {conversation.done && <Check strokeWidth={1.55} size={14}/>}</span>
@@ -69,7 +70,13 @@ export function InboxPage({ PageHeading, sidebarHost, sidebarVisible, onShowSide
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedId, setSelectedId] = useState("");
   const [query, setQuery] = useState("");
-  const [filter, setFilter] = useState("all");
+  const [filter, setFilter] = useState("open");
+  const [view,setView]=useState("focus");
+  const [account,setAccount]=useState("all");
+  const [category,setCategory]=useState("all");
+  const [accounts,setAccounts]=useState<any[]>([]);
+  const [filterOpen,setFilterOpen]=useState(false),[triageOpen,setTriageOpen]=useState(false),[triageBusy,setTriageBusy]=useState(false);
+  const [expanded,setExpanded]=useState<Record<string,boolean>>({});
   const [provider, setProvider] = useState("all");
   const [, redraw] = useState(0);
   const [error, setError] = useState("");
@@ -90,6 +97,8 @@ export function InboxPage({ PageHeading, sidebarHost, sidebarVisible, onShowSide
       busy = true;
       try {
         const result:any={conversations:[]};let offset:any=0;
+        const mailAccounts=await api('/mail/accounts?'+new URLSearchParams({projectId}));
+        if(!alive)return;setAccounts(mailAccounts.accounts);
         do {
           const page=await api('/inbox/threads?'+new URLSearchParams({projectId,offset:String(offset)}));
           result.conversations.push(...page.conversations);offset=page.nextOffset;
@@ -101,7 +110,7 @@ export function InboxPage({ PageHeading, sidebarHost, sidebarVisible, onShowSide
         try {const messenger=await api('/messenger/threads?'+new URLSearchParams({projectId}));result.conversations.push(...messenger.conversations);}catch(e:any){messengerError=String(e.message).includes('404')?'Messenger wird nach dem nächsten Serverneustart verfügbar.':e.message;}
         result.conversations.sort((a:any,b:any)=>String(b.updated).localeCompare(String(a.updated)));
         setConversations(result.conversations.map((row: any) => inboxConversation(row)));
-        setSelectedId(previous => previous || result.conversations[0]?.id || '');
+        setSelectedId(previous => previous || result.conversations.find((r:any)=>(r.triage?.category||'focus')==='focus')?.id || '');
         setError(messengerError);
       } catch (e: any) {if (alive) setError(e.message);}
       finally {busy = false; if (alive) setLoading(false);}
@@ -170,11 +179,18 @@ export function InboxPage({ PageHeading, sidebarHost, sidebarVisible, onShowSide
   const selected = row ? {...row, messages: detail?.messages || []} : null;
   const draftRecord = drafts.records.get(selectedId);
   const draft = draftRecord?.text || "";
-  const results = conversations.filter(item => {
-    const text = [item.sender, item.subject, item.provider, item.account, ...item.messages.map(message => message.text)].join(" ").toLocaleLowerCase("de");
-    return (provider === "all" || item.provider === provider) &&
-      (filter === "done" ? item.done : !item.done && (filter !== "unread" || item.unread)) && text.includes(query.toLocaleLowerCase("de").trim());
-  });
+  const sections=inboxSections(conversations,{query,provider,account,status:filter,category,view});
+  const filterCount=Number(provider!=='all')+Number(account!=='all')+Number(category!=='all')+Number(filter!=='open');
+  const triageReady=conversations.some(item=>item.triage);
+  async function correctTriage(value:string){
+    setTriageBusy(true);setError('');
+    try{
+      await api('/inbox/triage',{id:selectedId,projectId,category:value});
+      const label=inboxCategories.find(c=>c.value===value)?.label;
+      if(value!=='auto')setConversations(items=>items.map(item=>item.id===selectedId?{...item,triage:{category:value,label:label||value,reason:'Für dieses Gespräch von dir festgelegt.',source:'manual'}}:item));
+      setTriageOpen(false);
+    }catch(e:any){setError(e.message);}finally{setTriageBusy(false);}
+  }
   function openConversation(item: Conversation) {
     follow.current=true;
     setSelectedId(item.id);
@@ -191,12 +207,15 @@ export function InboxPage({ PageHeading, sidebarHost, sidebarVisible, onShowSide
       <PageHeading title="Inbox"><button type="button" className="icon-button" title="Konzept" aria-label="Inbox-Konzept" onClick={() => setConceptOpen(true)}><FileText strokeWidth={1.55} size={18}/></button></PageHeading>
       <div className="inbox-list-tools">
         <div className="search-box"><Search strokeWidth={1.55} size={18}/><input aria-label="Nachrichten suchen" placeholder="Suchen" value={query} onChange={event => setQuery(event.target.value)}/></div>
-        <div className="inbox-tabs" role="group" aria-label="Nachrichtenstatus">{[["all", "Offen"], ["unread", "Ungelesen"], ["done", "Erledigt"]].map(([value, label]) => <button key={value} type="button" aria-pressed={filter === value} onClick={() => setFilter(value)}>{label}</button>)}</div>
-        <FilterPicker label="Kanal" value={provider} onChange={setProvider} disabled={false} options={[{ value: "all", label: "Alle Kanäle" }, ...["Outlook", "Gmail", "WhatsApp", "Telegram"].map(value => ({ value, label: value }))]}/>
+        <div className="inbox-view-bar"><div className="inbox-tabs" role="group" aria-label="Inbox-Ansicht">{[["focus","Fokus"],["all","Alle"]].map(([value,label])=><button key={value} type="button" aria-pressed={view===value} onClick={()=>setView(value)}>{label}</button>)}</div><button type="button" className="icon-button" aria-label={filterCount?`Inbox filtern, ${filterCount} aktiv`:'Inbox filtern'} title="Inbox filtern" onClick={()=>setFilterOpen(true)}><SlidersHorizontal size={18}/>{filterCount>0&&<span>{filterCount}</span>}</button></div>
+        {(account!=='all'||provider!=='all'||category!=='all'||filter!=='open')&&<button type="button" className="inbox-filter-summary" onClick={()=>setFilterOpen(true)}>{[accounts.find(a=>a.id===account)?.address,provider!=='all'?provider:'',inboxCategories.find(c=>c.value===category)?.label,filter==='unread'?'Ungelesen':filter==='done'?'Erledigt':filter==='all'?'Alle Status':''].filter(Boolean).join(' · ')}</button>}
+        {!triageReady&&conversations.some(c=>!c.id.startsWith('msg:'))&&<p className="muted">Grundtriage wird nach dem Serverneustart verfügbar.</p>}
       </div>
       <div className="inbox-list" ref={list} aria-label="Gespräche">
-        {results.map(item => <InboxConversationRow key={item.id} conversation={item} selected={item.id === selectedId} onOpen={() => openConversation(item)}/>)}
-        {!results.length && <div className="inbox-empty" role="status"><Inbox strokeWidth={1.55} size={24}/><p>{query ? "Keine Treffer" : filter === "done" ? "Noch nichts erledigt" : filter === "unread" ? "Alles gelesen" : "Keine passenden Gespräche"}</p></div>}
+        {sections.main.map((item:Conversation) => <InboxConversationRow key={item.id} conversation={item} selected={item.id === selectedId} onOpen={() => openConversation(item)}/>)}
+        {sections.bundles.map((bundle:any)=><div className="inbox-bundle" key={bundle.value}><button type="button" className="inbox-bundle-toggle" aria-expanded={!!expanded[bundle.value]} onClick={()=>setExpanded(old=>({...old,[bundle.value]:!old[bundle.value]}))}><ChevronDown size={16}/><span>{bundle.label}</span><span className="inbox-bundle-count">{bundle.items.length}</span></button>{expanded[bundle.value]&&bundle.items.map((item:Conversation)=><InboxConversationRow key={item.id} conversation={item} selected={item.id===selectedId} onOpen={()=>openConversation(item)}/>)}</div>)}
+        {!sections.main.length&&sections.bundles.length>0&&<p className="inbox-focus-empty">Keine weiteren Gespräche im Fokus.</p>}
+        {!sections.main.length&&!sections.bundles.length && <div className="inbox-empty" role="status"><Inbox strokeWidth={1.55} size={24}/><p>{query ? "Keine Treffer" : filter === "done" ? "Noch nichts erledigt" : filter === "unread" ? "Alles gelesen" : "Keine passenden Gespräche"}</p></div>}
       </div>
     </div>, sidebarHost)}
     <section className="inbox-page" data-capability="inbox.messages" data-messenger={selectedId.startsWith("msg:")} data-group={!!detail?.thread?.external?.endsWith("@g.us")} aria-label="Nachrichtenverlauf">
@@ -206,6 +225,7 @@ export function InboxPage({ PageHeading, sidebarHost, sidebarVisible, onShowSide
         {!sidebarVisible && <button className="icon-button" type="button" aria-label="Zur Gesprächsliste" onClick={backToList}><ArrowLeft strokeWidth={1.55} size={18}/></button>}
         <BrandIcon name={selected.provider}/>
         <h2 ref={detailHeading} tabIndex={-1} title={`${selected.provider} · ${selected.account}`}>{selected.sender}</h2>
+        {selected.triage&&<button className="icon-button" type="button" aria-label="Einordnung ansehen oder ändern" title="Einordnung ansehen oder ändern" onClick={()=>setTriageOpen(true)}><SlidersHorizontal size={18}/></button>}
         <button className="icon-button" type="button" aria-label={selected.done ? "Wieder öffnen" : "Als erledigt markieren"} title={selected.done ? "Wieder öffnen" : "Als erledigt markieren"} aria-pressed={selected.done} onClick={async () => {try {await api(route(selectedId,'mark'),{id:selectedId,projectId,done:!selected.done});setConversations(items=>items.map(item=>item.id===selectedId?{...item,done:!selected.done}:item));}catch(e:any){setError(e.message);}}}><Check strokeWidth={1.55} size={18}/></button>
       </header>
       <div className="inbox-messages" key={selectedId} ref={messageList} onScroll={()=>{const el=messageList.current;if(el)follow.current=el.scrollHeight-el.scrollTop-el.clientHeight<60;}}>
@@ -229,7 +249,23 @@ export function InboxPage({ PageHeading, sidebarHost, sidebarVisible, onShowSide
       <div className="inbox-compose"><InboxComposer key={selectedId} threadId={selectedId} text={draft} onText={(text:string)=>void drafts.edit(selectedId,text)} onSend={()=>void send()} onFile={attach} disabled={!detail||!!draftRecord?.error} busy={sending||uploading} messenger={selectedId.startsWith('msg:')} attachment={attachments[selectedId]} reply={reply} onClearAttachment={()=>setAttachments(old=>{const copy={...old};delete copy[selectedId];return copy;})} onClearReply={()=>setReply(null)}/></div>
       </>}
     </section>
+    {filterOpen&&<Modal title="Inbox filtern" onClose={()=>setFilterOpen(false)}>
+      <div className="inbox-filter-fields">
+        <FilterPicker label="Kanal" value={provider} onChange={setProvider} disabled={false} options={[{value:'all',label:'Alle Kanäle'},...['Gmail','Outlook','WhatsApp','Telegram'].map(value=>({value,label:value}))]}/>
+        <FilterPicker label="Postfach" value={account} onChange={setAccount} disabled={false} options={[{value:'all',label:'Alle Postfächer'},...accounts.map(a=>({value:a.id,label:a.address}))]}/>
+        <FilterPicker label="Status" value={filter} onChange={setFilter} disabled={false} options={[{value:'open',label:'Offen'},{value:'unread',label:'Ungelesen'},{value:'done',label:'Erledigt'},{value:'all',label:'Alle Status'}]}/>
+        <FilterPicker label="Einordnung" value={category} onChange={setCategory} disabled={false} options={[{value:'all',label:'Alle Einordnungen'},...inboxCategories]}/>
+      </div>
+      <p className="muted">Die Grundtriage bündelt eindeutige Werbung, Belege und Routinemeldungen. Unklare Nachrichten bleiben im Fokus. Die Originalpostfächer bleiben unverändert.</p>
+      <div className="modal-actions"><button type="button" onClick={()=>{setProvider('all');setAccount('all');setFilter('open');setCategory('all');}}>Zurücksetzen</button><button type="button" className="primary" onClick={()=>setFilterOpen(false)}>Anzeigen</button></div>
+    </Modal>}
+    {triageOpen&&selected?.triage&&<Modal title="Einordnung" onClose={()=>setTriageOpen(false)}>
+      <p><strong>{selected.triage.label}</strong></p><p>{selected.triage.reason}</p>
+      <p className="muted">Deine Auswahl gilt für dieses Gespräch, auch bei neuen Nachrichten. Mit „Automatisch einordnen“ stellst du die Grundtriage wieder her.</p>
+      <div className="inbox-triage-options">{inboxCategories.map(c=><button type="button" key={c.value} disabled={triageBusy} aria-pressed={selected.triage?.category===c.value} onClick={()=>void correctTriage(c.value)}>{c.label}</button>)}<button type="button" disabled={triageBusy} onClick={()=>void correctTriage('auto')}>Automatisch einordnen</button></div>
+    </Modal>}
     {conceptOpen && <Modal title="Eine Inbox für alle Nachrichten" onClose={() => setConceptOpen(false)} wide={false} className="inbox-concept">
+      <p>Fokus zeigt Gespräche und bündelt eindeutige Werbung, Belege und Routinemeldungen. Alle zeigt die vollständige Liste für den gewählten Status. Die Suche berücksichtigt auch eingeklappte Gruppen. Die Grundtriage arbeitet lokal mit festen Regeln, ohne KI-Aufruf oder CRM-Voraussetzung.</p>
       <p>Outlook und Gmail werden unter Verbindungen eingerichtet. Die Inbox zeigt ausschließlich Nachrichten aus deinen ausdrücklich verbundenen Konten.</p>
       <p>Lesen, Erledigen und Antwortentwürfe werden lokal gespeichert. Der Sendepfeil sendet deinen gespeicherten Entwurf. Eingehende Nachrichten lösen keine automatische Antwort aus.</p>
       <p>Deine WhatsApp- und Telegram-Gespräche erscheinen hier nach der Einrichtung. Der separate Schreibkanal des Agenten bleibt im Hintergrund.</p>

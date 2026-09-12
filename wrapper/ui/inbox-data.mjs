@@ -1,5 +1,5 @@
 export function inboxConversation(row, messages = []) {
-  return {...row, sender:(row.sender||'').replace(/\s*<[^>]+>$/, '').replace(/^"|"$/g, '') || row.sender, account:row.address, provider:({gmail:'Gmail',outlook:'Outlook',whatsapp:'WhatsApp','telegram-user':'Telegram'})[row.provider]||row.provider,
+  return {...row, accountId:row.account||row.connection_id, sender:(row.sender||'').replace(/\s*<[^>]+>$/, '').replace(/^"|"$/g, '') || row.sender, account:row.address, provider:({gmail:'Gmail',outlook:'Outlook',whatsapp:'WhatsApp','telegram-user':'Telegram'})[row.provider]||row.provider,
     time:new Date(row.updated).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}),
     unread:row.revision>row.seen, done:!!row.done, messages};
 }
