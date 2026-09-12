@@ -26,7 +26,7 @@ def test_restore_quarantines_canonical_delivery_and_jobs(config, db):
     db.put('job/cursor/pending',0)
     with db.transaction() as cx:
         cx.execute("INSERT INTO job_notifications(id,job_id,title,body,status,created_at,target,delivery) VALUES('n','pending','T','B','completed',0,'telegram','pending')")
-        cx.execute("INSERT INTO sessions VALUES('old-session','csrf',?)",(time()+10000,))
+        cx.execute("INSERT INTO sessions(digest,csrf,expires_at) VALUES('old-session','csrf',?)",(time()+10000,))
     copy=config.data/'copy.sqlite3';db.backup(copy)
     quarantine_database(copy)
     with sqlite3.connect(copy) as cx:

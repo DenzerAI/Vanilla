@@ -35,6 +35,7 @@ CREATE TABLE IF NOT EXISTS memory_sources(id TEXT PRIMARY KEY, chat_id TEXT NOT 
 CREATE INDEX IF NOT EXISTS memory_project ON memory_sources(project_id,created_at);
 CREATE TABLE IF NOT EXISTS memory_changes(id TEXT PRIMARY KEY, path TEXT NOT NULL, before_version TEXT, after_version TEXT NOT NULL, kind TEXT NOT NULL, created_at REAL NOT NULL);
 CREATE TABLE IF NOT EXISTS maintenance(name TEXT PRIMARY KEY, status TEXT NOT NULL, checked_at REAL NOT NULL, details TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS users(id TEXT PRIMARY KEY, name TEXT NOT NULL UNIQUE COLLATE NOCASE, role TEXT NOT NULL CHECK(role IN ('owner','member')), salt TEXT NOT NULL, hash TEXT NOT NULL, created_at REAL NOT NULL, disabled INTEGER NOT NULL DEFAULT 0);
 """
 
 
@@ -72,6 +73,12 @@ class Database:
             if name not in columns:
                 self.connection.execute(f"ALTER TABLE executions ADD COLUMN {name} {definition}")
         self.connection.execute("INSERT OR IGNORE INTO schema_versions VALUES(2,?)", (time(),))
+        # Version 3: Benutzerkonten, Sitzungen je Benutzer, Chats mit Besitzer.
+        for table, name, definition in (("sessions", "user_id", "TEXT"), ("chats", "owner_id", "TEXT")):
+            if name not in {r["name"] for r in self.connection.execute(f"PRAGMA table_info({table})")}:
+                self.connection.execute(f"ALTER TABLE {table} ADD COLUMN {name} {definition}")
+        self.connection.execute("CREATE INDEX IF NOT EXISTS chats_owner ON chats(owner_id)")
+        self.connection.execute("INSERT OR IGNORE INTO schema_versions VALUES(3,?)", (time(),))
 
     @contextmanager
     def transaction(self):
@@ -125,7 +132,7 @@ class Database:
                 )
             for c in value.get("chats", []):
                 cx.execute(
-                    "INSERT INTO chats VALUES(?,?,?,?,?,?,?)",
+                    "INSERT INTO chats(id,project_id,title,worker_id,archived,updated_at,data,owner_id) VALUES(?,?,?,?,?,?,?,?)",
                     (
                         c["id"],
                         c.get("projectId", "default"),
@@ -134,6 +141,7 @@ class Database:
                         int(bool(c.get("archived"))),
                         c.get("updatedAt", 0),
                         dump(c),
+                        c.get("ownerId") or None,
                     ),
                 )
         if key.startswith("workspace/chats/") and key.endswith("/transcript.json"):

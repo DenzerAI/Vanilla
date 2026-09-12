@@ -241,6 +241,18 @@ Unbekannte Werte verwenden die ruhige aktivierte Voreinstellung; Speicherfehler
 bleiben sichtbar. Reduzierte Bewegung in App oder System hat Vorrang.
 
 
+## Benutzer
+
+Direkt nach Dein Profil steht Benutzer, sichtbar sobald der Kern das Feature `users` meldet. Die
+Speicherzeile zeigt, als wer man angemeldet ist, daneben Abmelden. Die Gruppe Konten listet jede
+Person als SettingRow mit Rolle; Eigentümer sehen je Zeile Passwort, Rollenwechsel und Entfernen,
+Mitglieder nur Passwort für sich selbst. Konto anlegen öffnet das gemeinsame Modal mit Name,
+Passwort und Rolle. Entfernen bestätigt im gemeinsamen Bestätigungsdialog. Eine zweite Gruppe
+erklärt in drei Zeilen, was Benutzer bedeuten: Chats gehören der Person, private Chats schützt
+die PIN, Gedächtnis bleibt gemeinsam. Keine Avatare, keine Einladungslinks, keine eigene Seite
+je Person. Anmeldung und „Erneut anmelden“ tragen Name und Passwort; ein leerer Name meldet mit
+dem Zugangscode an. Vertrag und Schnittstellen: [docs/USERS.md](../../docs/USERS.md).
+
 ## Dein Profil
 
 Direkt nach Dein Agent steht Dein Profil mit der vorhandenen Speicherzeile und SettingRow-Gruppen. Über dich enthält den Anzeigenamen des Nutzers; Wetter verwendet das vorhandene Eingabefeld mit einer um 400 ms verzögerten Open-Meteo-Ortssuche. Treffer stehen als SettingRow mit Stadt, Region, Land und nativem Auswählen-Button darunter. Veraltete Suchantworten werden verworfen. Speichern erfordert bei gesetztem Ort einen bestätigten Treffer und erhält dessen Koordinaten in USER.md. Löschen des Orts entfernt die Koordinaten. Der Wetterabruf startet nach erfolgreicher Speicherung und zeigt Erfolg oder Fehler getrennt vom Speicherstatus. Aktualisieren wiederholt den Abruf. Quellenlinks nennen Open-Meteo und GeoNames sowie die übermittelten Ortsdaten; keine amtliche Adressprüfung. Eine nicht eingerichtete Wetterkarte öffnet diesen Bereich direkt; die eingerichtete Wetterkarte öffnet einen neuen Wetterbericht im Chat. Leere Werte sind erlaubt, maximal 100 Zeichen je Feld.

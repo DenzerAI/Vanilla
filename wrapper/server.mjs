@@ -29,6 +29,7 @@ import {sharedMemoryCodexConfig} from './shared-memory.mjs';
 import {notificationTargets, sendJobNotification, routineInstructions} from './job-notifications.mjs';
 import { serverFingerprint, createRestartGate, installationStatus } from "./updates.mjs";
 import { coreEnabled, coreRequest, routedContext } from "./core-client.mjs";
+import { requestUser, runAs, currentUser, visibleChats, canSeeChat, newChatOwner } from "./users.mjs";
 import { createMcpSnapshot } from './integration-snapshot.mjs';
 import {computerToolStatus} from "./ui/tool-content.mjs";
 import { agentFiles, agentFilePath } from "./agent-files.mjs";
@@ -375,6 +376,7 @@ async function newChat({
     updatedAt: Date.now(),
     archived: false,
     pinned: false,
+    ownerId: newChatOwner(),
   };
   store.state.chats.unshift(c);
   loaded.add(c.id);
@@ -775,7 +777,7 @@ route("GET", "/api/bootstrap", async (_body, url) => {
     projects: store.state.projects,
     workspaceWarnings: store.workspaces.warnings,
     settings: store.state.settings,
-    chats: store.state.chats.filter(c=>!c.channelOnly).map(c=>browserChat(c,url.searchParams.get("view")==="sidebar")),
+    chats: visibleChats(store.state.chats.filter(c=>!c.channelOnly)).map(c=>browserChat(c,url.searchParams.get("view")==="sidebar")),
     models: modelCache,
     modelsByWorker,
     workers: workerState.workers,
@@ -787,8 +789,8 @@ route("GET", "/api/bootstrap", async (_body, url) => {
       error: engineError,
       version: workers.info?.userAgent,
     },
-    active: Object.fromEntries(active),
-    requests: [...workers.requests.values()].map(r=>({...r,connectionId:store.state.chats.find(c=>c.id===r.params?.threadId)?.connectionId})),
+    active: Object.fromEntries([...active].filter(([id])=>canSeeChat(store.state.chats.find(c=>c.id===id)))),
+    requests: [...workers.requests.values()].filter(r=>canSeeChat(store.state.chats.find(c=>c.id===r.params?.threadId))).map(r=>({...r,connectionId:store.state.chats.find(c=>c.id===r.params?.threadId)?.connectionId})),
     capabilities: workers.capability(workers.effectiveWorker),
     planAvailable: workers.routingOrder().some(id => workers.capability(id).plan),
   };
@@ -892,12 +894,12 @@ route("POST", "/api/projects/save", async (b) => {
   };
 });
 route("GET", "/api/search", async (b, u) => searchConversations({
-  workspace, chats:store.state.chats, projects:store.state.projects, threadCache,
+  workspace, chats:visibleChats(store.state.chats), projects:store.state.projects, threadCache,
   query:u.searchParams.get("q") || "",
 }));
 route("GET", "/api/chats", async (_body, url) => ({
-  chats: store.state.chats.filter(c=>!c.channelOnly).map(c=>browserChat(c,url.searchParams.get("view")==="sidebar")),
-  active: Object.fromEntries(active),
+  chats: visibleChats(store.state.chats.filter(c=>!c.channelOnly)).map(c=>browserChat(c,url.searchParams.get("view")==="sidebar")),
+  active: Object.fromEntries([...active].filter(([id])=>canSeeChat(store.state.chats.find(c=>c.id===id)))),
 }));
 route("GET", "/api/diagnostics", async () => ({
   events: [...eventNames],
@@ -1254,6 +1256,7 @@ route("POST", "/api/respond", async (b) => {
   const request = workers.requests.get(String(b.id));
   if (!request) throw new Error("Rückfrage nicht mehr verfügbar.");
   if (request.params?.threadId) store.chat(request.params.threadId);
+  if (request.params?.threadId && !canSeeChat(store.state.chats.find(c => c.id === request.params.threadId))) throw new Error("Diese Rückfrage gehört zu einem fremden Chat.");
   const receipt = questionReceipt(request, b.result);
   workers.respond(b.id, b.result);
   if (receipt && request.params?.threadId && request.params?.turnId) {
@@ -1272,9 +1275,14 @@ route("POST", "/api/respond", async (b) => {
 });
 route("GET", "/api/agent/files", async (b,u)=>agentFiles(root,u.searchParams.get("path") || ""));
 const readableFile = u => u.searchParams.get("scope") === "agent" ? agentFilePath(root,u.searchParams.get("path") || "") : u.searchParams.get("scope") === "artifacts" ? library.resolve(u.searchParams.get("path") || "",'artifacts') : inside(workspace,u.searchParams.get("path") || "");
-route("GET", "/api/files", async (b, u) => ({
-  files: await store.files(u.searchParams.get("path") || ""),
-}));
+route("GET", "/api/files", async (b, u) => {
+  const relative = u.searchParams.get("path") || "";
+  let files = await store.files(relative);
+  // Mitglieder sehen im Dateibrowser nur die Ordner ihrer eigenen Chats.
+  if (currentUser().role !== "owner" && relative.replace(/^\.?\/?/, "").replace(/\/$/, "") === "chats")
+    files = files.filter(f => canSeeChat(store.state.chats.find(c => c.id === f.name)));
+  return { files };
+});
 route("GET", "/api/file/info", async (b, u) => {
   const file = await readableFile(u);
   const info = await stat(file);
@@ -1607,7 +1615,8 @@ const server = http.createServer(async (req, res) => {
         return send(res, 403, {
           error: "Sitzung abgelaufen. Bitte Seite neu laden.",
         });
-      const result = await fn(req.method === "GET" ? {} : await body(req), u);
+      const payload = req.method === "GET" ? {} : await body(req);
+      const result = await runAs(requestUser(req.headers, coreEnabled), () => fn(payload, u));
       send(res, 200, result);
       return;
     }

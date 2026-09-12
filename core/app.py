@@ -24,6 +24,7 @@ from pydantic import BaseModel, Field
 from starlette.background import BackgroundTask
 
 from .chat_privacy import ChatPrivacy
+from .users import Users, CODE_USER, routes as user_routes
 from .frontend import asset_response
 from fastapi import HTTPException
 
@@ -80,6 +81,7 @@ def create_app(config=None):
     memory = Memory(db, config, knowledge, settings)
     memory.crm = crm
     privacy = ChatPrivacy(db, memory)
+    users = Users(db)
     memory.chat_privacy = privacy
     knowledge.chat_privacy = privacy
     operations = Operations(db, config, settings, knowledge, memory)
@@ -169,6 +171,11 @@ def create_app(config=None):
     async def conflict_error(request, error):
         return JSONResponse({"error": str(error)}, status_code=409)
 
+    @app.exception_handler(HTTPException)
+    async def http_error(request, error):
+        # Die Oberfläche liest überall `error`, nie `detail`.
+        return JSONResponse({"error": error.detail}, status_code=error.status_code, headers=getattr(error, "headers", None))
+
     @app.middleware("http")
     async def access(request: Request, call_next):
         if runtime.frozen and request.method not in {"GET", "HEAD", "OPTIONS"} and request.url.path not in ({"/api/auth/login", "/api/system/backups/resume"} if runtime.restore_hold else {"/api/auth/login"}) and not request.url.path.startswith("/internal/"):
@@ -208,16 +215,25 @@ def create_app(config=None):
         ):
             return JSONResponse({"error": "Anfrage zu groß."}, status_code=413)
         request.state.csrf = local_csrf
+        request.state.user = CODE_USER
         token = request.cookies.get("agent_session", "")
         session = (
             db.rows(
-                "SELECT csrf FROM sessions WHERE digest=? AND expires_at>?",
+                "SELECT csrf, user_id FROM sessions WHERE digest=? AND expires_at>?",
                 (hashlib.sha256(token.encode()).hexdigest(), time()),
             )
             if token
             else []
         )
-        if config.login_required:
+        if session and session[0]["user_id"]:
+            account = users.get(session[0]["user_id"])
+            if account:
+                request.state.user = account
+            else:
+                # Entfernte oder gesperrte Konten verlieren ihre Sitzung sofort.
+                session = []
+        login_required = config.login_required or users.count() > 0
+        if login_required:
             authorization = request.headers.get("authorization", "")
             bearer = len(config.access_token) >= 32 and hmac.compare_digest(authorization, "Bearer " + config.access_token)
             if (
@@ -247,7 +263,8 @@ def create_app(config=None):
                 )
         client = request.headers.get("x-chat-client", "")
         request.state.chat_client = client
-        if request.url.path.startswith('/api/') and not request.url.path.startswith('/api/chat/privacy/'):
+        privacy_route = request.url.path.startswith('/api/chat/privacy/')
+        if request.url.path.startswith('/api/'):
             data = dict(request.query_params)
             if 'application/json' in request.headers.get('content-type', ''):
                 try:
@@ -260,12 +277,19 @@ def create_app(config=None):
                 for key in ('id', 'chatId', 'threadId', 'sourceChatId'):
                     id = data.get(key)
                     if isinstance(id, str):
+                        # Besitz gilt überall, auch beim Entsperren; die PIN-Routen prüfen die PIN selbst.
+                        if not request.url.path.startswith('/api/users/'):
+                            users.require(request.state.user, id)
+                        if privacy_route:
+                            continue
                         privacy.require(id, client)
                         if privacy.record(id) and request.url.path in {'/api/fork', '/api/chat/provider', '/api/memory/compact'}:
                             raise HTTPException(409, 'Bei privaten Chats ist diese Aktion nicht verfügbar.')
-                for key in ('path', 'file', 'directory'):
-                    if privacy.path_private(data.get(key)):
-                        raise HTTPException(423, 'Diese Chatdatei ist privat.')
+                if not privacy_route:
+                    for key in ('path', 'file', 'directory'):
+                        users.require_path(request.state.user, data.get(key))
+                        if privacy.path_private(data.get(key)):
+                            raise HTTPException(423, 'Diese Chatdatei ist privat.')
             except HTTPException as error:
                 return JSONResponse({'error': error.detail}, status_code=error.status_code)
         writing = request.method not in {"GET", "HEAD", "OPTIONS"}
@@ -319,7 +343,7 @@ def create_app(config=None):
         return {
             "backend": "FastAPI",
             "storage": "SQLite",
-            "schema": 2,
+            "schema": 3,
             "knowledgeDocuments": db.rows("SELECT count(*) n FROM documents")[0]["n"],
             "embeddings": knowledge.embeddings.status(),
             "runtimeError": runtime.error,
@@ -337,6 +361,7 @@ def create_app(config=None):
     app.include_router(mail_workflow_routes(mail.workflow))
     app.include_router(calendar_routes(calendar))
     app.include_router(update_routes(github, updates, contributions))
+    app.include_router(user_routes(users, lambda: config.login_required))
 
     @app.post("/internal/update-operator")
     async def update_operator(request: Request):
@@ -442,7 +467,7 @@ def create_app(config=None):
 
     @app.get("/api/auth/session")
     async def session(request: Request):
-        return {"token": request.state.csrf, "loginRequired": config.login_required}
+        return {"token": request.state.csrf, "loginRequired": config.login_required or users.count() > 0, "user": request.state.user, "accounts": users.count() > 0}
 
     @app.post("/api/auth/login")
     async def login(request: Request):
@@ -455,8 +480,15 @@ def create_app(config=None):
                 status_code=429,
             )
         body = await request.json()
-        if not config.login_required or not hmac.compare_digest(
-            str(body.get("token", "")), config.login_password or config.access_token
+        account = None
+        if isinstance(body.get("name"), str) and body.get("name", "").strip():
+            # Persönliches Konto: Name und Passwort.
+            account = users.verify(body.get("name"), str(body.get("password", "")))
+            if not account:
+                previous.append(time())
+                return JSONResponse({"error": "Name oder Passwort stimmt nicht."}, status_code=401)
+        elif not config.login_required or not hmac.compare_digest(
+            str(body.get("token", body.get("password", ""))), config.login_password or config.access_token
         ):
             previous.append(time())
             return JSONResponse({"error": "Zugangscode stimmt nicht."}, status_code=401)
@@ -464,10 +496,10 @@ def create_app(config=None):
         with db.transaction() as cx:
             cx.execute("DELETE FROM sessions WHERE expires_at<?", (time(),))
             cx.execute(
-                "INSERT INTO sessions VALUES(?,?,?)",
-                (hashlib.sha256(token.encode()).hexdigest(), csrf, time() + 86400 * 7),
+                "INSERT INTO sessions(digest,csrf,expires_at,user_id) VALUES(?,?,?,?)",
+                (hashlib.sha256(token.encode()).hexdigest(), csrf, time() + 86400 * 7, account["id"] if account else None),
             )
-        response = JSONResponse({"ok": True})
+        response = JSONResponse({"ok": True, "user": account or CODE_USER})
         response.set_cookie(
             "agent_session",
             token,
@@ -706,8 +738,9 @@ def create_app(config=None):
 
     @app.get("/api/events")
     async def events(request: Request):
+        frames = privacy.stream(event_stream(runtime, db, request.headers.get("last-event-id", "")), request.query_params.get("client", ""))
         return StreamingResponse(
-            privacy.stream(event_stream(runtime, db, request.headers.get("last-event-id", "")), request.query_params.get("client", "")), media_type="text/event-stream", headers={"X-Accel-Buffering": "no"}
+            users.stream(frames, request.state.user), media_type="text/event-stream", headers={"X-Accel-Buffering": "no"}
         )
 
     @app.api_route("/api/{route:path}", methods=["GET", "POST", "PUT", "DELETE"])
@@ -727,11 +760,12 @@ def create_app(config=None):
                 pending = next((r for r in upstream.json().get('requests', []) if str(r.get('id')) == str(request_body.get('id'))), None)
                 if pending:
                     privacy.require(pending.get('params', {}).get('threadId'), request.state.chat_client)
+                    users.require(request.state.user, pending.get('params', {}).get('threadId'))
             except HTTPException as error:
                 return JSONResponse({'error': error.detail}, status_code=error.status_code)
             except (httpx.HTTPError, ValueError):
                 return JSONResponse({'error': 'Rückfrage kann gerade nicht geprüft werden.'}, status_code=503)
-        headers = {**runtime.headers}
+        headers = {**runtime.headers, "x-agent-user-id": request.state.user["id"], "x-agent-user-role": request.state.user["role"]}
         if request.headers.get("content-type"):
             headers["content-type"] = request.headers["content-type"]
         try:
@@ -755,6 +789,7 @@ def create_app(config=None):
             payload = json.loads(await response.aread())
             await response.aclose()
             payload["token"] = request.state.csrf
+            payload["user"] = request.state.user
             payload["features"] = {
                 **payload.get("features", {}),
                 "mailInbox": True,
@@ -770,6 +805,7 @@ def create_app(config=None):
 
                 "github": True,
                 "productUpdates": True,
+                "users": True,
             }
             return JSONResponse(payload)
         forwarded = {
@@ -800,4 +836,4 @@ def create_app(config=None):
     return app
 
 
-LOGIN_PAGE = """<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agent · Anmelden</title><link rel="stylesheet" href="/login.css"><main><h1>Dein Arbeitsbereich</h1><p>Mit deinem Zugangscode anmelden.</p><form id="login"><label for="token">Zugangscode</label><input id="token" name="token" type="password" autocomplete="current-password" required><button>Anmelden</button><p role="alert" id="error"></p></form></main><script src="/login.js"></script></html>"""
+LOGIN_PAGE = """<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Agent · Anmelden</title><link rel="stylesheet" href="/login.css"><main><h1>Dein Arbeitsbereich</h1><p>Mit deinem Konto anmelden.</p><form id="login"><label for="name">Name</label><input id="name" name="name" type="text" autocomplete="username" autocapitalize="off"><label for="password">Passwort</label><input id="password" name="password" type="password" autocomplete="current-password" required><button>Anmelden</button><p class="hint">Noch kein Konto? Name leer lassen und den Zugangscode der Installation eintragen.</p><p role="alert" id="error"></p></form></main><script src="/login.js"></script></html>"""

@@ -9,7 +9,7 @@ import './system-notice.css';
 import { AppLoader } from './app-loader';
 import { createRestartRecovery } from './restart-recovery.mjs';
 
-export function SystemNotice({api, message, onDismiss, ref, onBusyChange}) {
+export function SystemNotice({api, message, onDismiss, ref, onBusyChange, user}) {
   const [status,setStatus] = useState(null), [confirmation,setConfirmation] = useState(null);
   const [busy,setBusy] = useState(false), [error,setError] = useState('');
   const [authRequired,setAuthRequired] = useState(false), [loginOpen,setLoginOpen] = useState(false);
@@ -90,7 +90,9 @@ export function SystemNotice({api, message, onDismiss, ref, onBusyChange}) {
       {!authRequired && (busy || restart || reload) && <GlassButton size="sm" disabled={busy} aria-busy={busy} onClick={()=>restart ? restartServer() : reloadPage()}><span className="system-notice-icon" aria-hidden="true">{busy ? <AppLoader size={14} preview /> : <RotateCcw size={14}/>}</span><span>{busy ? 'Neustarten …' : restart ? 'Neustarten' : 'Aktualisieren'}</span></GlassButton>}
       {!authRequired && !busy && (message || error || (!restart && !reload)) && <button className="system-notice-close" aria-label="Hinweis schließen" onClick={()=>{setError('');onDismiss();}}><X size={16}/></button>}
     </div>, document.body)}
-    {loginOpen && <SessionLogin api={api} onClose={()=>setLoginOpen(false)} onAuthenticated={()=>{
+    {loginOpen && <SessionLogin api={api} onClose={()=>setLoginOpen(false)} onAuthenticated={account=>{
+      // Eine andere Person sieht andere Chats: dann sauber neu laden statt fremden Zustand weiterzuführen.
+      if (user?.id && account?.id && account.id !== user.id) { window.location.reload(); return; }
       wasUnauthorized.current=false; setAuthRequired(false); setLoginOpen(false); setError('');
       onDismiss(); reconnectEventStream();
     }}/>}
@@ -105,20 +107,22 @@ export function SystemNotice({api, message, onDismiss, ref, onBusyChange}) {
 }
 
 function SessionLogin({api,onClose,onAuthenticated}) {
-  const [password,setPassword]=useState(''), [busy,setBusy]=useState(false), [error,setError]=useState('');
+  const [name,setName]=useState(''), [password,setPassword]=useState(''), [busy,setBusy]=useState(false), [error,setError]=useState('');
   async function submit(event) {
     event.preventDefault(); setBusy(true); setError('');
     try {
-      await api('/auth/login',{token:password});
+      const result = await api('/auth/login', name.trim() ? {name:name.trim(),password} : {token:password});
       await api('/bootstrap');
-      onAuthenticated();
+      onAuthenticated(result?.user);
     } catch(e) { setError(e.message); }
     finally { setPassword(''); setBusy(false); }
   }
   return <Modal className="system-confirmation" title="Erneut anmelden" onClose={()=>!busy&&onClose()}>
     <p>Deine geöffneten Chats und Entwürfe bleiben erhalten.</p>
     <form onSubmit={submit}>
-      <label className="field"><span>Zugangscode</span><input data-autofocus type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)} disabled={busy}/></label>
+      <label className="field"><span>Name</span><input data-autofocus type="text" autoComplete="username" autoCapitalize="off" value={name} onChange={e=>setName(e.target.value)} disabled={busy}/></label>
+      <label className="field"><span>Passwort</span><input type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)} disabled={busy}/></label>
+      <p className="form-help">Ohne Konto: Name leer lassen und den Zugangscode der Installation eintragen.</p>
       {error&&<p role="alert" className="form-error">{error}</p>}
       <div className="system-confirmation-actions"><button type="button" disabled={busy} onClick={onClose}>Abbrechen</button><button type="submit" disabled={busy}>{busy?'Anmeldung läuft …':'Anmelden'}</button></div>
     </form>

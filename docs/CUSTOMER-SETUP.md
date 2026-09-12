@@ -43,6 +43,14 @@ Freigabe von Empfänger und Inhalt; unklare Zustellung niemals automatisch wiede
 Trennen stoppt Synchronisation und entfernt den Zugang; lokale Nachrichten bleiben.
 Die vollständigen OAuth-, Entwurfs-, Fehler- und Wiederherstellungsregeln: MAIL.md.
 
+## users
+
+Zuerst unter Einstellungen → Zugang einen Zugangsschlüssel setzen; er bleibt der Rückweg.
+Dann unter Einstellungen → Benutzer das eigene Konto als Eigentümer anlegen und für jede
+weitere Person ein Konto mit Rolle Mitglied. Ab dem ersten Konto meldet sich jede Person mit
+Name und Passwort an; Mitglieder sehen nur ihre eigenen Chats, Eigentümer alle. Persönliche
+Inhalte schützt zusätzlich die Chat-PIN. Vertrag: [USERS.md](USERS.md).
+
 ## connections
 
 Vorhandenen Verbindungstyp im Service-, CRM- oder Integrationskatalog nachschlagen.
