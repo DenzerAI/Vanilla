@@ -260,3 +260,30 @@ test('Telegram start acknowledges an approved user without passing a slash comma
   await f.runtime.accept(c.id,{...message,messageId:'hello',text:'Hallo'});
   assert.equal(f.calls.length,1);
 });
+
+test('restart pauses idle listeners and restores them from durable state without replaying tasks',async t=>{
+  const f=await fixture(t),c=await connection(f,'a2a',{mode:'server',host:'127.0.0.1',port:await freePort()},{token:'synthetic-token-at-least-24-chars'});
+  await f.runtime.start(c.id);
+  await f.runtime.pauseForRestart();
+  assert.equal(f.runtime.running(c.id),false);
+  assert.deepEqual(JSON.parse(await readFile(f.runtime.file,'utf8')).restartChannels,[c.id]);
+  await f.runtime.init();
+  assert.deepEqual(await f.runtime.resumeAfterRestart(),[]);
+  assert.equal(f.runtime.running(c.id),true);
+  assert.deepEqual(f.runtime.state.restartChannels,[]);
+  assert.equal(f.calls.length,0);
+  f.runtime.state.tasks.busy={connectionId:c.id,status:'running'};
+  await assert.rejects(f.runtime.pauseForRestart(),/Kanalaufträge/);
+  assert.equal(f.runtime.running(c.id),true);
+});
+
+test('failed listener reconnect remains retryable and does not prevent other listeners',async t=>{
+  const f=await fixture(t);
+  f.runtime.state.restartChannels=['one','two'];
+  f.services.list=()=>[{id:'one'},{id:'two'}];
+  const started=[];
+  f.runtime.start=async id=>{if(id==='one')throw Error('offline');started.push(id);};
+  assert.deepEqual(await f.runtime.resumeAfterRestart(),[{id:'one',error:'offline'}]);
+  assert.deepEqual(started,['two']);
+  assert.deepEqual(f.runtime.state.restartChannels,['one']);
+});

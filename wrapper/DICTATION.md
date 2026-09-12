@@ -115,9 +115,15 @@ Workspace, Chat, Pane und gegebenenfalls die konkrete Rückfrage. Neue Aufnahmen
 sind bis zum Abschluss gesperrt. Vorhandene Entwürfe und Anhänge bleiben erhalten.
 
 Navigation zu Inbox, Einstellungen, anderen Chats oder Panels beendet das Diktat
-nicht. Außerhalb des ausgewählten Ursprungscomposers erscheint oben rechts die
-RecordingHost als kompakte Aufnahmekapsel: ursprünglicher Chatname als
-Rücksprung, statischer Aufnahmepunkt, Status, Dauer, Pause/Fortsetzen und Stop.
+nicht. Außerhalb des ausgewählten Ursprungscomposers zeigt RecordingHost oben rechts eine flache, vollständig gerundete Pille:
+neutrales Mikrofon als Rücksprung, Laufzeit, Pause/Fortsetzen und Stop.
+Kein sichtbarer Chatname und kein pulsierendes Symbol. Der Tooltip und
+zugängliche Name des Mikrofonbuttons nennen weiterhin den Ursprungschat.
+44-px-Bedienziele ohne vertikales Padding ergeben 46 px Gesamthöhe.
+RecordingIndicator markiert den Ursprung in Chatliste und Panekopf/Tabs mit
+einem statischen Record-Zeichen; bei Pause erscheint ein graues Pausenzeichen.
+Für einen ungespeicherten Chat steht die Markierung am zugehörigen Workspace.
+Vorhandene Arbeits- und Lesestatus bleiben unabhängig erhalten.
 Auch eine geschlossene Pane lässt sich über den Rücksprung wieder öffnen.
 Rückkehr verschiebt ausschließlich die Bedienelemente zurück in den Composer;
 der Aufnahmeprozess und seine bereits gesicherten Abschnitte bleiben bestehen.

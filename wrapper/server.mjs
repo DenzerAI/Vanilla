@@ -737,11 +737,25 @@ route("POST", "/api/updates/presence", body => {
   else browserSessions.delete(body.id);
   return {ok:true};
 });
-route("POST", "/api/system/backup-hold", body => {
+route("POST", "/api/system/backup-hold", async body => {
   if (!coreEnabled || typeof body.hold !== 'boolean') throw new Error('Ungültige Wartungspause.');
-  if (body.hold && (active.size || turnLocks.size || voiceSessions.size || liveBrowserSessions().length || channels.live.size || channels.starting.size)) throw new Error('Laufende Arbeit und aktive Eingangskanäle vor der Sicherung oder Wiederherstellung anhalten.');
-  backupHold = body.hold;
-  return {ok:true,hold:backupHold};
+  if (body.hold) {
+    if (updateHold) throw Error('Eine Updatepause läuft bereits.');
+    if (active.size || turnLocks.size || voiceSessions.size || liveBrowserSessions().length || updateReviews.active() || channels.starting.size || [...channels.live.keys()].some(id=>channels.hasActive(id))) throw Error('Bitte laufende Aufträge und Gespräche vor dem Neustart beenden.');
+    if (body.restart !== true && channels.live.size) throw Error('Aktive Eingangskanäle vor der Sicherung oder Wiederherstellung anhalten.');
+    backupHold = true;
+    try {
+      if (body.restart === true) await channels.pauseForRestart();
+    } catch(error) {
+      backupHold = false;
+      await channels.resumeAfterRestart();
+      throw error;
+    }
+    return {ok:true,hold:true};
+  }
+  backupHold = false;
+  const channelErrors = !updateHold && process.env.VANILLA_RECOVERY_HOLD !== '1' ? await channels.resumeAfterRestart() : [];
+  return {ok:true,hold:false,channelErrors};
 });
 route("POST", "/api/updates/restart", body => restartGate.request(body));
 
@@ -1528,7 +1542,7 @@ scheduler.unref();
 const server = http.createServer(async (req, res) => {
   if ((backupHold || process.env.VANILLA_RECOVERY_HOLD === "1") && req.url !== "/api/system/backup-hold" && !["GET", "HEAD", "OPTIONS"].includes(req.method)) return send(res, 503, {error:"Wiederherstellung prüfen und Betrieb ausdrücklich fortsetzen."});
 
-  if (updateHold && !['GET','HEAD','OPTIONS'].includes(req.method) && new URL(req.url, 'http://localhost').pathname !== '/api/system/update-hold') {
+  if (updateHold && !['GET','HEAD','OPTIONS'].includes(req.method) && !['/api/system/update-hold','/api/system/backup-hold'].includes(new URL(req.url, 'http://localhost').pathname)) {
     res.writeHead(503, {'Content-Type':'application/json'}); res.end(JSON.stringify({error:'Update wird geprüft. Bitte kurz warten.'})); return;
   }
   if (coreEnabled && req.headers["x-agent-internal"] !== token) return send(res, 403, {error:"Interner Worker-Anschluss geschützt."});
@@ -1635,9 +1649,14 @@ const server = http.createServer(async (req, res) => {
     send(res, 400, { error: readableCodexError(e) });
   }
 });
-server.listen(port, "127.0.0.1", () =>
-  console.log(`Agent läuft auf http://127.0.0.1:${port}`),
-);
+server.listen(port, "127.0.0.1", () => {
+  console.log(`Agent läuft auf http://127.0.0.1:${port}`);
+  if (!updateHold && process.env.VANILLA_RECOVERY_HOLD !== '1') {
+    void channels.resumeAfterRestart().then(errors=>{
+      if(errors.length) console.error('Nachrichtenempfang nach Neustart prüfen:', errors);
+    }).catch(error=>console.error('Nachrichtenempfang nach Neustart:', error.message));
+  }
+});
 for (const sig of ["SIGINT", "SIGTERM"])
   process.on(sig, async () => {
     await channels.close();

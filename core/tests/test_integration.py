@@ -219,3 +219,66 @@ def test_existing_workers_stream_persist_and_resume_through_python(integration_r
             child.wait(timeout=15)
         client.close()
         log.close()
+
+
+def test_restart_button_with_idle_listener_and_rollback(integration_root):
+    """Exercise the real core/adapter HTTP loop with a synthetic local listener."""
+    root = Path(__file__).resolve().parents[2]
+    folder = integration_root
+    company = folder/'company'
+    company.mkdir()
+    (company/'AGENTS.md').write_text('# Test')
+    (company/'FIRMA.md').write_text('# Synthetic')
+    port, adapter_port, listener_port = free_port(), free_port(), free_port()
+    env = {'PATH':os.environ['PATH'], 'HOME':str(folder), 'UWE_PORT':str(port),
+           'AGENT_ADAPTER_PORT':str(adapter_port), 'UWE_WORKSPACE':str(folder/'workspace'),
+           'UWE_DATA_ROOT':str(folder/'data'), 'COMPANY_BASE':str(company),
+           'UWE_CODEX_BINARY':'/usr/bin/false', 'UWE_HERMES_BINARY':'/usr/bin/false'}
+    with (folder/'restart.log').open('w+') as log:
+        child = subprocess.Popen([sys.executable,'-m','core'],cwd=root,env=env,stdout=log,stderr=log)
+        client = httpx.Client(base_url=f'http://127.0.0.1:{port}/api',trust_env=False,timeout=20)
+        def ready(previous=None):
+            for _ in range(200):
+                try:
+                    status = client.get('/updates').json()
+                    if status.get('instanceId') and status['instanceId'] != previous:
+                        client.headers['x-uwe-token'] = client.get('/auth/session').json()['token']
+                        return status
+                except (httpx.HTTPError,ValueError): pass
+                time.sleep(.1)
+            log.flush()
+            raise AssertionError((folder/'restart.log').read_text()[-8000:])
+        def post(path, body):
+            response=client.post(path,json=body)
+            assert response.status_code == 200, response.text
+            return response.json()
+        try:
+            first=ready()
+            connection=post('/services/save',{'provider':'a2a','worker':'hermes','projectId':'default',
+                'config':{'mode':'server','host':'127.0.0.1','port':listener_port},
+                'credentials':{'token':'synthetic-token-at-least-24-chars'}})
+            # save returns the public connection directly.
+            id=connection['id']
+            post('/services/start',{'id':id})
+            held=post('/system/update-hold',{'hold':True})
+            rejected=client.post('/system/restart',json={})
+            assert rejected.status_code == 400, rejected.text
+            post('/system/update-hold',{'hold':False,'channels':held['channels']})
+            # The actual banner calls the adapter, which calls back into the core.
+            assert post('/updates/restart',{})['restarting']
+            second=ready(first['instanceId'])
+            assert not second['restartRequired']
+            for _ in range(100):
+                connections=client.get('/services').json()['connections']
+                if any(c['id']==id and c.get('runtimeActive') for c in connections):break
+                time.sleep(.1)
+            else: raise AssertionError('Listener was not restored')
+            assert post('/system/restart',{})['restarting']
+            third=ready(second['instanceId'])
+            assert not third['restartRequired']
+        finally:
+            client.close()
+            child.terminate()
+            try: child.wait(timeout=20)
+            except subprocess.TimeoutExpired:
+                child.kill();child.wait(timeout=5)

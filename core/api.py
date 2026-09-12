@@ -173,7 +173,7 @@ def routes(operations, queue):
                 if runtime.config.start_adapter:
                     adapter_held = True
                     try:
-                        await runtime.request('POST','/api/system/backup-hold',json={'hold':True})
+                        await runtime.request('POST','/api/system/backup-hold',json={'hold':True, 'restart': record is None and not resume})
                     except RuntimeError as error:
                         # An adapter refusal is an expected conflict, not an HTTP 500.
                         # Keep the existing rollback/release path and JSON error contract.

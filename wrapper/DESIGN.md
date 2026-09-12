@@ -1608,8 +1608,14 @@ wählen das darunter sichtbare Tagesraster. Führendes Verhalten: surfaces/today
 
 Diktat und Erkennung gehören der zentralen RecordingProvider-Sitzung. Navigation
 und Panewechsel erhalten sie. Außerhalb des ausgewählten Ursprungscomposers
-zeigt die Aufnahmekapsel oben rechts Chat-Rücksprung, Aufnahmepunkt, Status,
-Dauer, Pause/Fortsetzen und Stop. SystemNotice weicht um die gemessene Höhe aus.
+zeigt eine flache Pille oben rechts ein neutrales Mikrofon zum Rücksprung,
+Dauer, Pause/Fortsetzen und Stop. Kein sichtbarer Titel oder pulsierender Punkt.
+Radius-pill und 44-px-Bedienziele ergeben ohne vertikales Padding 46 px Höhe.
+Der Chatname steht im Tooltip und zugänglichen Namen des Rücksprungs.
+RecordingIndicator markiert statisch den Ursprungschat in der Seitenleiste
+und die passende Pane; ungespeicherte Chats markieren ihren Workspace.
+Aufnahme zeigt ein rotes Record-Zeichen, Pause ein graues Pausenzeichen.
+SystemNotice weicht um die gemessene Höhe aus.
 Rückkehr zeigt dieselbe Aufnahme wieder im Composer. Stop übernimmt ausschließlich
 in den ursprünglichen Entwurf, ohne Versand oder Ansichtswechsel. Ein expliziter
 Sendebefehl fällt bei zwischenzeitlichem Chatwechsel auf diesen Entwurf zurück.

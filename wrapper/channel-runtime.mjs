@@ -99,6 +99,23 @@ export class ChannelRuntime {
     }catch(e){r.stopped=true;r.error=e.code==='EADDRINUSE'?'Adresse/Port bereits belegt. Bestehenden Dienst verbinden oder einen anderen Port wählen.':e.message;throw Error(r.error);}
   }
   async stop(id){if(this.starting.has(id))await this.starting.get(id).catch(()=>{});const r=this.live.get(id);if(r){r.stopped=true;clearTimeout(r.bridge?.reconnectTimer);if(r.bridge){r.bridge.handleConnectionUpdate=async()=>{};r.bridge.socket?.end(undefined);}if(r.server)await new Promise(resolve=>{r.server.close(resolve);r.server.closeAllConnections?.();});this.live.delete(id);}return {runtimeStatus:'stopped'};}
+  async pauseForRestart() {
+    if(this.starting.size || [...this.live.keys()].some(id=>this.hasActive(id))) throw Error('Bitte laufende Kanalaufträge vor dem Neustart beenden.');
+    this.state.restartChannels=[...new Set([...(this.state.restartChannels||[]),...this.live.keys()])];
+    await this.save();
+    for(const id of this.state.restartChannels) await this.stop(id);
+  }
+  async resumeAfterRestart() {
+    const errors=[];
+    for(const id of [...(this.state.restartChannels||[])]) {
+      try {
+        if(this.services.list().some(c=>c.id===id)) await this.start(id);
+        this.state.restartChannels=this.state.restartChannels.filter(value=>value!==id);
+        await this.save();
+      } catch(error) {errors.push({id,error:error.message});}
+    }
+    return errors;
+  }
   async close(){await Promise.all([...new Set([...this.live.keys(),...this.starting.keys()])].map(id=>this.stop(id)));}
   async pollTelegram(c,r) {
     while(!r.stopped){

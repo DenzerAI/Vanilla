@@ -303,7 +303,27 @@ def test_restart_adapter_refusal_is_json_and_releases_freeze(config,monkeypatch)
         assert response.status_code==400
         assert 'Eingangskanäle' in response.json()['error']
         assert not runtime.frozen
-        assert calls==[('/api/system/backup-hold',{'hold':True}),('/api/system/backup-hold',{'hold':False})]
+        assert calls==[('/api/system/backup-hold',{'hold':True,'restart':True}),('/api/system/backup-hold',{'hold':False})]
+        assert not (config.data/'restart.json').exists()
+    finally:
+        app.state.db.close()
+
+
+def test_restart_rejected_during_update_does_not_leave_core_frozen(config, monkeypatch):
+    from core.app import create_app
+    app = create_app(config)
+    runtime = app.state.runtime
+    async def inactive(): return False
+    async def reject(*args, **kwargs): raise RuntimeError('Updatepause läuft.')
+    monkeypatch.setattr(runtime, 'has_active_work', inactive)
+    monkeypatch.setattr(runtime, 'request', reject)
+    runtime.config.start_adapter = True
+    try:
+        client = TestClient(app)
+        token = client.get('/api/auth/session').json()['token']
+        response = client.post('/api/system/restart', json={}, headers={'x-uwe-token':token})
+        assert response.status_code == 400
+        assert not runtime.frozen
         assert not (config.data/'restart.json').exists()
     finally:
         app.state.db.close()
