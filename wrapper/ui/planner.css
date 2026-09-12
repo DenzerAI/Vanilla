@@ -582,3 +582,5 @@
 .planner-header-actions { display: flex; align-items: center; gap: var(--space-8); }
 .planner-header-actions > .icon-button { width: var(--control-touch); height: var(--control-touch); border-radius: var(--radius-pill); background: var(--popover-glass); border: 1px solid var(--border); }
 .planner-header-actions > .icon-button:hover, .planner-header-actions > .icon-button[aria-expanded="true"] { background: var(--selected); }
+.planner-full-calendar .page-heading { flex-wrap: nowrap; }
+.planner-full-calendar .page-heading-title { flex: 1; }
