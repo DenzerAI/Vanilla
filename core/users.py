@@ -116,9 +116,13 @@ class Users:
             raise HTTPException(403, "Dieser Chat gehört einem anderen Benutzer.")
 
     def require_path(self, user, path):
-        """Dateiwege wie chats/<id>/transcript.json unterliegen demselben Besitz."""
-        if user and user["role"] != "owner":
-            self.require(user, path_chat_id(path))
+        """Dateiwege wie chats/<id>/transcript.json unterliegen demselben Besitz.
+
+        Für Dateien gilt fail-closed: ein Chat, den die Liste nicht kennt, gehört keinem Mitglied.
+        """
+        chat_id = path_chat_id(path)
+        if chat_id and user and user["role"] != "owner" and self.chat_owner(chat_id) != user["id"]:
+            raise HTTPException(403, "Dieser Chat gehört einem anderen Benutzer.")
 
     async def stream(self, frames, user):
         """Mitglieder bekommen keine Ereignisse fremder Chats."""

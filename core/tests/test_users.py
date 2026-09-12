@@ -158,6 +158,7 @@ def test_member_cannot_read_foreign_chat_files_or_create_accounts_without_code(c
         assert client.get("/api/file/text?path=chats/other/transcript.json").status_code == 403
         assert client.get("/api/file/raw?path=workspace/chats/other.md").status_code == 403
         assert client.get("/api/files?path=chats/other").status_code == 403
+        assert client.get("/api/file/text?path=chats/unbekannt/transcript.json").status_code == 403
         # Eigene und chatfremde Pfade gehen an den Adapter (hier nicht gestartet → 503, nicht 403).
         assert client.get("/api/file/text?path=chats/mine/transcript.json").status_code == 503
         assert client.get("/api/file/text?path=notes/a.md").status_code == 503
