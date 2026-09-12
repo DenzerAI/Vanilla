@@ -165,3 +165,10 @@ aktiven Verlauf ab. BrowserThread erhält für aufgeschobene große Werkzeugbele
 das additive Feld shelfJobs (jobId/name), ausschließlich aus erfolgreichen
 strukturierten Erstellbelegen. Keine neue Speicherung, alte Leser ignorieren das
 Feld. Aufbau und Grenzen: wrapper/surfaces/chat.md, Veränderbare Breiten und Ablage.
+
+Der gemeinsame AgentCompanion reserviert im Composer auch bei Anhängen und
+Rückfragen seine Bühne. Er verbindet native Arbeitszustände mit zeitlich
+begrenzten Leerlaufgesten; der Start und der Seitenleistenkopf wiederholen
+die Figur nicht. Der Sichtbarkeitsbeobachter steuert die SVG-Animationen mit
+höherer Selektorspezifität als die gemeinsame Pausenregel. Keine Datenmigration;
+Bewegungseinstellungen bleiben erhalten. Vertrag: wrapper/surfaces/chat.md.

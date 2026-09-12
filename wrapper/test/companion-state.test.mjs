@@ -9,7 +9,7 @@ test("die Figur zeigt den Sitzungsstand in fester Rangfolge", () => {
   assert.equal(companionSet({ ...base, connection: "offline", running: true }), "krank");
   assert.equal(companionSet({ ...base, waitingSince: base.now - 1000, running: true }), "ruft");
   assert.equal(companionSet({ ...base, waitingSince: base.now - CALL_MS, running: true }), "wartet");
-  assert.equal(companionSet({ ...base, busy: true }), "isst");
+  assert.equal(companionSet({ ...base, busy: true }), "denkt");
   assert.equal(companionSet({ ...base, running: true }), "arbeitet");
   assert.equal(companionSet({ ...base, running: true, activity: "message" }), "arbeitet");
   assert.equal(companionSet({ ...base, running: true, activity: "reasoning" }), "denkt");
@@ -38,4 +38,17 @@ test("jedes Set hat ein deutsches Label", () => {
   assert.ok(companionSets.length >= 17);
   for (const [id, label] of companionSets) assert.equal(companionSetLabel(id), label);
   assert.equal(companionSetLabel("unbekannt"), "Ruhe");
+});
+
+ test("Leerlauf wechselt kurz die Gesten, echte Arbeit und Rückfragen haben Vorrang", () => {
+  for (const hasTurns of [false, true]) {
+    assert.equal(companionSet({...base, hasTurns, idleMs: 10000}), "ruhe");
+    assert.equal(companionSet({...base, hasTurns, idleMs: 42000}), "spielt");
+    assert.equal(companionSet({...base, hasTurns, idleMs: 82000}), "isst");
+    assert.equal(companionSet({...base, hasTurns, idleMs: 114000}), "tanzt");
+    assert.equal(companionSet({...base, hasTurns, idleMs: NOD_MS}), "nickt");
+    assert.equal(companionSet({...base, hasTurns, idleMs: SLEEP_MS}), "schlaeft");
+    assert.equal(companionSet({...base, hasTurns, idleMs: 82000, running: true, busy: true, activity: "read"}), "liest");
+    assert.equal(companionSet({...base, hasTurns, idleMs: SLEEP_MS, waitingSince: base.now}), "ruft");
+  }
 });

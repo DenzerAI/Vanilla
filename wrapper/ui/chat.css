@@ -453,7 +453,7 @@
 .message-delivery > button { gap: var(--space-4); font-size: var(--text-caption); }
 
 /* Reserve the full stage below attachments and questions, alongside model controls. */
-.composer-area:has(.composer-companion) .composer-options { min-height: 75px; padding-left: 145px; align-items: flex-end; }
+.composer-area:has(.composer-companion) .composer-options { min-height: 75px; padding-left: calc(var(--space-64) * 2); align-items: flex-end; }
 @media (max-width: 600px) {
-  .composer-area:has(.composer-companion) .composer-options { min-height: 60px; padding-left: 118px; }
+  .composer-area:has(.composer-companion) .composer-options { min-height: 60px; padding-left: calc(var(--space-64) + var(--space-48)); }
 }

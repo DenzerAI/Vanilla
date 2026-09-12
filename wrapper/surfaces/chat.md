@@ -8,7 +8,7 @@ Der zuständige Worker erzeugt den Titel mit dem gewählten Modell in einer sepa
 
 Die bisherige Projektgruppe heißt in der Seitenleiste „Workspace“. Hinzufügen und Bearbeiten verwenden dieselbe Bezeichnung im bestehenden Dialog. Projekt-IDs, Daten und Ordner bleiben erhalten.
 
-Die Agentenidentität oben links öffnet als ganzer Avatar-/Namensbutton das Agent-Menü. AgentMenu verwendet Avatar und ChatMenu samt Verbindungspunkt und konfiguriertem Namen. ServerDetails zeigt Verbindung, laufende Produktversion, letzten lokalen Git-Commit mit Datum/Uhrzeit, letzten lokal belegten Push, Serverstart und Laufzeit sowie Server, Engine und gemessene Antwortzeit. Fehlende Daten erscheinen kompakt als Gedankenstrich; Tooltips erklären nicht erfasste Zeitpunkte. Pushdaten stammen ausschließlich aus Remote-Reflog-Einträgen „update by push“, niemals aus Fetch- oder Commitzeiten. Es folgen Nutzung und Einstellungen. Archivierte Chats bleiben in Einstellungen erreichbar. Die Abschlusszeile enthält einen randlosen Neustart-IconButton mit Tooltip und ThemeToggle ohne redundante Beschriftung. Kein separater Statusbutton oder Agentenfuß; der Kopf bleibt auch in Einstellungen und Inbox erreichbar.
+Die Agentenidentität oben links öffnet als ganzer Namensbutton das Agent-Menü. AgentMenu verwendet ChatMenu und den konfigurierten Namen in der UI-Schrift. ServerDetails zeigt Verbindung, laufende Produktversion, letzten lokalen Git-Commit mit Datum/Uhrzeit, letzten lokal belegten Push, Serverstart und Laufzeit sowie Server, Engine und gemessene Antwortzeit. Fehlende Daten erscheinen kompakt als Gedankenstrich; Tooltips erklären nicht erfasste Zeitpunkte. Pushdaten stammen ausschließlich aus Remote-Reflog-Einträgen „update by push“, niemals aus Fetch- oder Commitzeiten. Es folgen Nutzung und Einstellungen. Archivierte Chats bleiben in Einstellungen erreichbar. Die Abschlusszeile enthält einen randlosen Neustart-IconButton mit Tooltip und ThemeToggle ohne redundante Beschriftung. Kein separater Statusbutton oder Agentenfuß; der Kopf bleibt auch in Einstellungen und Inbox erreichbar.
 
 Die Projekt-/Chatnavigation liegt in der Seitenleiste. Ein unbenannter neuer Chat zeigt oben keinen Titel und keinen separaten Einstieg „Bestehenden Chat öffnen“. Benannte Entwürfe und bestehende Chats behalten ihr kompaktes Chatmenü. Bei mehreren Panels gehört jedes Drei-Punkte-Menü zum jeweiligen Panel. Die globale Chatleiste enthält die Ansichts- und Workspace-Aktionen ohne untere Trennlinie. Chatfläche zeigt Nutzereingaben, Antworten und kompakte Werkzeugaktivität. Der Composer besteht aus einer pillenförmigen Schreibzeile: Anhängen, Eingabe, genau ein Mikrofon für Diktat, Senden/Stoppen. Über der Pille steht ComposerHeading: ausschließlich ModelPicker rechts in caption, mit Einzug auf die Achse des Sendepfeils. Die Pille endet mit 8 px Abstand bündig zur Seitenleiste; sichere Displayränder bleiben berücksichtigt. Arbeitsmodus und Fast liegen im geöffneten Modellfenster: links der Fast-Blitz, rechts Wrench oder SquarePen mit Chevron. Das gemeinsame ChatMenu bietet Umsetzen und Planen ausgeschrieben mit Auswahlhaken. Tooltip und zugänglicher Name nennen den aktiven Modus. Planen bleibt ohne wirksamen Schreibschutz deaktiviert; während laufender Arbeit ist die Moduswahl gesperrt. Fokus, Escape und Klicks im Untermenü erhalten das übergeordnete Modellfenster. Im geschlossenen Modelltrigger kennzeichnet ein kleines Planicon den Planmodus. Fast verwendet aktiv Terrakotta (brand-accent), eine stärkere Kontur und den gemeinsamen Auswahlring. Touchziele bleiben mindestens 44 px hoch. Modellname und Denkaufwand bleiben gemeinsam auswählbar. Keine separate Worker-Beschriftung oder Computer-Use-Schaltfläche im Composer. Bei mehrzeiligen Entwürfen wächst die Schreibfläche; ihre Rundung bleibt erhalten. Zusätzliche direkt benötigte Aktionen sind knappe Iconbuttons mit Tooltip und zugänglichem Namen. Keine Konfiguration oder Verlaufsverwaltung im Composer.
 
@@ -161,10 +161,10 @@ Unter der Eingabe gibt es keinen Computer-Use-Einstieg und keine Werkzeugkatalog
 
 Das Hauptmenü zeigt Inbox, Kalender, Aufträge, die verfügbare Bibliothek und Firma in dieser Reihenfolge; darunter bleiben Workspaces und Chats. Firma verwendet dieselbe nav-item-Zeile ohne eigene Abschnittsüberschrift. Verbindungen und Skills werden über die Einstellungen im Agentenmenü erreicht. Modul-Platzhalter und reservierte Leerzeilen entfallen. Symbole, Textkanten, Abstände und Flächengestaltung bleiben erhalten.
 
-Der Composer zeigt keinen zusätzlichen Avatar. Nach dem Speichern des Profils übernehmen alle offenen Panels Namen und Avatar über das gemeinsame Identitätsereignis.
+Der Composer zeigt die einzige Begleitfigur im Chat, auch mit Anhängen und Rückfragen. Nach dem Speichern des Profils übernehmen alle offenen Panels Namen und Avatar über das gemeinsame Identitätsereignis.
 
-Alle sechs Motive zeigen ausschließlich ruhige Augenbewegungen wie in der
-Profilvorschau. SVG-Gruppen trennen Blickrichtung und Blinzeln vom stillen Kopf.
+Alle sechs Motive verwenden die gemeinsamen Pixelanimationen. SVG-Gruppen
+trennen Körper, Blickrichtung, Blinzeln und zustandsabhängige Requisiten.
 Ein gemeinsamer Sichtbarkeitsbeobachter pausiert Avatare außerhalb des sichtbaren
 Bereichs. Reduzierte Bewegung in App oder Betriebssystem schaltet sie aus.
 
@@ -296,7 +296,7 @@ Die Ordnernavigation nutzt kompakte List-Skeletons in der bestehenden Dateiliste
 
 ## Ruhiger Gesprächsfluss
 
-Antworten beginnen direkt mit ihrem Inhalt. Der konfigurierte Avatar und Agentenname bleiben im Seitenleistenkopf. ComposerHeading zeigt nur ModelPicker rechts, mit Einzug auf die Achse des Sendepfeils. Eine wiederholte Autorenzeile und relatives Nachrichtenalter entfallen; der genaue Antwortzeitpunkt bleibt als Tooltip des Antwortblocks verfügbar. Direkt darunter steht die zweite Zeile: ausgewählter AppLoader, Live-Status, Schrittanzahl und tatsächliche Bearbeitungszeit. Diese zweite Zeile ist die aufklappbare ActivityGroup und bleibt nach Abschluss als kompakter Verlauf erhalten. Ohne Werkzeuge bleibt der kompakte Arbeitsstatus an derselben Stelle. Der Spinner endet mit der Arbeit und behauptet keinen weiteren Fortschritt.
+Antworten beginnen direkt mit ihrem Inhalt. Der konfigurierte Agentenname bleibt im Seitenleistenkopf. ComposerHeading zeigt nur ModelPicker rechts, mit Einzug auf die Achse des Sendepfeils. Eine wiederholte Autorenzeile und relatives Nachrichtenalter entfallen; der genaue Antwortzeitpunkt bleibt als Tooltip des Antwortblocks verfügbar. Direkt darunter steht die zweite Zeile: ausgewählter AppLoader, Live-Status, Schrittanzahl und tatsächliche Bearbeitungszeit. Diese zweite Zeile ist die aufklappbare ActivityGroup und bleibt nach Abschluss als kompakter Verlauf erhalten. Ohne Werkzeuge bleibt der kompakte Arbeitsstatus an derselben Stelle. Der Spinner endet mit der Arbeit und behauptet keinen weiteren Fortschritt.
 
 Zwischenmeldungen bleiben während der Arbeit im Gespräch sichtbar. Sobald eine abschließende Antwort vorliegt und die Arbeit beendet ist, werden Zwischenmeldungen und Werkzeugschritte in ihrer ursprünglichen Reihenfolge in die standardmäßig geschlossene Gruppe aufgenommen. Aufklappen zeigt den vollständigen Ablauf. Ein ausdrücklich geöffneter Arbeitsverlauf und seine geöffneten Werkzeugdetails bleiben beim Abschluss offen. Diese Entscheidungen liegen bei ChatTurn und überstehen das Umhängen der Statuszeile unter die finale Antwort. Laufende oder fehlgeschlagene Turns ohne Abschlussantwort verlieren ihre sichtbaren Zwischenmeldungen nicht. Nutzernachrichten und Antworten behalten ihre Reihenfolge; Nachträge werden nicht vor die erste Nutzernachricht verschoben.
 
@@ -325,7 +325,7 @@ Kopf und Bereichsauswahl nutzen control (14 px), Dateizeilen und Begleittexte sm
 „Befehle“ verwendet normale UI-Schrift im Leerzustand, Monospace nur für Eingabe und tatsächliche Ausgabe. Der kurze Hinweis benennt Einzelaufrufe und das 30-Sekunden-Limit. Die Eingabe bleibt unten als kompakte getönte Zeile. Die gemeinsame schwarze Materialfläche, feine Kante und Lichtbewegung bleiben in allen Ansichten sichtbar. Der Bereich ist kein persistentes Terminal und bietet keine neu erfundene native Finder-/Terminal-Anbindung.
 
 
-Die erste Nachrichtenaktion und das Fortschrittssymbol teilen dieselbe senkrechte Mittelachse. Avatar und Name bleiben im Seitenleistenkopf; der Composer zeigt keine zusätzliche Identität.
+Die erste Nachrichtenaktion und das Fortschrittssymbol teilen dieselbe senkrechte Mittelachse. Der Name bleibt im Seitenleistenkopf; die Figur steht am Composer.
 
 
 Der leere Composer zeigt auf Desktop und Handy nur „Nachricht“ in der zurückhaltenden Rolle `faint`, vertikal zentriert mit 2 px optischer Absenkung. Die leere Schreibzeile bleibt eine volle Pille; ausschließlich tatsächlicher mehrzeiliger Text oder die aktive Aufnahme erweitern die Rundung. Die Höhenmessung berücksichtigt den Textinnenabstand und ignoriert Platzhalterumbrüche für den Mehrzeilenzustand.
@@ -506,7 +506,7 @@ Der scrollbare Einstieg reicht bis zum unteren Panelrand: Karten und Text laufen
 hinter Eingabe und Anhängen weiter, ohne harte Schnittkante an deren Oberseite.
 Der gemeinsame untere Fade und der dynamische Composer-Endabstand halten die
 letzten Inhalte und die Kartennavigation vollständig erreichbar.
-Der größere Avatar steht mittig über dem rahmenlosen Text. Zwei feste Textzeilen halten den Einstieg beim Schreiben und beim Satzwechsel stabil. AttentionFan nutzt
+Der Start zeigt ausschließlich den größeren rahmenlosen Begrüßungstext mit der Titelrolle. Zwei feste Textzeilen halten den Einstieg beim Schreiben und beim Satzwechsel stabil. AttentionFan nutzt
 suggestion-glass, die gemeinsame Glaskante und 28 px Blur, mit deckenden Fallbacks.
 Maus-Hover hebt eine Karte in ihrer bestehenden Position an und betont ihre Kontur;
 kein Umsortieren unter dem Zeiger. Ein Klick öffnet die angehobene Karte, Touch
@@ -559,7 +559,7 @@ sind keine Workspace-Titel. Geschützte Einträge sind zunächst ausgeblendet.
 
 ### Persönlicher Heute-Einstieg
 
-Avatar, Text und Karten besitzen feste Plätze. Der größere gewählte Avatar steht mittig über zwei reservierten Textzeilen ohne Sprechblasenfläche oder Rahmen. Die vorhandene Schreibanimation bleibt; längere Texte ändern weder die Höhe des Einstiegs noch die Position der Karten. Kurze, belegte Anschlussfragen greifen die gewählte Karte auf. Dateinamen dienen nur als Thema; keine erfundene Erinnerung oder unbelegte Zeitangabe.
+Avatar, Text und Karten besitzen feste Plätze. Zwei reservierte Textzeilen in der Titelrolle stehen ohne zusätzliche Figur, Sprechblasenfläche oder Rahmen über den Karten. Die vorhandene Schreibanimation bleibt; längere Texte ändern weder die Höhe des Einstiegs noch die Position der Karten. Kurze, belegte Anschlussfragen greifen die gewählte Karte auf. Dateinamen dienen nur als Thema; keine erfundene Erinnerung oder unbelegte Zeitangabe.
 
 Alle Fächerkarten sind einschließlich Innenabständen 14 rem hoch (224 px bei normaler Schriftgröße); vergrößerte Schrift skaliert auch die Kartenhöhe. Titel und
 Beschreibung bleiben auf je zwei Zeilen begrenzt. Die Navigation reserviert auch
@@ -1635,3 +1635,20 @@ falsch darstellen, deshalb UI und Server zusammen zurücksetzen beziehungsweise
 vor Rückkehr die betroffenen Belege berücksichtigen. Keine Änderung nativer Chats.
 Prüfung: Wiederholungsrennen, Anhänge, falscher Chat, Speicherfehler, Neustart,
 Browserwiederherstellung sowie Desktop und mobile Emulation.
+
+### Companion am Composer (12.09.2026)
+
+Im Chat steht die Figur ausschließlich links auf der Composerkante. Auch bei
+Anhängen, Uploads und Rückfragen reserviert die Optionszeile die Bühnenhöhe
+(75 px, schmal 60 px); Modellwahl und Anhangaktionen bleiben frei.
+Der Start und sein Ladeplatzhalter zeigen nur den vergrößerten Begrüßungstext.
+Der Seitenleistenkopf zeigt nur den Namen in font-ui; Verbindung und Status
+bleiben im zugänglich beschrifteten Agentenmenü erreichbar.
+Ruhe, kurze Spiel-, Snack- und Tanzpausen wechseln auch im leeren Chat.
+Nach fünf Minuten nickt die Figur ein, nach zehn schläft sie; Eingaben wecken
+sie sofort. Senden zeigt Denken; laufende Tätigkeiten haben Vorrang vor
+Leerlauf. Rückfragen zeigen Rufen, nach einer Minute Warten. Erfolgreicher
+Abschluss, Fehler und Verbindungsverlust behalten ihre eigenen Zustände.
+Unsichtbare Figuren pausieren; Still und reduzierte Bewegung bleiben wirksam.
+Die Startreferenz verwendet denselben Companion samt Anhangumschalter.
+Keine Datenmigration oder Änderung gespeicherter Bewegungseinstellungen.

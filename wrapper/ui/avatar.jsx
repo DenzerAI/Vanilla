@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useRef, useState } from "react";
 import { observeAvatarMotion, avatarMotionTiming } from "./avatar-motion.mjs";
 import {
   agentAvatar,
@@ -18,7 +18,7 @@ const artwork = { lumi, nori, miko, orbit, pixel, kibo };
 const STAGE_VIEWBOX = 'viewBox="-10 -8 31 25"';
 const COMPACT_VIEWBOX = 'viewBox="-1 0 18 16"';
 export const DEFAULT_AVATAR_SET = "ruhe";
-export function Avatar({ avatar, color, large = false, motion = undefined, set = DEFAULT_AVATAR_SET, stage = false }) {
+export const Avatar = memo(function Avatar({ avatar, color, large = false, motion = undefined, set = DEFAULT_AVATAR_SET, stage = false }) {
   const { id } = agentAvatar(avatar);
   const ref = useRef();
   const [timing] = useState(avatarMotionTiming);
@@ -43,4 +43,4 @@ export function Avatar({ avatar, color, large = false, motion = undefined, set =
       />
     </span>
   );
-}
+});

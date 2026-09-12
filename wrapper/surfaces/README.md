@@ -18,7 +18,7 @@ Diese Dateien sind verbindliche Bauanleitungen, keine Ideensammlung. Vor einer E
 
 ## Navigation
 
-Der gemeinsame Seitenleistenkopf zeigt AgentMenu mit konfiguriertem Avatar, Namen und integriertem Verbindungspunkt. Daneben stehen Suche als IconButton, Benachrichtigungen und Einklappen. Dies gilt auch für Inbox und Einstellungen. Der bisherige Agentenfuß und der separat bedienbare Serverstatus entfallen; Details und Neustart stehen im Agentenmenü. Aufbau und Tastaturbedienung führt chat.md.
+Der gemeinsame Seitenleistenkopf zeigt AgentMenu mit konfiguriertem Namen in der UI-Schrift. Daneben stehen Suche als IconButton, Benachrichtigungen und Einklappen. Dies gilt auch für Inbox und Einstellungen. Der bisherige Agentenfuß und der separat bedienbare Serverstatus entfallen; Details und Neustart stehen im Agentenmenü. Aufbau und Tastaturbedienung führt chat.md.
 
 Inbox, Kalender, Aufträge, die verfügbaren Ergebnisse und Firma bilden in dieser Reihenfolge das Hauptmenü, ohne eigene Abschnittsüberschrift für Firma; die Gruppe „Workspace“ und ihre Chats folgen darunter. Verbindungen und Skills stehen in der vorhandenen Einstellungsnavigation mit ihren bisherigen Symbolen und Katalogansichten. Globale Suche und Querverweise öffnen den jeweiligen Einstellungsbereich direkt. Keine Modul-Platzhalter, zusätzliche Navigationsebene oder neue Seitengestaltung.
 
@@ -166,3 +166,20 @@ Systemhinweise stehen jetzt einheitlich oben rechts am Bildschirm, einschließli
 Aktualisieren und Neustarten. SystemNotice rendert über ein Body-Portal; sichere
 Displayränder und bestehende Abstandsrollen gelten auf Desktop und Handy.
 Diese Platzierung ersetzt die zuvor beschriebene zentrierte Update-Pille.
+
+### Companion am Composer (12.09.2026)
+
+Im Chat steht die Figur ausschließlich links auf der Composerkante. Auch bei
+Anhängen, Uploads und Rückfragen reserviert die Optionszeile die Bühnenhöhe
+(75 px, schmal 60 px); Modellwahl und Anhangaktionen bleiben frei.
+Der Start und sein Ladeplatzhalter zeigen nur den vergrößerten Begrüßungstext.
+Der Seitenleistenkopf zeigt nur den Namen in font-ui; Verbindung und Status
+bleiben im zugänglich beschrifteten Agentenmenü erreichbar.
+Ruhe, kurze Spiel-, Snack- und Tanzpausen wechseln auch im leeren Chat.
+Nach fünf Minuten nickt die Figur ein, nach zehn schläft sie; Eingaben wecken
+sie sofort. Senden zeigt Denken; laufende Tätigkeiten haben Vorrang vor
+Leerlauf. Rückfragen zeigen Rufen, nach einer Minute Warten. Erfolgreicher
+Abschluss, Fehler und Verbindungsverlust behalten ihre eigenen Zustände.
+Unsichtbare Figuren pausieren; Still und reduzierte Bewegung bleiben wirksam.
+Die Startreferenz verwendet denselben Companion samt Anhangumschalter.
+Keine Datenmigration oder Änderung gespeicherter Bewegungseinstellungen.

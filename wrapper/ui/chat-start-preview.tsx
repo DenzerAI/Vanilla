@@ -1,5 +1,7 @@
 import {useLayoutEffect,useMemo,useRef,useState} from 'react';
 import {ChatStart} from './chat-start';
+import {AgentCompanion} from './agent-companion.jsx';
+import {ComposerHeading} from './chat-controls.jsx';
 import {createChatScroll} from './chat-scroll.mjs';
 import {Skeleton} from './skeleton';
 import './chat-start-preview.css';
@@ -21,7 +23,8 @@ export function ChatStartPreview() {
       <div ref={viewport} className="conversation"><ChatStart key={String(loading)} api={api} greeting="Was möchtest du heute angehen?" profile={{avatar:'nori',avatarColor:'neutral',reduceMotion:'on'}} requests={[]} notifications={[]} chats={chats} projectId="preview" composing={!!draft || attachment} onOpen={item=>{if(item.prompt)setDraft(item.prompt);setAction(item.threadId?'Vorschau: Gespräch öffnen.':item.kind==='weather'?'Vorschau: Wetterort im Profil einrichten.':'Vorschau: Entwurf vorbereiten.');}}/></div>
       <div className="composer-area"><div className="composer pill-composer">
         {attachment&&<div className="chat-start-preview-attachment"><Skeleton variant="media" announce={false}/><span className="page-note">Beispielanhang</span></div>}
-        <div className="composer-entry"><textarea aria-label="Nachricht · Vorschau" placeholder="Nachricht" rows={1} value={draft} onChange={event=>setDraft(event.target.value)}/></div>
+        <ComposerHeading><span className="model-trigger">Modell · Denkstufe</span></ComposerHeading>
+        <div className="composer-entry"><AgentCompanion avatar="lumi" color="neutral" chatId="preview" running={false} waiting={false} busy={false} connection="online" activity={null} lastTurnStatus={null} hasTurns={false}/><textarea aria-label="Nachricht · Vorschau" placeholder="Nachricht" rows={1} value={draft} onChange={event=>setDraft(event.target.value)}/></div>
       </div></div>
     </div>
     <p className="page-note" role="status">{action||'Kartenaktionen zeigen hier nur ihr Ziel. Es wird keine Nachricht gesendet.'}</p>

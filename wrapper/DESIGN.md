@@ -458,7 +458,7 @@ Der rechte Bereich „Workspace“ verwendet die eigene Rolle `workspace-panel-b
 
 ## Ruhiger Gesprächsfluss
 
-Antworten beginnen direkt mit ihrem Inhalt. Der konfigurierte Avatar und Agentenname bleiben im Seitenleistenkopf. ComposerHeading zeigt nur ModelPicker rechts, mit Einzug auf die Achse des Sendepfeils; links darüber steht die Figur des Agenten auf der Oberkante der Schreibzeile und zeigt den Sitzungsstand (siehe Avatare). Eine wiederholte Autorenzeile und relatives Nachrichtenalter entfallen; der genaue Antwortzeitpunkt bleibt als Tooltip des Antwortblocks verfügbar. Direkt unter dem jeweils neuesten Antworttext, vor den bei Hover eingeblendeten Nachrichtenaktionen, stehen ausgewählter AppLoader, Live-Status, Schrittanzahl und tatsächliche Bearbeitungszeit. Diese aufklappbare ActivityGroup wandert beim Streaming mit dem Text nach unten und bleibt nach Abschluss dort als kompakter Verlauf erhalten. Ohne Werkzeuge steht der kompakte Arbeitsstatus ebenfalls direkt unter dem Text vor den Aktionen. Die Aktionszeile reserviert keinen Platz zwischen Text und Status. Die Anzeige liegt im normalen Gesprächsfluss, ohne Inhalte zu überdecken; manuelles Hochscrollen pausiert weiterhin das automatische Mitlaufen. Der Spinner endet mit der Arbeit und behauptet keinen weiteren Fortschritt.
+Antworten beginnen direkt mit ihrem Inhalt. Der konfigurierte Agentenname bleibt im Seitenleistenkopf. ComposerHeading zeigt nur ModelPicker rechts, mit Einzug auf die Achse des Sendepfeils; links darüber steht die Figur des Agenten auf der Oberkante der Schreibzeile und zeigt den Sitzungsstand (siehe Avatare). Eine wiederholte Autorenzeile und relatives Nachrichtenalter entfallen; der genaue Antwortzeitpunkt bleibt als Tooltip des Antwortblocks verfügbar. Direkt unter dem jeweils neuesten Antworttext, vor den bei Hover eingeblendeten Nachrichtenaktionen, stehen ausgewählter AppLoader, Live-Status, Schrittanzahl und tatsächliche Bearbeitungszeit. Diese aufklappbare ActivityGroup wandert beim Streaming mit dem Text nach unten und bleibt nach Abschluss dort als kompakter Verlauf erhalten. Ohne Werkzeuge steht der kompakte Arbeitsstatus ebenfalls direkt unter dem Text vor den Aktionen. Die Aktionszeile reserviert keinen Platz zwischen Text und Status. Die Anzeige liegt im normalen Gesprächsfluss, ohne Inhalte zu überdecken; manuelles Hochscrollen pausiert weiterhin das automatische Mitlaufen. Der Spinner endet mit der Arbeit und behauptet keinen weiteren Fortschritt.
 
 Zwischenmeldungen bleiben während der Arbeit im Gespräch sichtbar. Sobald eine abschließende Antwort vorliegt und die Arbeit beendet ist, werden Zwischenmeldungen und Werkzeugschritte in ihrer ursprünglichen Reihenfolge in die standardmäßig geschlossene Gruppe aufgenommen. Aufklappen zeigt den vollständigen Ablauf. Laufende oder fehlgeschlagene Turns ohne Abschlussantwort verlieren ihre sichtbaren Zwischenmeldungen nicht. Nutzernachrichten und Antworten behalten ihre Reihenfolge; Nachträge werden nicht vor die erste Nutzernachricht verschoben.
 
@@ -487,7 +487,7 @@ Kopf und Bereichsauswahl nutzen control (14 px), Dateizeilen und Begleittexte sm
 „Befehle“ verwendet normale UI-Schrift im Leerzustand, Monospace nur für Eingabe und tatsächliche Ausgabe. Der kurze Hinweis benennt Einzelaufrufe und das 30-Sekunden-Limit. Die Eingabe bleibt unten als kompakte getönte Zeile. Die gemeinsame schwarze Materialfläche, feine Kante und Lichtbewegung bleiben in allen Ansichten sichtbar. Der Bereich ist kein persistentes Terminal und bietet keine neu erfundene native Finder-/Terminal-Anbindung.
 
 
-Die erste Nachrichtenaktion und das Fortschrittssymbol teilen dieselbe senkrechte Mittelachse. Avatar und Name bleiben im Seitenleistenkopf; auf der Schreibzeile steht zusätzlich die Figur oben links (`.composer-companion`, Fußlinie auf der Pillenkante, ohne Zeigerereignisse). Sie verschwindet, solange eine Rückfrage oder Anhänge über der Zeile stehen.
+Die erste Nachrichtenaktion und das Fortschrittssymbol teilen dieselbe senkrechte Mittelachse. Der Name bleibt im Seitenleistenkopf; auf der Schreibzeile steht die Figur oben links (`.composer-companion`, Fußlinie auf der Pillenkante, ohne Zeigerereignisse). Sie bleibt auch mit Anhängen und Rückfragen sichtbar; die Optionszeile reserviert ihre Bühnenhöhe und hält Modellwahl und Vorschauen frei.
 
 ## Inbox
 
@@ -721,7 +721,7 @@ Der scrollbare Einstieg reicht bis zum unteren Panelrand: Karten und Text laufen
 hinter Eingabe und Anhängen weiter, ohne harte Schnittkante an deren Oberseite.
 Der gemeinsame untere Fade und der dynamische Composer-Endabstand halten die
 letzten Inhalte und die Kartennavigation vollständig erreichbar.
-Der größere Avatar steht mittig über dem rahmenlosen Text. Zwei feste Textzeilen halten den Einstieg beim Schreiben und beim Satzwechsel stabil. AttentionFan nutzt
+Der Start zeigt ausschließlich den größeren rahmenlosen Begrüßungstext mit der Titelrolle. Zwei feste Textzeilen halten den Einstieg beim Schreiben und beim Satzwechsel stabil. AttentionFan nutzt
 suggestion-glass, die gemeinsame Glaskante und 28 px Blur, mit deckenden Fallbacks.
 Maus-Hover hebt eine Karte in ihrer bestehenden Position an und betont ihre Kontur;
 kein Umsortieren unter dem Zeiger. Ein Klick öffnet die angehobene Karte, Touch
@@ -766,7 +766,7 @@ sind keine Workspace-Titel. Geschützte Einträge sind zunächst ausgeblendet.
 
 ### Persönlicher Heute-Einstieg
 
-Avatar, Text und Karten besitzen feste Plätze. Der größere gewählte Avatar steht mittig über zwei reservierten Textzeilen ohne Sprechblasenfläche oder Rahmen. Die vorhandene Schreibanimation bleibt; längere Texte ändern weder die Höhe des Einstiegs noch die Position der Karten. Kurze, belegte Anschlussfragen greifen die gewählte Karte auf. Dateinamen dienen nur als Thema; keine erfundene Erinnerung oder unbelegte Zeitangabe.
+Avatar, Text und Karten besitzen feste Plätze. Zwei reservierte Textzeilen in der Titelrolle stehen ohne zusätzliche Figur, Sprechblasenfläche oder Rahmen über den Karten. Die vorhandene Schreibanimation bleibt; längere Texte ändern weder die Höhe des Einstiegs noch die Position der Karten. Kurze, belegte Anschlussfragen greifen die gewählte Karte auf. Dateinamen dienen nur als Thema; keine erfundene Erinnerung oder unbelegte Zeitangabe.
 
 Alle Fächerkarten sind einschließlich Innenabständen 224 px hoch. Titel und
 Beschreibung bleiben auf je zwei Zeilen begrenzt. Die Navigation reserviert auch
@@ -1714,3 +1714,24 @@ ohne KI-Anbieter oder CRM-Voraussetzung; unklare Eingänge bleiben im Fokus.
 Inbox-Dialoge werden mit dem gemeinsamen Modal über ein Portal am Dokumentkörper geöffnet, damit sie auch bei mobil ausgeblendetem Detailbereich sichtbar bleiben.
 
 KI & Modelle verwendet kompakte SettingRow-Gruppen: vorhandene Programme zuerst, Kataloge und Aktualisierungen anfangs geschlossen über native details/summary (ai-disclosure). Programm-Chevrons öffnen Aktionen und Details. Lokale Laufzeiten zeigen Anzahl statt einer dauerhaft ausgeklappten Modellliste. Status trennt Installation, gespeicherte Einrichtung und Live-Verbindung. Vertrag: surfaces/settings.md.
+
+### Companion am Composer (12.09.2026)
+
+Im Chat steht die Figur ausschließlich links auf der Composerkante. Auch bei
+Anhängen, Uploads und Rückfragen reserviert die Optionszeile die Bühnenhöhe
+(75 px, schmal 60 px); Modellwahl und Anhangaktionen bleiben frei.
+Der Start und sein Ladeplatzhalter zeigen nur den vergrößerten Begrüßungstext.
+Der Seitenleistenkopf zeigt nur den Namen in font-ui; Verbindung und Status
+bleiben im zugänglich beschrifteten Agentenmenü erreichbar.
+Ruhe, kurze Spiel-, Snack- und Tanzpausen wechseln auch im leeren Chat.
+Nach fünf Minuten nickt die Figur ein, nach zehn schläft sie; Eingaben wecken
+sie sofort. Senden zeigt Denken; laufende Tätigkeiten haben Vorrang vor
+Leerlauf. Rückfragen zeigen Rufen, nach einer Minute Warten. Erfolgreicher
+Abschluss, Fehler und Verbindungsverlust behalten ihre eigenen Zustände.
+Unsichtbare Figuren pausieren; Still und reduzierte Bewegung bleiben wirksam.
+Die Startreferenz verwendet denselben Companion samt Anhangumschalter.
+Keine Datenmigration oder Änderung gespeicherter Bewegungseinstellungen.
+
+Avatar bleibt bei unveränderten Eigenschaften memoisiert: Der Sekundentakt des
+Companion darf die SVG-Ebenen nicht neu einsetzen und ihre Animationen nicht
+jede Sekunde zurücksetzen. Zustands- und Profilwechsel aktualisieren weiterhin.

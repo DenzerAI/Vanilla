@@ -102,7 +102,7 @@ export function DesignReference({ theme, tone, accent }) {
       <DefaultToggle/>
       <h3 className="section-heading">Agent-Menü · Beispiel</h3>
       <div className="sidebar-topbar agent-menu-preview"><AgentMenu name="Vanilla" avatar="nori" connectionState="online" preview onNavigate={()=>{}} onRestart={()=>{}} /></div>
-      <p className="page-note">Avatar und Name öffnen das gemeinsame Menü. Der Verbindungspunkt gehört zur Identität; Serverdetails stehen im geöffneten Menü. Die Vorschau verändert keine Einstellungen und startet keinen Server neu.</p>
+      <p className="page-note">Der Name in der UI-Schrift öffnet das gemeinsame Menü. Verbindung und Serverdetails stehen im geöffneten Menü. Die Vorschau verändert keine Einstellungen und startet keinen Server neu.</p>
       <h3 className="section-heading">Nachrichtenübergabe · Beispiel</h3>
       {[false,true].map(double=><div className="user-message-row" key={String(double)}>
         <div className="user-message"><p>{double?'Verarbeitung begonnen':'Sicher angekommen'}</p></div>

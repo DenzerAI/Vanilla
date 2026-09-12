@@ -34,7 +34,8 @@
   animation-delay: var(--avatar-delay, 2s);
   animation-play-state: paused;
 }
-[data-avatar-motion="running"] .agent-avatar-art * { animation-play-state: running; }
+/* Outrank the shared :is(..., .p-drop rect) pause rule, including its SVG type specificity. */
+:is(.avatar, .identity-avatar)[data-avatar-motion="running"] .agent-avatar-art * { animation-play-state: running; }
 /* Grund-Set: läuft in jedem Zustand mit, sofern ein Set nichts anderes sagt */
 .agent-avatar-art .eye { animation-name: px-blink; animation-duration: 4.6s; }
 .agent-avatar-art .eyes { animation-name: px-look; animation-duration: 9s; }
