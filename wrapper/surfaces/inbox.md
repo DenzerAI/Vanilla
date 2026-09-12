@@ -104,3 +104,5 @@ Das Einordnungs-Icon im Mailkopf öffnet Grund und Kategorienauswahl. Die bewuss
 Auswahl gilt dauerhaft für dieses Gespräch, bis „Automatisch einordnen“ gewählt
 wird. Keine automatische Absenderregel. Die Grundtriage ist lokal regelbasiert,
 ohne KI-Anbieter oder CRM-Voraussetzung; unklare Eingänge bleiben im Fokus.
+
+Inbox-Dialoge werden mit dem gemeinsamen Modal über ein Portal am Dokumentkörper geöffnet, damit sie auch bei mobil ausgeblendetem Detailbereich sichtbar bleiben.

@@ -247,7 +247,7 @@ export function InboxPage({ PageHeading, sidebarHost, sidebarVisible, onShowSide
       <div className="inbox-compose"><InboxComposer key={selectedId} threadId={selectedId} text={draft} onText={(text:string)=>void drafts.edit(selectedId,text)} onSend={()=>void send()} onFile={attach} disabled={!detail||!!draftRecord?.error} busy={sending||uploading} messenger={selectedId.startsWith('msg:')} attachment={attachments[selectedId]} reply={reply} onClearAttachment={()=>setAttachments(old=>{const copy={...old};delete copy[selectedId];return copy;})} onClearReply={()=>setReply(null)}/></div>
       </>}
     </section>
-    {filterOpen&&<Modal title="Inbox filtern" onClose={()=>setFilterOpen(false)}>
+    {filterOpen&&createPortal(<Modal title="Inbox filtern" onClose={()=>setFilterOpen(false)}>
       <div className="inbox-filter-fields">
         <label className="field"><span>Kanal</span><select value={provider} onChange={e=>{setProvider(e.target.value);setSelectedId('');}}><option value="all">Alle Kanäle</option>{['Gmail','Outlook','WhatsApp','Telegram'].map(value=><option key={value} value={value}>{value}</option>)}</select></label>
         <label className="field"><span>Postfach</span><select value={account} onChange={e=>{setAccount(e.target.value);setSelectedId('');}}><option value="all">Alle Postfächer</option>{accounts.map(a=><option key={a.id} value={a.id}>{a.address}</option>)}</select></label>
@@ -256,17 +256,17 @@ export function InboxPage({ PageHeading, sidebarHost, sidebarVisible, onShowSide
       </div>
       <p className="muted">Die Grundtriage bündelt eindeutige Werbung, Belege und Routinemeldungen. Unklare Nachrichten bleiben im Fokus. Die Originalpostfächer bleiben unverändert.</p>
       <div className="modal-actions"><button type="button" onClick={()=>{setProvider('all');setAccount('all');setFilter('open');setCategory('all');}}>Zurücksetzen</button><button type="button" className="primary" onClick={()=>setFilterOpen(false)}>Anzeigen</button></div>
-    </Modal>}
-    {triageOpen&&selected?.triage&&<Modal title="Einordnung" onClose={()=>setTriageOpen(false)}>
+    </Modal>, document.body)}
+    {triageOpen&&selected?.triage&&createPortal(<Modal title="Einordnung" onClose={()=>setTriageOpen(false)}>
       <p><strong>{selected.triage.label}</strong></p><p>{selected.triage.reason}</p>
       <p className="muted">Deine Auswahl gilt für dieses Gespräch, auch bei neuen Nachrichten. Mit „Automatisch einordnen“ stellst du die Grundtriage wieder her.</p>
       <div className="inbox-triage-options">{inboxCategories.map(c=><button type="button" key={c.value} disabled={triageBusy} aria-pressed={selected.triage?.category===c.value} onClick={()=>void correctTriage(c.value)}>{c.label}</button>)}<button type="button" disabled={triageBusy} onClick={()=>void correctTriage('auto')}>Automatisch einordnen</button></div>
-    </Modal>}
-    {conceptOpen && <Modal title="Eine Inbox für alle Nachrichten" onClose={() => setConceptOpen(false)} wide={false} className="inbox-concept">
+    </Modal>, document.body)}
+    {conceptOpen && createPortal(<Modal title="Eine Inbox für alle Nachrichten" onClose={() => setConceptOpen(false)} wide={false} className="inbox-concept">
       <p>Fokus zeigt Gespräche und bündelt eindeutige Werbung, Belege und Routinemeldungen. Alle zeigt die vollständige Liste für den gewählten Status. Die Suche berücksichtigt auch eingeklappte Gruppen. Die Grundtriage arbeitet lokal mit festen Regeln, ohne KI-Aufruf oder CRM-Voraussetzung.</p>
       <p>Outlook und Gmail werden unter Verbindungen eingerichtet. Die Inbox zeigt ausschließlich Nachrichten aus deinen ausdrücklich verbundenen Konten.</p>
       <p>Lesen, Erledigen und Antwortentwürfe werden lokal gespeichert. Der Sendepfeil sendet deinen gespeicherten Entwurf. Eingehende Nachrichten lösen keine automatische Antwort aus.</p>
       <p>Deine WhatsApp- und Telegram-Gespräche erscheinen hier nach der Einrichtung. Der separate Schreibkanal des Agenten bleibt im Hintergrund.</p>
-    </Modal>}
+    </Modal>, document.body)}
   </>;
 }
