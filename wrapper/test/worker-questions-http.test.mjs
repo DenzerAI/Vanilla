@@ -55,6 +55,7 @@ test('HTTP → pending native RPC → reply → completed turn and persistent qu
  t.after(async()=>{if(child&&child.exitCode===null){child.kill();await exited;}await rm(dir,{recursive:true,force:true});});
  const binary=path.join(dir,'peer.cjs');await writeFile(binary,`#!${process.execPath}\n${peer}`,{mode:0o700});
  await mkdir(path.join(dir,'company'));await writeFile(path.join(dir,'company/AGENTS.md'),'# Fixture');await writeFile(path.join(dir,'company/FIRMA.md'),'# Fictional fixture');
+ await mkdir(path.join(dir,'workspace/soul'),{recursive:true});await writeFile(path.join(dir,'workspace/soul/IDENTITY.md'),'# Agent\n\nAnzeigename: Fixture\nAvatar: lumi\n');
  const socket=net.createServer();await new Promise(r=>socket.listen(0,'127.0.0.1',r));const port=socket.address().port;await new Promise(r=>socket.close(r));
  child=spawn(process.execPath,[fileURLToPath(new URL('../server.mjs',import.meta.url))],{env:{PATH:process.env.PATH,HOME:dir,UWE_PORT:String(port),UWE_WORKSPACE:path.join(dir,'workspace'),UWE_DATA_ROOT:path.join(dir,'data'),COMPANY_BASE:path.join(dir,'company'),UWE_CODEX_BINARY:binary},stdio:['ignore','pipe','pipe']});
  exited=once(child,'exit');let diagnostics='';child.stderr.on('data',v=>diagnostics+=v);
@@ -89,7 +90,7 @@ test('HTTP → pending native RPC → reply → completed turn and persistent qu
    for(const viewport of ['desktop','mobile']) {
     const args=['scripts/ui-check.mjs','--base',base.replace(/\/api$/,''),'--viewport',viewport,
       '--out','workspaces/default/output/async-questions-ui','--path','/?chat='+asyncThread.id,
-      '--wait','css=.composer-question','--click','css=.composer-question-option:nth-child(2)',
+      '--wait','css=.composer-question','--sleep','500','--click','css=.composer-question-option:nth-child(2) input','--wait','css=.composer-question input:checked',
       '--eval',`({question:document.querySelector('.composer-question-title').textContent,selected:document.querySelectorAll('.composer-question input:checked').length,overflow:document.documentElement.scrollWidth>innerWidth})`,
       '--shot','async-question-'+viewport];
     await new Promise((resolve,reject)=>{

@@ -105,7 +105,7 @@ export class AsyncQuestions {
   constructor({chats,save,emit,enqueue}) { Object.assign(this,{chats,save,emit,enqueue}); this.serial=Promise.resolve(); }
   change(fn) { const operation=this.serial.then(fn); this.serial=operation.catch(()=>{}); return operation; }
   pending() { return this.chats().flatMap(c => (c.asyncQuestions || [])
-    .filter(r=>!r.status && r.request.workerId === (c.workerId || 'codex')).map(r=>r.request)); }
+    .filter(r=>!r.status && r.request.workerId === (c.workerId || 'codex') && (!r.request.workerThreadId || r.request.workerThreadId === (c.workerThreadId || c.id))).map(r=>r.request)); }
   observe(event) { return this.change(async()=>{
     const request=asyncQuestionRequest(event), p=event.params || {};
     const chat=this.chats().find(c=>c.id === p.threadId);
@@ -113,6 +113,8 @@ export class AsyncQuestions {
     if (request) {
       const records=chat.asyncQuestions ||= [];
       if (records.some(r=>r.request.id === request.id)) return;
+      request.workerThreadId=chat.workerThreadId || chat.id;
+      if (chat.connectionId) request.connectionId=chat.connectionId;
       records.push({request}); await this.save();
       this.emit({method:'wrapper/request',params:request});
     } else if (event.method === 'turn/completed' && ['interrupted','failed'].includes(p.turn?.status)) {

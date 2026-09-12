@@ -118,7 +118,7 @@ export function AgentMenu({ theme, onThemeChange, name, avatar, avatarColor, con
     footer={(close: () => void) => <span className="agent-theme-row"><IconButton role="menuitem" label={restartBusy ? "Server startet neu …" : "Server neu starten"} className="agent-restart-button" disabled={restartBusy} onClick={() => { close(); onRestart(); }}><RotateCcw size={18} strokeWidth={1.55}/></IconButton><ThemeToggle theme={theme} onThemeChange={onThemeChange} menuItem /></span>}
     header={<ServerDetails connectionState={connectionState} preview={preview} />}
     items={[
-      ...(companionHidden && onShowCompanion ? [{ id: "companion", label: `${name || "Figur"} auf der Schreibzeile zeigen`, icon: <Avatar avatar={avatar} color={avatarColor} />, action: onShowCompanion }] : []),
+      ...(companionHidden && onShowCompanion ? [{ id: "companion", label: `${name || "Figur"} auf der Schreibzeile zeigen`, icon: React.createElement(Avatar as any, { avatar, color: avatarColor }), action: onShowCompanion }] : []),
       { id: "usage", label: "Nutzung", icon: <Activity size={18} strokeWidth={1.55} />, action: () => onNavigate("usage") },
       { id: "settings", label: "Einstellungen", icon: <Settings size={18} strokeWidth={1.55} />, action: () => onNavigate("general") },
     ]}

@@ -230,9 +230,23 @@ auf der Schreibzeile (`AgentCompanion`) leitet ihn aus Verbindung, offenen
 Rückfragen, laufendem Turn, jüngster Tätigkeit, Turn-Ergebnis und Leerlaufzeit
 ab; Ruf wird nach einer Minute zu Wartet, Fertig dauert zweieinhalb Sekunden,
 Einnicken beginnt nach fünf, Schlafen nach zehn Minuten Ruhe.
-Unter Aussehen → Visuell → Figur-Animation stehen Still, Ruhig und Lebendig
-(Standard); frühere Gesichtsstile laufen als Lebendig weiter. Ruhig lässt
-Hüpfer und Drehungen weg, Still zeigt die Pose ohne Bewegung.
+Die Figur ist auf der Schreibzeile ein Menü-Auslöser (`ChatMenu`, öffnet nach
+oben): letzte Meldung, Figur wechseln (führt zu Dein Agent), Figur ausblenden.
+Rechts neben ihr erscheint eine Sprechblase (`.companion-bubble`,
+`companion-notes.mjs`) nur für Fakten außerhalb des aktuellen Chats: ein anderer
+Chat ist fertig oder fehlgeschlagen, ein anderer Chat braucht eine Freigabe, ein
+Hintergrund-Job hat ein Ergebnis. Der Chattitel ist die Aussage („… ist fertig“),
+Tippen öffnet den Chat beziehungsweise die Benachrichtigung, das Kreuz schließt,
+nach zwanzig Sekunden verschwindet sie; mehrere Meldungen stapeln sich als
+„und N weitere“, je Chat und Art nur eine. Beim Eintreffen hüpft die Figur einmal
+(Ruft), sofern sie gerade nichts Wichtigeres zeigt. Der eigene Chat bekommt keine
+Blase, sein Stand ist die Figur selbst.
+Unter Aussehen → Visuell → Figur-Animation stehen Still, Ruhig, Lebendig
+(Standard) und Ausgeblendet; frühere Gesichtsstile laufen als Lebendig weiter.
+Ruhig lässt Hüpfer und Drehungen weg, Still zeigt die Pose ohne Bewegung,
+Ausgeblendet nimmt die Figur von der Schreibzeile. Zurück holt sie das
+Agent-Menü im Seitenleistenkopf („… auf der Schreibzeile zeigen“) oder die
+Einstellung.
 `AvatarMotionSetting` verwendet die gemeinsame SettingRow; Unser Design zeigt
 denselben Baustein und die sechs produktiven Figuren. System-/App-Vorgaben für
 reduzierte Bewegung zeigen die Pose ohne Bewegung. Unsichtbare Avatare und

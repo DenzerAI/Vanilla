@@ -747,7 +747,8 @@ Migration; Rückkehr stellt nur bisherige Darstellung und Kartenbegrenzung wiede
 ## Native Rückfragen am Composer · Version 1.1.0
 
 Nur strukturierte Anbieteranfragen öffnen `ComposerQuestion`: Codex
-`item/tool/requestUserInput` und ACP `elicitation/create` (Form). Text und
+`item/tool/requestUserInput`, asynchrone Codex-Fragen (siehe unten) und ACP
+`elicitation/create` (Form). Text und
 Werkzeugausgaben werden nicht nach Fragen durchsucht; keine zusätzliche
 Aufforderung an das Modell, Fragen zu erzeugen. Alle gelieferten Optionen,
 Beschreibungen und Mehrfachauswahlen bleiben erhalten. Es gibt keine erfundenen
@@ -763,7 +764,7 @@ sendet nichts. Freitext ersetzt die Auswahl der jeweiligen Frage. Bei nativen
 Formfeldern ohne freie Antwort bleibt die Eingabe schreibgeschützt. Vertrauliche
 Felder sind maskiert. Diktat ergänzt die Rückfrage, nicht den normalen Entwurf.
 
-Die Antwort verwendet `/api/respond` und die konkrete offene Request-ID,
+Bei wartenden nativen Aufrufen verwendet die Antwort `/api/respond` und die konkrete offene Request-ID,
 niemals `/api/turn`. Der Anbieter behält seinen wartenden Aufruf; keine
 simulierte Pause und kein neuer Modelllauf. Sendeversuche sind während einer
 laufenden Übertragung gesperrt. Ein Fehler erhält Eingabe und Auswahl und wird

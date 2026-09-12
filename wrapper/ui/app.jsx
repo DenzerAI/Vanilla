@@ -2384,7 +2384,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                         {date && date !== previous && <div className="chat-day-divider"><span>{date}</span></div>}
                         <ChatTurn chatTitle={chatTitle} chatId={chatId} statisticsApi={api} statisticsSnapshot={current?.statisticsSnapshot} agentProfile={boot.settings} paneNumber={paneNumber} workerId={current?.workerId || "codex"} workspace={boot.workspace} directory={current?.cwd || boot.workspace} turn={t} running={running && t.id === active[chatId]} onForkTurn={forkTurn} onEditTurn={editTurn} onRetryTurn={retryTurn}
                           onDeleteTurn={deleteTurn} onRecover={recoverDelivery}
-                          actionsDisabled={running || busy} waiting={requests.some(r => r.params?.threadId === chatId)} visible={foreground && view === "chat" && readablePane} onFile={openTurnFile} />
+                          actionsDisabled={running || busy} waiting={requests.some(r => r.params?.threadId === chatId && r.method !== 'wrapper/requestUserInputAsync')} visible={foreground && view === "chat" && readablePane} onFile={openTurnFile} />
                       </React.Fragment>;
                     })}
                     {requests

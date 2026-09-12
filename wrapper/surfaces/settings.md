@@ -35,8 +35,9 @@ Speichern übernimmt das gesamte Profil. Die Radioauswahl unterstützt Pfeiltast
 Die Figuren verwenden die Farbrollen des aktuellen Themes; Augen sind Ausschnitte
 in der Fläche dahinter. Die Figur hat Arme und Füße, keinen Mund, und steht in
 jedem Zustand auf derselben Fußlinie.
-Die gemeinsame Figur-Animation unter Aussehen bietet Still, Ruhig und Lebendig
-(Standard). Die Auswahl wird sofort über die bestehende Darstellungseinstellung
+Die gemeinsame Figur-Animation unter Aussehen bietet Still, Ruhig, Lebendig
+(Standard) und Ausgeblendet; Ausgeblendet nimmt die Figur von der Schreibzeile,
+das Agent-Menü im Seitenleistenkopf holt sie zurück. Die Auswahl wird sofort über die bestehende Darstellungseinstellung
 validiert und gespeichert und gilt auch in offenen Chats; frühere Werte der
 Gesichtsstile werden als Lebendig gelesen. Lebendig hüpft und dreht sich
 gelegentlich, Ruhig lässt das weg, Still zeigt nur die Pose. Auf der Schreibzeile
