@@ -1,5 +1,6 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChatMenu } from "./chat-controls.jsx";
+import { Avatar } from "./avatar.jsx";
 import { Activity, RotateCcw, Settings } from "./icons.jsx";
 
 import { IconButton } from "./icon-button";

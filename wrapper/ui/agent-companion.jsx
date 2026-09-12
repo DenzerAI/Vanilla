@@ -10,8 +10,8 @@ const quiet = new Set(["ruhe", "spielt", "isst", "tanzt", "nickt", "schlaeft", "
 
 /** Die Figur oben links auf der Schreibzeile. Sie hält ihre Uhr selbst,
  *  damit der Sekundentakt nicht das ganze Gespräch neu zeichnet. */
-export function AgentCompanion({ avatar, color, name, chatId, running, waiting, busy, connection, activity, lastTurnStatus, hasTurns, hidden = false,
-  notes = [], chatTitle = () => "", onOpenNote, onDismissNote, onPick, onHide }) {
+export function AgentCompanion({ avatar, color, name = "", chatId, running, waiting, busy, connection, activity, lastTurnStatus, hasTurns, hidden = false,
+  notes = [], chatTitle = () => "", onOpenNote = null, onDismissNote = null, onPick = null, onHide = null }) {
   const [now, setNow] = useState(() => Date.now());
   const marks = useRef({ activity: Date.now(), waitingSince: null, completedAt: null, wasRunning: false });
   useEffect(() => {

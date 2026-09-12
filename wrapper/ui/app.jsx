@@ -152,6 +152,7 @@ import { Avatar } from "./avatar.jsx";
 import { AvatarMotionSetting } from "./avatar-motion-setting.jsx";
 import { AgentCompanion } from "./agent-companion.jsx";
 import { latestActivity } from "./companion-state.mjs";
+import { addNote, dismissNote, dropChatNotes } from "./companion-notes.mjs";
 import { WelcomeParticles } from "./welcome-particles";
 import { nextChatGreeting } from "./chat-greetings.mjs";
 import { DictationComposer, RecordingProvider, RecordingIndicator } from "./recording-session.jsx";
@@ -716,6 +717,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     [loading, setLoading] = useState(false),
     [toast, setToast] = useState(""),
     [modal, setModal] = useState(null),
+    [companionNotes, setCompanionNotes] = useState([]),
     [welcome, setWelcome] = useState(false),
     [search, setSearch] = useState(""),
     [settingsTab, setSettingsTab] = useState(() => ["work-evidence", "service"].includes(new URLSearchParams(window.location.search).get("view")) ? "service" : "general"),
@@ -1069,15 +1071,21 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       if (e.method === "wrapper/request") {
         setRequests(rs => rs.some(r => String(r.id) === String(p.id))
           ? rs.map(r => String(r.id) === String(p.id) ? p : r) : [...rs,p]);
+        if (p.params?.threadId && p.params.threadId !== chatRef.current) setCompanionNotes(n => addNote(n, { kind: "approval", chatId: p.params.threadId }));
         return;
       }
       if (e.method === "wrapper/requestResolved") {
-        setRequests((r) => r.filter((x) => String(x.id) !== String(p.id)));
+        setRequests((r) => {
+          const resolved = r.find((x) => String(x.id) === String(p.id));
+          if (resolved?.params?.threadId) setCompanionNotes(n => dropChatNotes(n, resolved.params.threadId, ["approval"]));
+          return r.filter((x) => String(x.id) !== String(p.id));
+        });
         return;
       }
       if (e.method === "turn/started")
         setActive((a) => ({ ...a, [p.threadId]: p.turn.id }));
       if (e.method === "turn/completed") {
+        if (p.threadId !== chatRef.current && ["completed", "failed"].includes(p.turn.status)) setCompanionNotes(n => addNote(n, { kind: p.turn.status === "failed" ? "failed" : "done", chatId: p.threadId }));
         setChats(old => old.map(c => c.id === p.threadId ? {...c, lastTurnStatus: p.turn.status, ...(p.turn.status === "completed" ? {lastCompletedTurnId:p.turn.id} : {}), updatedAt: Date.now()} : c));
         setActive((a) => {
           const n = { ...a };
@@ -2066,6 +2074,12 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   }, [foreground, view, readablePane, selectedPane, loading, running, thread, chatId, current?.lastCompletedTurnId, current?.readTurnId]);
 
   const notificationState = useJobNotifications(api, !!boot?.features?.routines && !embedded, notify);
+  useEffect(() => {
+    const event = e => { const p = e.detail; if (p?.kind === "notification.created" && p.entity_id) setCompanionNotes(n => addNote(n, { kind: "job", noticeId: p.entity_id, title: p.payload?.title || "Neues Ergebnis" })); };
+    window.addEventListener("core/event", event);
+    return () => window.removeEventListener("core/event", event);
+  }, []);
+  useEffect(() => { if (chatId) setCompanionNotes(n => dropChatNotes(n, chatId)); }, [chatId]);
   const [requestSignal, setRequestSignal] = useState(0);
   const previousRequests = useRef(null);
   useEffect(() => {
@@ -2107,7 +2121,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         <PanelLight mode={boot.settings.panelLight || "animated"} active={sidebar} />
         <div className="sidebar-resizer"><PaneDivider label="Seitenleistenbreite ändern" value={sidebarWidth} min={220} max={400} onReset={()=>setSidebarWidth(268)} onResize={delta=>setSidebarWidth(width=>Math.max(220,Math.min(400,width+delta)))}/></div>
         <div className="sidebar-topbar">
-          <AgentMenu theme={boot.settings.theme} onThemeChange={theme=>saveSettings({theme})} name={boot.settings.name} avatar={boot.settings.avatar} avatarColor={boot.settings.avatarColor} connectionState={connectionState} restartBusy={serverRestartBusy} onNavigate={tab=>{closeMobileNavigation();if(tab==="updates")setUpdatesTab("version");setSettingsTab(tab);setView("settings");}} onRestart={()=>systemNoticeRef.current?.restart()} />
+          <AgentMenu theme={boot.settings.theme} onThemeChange={theme=>saveSettings({theme})} name={boot.settings.name} avatar={boot.settings.avatar} avatarColor={boot.settings.avatarColor} connectionState={connectionState} restartBusy={serverRestartBusy} companionHidden={normalizeAvatarMotion(boot.settings.avatarMotion) === "hidden"} onShowCompanion={()=>guard(() => saveSettings({avatarMotion: "lively"}))()} onNavigate={tab=>{closeMobileNavigation();if(tab==="updates")setUpdatesTab("version");setSettingsTab(tab);setView("settings");}} onRestart={()=>systemNoticeRef.current?.restart()} />
           <IconButton label="System durchsuchen (⌘/Strg K)" aria-keyshortcuts="Meta+K Control+K" aria-haspopup="dialog" aria-expanded={modal === "search"} onClick={()=>{setSearch("");setModal("search");}}>{icon(Search,18)}</IconButton>
           {boot.features?.routines ? <IconButton label={`Benachrichtigungen${notificationState.data?.unread ? ` · ${notificationState.data.unread} ungelesen` : ''}${requests.length ? ` · ${requests.length} Rückfragen` : ''}`} aria-haspopup="dialog" aria-expanded={modal === "notifications" || modal?.type === "notifications"} onClick={()=>setModal("notifications")}><NotificationBell signal={bellSignal} />{(notificationState.data?.unread>0||requests.length>0)&&<i className="notification-dot"/>}</IconButton> : requests.length > 0 && <IconButton label="Offene Rückfragen" aria-haspopup="dialog" aria-expanded={modal === "activity"} onClick={()=>setModal("activity")}><NotificationBell signal={bellSignal} /><i className="notification-dot"/></IconButton>}
           <IconButton
@@ -2442,7 +2456,13 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       />
                   </ComposerHeading>
                   <ComposerFocus active={composerActive} multiple={embedded ? showPaneHeader : paneOrder.length > 1} visible={foreground && view === "chat" && readablePane} onActivate={activateComposer}>
-                      <AgentCompanion avatar={boot.settings.avatar} color={boot.settings.avatarColor} chatId={chatId} running={running} waiting={!!questionState.request || requests.some(r => r.params?.threadId === chatId)} busy={busy} connection={connectionState} activity={companionActivity} lastTurnStatus={current?.lastTurnStatus} hasTurns={!!thread?.turns?.length} hidden={!(foreground && view === "chat" && readablePane)} />
+                      <AgentCompanion avatar={boot.settings.avatar} color={boot.settings.avatarColor} name={boot.settings.name} chatId={chatId} running={running} waiting={!!questionState.request || requests.some(r => r.params?.threadId === chatId)} busy={busy} connection={connectionState} activity={companionActivity} lastTurnStatus={current?.lastTurnStatus} hasTurns={!!thread?.turns?.length}
+                        hidden={!(foreground && view === "chat" && readablePane) || normalizeAvatarMotion(boot.settings.avatarMotion) === "hidden"}
+                        notes={companionNotes} chatTitle={note => chats.find(c => c.id === note.chatId)?.title || ""}
+                        onOpenNote={note => { setCompanionNotes(n => dismissNote(n, note.id)); if (note.kind === "job") setModal({type:"notifications", id:note.noticeId}); else if (note.chatId) void openChat(note.chatId); }}
+                        onDismissNote={id => setCompanionNotes(n => dismissNote(n, id))}
+                        onPick={() => { setSettingsTab("identity"); setView("settings"); }}
+                        onHide={() => guard(() => saveSettings({avatarMotion: "hidden"}))()} />
                       <IconButton
                         label="Dateien anhängen"
                         disabled={!!questionState.request}
