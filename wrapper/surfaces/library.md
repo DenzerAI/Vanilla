@@ -168,3 +168,16 @@ keine Dateiverschiebung, keine Löschung von Favoriten oder eigenen Zuordnungen.
 Der Index erfasst lokale Dateilinks finaler Antworten mit ihrer Auftragsherkunft;
 die Chatansicht behält ihre Duplikatfilter. Ein fehlender Auftrag bleibt als
 nicht verfügbar gekennzeichnet, seine Dateien bleiben erhalten.
+
+
+## Ablage am Chat · Version 5
+
+Die gemeinsame rechte Dateivorschau heißt Ablage. Im Chat erweitert ChatShelf
+sie um die chronologische Sammlung; der Bereich Dateien bleibt AgentFiles.
+Aufbau, Auswahl, Herkunft und Rückkehr führt chat.md, Abschnitt
+„Veränderbare Breiten und Ablage“. ShelfFilePreview verwendet FileContent im
+Lesemodus, bestehende Download-/Pfadprüfungen bleiben führend. Die Ergebnisansicht
+behält ihren Index und ihre Dateiauswahl; keine zweite Kopie eines Ergebnisses.
+Neue Listeneinträge werden ausschließlich aus dem aktuellen Chatverlauf abgeleitet.
+Keine Datenmigration. Alte Leser ignorieren die zusätzliche browserseitige
+shelfJobs-Projektion. Prüfungen: chat-shelf.test.mjs und thread-view.test.mjs.

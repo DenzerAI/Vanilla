@@ -62,8 +62,8 @@ test("planner renders both integrated views and keeps examples out of the real-d
     assert.doesNotMatch(today, /Beispielansicht|Briefing &amp; Quellen öffnen/);
     assert.equal((today.match(/class="planner-briefing-row"/g) || []).length, 4);
     const month = render("calendar");
-    assert.match(month, /planner-month-week/);
-    assert.match(month, /KW /);
+    assert.match(month, /calendar-month-grid/);
+    assert.match(month, /Termine am ausgewählten Tag/);
     assert.match(month, /Nur Mo/);
     globalThis.localStorage = {
       getItem: (key) => (key === "planner.demo" ? "false" : null),
@@ -81,7 +81,7 @@ test("planner renders both integrated views and keeps examples out of the real-d
         })[key] ?? null,
     };
     assert.equal(
-      (render("calendar").match(/class="planner-day /g) || []).length,
+      (render("calendar").match(/class="calendar-time-column"/g) || []).length,
       5,
     );
     globalThis.localStorage = {
@@ -89,7 +89,7 @@ test("planner renders both integrated views and keeps examples out of the real-d
         ({ "planner.demo": "true", "planner.view": "day" })[key] ?? null,
     };
     assert.equal(
-      (render("calendar").match(/class="planner-day /g) || []).length,
+      (render("calendar").match(/class="calendar-time-column"/g) || []).length,
       1,
     );
   } finally {

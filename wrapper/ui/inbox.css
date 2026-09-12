@@ -76,3 +76,17 @@
 .inbox-page[data-messenger="true"] .inbox-message-actions { position: absolute; right: 0; bottom: 0; margin: 0; }
 .inbox-page[data-messenger="true"] .inbox-message .inbox-media { margin-bottom: var(--space-8); }
 .inbox-page[data-messenger="true"] .inbox-message .muted { font-size: var(--text-small); }
+
+.inbox-voice { width: min(360px, 100%); min-width: min(240px, 100%); }
+.inbox-voice-player { display: flex; align-items: center; gap: var(--space-12); padding-block: var(--space-8); }
+.inbox-voice-player > .icon-button { background: var(--raised); border-radius: var(--radius-pill); flex-shrink: 0; }
+.inbox-voice-progress { flex: 1; min-width: 0; }
+.inbox-voice-progress input { display: block; width: 100%; padding: 0; margin: 0; accent-color: var(--text); cursor: pointer; }
+.inbox-voice-progress > div { display: flex; justify-content: space-between; font-size: var(--text-caption); color: var(--muted); font-variant-numeric: tabular-nums; margin-top: var(--space-4); }
+.inbox-transcript summary { display: flex; align-items: center; justify-content: space-between; gap: var(--space-16); min-height: var(--space-40); cursor: pointer; color: var(--muted); list-style: none; }
+.inbox-transcript summary::-webkit-details-marker { display: none; }
+.inbox-transcript summary::marker { content: ''; }
+.inbox-transcript summary svg { flex-shrink: 0; transform: rotate(-90deg); }
+.inbox-transcript[open] summary svg { transform: rotate(0); }
+.inbox-message .inbox-transcript p { margin: 0 0 var(--space-8); font-size: var(--text-reading); line-height: var(--leading-reading); }
+.inbox-transcript-pending { margin: var(--space-8) 0; color: var(--muted); font-size: var(--text-small); }

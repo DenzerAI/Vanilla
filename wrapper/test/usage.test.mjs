@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import {codexAllowance,claudeAllowance,allowanceReader,claudeTurnUsage,recordUsage,addTokens,featuredAllowances,remainingPercent} from '../usage.mjs';
 import {summarizeStatistics} from '../ui/statistics-data.mjs';
 import {readClaudeUsage} from '../claude-usage.mjs';
-import {mkdtemp,rm} from 'node:fs/promises';
+import {mkdtemp,rm,writeFile} from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
@@ -75,19 +75,19 @@ test('the real ACP adapter forwards native turn counters and preserves context u
  assert.equal(thread.workerSession.usage.contextUsed,45);assert.equal(thread.workerSession.usage.cost,1.2);
 });
 
-test('the card features the working allowances, week first, then fills spare rows with additional windows',()=>{
+test('the card shows only weekly allowances and never fills with Spark or short windows',()=>{
  const now=Date.now();
  const codex=codexAllowance({rateLimitsByLimitId:{
   codex:{limitName:'Codex',primary:{usedPercent:73,resetsAt:now/1000+600,windowDurationMins:10080},secondary:{usedPercent:12,resetsAt:now/1000+600,windowDurationMins:300}},
   codex_bengalfox:{limitName:'GPT-5.3-Codex-Spark',primary:{usedPercent:0,resetsAt:now/1000+600,windowDurationMins:300}}}},now);
  const claude=claudeAllowance({rate_limits_available:true,rate_limits:{seven_day:{utilization:40,resets_at:new Date(now+600000).toISOString()},seven_day_oauth_apps:{utilization:90,resets_at:new Date(now+600000).toISOString()}}},now);
  const featured=featuredAllowances([codex,claude]);
- assert.deepEqual(featured.map(r=>r.label),['Codex · Woche','Claude · Woche','Codex · 5 Stunden','GPT-5.3-Codex-Spark · 5 Stunden']);
+ assert.deepEqual(featured.map(r=>r.label),['Codex · Woche','Claude · Woche']);
  assert.ok(!featured.some(r=>/Apps/.test(r.label)));
  assert.equal(remainingPercent(featured[0],now),27);
  assert.equal(remainingPercent({...featured[0],expired:true},now),null);
  const legacy=featuredAllowances([{id:'codex',rows:[{id:'codex_x:primary',label:'Spark · Woche',usedPercent:0},{id:'codex:primary',label:'Codex · Woche',usedPercent:50}]}]);
- assert.deepEqual(legacy.map(r=>r.label),['Codex · Woche','Spark · Woche']);
+ assert.deepEqual(legacy.map(r=>r.label),['Codex · Woche']);
 });
 
 test('Claude reports the missing subscription profile without exposing authentication data',()=>{
@@ -97,11 +97,38 @@ test('Claude reports the missing subscription profile without exposing authentic
  assert.deepEqual(result.rows,[]);
 });
 
-test('four main windows keep both providers visible ahead of model-specific allowances',()=>{
+test('weekly windows keep both providers visible without short windows',()=>{
  const now=Date.now(),reset=new Date(now+600000).toISOString();
  const codex=codexAllowance({rateLimitsByLimitId:{codex:{primary:{usedPercent:20,windowDurationMins:300},secondary:{usedPercent:40,windowDurationMins:10080}},spark:{primary:{usedPercent:0,windowDurationMins:300}}}},now);
  const claude=claudeAllowance({rate_limits_available:true,rate_limits:{five_hour:{utilization:12,resets_at:reset},seven_day:{utilization:55,resets_at:reset}}},now);
  const rows=featuredAllowances([codex,claude]);
- assert.deepEqual(rows.map(r=>[r.provider,r.period]),[['codex','week'],['claw-code','week'],['codex','short'],['claw-code','short']]);
- assert.deepEqual(rows.map(r=>remainingPercent(r,now)),[60,45,80,88]);
+ assert.deepEqual(rows.map(r=>[r.provider,r.period]),[['codex','week'],['claw-code','week']]);
+ assert.deepEqual(rows.map(r=>remainingPercent(r,now)),[60,45]);
+});
+
+
+test('Claude model weeks remain prominent and missing main weeks are never fabricated',()=>{
+ const claude=claudeAllowance({rate_limits_available:true,rate_limits:{seven_day_sonnet:{utilization:23},model_scoped:[{display_name:'Opus',utilization:45}]}});
+ const rows=featuredAllowances([claude,{id:'codex',rows:[]}]);
+ assert.deepEqual(rows.map(r=>r.label),['Codex · Woche','Claude · Woche','Sonnet · Woche','Opus · Woche']);
+ assert.equal(remainingPercent(rows[0]),null);
+ assert.equal(remainingPercent(rows[1]),null);
+ assert.equal(remainingPercent(rows[2]),77);
+});
+
+
+test('Claude allowance fallback uses the signed-in installation profile without changing service auth',async t=>{
+ const dir=await mkdtemp(path.join(os.tmpdir(),'allowance-profile-'));
+ t.after(()=>rm(dir,{recursive:true,force:true}));
+ await writeFile(path.join(dir,'worker-auth.json'),JSON.stringify({version:1,environment:{'claw-code':'oauth'}}));
+ const calls=[];let closed=0;
+ const expected={rate_limits_available:true,rate_limits:{seven_day:{utilization:42}}};
+ const result=await readClaudeUsage({dataRoot:dir,cwd:dir,environment:{CLAUDE_CODE_OAUTH_TOKEN:'synthetic-service-token'},queryFactory:input=>{
+  calls.push(input.options.env);
+  return {initializationResult:async()=>({}),usage_EXPERIMENTAL_MAY_CHANGE_DO_NOT_RELY_ON_THIS_API_YET:async()=>calls.length===1?{rate_limits_available:false}:expected,close:()=>closed++};
+ }});
+ assert.equal(result,expected);assert.equal(closed,2);
+ assert.equal(calls[0].CLAUDE_CODE_OAUTH_TOKEN,'synthetic-service-token');
+ assert.equal(calls[1].CLAUDE_CODE_OAUTH_TOKEN,undefined);
+ assert.equal(calls[0].CLAUDE_CONFIG_DIR,calls[1].CLAUDE_CONFIG_DIR);
 });

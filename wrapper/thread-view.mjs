@@ -1,3 +1,4 @@
+import {shelfJobs} from './ui/chat-shelf.mjs';
 import {activityDetailLabel, changeStats} from './ui/activity-detail.mjs';
 import {generatedImageItems} from './ui/tool-content.mjs';
 
@@ -10,6 +11,8 @@ export function browserThread(thread) {
     for (const key of ['id','type','status','server','tool','toolName','name','workerId','path','savedPath']) {
       if (item[key] !== undefined) summary[key] = item[key];
     }
+    const jobs=shelfJobs(item);
+    if(jobs.length) summary.shelfJobs=jobs;
     if (Array.isArray(item.artifacts)) summary.artifacts = item.artifacts.map(({path,name})=>({path,name}));
     if (Array.isArray(item.changes)) summary.changes = item.changes.map(({path,kind})=>({path,kind}));
     return {...summary, detailsDeferred:true,

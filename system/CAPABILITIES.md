@@ -79,3 +79,16 @@ die Originaldatei. Dokumentformat und Rückkehrgrenzen führt
 `chat.audio.control` ergänzt ChatAudioControls, ChatAudioButton und ChatAudio um
 flüchtige Arbeitsbegleitung, Pause und exklusiven Besitz über Navigation hinweg.
 Vertrag: wrapper/VOICE.md, Chatübergreifendes Vorlesen und Arbeitsbegleitung.
+
+
+`chat.dictation.persistent` erweitert das vorhandene Diktat: RecordingProvider,
+DictationComposer und Aufnahmekapsel halten die Sitzung bei Navigation aktiv.
+Bestehende /api/dictation-Anschlüsse und /api/dictation/status bleiben führend.
+Bedienung, Entwurfszuordnung, Wiederherstellung und Grenzen: wrapper/DICTATION.md,
+Aufnahme beim Navigieren.
+
+
+`chat.shelf` ist die Ablage neben dem aktiven Chat. ChatShelf sammelt vorhandene
+Uploads, Ergebnisse, Links und bestätigte Job-Neuanlagen aus dem Verlauf.
+Dateien, Vorschau und Jobdetails verwenden die bestehenden Anschlüsse.
+Vertrag: wrapper/surfaces/chat.md, Veränderbare Breiten und Ablage.

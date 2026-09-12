@@ -248,3 +248,15 @@ test('Microsoft calendar follows complete bounded pages and rejects foreign cont
   assert.ok(calls.every(url=>!url.startsWith('https://example.test')));
   await assert.rejects(f.services.action(c.id,'calendar',{}),/Zeitraum|zeitraum/);
 });
+
+test('Telegram start acknowledges an approved user without passing a slash command to a worker',async t=>{
+  const f=await fixture(t),c=await connection(f);
+  const message={sender:'123',chatId:'123',messageId:'start',text:'/start'};
+  assert.equal(await f.runtime.accept(c.id,{...message,sender:'456'}),null);
+  const result=await f.runtime.accept(c.id,message);
+  assert.equal(result.status,'completed');assert.match(result.result,/Verbunden/);
+  assert.equal(f.calls.length,0);
+  assert.equal(Object.keys(f.runtime.state.tasks).length,0);
+  await f.runtime.accept(c.id,{...message,messageId:'hello',text:'Hallo'});
+  assert.equal(f.calls.length,1);
+});

@@ -423,3 +423,9 @@ werden über ihren eigenen Vertrag docs/DEVICES.md eingerichtet.
 Der bestehende Systemschalter `system.frontend_check` und die Pause im Systemauftrag steuern dieselbe Einstellung. Fehlende Werte erhalten additiv `true`; ausdrücklich gespeichertes `false` bleibt erhalten. Bestehende Aufträge, Chats und Worker-Kontext bleiben bestehen.
 
 Die Modulprüfung (`scripts/verify-modules.py`) nennt bei einem Fehler die geänderten Quelldateien und die konkrete Abhilfe: Modulversion in `system/modules.json` erhöhen oder den Vertrag ergänzen, Anschlüsse unter `entrypoints`, Quelldateien unter `sources` eintragen. Reine Oberflächendateien unter `wrapper/ui/` verlangen keine neue Modulversion; ihr Vertrag ist `wrapper/DESIGN.md` mit der Designprüfung. Verhalten, Anschlüsse und Datenwege benötigen weiterhin Versionssprung oder Vertragsänderung.
+
+Lehnt der Adapter die Neustartpause wegen aktiver Eingangskanäle ab, liefert
+der Kern eine strukturierte JSON-Fehlermeldung mit HTTP 400. Die vorhandene
+Rücknahme der Wartungspause bleibt erhalten. Empfang unter Verbindungen
+stoppen und nach dem Neustart wieder starten; laufende Kanalaufträge zuerst
+beenden. Eine Ablehnung setzt keinen Neustartmarker.

@@ -881,7 +881,9 @@ async function createUiChat(b) {
 }
 route("POST", "/api/chats", createUiChat);
 route("POST", "/api/projects/save", async (b) => {
-  const project = await store.saveProject({ id: b.id, name: b.name, icon: b.icon, color: b.color, revision:b.revision });
+  const project = !b.id && b.requestId
+    ? await store.workspaces.create({requestId:b.requestId,name:b.name,description:b.description,icon:b.icon,color:b.color,status:'ready'})
+    : await store.saveProject({ id: b.id, name: b.name, icon: b.icon, color: b.color, revision:b.revision });
   emit({ method: "wrapper/projects" });
   return {
     project,

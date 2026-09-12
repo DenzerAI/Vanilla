@@ -56,3 +56,22 @@ Live-Anmeldung nicht.
 - https://docs.telethon.dev/en/stable/concepts/sessions.html
 - https://core.telegram.org/api/bots/bot-to-bot (Bot-zu-Bot-Kommunikation ist mit
   passender BotFather-Freigabe möglich; keine persönliche Kontoanmeldung.)
+
+## Vorhandenen Agentenbot verbinden
+
+Der Dienstanschluss `telegram` unter Verbindungen verwendet den vorhandenen
+Bot-Token im gemeinsamen Secrets-Speicher und explizite `allowedUsers`. Er ist
+vom persönlichen `telegram-user`-Inbox-Konto unabhängig. `getMe` und
+`getWebhookInfo` prüfen die Identität ohne Nachrichtenversand. Empfang erst
+mit eindeutig zugeordneten Nutzer-IDs aktivieren; keinen fremden Webhook
+übernehmen. Historische Tokens und IDs niemals in Dokumentation kopieren.
+
+Die gemeinsame Netzprüfung akzeptiert öffentliche IPv6-Adressen auch unter
+2001::/16; die IANA-Sonderbereiche 2001::/23, 2001:db8::/32, 2002::/16
+und 3fff::/20 bleiben ausgeschlossen. Alle aufgelösten Adressen werden vor
+dem auf eine geprüfte Adresse festgelegten Verbindungsaufbau validiert.
+Quelle: https://www.iana.org/assignments/iana-ipv6-special-registry/
+
+`/start` bestätigt für freigegebene Bot-Nutzer die Verbindung direkt. Es startet
+keinen Worker und wird nicht an dessen Slash-Befehlssystem weitergereicht.
+Normale Nachrichten bleiben im bestehenden Kanalauftragssystem.

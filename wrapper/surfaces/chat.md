@@ -2,7 +2,7 @@
 
 ## Automatische Chat-Titel
 
-Der zuständige Worker erzeugt den Titel mit dem gewählten Modell in einer separaten Hintergrundanfrage anhand der ersten Nutzernachricht. Beide Anschlusswege verwenden die zentrale Regel und Prüfung in `chat-title.mjs`: möglichst 2–3 Wörter, höchstens 4 Wörter und 28 Zeichen einschließlich Leerzeichen. Das Hauptthema steht zuerst; bei Überlänge wird neu formuliert, niemals abgeschnitten. Ein ungültiges Ergebnis wird einmal neu angefragt, danach gilt „Neues Anliegen“. Jeder Worker vergibt Titel: Die ACP-Titelsitzung heftet das Chat-Modell mit dem Mechanismus an, den die Sitzung selbst anbietet, also `session/set_config_option` bei Konfigurationsoptionen und andernfalls `session/set_model`. Ein nicht verfügbares oder nicht bestätigtes Modell kostet nur die Anheftung, niemals den Titel; die Anfrage läuft dann mit der Standardauswahl der Sitzung weiter. Manuelle Benennungen bleiben geschützt; bestehende Titel werden nur auf ausdrücklichen Auftrag überarbeitet.
+Der zuständige Worker erzeugt den Titel mit dem gewählten Modell in einer separaten Hintergrundanfrage anhand der ersten Nutzernachricht. Beide Anschlusswege verwenden die zentrale Regel und Prüfung in `chat-title.mjs`: möglichst 2–3 Wörter, höchstens 4 Wörter und 28 Zeichen einschließlich Leerzeichen. Das Hauptthema steht zuerst; bei Überlänge wird neu formuliert, niemals abgeschnitten. Vor der Hintergrundanfrage wird bereits ein lokaler Titel aus vollständigen Wörtern der ersten Nachricht gespeichert und ausgesendet. Auch ohne erreichbare KI bleibt dadurch ein Titel sichtbar. Ungültige Antworten und Anbieterfehler werden einmal wiederholt; jede Anfrage ist insgesamt auf 45 Sekunden begrenzt. Danach bleibt der lokale Titel bestehen. Die nächste Nachricht darf anhand des gespeicherten ursprünglichen Texts erneut verbessern, insgesamt höchstens vier Versuche. Ein Prozessneustart blockiert diese Fortsetzung nicht; parallele Aufrufe werden im Prozess zusammengefasst. Additive Chatfelder `titleSourceText` (maximal 12000 Zeichen), `titleAttempts` und `titleError` halten Ursprung, Versuchszahl und sichere Fehlerkategorie mit Zeitpunkt fest. Rohe Anbieterfehler werden nicht gespeichert. Die Zustände sind `pending`, `generated` und `fallback`; ältere `failed`-Einträge ohne Ursprung werden nicht aus späteren Nachrichten umbenannt. Verspätete Antworten überschreiben weder manuelle Titel noch Forknamen. Jeder Worker vergibt Titel: Die ACP-Titelsitzung heftet das Chat-Modell mit dem Mechanismus an, den die Sitzung selbst anbietet, also `session/set_config_option` bei Konfigurationsoptionen und andernfalls `session/set_model`. Ein nicht verfügbares oder nicht bestätigtes Modell kostet nur die Anheftung, niemals den Titel; die Anfrage läuft dann mit der Standardauswahl der Sitzung weiter. Manuelle Benennungen bleiben geschützt; bestehende Titel werden nur auf ausdrücklichen Auftrag überarbeitet.
 
 ## Aufbau und Erweiterungen
 
@@ -83,17 +83,68 @@ Planmodus ohne wirksamen Schreibschutz wird nicht angeboten. Die gemeinsame Mode
 
 Drag & Drop und Dateiauswahl nutzen denselben Uploadablauf. Das Ziel ist das konkrete Chatpanel einschließlich Verlauf und Eingabe. Während des Ziehens wird das Ablageziel sichtbar; nach Ablegen erscheinen Uploadstatus, danach Bildvorschauen oder Dateianhänge mit Name und Entfernen-Aktion. Eingabetext bleibt erhalten, Weiterschreiben ist sofort möglich, gesendet wird erst auf Nutzeraktion nach Abschluss der Uploads. Pro Datei gelten 24 MB. Ein Dateifehler verhindert nicht das Anheften weiterer Dateien. Ein Chat- oder Projektwechsel während des Uploads darf die Datei nicht dem neuen Chat zuordnen. Die ursprüngliche Session behält ihre Anhänge.
 
-## Veränderbare Breiten und Workspace
+## Veränderbare Breiten und Ablage
 
-Die Seitenleiste lässt sich an der rechten Trennkante zwischen 220 und 400 px ziehen; ihre Breite bleibt lokal gespeichert. Pfeiltasten bewegen Trennkanten, Doppelklick setzt die automatische Breite zurück. Der Workspace erhält dieselbe Bedienung an der linken Kante, eine Vergrößerungsaktion und eine Rückkehr zur kompakten Breite. Jeder neue Öffnungsvorgang startet mit 280 px; Dateien, Vorschauen, Befehle und Änderungen verbreitern ihn nicht automatisch. Manuelles Ziehen bleibt bis zum Schließen erhalten. Die Chatfläche behält nach Möglichkeit 400 px; bei knappem Platz erscheint der Workspace darüber, auf Mobilgeräten in voller Breite.
+Workspace bezeichnet weiterhin den übergeordneten Arbeitsbereich mit seinen Chats.
+Die rechte Leiste heißt **Ablage**. Ihr Kopf zeigt den Namen, Vergrößern/Verkleinern
+und Schließen; darunter wechselt die native Auswahl zwischen **Im Chat** und
+**Dateien**. Änderungen und Befehle entfallen in dieser Kundenauswahl. Vorhandene
+technische Anschlüsse bleiben erhalten. Frühere gespeicherte review/terminal-
+Ansichten fallen beim Öffnen auf Im Chat zurück.
 
-Bei geöffnetem Workspace reserviert die globale Chatleiste eine eigene Zeile oberhalb der Inhalte; sie überlagert keine Workspace-Aktionen. Genau ein Sidebar-Symbol rechts in dieser Leiste öffnet oder schließt den Workspace und benennt den aktuellen Zustand. Im Workspace-Kopf wechselt eine kompakte native Auswahl zwischen Dateien, Änderungen und Befehle. Der Workspace öffnet direkt Dateien, eine vorgeschaltete Kachelübersicht entfällt. Der eigene Schließen-Button bleibt für überlagernde mobile Ansichten erreichbar. Daneben schaltet ein diagonales Größen-Symbol zwischen Vergrößern und automatischer Breite um. Auf Mobilgeräten mit voller Workspace-Breite entfällt diese Größenaktion. Die Trennkante behält Doppelklick und Tastaturbedienung.
+Die Ablage startet mit 360 px und lässt sich ab 280 px ziehen. Vergrößern nutzt
+wie bisher die Chatfläche; die Dateivorschau bleibt dabei gemountet. Schließen
+setzt die Breite beim nächsten Öffnen zurück. Mobil überlagert die Ablage den
+Chat; Schließen bleibt erreichbar. Escape verkleinert zuerst, kehrt danach von
+der Vorschau zur Liste zurück und schließt zuletzt die Ablage.
 
-Der Workspace enthält Dateien, Terminal und Git Review. Eine Browser-Kachel entfällt. Dateien zeigt unabhängig vom Chat den echten Agent-Projektordner des Servers mit allen unmittelbar vorhandenen Einträgen. Geschützte Einträge (versteckte Dateien, Daten-/Schlüsselablage, Abhängigkeiten und ausbrechende Verknüpfungen) sind gesperrt und über „geschützte einblenden“ sichtbar. Ordner werden direkt gelesen, Vorschau und Download sind schreibgeschützt. Explizite Chat-Artefakte verwenden weiterhin ihre bisherigen Workspace-Pfade.
+**Im Chat** verwendet ChatShelf und collectShelfEntries: eine chronologische,
+schlichte Liste tatsächlicher Uploads, Leserartefakte, ausdrücklich verlinkter
+Dateien, bestätigter neu angelegter Jobs und benannter HTTP(S)-Links aus dem
+aktiven Gespräch. Aufgezeichnete Reihenfolge bleibt auch ohne Zeitangaben führend.
+Datumsgruppen und Uhrzeiten stammen nur aus dem Verlauf; keine erfundenen Zeiten.
+Gleiche Dateipfade/URLs/Jobkennungen werden zusammengeführt. Überarbeitungen bleiben
+am ersten Eintrag mit „aktualisiert“; eigene Varianten bleiben eigene Einträge.
+Quellcodeänderungen, Kommentarphasen, unfertige Antwortlinks, fehlgeschlagene
+Dateiaktionen, Codebeispiele, numerische Quellenverweise und Bildschirmaufnahmen
+werden nicht automatisch zu Ergebnissen. Typisierte generierte Bilder bleiben
+auch ohne lokalen Pfad sichtbar. Uploads vor dem Senden bleiben am Composer;
+die Ablage führt die im Gespräch gespeicherten Anhänge.
 
-Git Review bezieht sich auf das aktive Projekt. Es zeigt den Branch, neue und geänderte Dateien sowie aufklappbare farbige Diffs für Index und Arbeitskopie. Aktualisieren, Laden, Fehler, kein Repository, keine Änderungen und Ausgabebegrenzung sind eigene Zustände. Es führt keine Git-Schreibaktionen aus und hängt nicht von der Worker-Terminalfähigkeit ab.
+Chatwechsel, Workspacewechsel, Panewechsel und Privatsperre verwerfen die
+Vorschauauswahl. Mehrfachansichten liefern die Ablage aus der aktiven Session;
+Fehler, Laden, leer und gesperrt haben eigene Zustände. Chatinhalt und Inline-
+Ergebnisse bleiben erhalten. Bei geöffneter Ansicht Im Chat öffnet ein neu
+hinzugekommenes fertiges HTML-Ergebnis seine Vorschau, sofern keine andere
+Vorschau ausgewählt ist. Bereits vorhandene Ergebnisse beim ersten Laden öffnen
+sich nicht automatisch. Geschlossene Ablagen bleiben geschlossen.
 
-Die Nebenfunktion „Befehle“ nutzt den vorhandenen Worker-Anschluss für einzelne Befehle im aktiven Projekt. Jeder Befehl erhält eine neue Shell, maximal 30 Sekunden und begrenzte Ausgabe. Es ist keine persistente interaktive PTY-Sitzung. Laufende, leere oder vom Worker nicht unterstützte Eingaben können nicht abgeschickt werden; Ausgaben, Exit-Code und Fehler bleiben sichtbar.
+Dateien öffnen ShelfFilePreview mit FileContent im schreibgeschützten Lesemodus:
+Markdown formatiert, HTML gerendert, Bilder/Audio/Video/PDF über die vorhandenen
+Renderer. Zurück erhält die Listenposition und stellt den Tastaturfokus wieder her.
+Name, Download und aufklappbare Herkunftsinformationen bleiben erreichbar.
+HTML-Quelltext und Aktualisieren bleiben im vorhandenen FileContent, Vollbild
+und Präsentieren im HtmlPreview. Fehler und Wiederholen bleiben unverändert.
+Jobs öffnen das vorhandene JobForm unter Aufträge nach erneutem Lesen der Jobliste;
+fehlende Jobs erhalten eine Meldung. Externe Links öffnen mit noopener/noreferrer.
+
+**Dateien** bleibt der echte Dateibrowser AgentFiles des aktiven Workspaces,
+mit geschützten Einträgen und dessen Wurzel als Navigationsgrenze. Derselbe
+Lesemodus stellt Markdown dar. Der Dateibrowser bleibt beim Wechsel der Ablage-
+Ansicht gemountet, sodass der gewählte Ordner erhalten bleibt.
+
+Die Gestaltung verwendet bestehende schwarze Workspace-Fläche, zentrale
+Schrift-/Abstandsrollen, gemeinsame IconButtons und zurückhaltende Glasrollen
+für Auswahl/Hover. Keine neue Palette. ChatShelfPreview zeigt die Produktionsliste
+mit neutralen Beispieldaten unter Unser Design.
+
+Datenvertrag: abgeleitete Ansicht, keine neue Ablagekopie und keine Migration von
+Dateien, Jobs oder Chats. BrowserThread erhält additiv shelfJobs für große,
+aufgeschobene Werkzeugausgaben. Nur strukturierte erfolgreiche Belege mit
+created=true und job.id/name gelten als Neuanlage; Werkzeugargumente und Prosa
+sind keine Belege. Ältere Server können bei aufgeschobenen großen Belegen Jobs
+auslassen, bis sie neu starten. Alte Leser ignorieren shelfJobs. Historische
+Jobs ohne passenden Erstellbeleg lassen sich nicht zuverlässig einem Chat zuordnen.
 
 
 ## Formatierte Antworten und Computer Use
@@ -875,7 +926,7 @@ Betriebssystem-Hotkeys. Dialoge, Menüs und Sprachchat verhindern einen neuen St
 Umschalten erfolgt beim Loslassen einer allein gedrückten Taste; Kombinationen
 und Wiederholungen lösen es nicht aus. PTT startet beim Drücken und beendet beim
 Loslassen; zusätzliche Tastenkombinationen unterbrechen die PTT-Aufnahme.
-Fenster-/Panewechsel beendet eine per Kürzel gestartete Aufnahme. Ein Loslassen
+Fenster-/Panewechsel erhält Umschalt-Aufnahmen; nur Gedrückt-halten endet bei Fokusverlust oder Loslassen. Ein Loslassen
 während der Mikrofonfreigabe bricht den ausstehenden PTT-Start ab. Erneuter Start
 braucht eine neue Geste. Beenden sichert und transkribiert ausschließlich in den
 Entwurf, ohne Nachricht zu senden. Vorhandene Audio-Wiederherstellung bleibt.
@@ -904,11 +955,14 @@ AllowanceBars zeigt Anbieterwerte als Prozent, niemals als Tokenbudget. Die
 Detailansicht zeigt den verbrauchten Anteil; die Kachel zeigt den verbleibenden
 Anteil mit dem Zusatz „übrig“ und einem Balken, der sich leert. Der Balken ist
 grün, ab 25 Prozent Rest warm und ab 10 Prozent Rest rot; ohne gemeldeten Wert
-bleibt er neutral. Die Kachel zeigt höchstens drei Zeilen und nur
-Hauptkontingente, die tatsächlich Arbeit tragen: pro Anbieter das Wochenfenster,
-danach das kurze Fenster. Nebenkontingente wie Spark-Modelle, App- oder
-modellbezogene Fenster erscheinen nur im Detail, zusammen mit einem Hinweis auf
-ihre Anzahl. Alle benannten Kontingente und Reset-Zeitpunkte bleiben im Detail
+bleibt er neutral. Die Kachel zeigt höchstens vier Zeilen: zuerst Codex · Woche und
+Claude · Woche, danach separat gemeldete Claude-Modellwochenkontingente
+(zum Beispiel Opus und Sonnet). Fehlende Wochenwerte bleiben als „Nicht verfügbar“
+sichtbar. Kurze Fenster, Spark und App-Kontingente erscheinen nur im Detail;
+ein Hinweis zählt die weiteren tatsächlich gemeldeten Kontingente.
+Keine Datenmigration; ältere Antworten ohne Klassifikation werden anhand ihrer
+stabilen IDs und Zeitraumbezeichnungen gelesen.
+Alle benannten Kontingente und Reset-Zeitpunkte bleiben im Detail
 erhalten, einschließlich modellbezogener Claude-Wochenlimits, Credits und
 Reset-Gutschriften. Abgelaufene Zeitfenster zeigen „neuer Stand
 ausstehend“, fehlende Werte bleiben unbekannt und Fehler behalten erkennbar den
@@ -961,8 +1015,8 @@ Sichern/Erkennen/Senden werden weitere Start-/Sendeimpulse ignoriert.
 Escape bricht Aufnahme oder ausstehende Erkennung ohne Textübernahme und Senden
 ab. Bereits übergebene Nachrichten werden damit nicht zurückgerufen. Audio bleibt
 unter Stimme wiederherstellbar, Entwürfe und Anhänge bleiben erhalten.
-Pane-/Fensterwechsel beendet eine per Pane-Kürzel gestartete Aufnahme ohne
-Senden. Ein Chatwechsel verwirft ausstehende Textübernahme; auch verspätete
+Pane-/Fensterwechsel erhält die Aufnahme. Ein Chatwechsel während der Erkennung
+übernimmt ausschließlich in den ursprünglichen Entwurf; verspätete
 Statusantworten dürfen niemals in einen anderen Chat senden.
 Verborgene oder maximierte Zielpanels werden über die aktive Panelauswahl sichtbar.
 Nicht geöffnete Panels melden einen Hinweis; gesperrte Chats starten kein Mikrofon.
@@ -1035,7 +1089,8 @@ ist ein Layoutbeispiel und führt keinen Upload aus.
 
 ## Workspace-Spezialisierung
 
-Das Plus neben Workspace eröffnet die kurze native Einrichtung. Die anklickbare
+Das Plus neben Workspace öffnet den kompakten Erstellen-Dialog. Ein Name genügt;
+danach öffnet sich ein leerer Chat ohne Einrichtungsinterview. Die anklickbare
 Überschrift erklärt den Begriff; das bestehende Projektmenü bearbeitet oder
 setzt die Einrichtung fort. Name und Spezialisierung stehen in AGENTS.md,
 Assistentenname und Firmenbasis bleiben gemeinsam. Wiederholte Startanfragen
@@ -1533,3 +1588,18 @@ Gemeinsame Rollen fan-glass-light, fan-calendar-base, fan-glass-duration und
 attentionFanMotion steuern Material und Bewegung. Aussehen → Bewegung reduzieren
 schaltet die Bewegung ab; reduzierte Transparenz und Forced Colors bleiben lesbar.
 Bestehende AttentionFan-Referenzen verwenden dasselbe Material. Keine Datenmigration.
+
+
+### Beständige Diktataufnahme
+
+Diktat und Erkennung gehören der zentralen RecordingProvider-Sitzung. Navigation
+und Panewechsel erhalten sie. Außerhalb des ausgewählten Ursprungscomposers
+zeigt die Aufnahmekapsel oben rechts Chat-Rücksprung, Aufnahmepunkt, Status,
+Dauer, Pause/Fortsetzen und Stop. SystemNotice weicht um die gemessene Höhe aus.
+Rückkehr zeigt dieselbe Aufnahme wieder im Composer. Stop übernimmt ausschließlich
+in den ursprünglichen Entwurf, ohne Versand oder Ansichtswechsel. Ein expliziter
+Sendebefehl fällt bei zwischenzeitlichem Chatwechsel auf diesen Entwurf zurück.
+IconButton, VoiceStatus und bestehende Tokens gelten auch mobil; RecordingPreview
+zeigt das Muster unter Unser Design. Rückfragen bleiben an die konkrete Frage
+gebunden. Keine Datenmigration. Wiederherstellung und Hintergrundgrenzen führt
+[DICTATION.md](../DICTATION.md#aufnahme-beim-navigieren).

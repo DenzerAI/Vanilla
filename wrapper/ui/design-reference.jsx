@@ -1,3 +1,5 @@
+import {ChatShelfPreview} from './chat-shelf.tsx';
+import {RecordingPreview} from './recording-session.jsx';
 import {ChatAudioPreview} from "./chat-audio-controls";
 import {ComposerCommandsPreview} from './composer-commands';
 import {VoiceProfilesPreview} from './voice-profiles.jsx';
@@ -86,6 +88,7 @@ export function DesignReference({ theme, tone, accent }) {
       <h3 className="section-heading">Slash-Befehle · Beispiel</h3><ComposerCommandsPreview/>
       <h3 className="section-heading">Ergebnisse im Chat · Beispiel</h3>
       <ChatArtifactsPreview/>
+      <h3 className="section-heading">Ablage · Im Chat</h3><ChatShelfPreview/>
       <h3 className="section-heading">Aufträge · Reiter</h3>
       <div className="tabs" aria-label="Auftragsfilter als Beispiel">{jobFilters.map(([id,label])=><button key={id} type="button" className={id===jobPreviewFilter?'selected':''} aria-pressed={id===jobPreviewFilter} onClick={()=>setJobPreviewFilter(id)}>{label}</button>)}</div>
       <p className="page-note">Nutzeraufträge nach Status; Systemwartung im eigenen Reiter. Die Auswahl öffnet die gemeinsamen Auftragsdetails.</p>
@@ -128,6 +131,7 @@ export function DesignReference({ theme, tone, accent }) {
       <h3 className="section-heading">Wetter · Himmel im Glasfächer</h3>
       <WeatherPreview/>
       <h3 className="section-heading">Sprache · Pegel und Erkennung</h3>
+      <RecordingPreview/>
       <div className="composer-entry"><VoiceWave levels={Array.from({length:60},(_,i)=> i>18 && i<45 ? (1+Math.sin(i*.7))*.08 : 0)}/></div>
       <div className="composer-entry"><VoiceStatus label="Wird erkannt" busy/></div>
       <p className="page-note">Statischer Beispielpegel und gemeinsame Ladeanzeige. Kein Mikrofonzugriff.</p>

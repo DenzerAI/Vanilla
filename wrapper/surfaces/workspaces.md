@@ -8,19 +8,26 @@ Ausbau.
 
 ## Einrichtung
 
-Voraussetzung ist die vorhandene Arbeitsbereichsstruktur und für das Gespräch
-ein ausführbarer nativer Worker. Das Plus neben „Workspace“ legt einen Entwurf
-im bestehenden `projects/` an und öffnet einen normalen Einrichtungschat.
-Die anklickbare Überschrift erklärt Zweck und Freiwilligkeit auch auf dem Handy.
-Ein vorhandener Workspace bietet im Menü „Im Chat einrichten …“ und
-„Workspace bearbeiten …“. Beides arbeitet an derselben Beschreibung.
+Das Plus neben „Workspace“ öffnet denselben kompakten Dialog wie „Workspace
+bearbeiten …“. Nur der Name ist erforderlich. Erstellen legt sofort einen
+nutzbaren Bereich an und öffnet einen leeren Chat, ohne Worker-Aufruf oder
+Einrichtungsinterview. Die wiederholbare Erstellung verwendet `/projects/save`
+mit einer stabilen requestId und dem vorhandenen WorkspaceDirectory.create.
+Eine verlorene Antwort führt bei erneutem Speichern nicht zu einem zweiten Bereich.
 
-Das kurze Gespräch klärt fehlende Angaben in vier Schritten: Zweck, besondere
-Vorgaben, benötigte Unterlagen/Skills, wiederkehrende Abläufe und Ergebnisse.
-Bekannte Firmenangaben werden nicht erneut abgefragt. Grundlegende
-Spezialisierung steht in AGENTS.md. Vorhandene Skills werden verlinkt; nur ein
-wirklich beauftragter wiederverwendbarer Ablauf erhält eine eigene
-`skills/<name>/SKILL.md`. Die Einrichtung erzeugt keinen Job oder Zeitplan.
+Das Symbol neben dem Namen öffnet die visuellen Symbol- und Farbauswahlen.
+„Weitere Angaben“ enthält die optionale Beschreibung „Was gehört hierher?“.
+Für bestehende Workspaces bietet dieser Abschnitt „Arbeitsweise im Chat anpassen“.
+Diese Aktion speichert zuerst und öffnet anschließend das bestehende
+Einrichtungsgespräch; Fehler lassen den Entwurf und die neue Revision erhalten.
+Der gleiche Einstieg bleibt im Workspace-Menü verfügbar. Die Überschrift
+„Workspace“ erklärt weiterhin Zweck und Freiwilligkeit.
+
+Das optionale Gespräch klärt besondere Vorgaben, benötigte Unterlagen/Skills und
+wiederkehrende Abläufe. Bekannte Angaben werden nicht erneut abgefragt.
+Arbeitsanweisungen und Skills gehören nicht in den normalen Bearbeitungsdialog.
+Es entstehen keine automatischen Jobs oder Zeitpläne. Firmenwissen bleibt in
+der gemeinsamen Firmenbasis, der Workspace organisiert die zugehörige Arbeit.
 
 ## Daten und Kontext
 
@@ -50,13 +57,21 @@ Chats, Aufträge und Ergebnisse behalten ihre Kennungen und Ablagen.
 
 ## Bedienung und Fehler
 
-Das gemeinsame Modal verwendet SettingRow, native Eingaben/Selects, bestehende
-Symbole, Farben und Abstände. Laden zeigt den Settings-Skeleton. Fehler bleiben
-im Formular; ein Revisionskonflikt überschreibt keinen anderen Bearbeitungsstand
-und erhält den lokalen Entwurf. „Speichern und im Chat weiter einrichten“
-speichert zuerst. Auf schmalen Fenstern umbrechen Zeilen und Aktionen;
-Beschriftungen, Tastaturfokus und Touchziele bleiben zugänglich. Unser Design
-zeigt dieselben Komponenten mit ausdrücklich lokalen Beispieldaten.
+WorkspaceDefinitionEditor verwendet für Erstellen und Bearbeiten den gemeinsamen
+Modal mit project-dialog, Field-Muster und nativen Radio-Gruppen. Die randlose
+sheet-glass-Fläche folgt dem bestehenden Liquid-Glass-Material samt Fallbacks.
+Kopf und Aktionen bleiben fest sichtbar; nur project-editor-body scrollt.
+Name, optionale Beschreibung und visuelle Auswahl sind auf schmalen Fenstern
+und bei großer Schrift bedienbar. Speichern ist während der Anfrage gesperrt;
+Fehler stehen am erreichbaren Fuß. Laden verwendet den Settings-Skeleton.
+Unser Design zeigt denselben Produktionsdialog mit lokalen Beispieldaten.
+
+Einrichtungsstatus und Rohtexteditor werden nicht angezeigt. Bearbeiten sendet
+nur Name, Beschreibung, Symbol und Farbe mit der geladenen Revision. Bestehender
+Status, Markdown und Erweiterungsfelder bleiben erhalten. Neue Bereiche sind
+intern ready, ohne Einrichtungs-Platzhalter. Die Navigation zeigt keinen
+Einrichtungsstatus. Revisionskonflikte erhalten den lokalen Entwurf und verhindern
+das Überschreiben zwischenzeitlicher Änderungen.
 
 Fehlerhafte YAML-Versionen, fehlende konfigurierte Beschreibungen, doppelte IDs
 und verknüpfte AGENTS.md werden als konkrete Fehler gemeldet. Ein betroffener
@@ -75,8 +90,8 @@ Beschreibungen, eigene Skills, bestehender State und Chats verwenden die
 vorhandenen Sicherungswege. Unterbrechung nach gespeicherter Beschreibung kann
 beim nächsten Start über die Projektsuche wiedergefunden werden.
 
-Zum Aufheben einer Spezialisierung die Besonderheiten im Bearbeitungsdialog
-entfernen oder anpassen. Automatisches Löschen von Workspace/Chats ist nicht
+Zum Aufheben einer Spezialisierung die Besonderheiten über „Arbeitsweise im
+Chat anpassen“ gezielt entfernen oder anpassen lassen. Automatisches Löschen von Workspace/Chats ist nicht
 Teil dieses Moduls. Vor Rückkehr auf alten Code laufende Einrichtung beenden
 und Dateien/State sichern. Alte Leser können den Markdowntext weiterhin lesen,
 berücksichtigen jedoch keine neuen Revisions- und Einrichtungsregeln. Bereits
@@ -103,3 +118,7 @@ bleibt Allgemein der Einstieg. WorkspaceInfo erklärt diese gemeinsame Zuordnung
 Kategorien werden nicht mehr als zusätzliche Organisation empfohlen. Die
 Referenz zeigt den produktiven FilterPicker mit „Alle Workspaces“. Bestehende
 Dateipfade, Projektkennungen und Arbeitsweisen bleiben unverändert.
+
+Dialogvereinfachung: keine Migration vorhandener Daten. Ältere Oberflächen zeigen
+den weiterhin kompatiblen Status und Markdowntext wieder an. Bestehende IDs,
+Dateipfade, Chats und Arbeitsanweisungen bleiben erhalten.

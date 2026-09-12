@@ -20,7 +20,7 @@ export function bindDictationShortcut(target, {key,mode,available,phase,start,fi
     else if (['recording','paused'].includes(phase())) finish();
   }
   function begin() { owned=true; start(); }
-  function reset() { pressed=false;chord=false;held.clear();endOwned(); }
+  function reset() { pressed=false;chord=false;held.clear();if(mode==='hold')endOwned();else owned=false; }
   function down(event) {
     held.add(event.code);
     if(event.code!==key) {

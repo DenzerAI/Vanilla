@@ -7,6 +7,7 @@ import { FilterPicker } from "./filter-picker.jsx";
 import { Modal } from "./modal.jsx";
 import "./inbox.css";
 import {InboxComposer} from './inbox-composer';
+import {InboxVoiceMessage, InboxTranscript} from './inbox-voice-message';
 import {DeliveryChecks} from './delivery-checks';
 import {ChatMenu} from './chat-controls.jsx';
 
@@ -214,11 +215,11 @@ export function InboxPage({ PageHeading, sidebarHost, sidebarVisible, onShowSide
           {selected.messages.map((message: any, index: number) => <article key={message.id||index} className={"inbox-message " + (message.outgoing ? "inbox-message-outgoing" : "")}>
 
             {message.quoted&&<blockquote className="inbox-quote"><strong>{message.quoted.sender}</strong><p>{message.quoted.text}</p></blockquote>}
-            {message.media?.url&&(message.media.mime.startsWith('image/')?<a href={message.media.url} target="_blank" rel="noreferrer"><img className="inbox-media" src={message.media.url} alt={message.text||'Bild'} loading="lazy"/></a>:message.media.mime.startsWith('audio/')?<audio className="inbox-media" controls preload="none" src={message.media.url}/>:message.media.mime.startsWith('video/')?<video className="inbox-media" controls preload="metadata" src={message.media.url}/>:<a href={message.media.url} download>{message.media.name||'Datei herunterladen'}</a>)}
+            {message.media?.url&&(message.media.mime.startsWith('image/')?<a href={message.media.url} target="_blank" rel="noreferrer"><img className="inbox-media" src={message.media.url} alt={message.text||'Bild'} loading="lazy"/></a>:message.media.mime.startsWith('audio/')?<InboxVoiceMessage src={message.media.url} transcript={message.transcript}/>:message.media.mime.startsWith('video/')?<video className="inbox-media" controls preload="metadata" src={message.media.url}/>:<a href={message.media.url} download>{message.media.name||'Datei herunterladen'}</a>)}
             {message.missingMedia&&<p className="muted">Originaldatei nicht im übernommenen Verlauf vorhanden.</p>}
             <p>{message.text}</p>
             {!selectedId.startsWith('msg:')&&message.attachments?.map((attachment:any)=><p key={attachment.id}><a href={'/api/inbox/attachment?'+new URLSearchParams({id:message.id,attachmentId:attachment.id,projectId})} download>{attachment.name||'Anhang herunterladen'}</a></p>)}
-            {message.transcript&&<details><summary>Transkript</summary><p>{message.transcript}</p></details>}
+            {message.transcript&&!(message.media?.url&&message.media.mime.startsWith('audio/'))&&<InboxTranscript text={message.transcript}/>}
             {!!message.reactions?.length&&<div className="inbox-reactions">{message.reactions.map((reaction:any,n:number)=><span key={n} title={reaction.sender}>{reaction.emoji}{reaction.count>1?' '+reaction.count:''}</span>)}</div>}
             <div className="inbox-message-meta"><strong>{message.outgoing?"Du":selectedId.startsWith("msg:")?(detail?.thread?.external?.endsWith("@g.us")?message.sender.split("@")[0]:selected.sender):message.sender}</strong><span>{new Date(message.time).toLocaleString('de-DE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</span>{message.outgoing&&message.ack!=null&&<span title={message.ack>=3?'Gelesen':message.ack>=2?'Zugestellt':'Gesendet'}><DeliveryChecks double={message.ack>=2}/></span>}</div>
             {selectedId.startsWith('msg:')&&<div className="inbox-message-actions"><ChatMenu selected={undefined} footer={undefined} label="Nachrichtenaktionen" className="icon-button" items={[{id:'reply',label:'Antworten',icon:<ArrowLeft size={16}/>,action:()=>setReply(message)},...['👍','❤️','😂','😮','😢','🙏',''].map(emoji=>({id:emoji||'remove',label:emoji||'Reaktion entfernen',action:async()=>{try{await api('/messenger/react',{id:selectedId,projectId,messageId:message.id,emoji});setRefreshDetail(n=>n+1);}catch(error:any){setError(error.message);}}}))]}><MoreHorizontal size={16}/></ChatMenu></div>}

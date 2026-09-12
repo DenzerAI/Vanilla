@@ -3,7 +3,7 @@
 .sidebar-resizer { right: -4px; }
 .workspace-resizer { left: -4px; }
 .sidebar-resizer .pane-divider, .workspace-resizer .pane-divider { width: 8px; height: 100%; touch-action: none; }
-.app .workspace-panel { position: relative; width: var(--workspace-width, 280px); min-width: 280px; max-width: calc(100% - 416px); flex-shrink: 0; margin: var(--space-8); padding-block: var(--space-8); border: 0; border-radius: var(--radius-large); background-color: var(--workspace-panel-glass); box-shadow: var(--workspace-panel-shadow); backdrop-filter: blur(var(--space-32)); -webkit-backdrop-filter: blur(var(--space-32)); isolation: isolate; }
+.app .workspace-panel { position: relative; width: var(--workspace-width, 360px); min-width: 280px; max-width: calc(100% - 416px); flex-shrink: 0; margin: var(--space-8); padding-block: var(--space-8); border: 0; border-radius: var(--radius-large); background-color: var(--workspace-panel-glass); box-shadow: var(--workspace-panel-shadow); backdrop-filter: blur(var(--space-32)); -webkit-backdrop-filter: blur(var(--space-32)); isolation: isolate; }
 .app .workspace-panel.workspace-expanded { width: 1000px; }
 .workspace-panel .panel-head { flex-shrink: 0; gap: var(--space-8); height: auto; min-height: 48px; border-bottom: 1px solid var(--border); }
 .workspace-panel .workspace-view-select { flex: 1; min-width: 0; width: auto; border-color: transparent; background-color: transparent; color: var(--text); }
@@ -25,7 +25,7 @@
 .workspace-panel .terminal-panel { background: transparent; }
 .workspace-panel .terminal-panel pre { overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; }
 @media (max-width: 900px) {
-  .app .workspace-panel { position: absolute; right: 0; top: 0; bottom: 0; width: var(--workspace-width, 280px); max-width: calc(100vw - 32px); }
+  .app .workspace-panel { position: absolute; right: 0; top: 0; bottom: 0; width: var(--workspace-width, 360px); max-width: calc(100vw - 32px); }
   .app .workspace-panel.workspace-expanded { width: calc(100vw - 32px); }
 }
 @media (max-width: 650px) {
@@ -42,7 +42,7 @@
 .sidebar-resizer .pane-divider::after, .workspace-resizer .pane-divider::after { content: ''; position: absolute; top: 0; bottom: 0; left: 3px; width: 1px; background: transparent; }
 .sidebar-resizer .pane-divider:hover::after, .workspace-resizer .pane-divider:hover::after, .sidebar-resizer .pane-divider:focus-visible::after, .workspace-resizer .pane-divider:focus-visible::after { background: var(--blue); width: 2px; }
 @container workspace-layout (max-width: 680px) {
-  .app .workspace-panel, .app .workspace-panel.workspace-expanded { position: absolute; right: 0; top: 0; bottom: 0; z-index: 10; width: var(--workspace-width, 280px); max-width: calc(100% - var(--space-16)); }
+  .app .workspace-panel, .app .workspace-panel.workspace-expanded { position: absolute; right: 0; top: 0; bottom: 0; z-index: 10; width: var(--workspace-width, 360px); max-width: calc(100% - var(--space-16)); }
 }
 @media (max-width: 900px) { .app .workspace-panel { top: 0; } }
 @media (max-width: 650px) { .app .workspace-panel, .app .workspace-panel.workspace-expanded { width: 100%; } }
@@ -97,3 +97,7 @@
 }
 
 .workspace-panel .workspace-artifact-preview { overflow: auto; }
+
+/* Keep Ablage controls reachable below the shared update notice. */
+body:has(> .system-notice.system-update) .app:not(.embedded-chat) > .main .chat-topbar { top: calc(var(--control-touch) + var(--space-16)); }
+body:has(> .system-notice.system-update) .app:not(.embedded-chat) > .main .workspace-panel > .panel-head { margin-top: calc(var(--control-touch) + var(--space-16)); }

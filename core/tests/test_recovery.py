@@ -279,3 +279,31 @@ def test_restore_journal_rolls_back_env_with_other_files(config,db):
     recover(config,journal)
     assert env.read_text()=='ORIGINAL="private-value"\n'
     assert not original.exists() and not journal.exists()
+
+
+def test_restart_adapter_refusal_is_json_and_releases_freeze(config,monkeypatch):
+    from core.app import create_app
+    app=create_app(config)
+    runtime=app.state.runtime
+    calls=[]
+    async def inactive():return False
+    async def request(method,path,**kwargs):
+        calls.append((path,kwargs.get('json')))
+        if kwargs.get('json',{}).get('hold'):
+            raise RuntimeError('Aktive Eingangskanäle vor dem Neustart anhalten.')
+        return {'ok':True}
+    monkeypatch.setattr(runtime,'has_active_work',inactive)
+    monkeypatch.setattr(runtime,'request',request)
+    # Avoid starting real services; exercise the route and error middleware directly.
+    runtime.config.start_adapter=True
+    try:
+        client=TestClient(app)
+        csrf=client.get('/api/auth/session').json()['token']
+        response=client.post('/api/system/restart',json={},headers={'x-uwe-token':csrf})
+        assert response.status_code==400
+        assert 'Eingangskanäle' in response.json()['error']
+        assert not runtime.frozen
+        assert calls==[('/api/system/backup-hold',{'hold':True}),('/api/system/backup-hold',{'hold':False})]
+        assert not (config.data/'restart.json').exists()
+    finally:
+        app.state.db.close()

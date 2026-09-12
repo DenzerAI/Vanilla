@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { EventEmitter } from 'node:events';
-import { validTitle, assignChatTitle, generateTitle, TITLE_RULES } from '../chat-title.mjs';
+import { validTitle, assignChatTitle, generateTitle, fallbackTitle, TITLE_RULES } from '../chat-title.mjs';
 
 test('only compact complete titles are accepted', () => {
   assert.equal(validTitle('  Angebot für Dachsanierung  '), 'Angebot für Dachsanierung');
@@ -17,7 +17,7 @@ test('first message uses selected model, is generated once and broadcasts update
   await assignChatTitle(args);
   await assignChatTitle({ ...args, text: 'Weitere Nachricht' });
   assert.equal(c.title, 'Angebot erstellen'); assert.equal(c.titleStatus, 'generated');
-  assert.equal(calls, 1); assert.equal(events, 1);
+  assert.equal(calls, 1); assert.equal(events, 2);
 });
 test('manual titles and concurrent manual edits are preserved', async () => {
   const c = chat(); let release;
@@ -31,7 +31,8 @@ test('manual titles and concurrent manual edits are preserved', async () => {
 test('failure leaves complete neutral fallback without throwing into chat', async () => {
   const c = chat();
   await assignChatTitle({ chat: c, text: 'Auftrag', save: noop, emit: noop, generate: async () => { throw Error('offline'); } });
-  assert.equal(c.title, 'Neues Anliegen'); assert.equal(c.titleStatus, 'failed');
+  assert.equal(c.title, 'Auftrag'); assert.equal(c.titleStatus, 'fallback');
+  assert.equal(c.titleError.code, 'PROVIDER_ERROR');
 });
 test('Codex title request uses isolated thread and collects item events', async () => {
   const adapter = new EventEmitter(); const calls = [];
@@ -103,7 +104,7 @@ test('an unusable model selection still yields a generated title', async () => {
 test('invalid model titles are retried once and never cut mid-word', async () => {
   const c = chat(); let calls = 0;
   await assignChatTitle({ chat: c, text: 'Auftrag', save: noop, emit: noop, generate: async () => { calls++; return null; } });
-  assert.equal(calls, 2); assert.equal(c.title, 'Neues Anliegen');
+  assert.equal(calls, 2); assert.equal(c.title, 'Auftrag');
 });
 test('timeout releases notification listeners and stops the isolated turn', async () => {
   const adapter = new EventEmitter(); const calls = [];
@@ -126,4 +127,50 @@ test('timeout releases notification listeners and stops the isolated turn', asyn
   assert.equal(validTitle('Ein kurzer Titel passt'), 'Ein kurzer Titel passt');
   assert.equal(validTitle('So ein Titel ist lang'), null);
   assert.equal(validTitle('Workspace-Buttons'), 'Workspace-Buttons');
+});
+
+test('local titles use complete words and handle empty or unusual input', () => {
+  assert.equal(fallbackTitle('Lass uns mal kurz diskutieren, brauchen wir eine Kalenderfunktion? Macht das Sinn?'), 'Kalenderfunktion');
+  for (const input of ['', '🙂', 'x'.repeat(100), 'https://example.org', '你好 世界', 'Bitte Angebot erstellen']) {
+    assert.ok(validTitle(fallbackTitle(input)));
+  }
+});
+
+test('provider errors are retried and a local title is already saved', async () => {
+  const c = chat(); const saved = []; let calls = 0;
+  await assignChatTitle({ chat: c, text: 'Kalender planen', save: async () => saved.push(structuredClone(c)), emit: noop,
+    generate: async () => { if (++calls === 1) throw Error('offline'); return 'Kalenderplanung'; } });
+  assert.equal(saved[0].title, 'Kalender planen');
+  assert.equal(c.title, 'Kalenderplanung');
+  assert.equal(c.titleStatus, 'generated');
+  assert.equal(c.titleError, undefined);
+  assert.equal(calls, 2);
+});
+
+test('hung requests finish locally, reject duplicates and cannot overwrite later titles', async () => {
+  const c = chat(); let late; let calls = 0;
+  const args = { chat: c, text: 'Kalender planen', save: noop, emit: noop, timeout: 10,
+    generate: () => { calls++; return new Promise(resolve => { late = resolve; }); } };
+  const pending = assignChatTitle(args);
+  await assignChatTitle(args);
+  await pending;
+  assert.equal(calls, 2);
+  assert.equal(c.title, 'Kalender planen');
+  assert.equal(c.titleStatus, 'fallback');
+  assert.equal(c.titleError.code, 'TITLE_TIMEOUT');
+  late('Verspäteter Titel');
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(c.title, 'Kalender planen');
+});
+
+test('persisted pending and fallback titles resume using the original message with bounded retries', async () => {
+  const c = { ...chat(), title: 'Kalender planen', titleStatus: 'pending', titleSourceText: 'Kalender planen' };
+  const args = { chat: c, text: 'Jetzt über etwas anderes sprechen', save: noop, emit: noop,
+    generate: async (_, p) => { assert.equal(p.text, 'Kalender planen'); throw Error('offline'); } };
+  await assignChatTitle(args);
+  await assignChatTitle(args);
+  await assignChatTitle({ ...args, generate: () => assert.fail('retry limit') });
+  assert.equal(c.titleAttempts, 4);
+  assert.equal(c.title, 'Kalender planen');
+  assert.equal(c.titleStatus, 'fallback');
 });

@@ -22,3 +22,13 @@ test('absolute workspace paths and hidden paths are rejected', async () => {
   await assert.rejects(inside(process.cwd(), process.cwd()));
   await assert.rejects(inside(process.cwd(), '.env'));
 });
+
+test('public IPv6 allocations remain reachable while special-purpose ranges stay denied', async () => {
+  for (const address of ['2001:67c:4e8:f004::9','2001:4860:4860::8888','2606:4700:4700::1111'])
+    assert.equal(publicAddress(address), true, address);
+  for (const address of ['2001::1','2001:0000::1','2001:2::1','2001:10::1','2001:1ff::1','2001:db8::1','2001:0db8::1','2002::1','3fff::1','3fff:fff::1'])
+    assert.equal(publicAddress(address), false, address);
+  await assert.rejects(safeRequest('https://synthetic.invalid', {resolve:async()=>[
+    {address:'2001:67c:4e8:f004::9',family:6}, {address:'::1',family:6},
+  ]}), /Interne oder private URL/);
+});

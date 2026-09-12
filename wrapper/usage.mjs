@@ -74,24 +74,24 @@ export function allowanceReader({readCodex,readClaude,enabled,now=Date.now,ttl=6
  };
 }
 
-/** The compact card shows the allowances that carry real work: main windows
- * per provider, the week first, then additional reported windows. */
+/** Weekly allowances lead the card; short windows and Spark stay in details. */
 export function featuredAllowances(providers=[],limit=4) {
- // Older payloads from a running instance carry no classification yet.
- const isMain=r=>r.primary!==undefined?r.primary===true:/^(codex:|five_hour$|seven_day$)/.test(String(r.id));
- const periodOf=r=>r.period!==undefined?r.period:/Woche/.test(String(r.label))?'week':/5 Stunden/.test(String(r.label))?'short':null;
- const picked=[];
- for(const provider of providers){
-  const own=(provider.rows||[]).filter(isMain).map(r=>({...r,period:periodOf(r),provider:provider.id}));
-  const week=own.find(r=>r.period==='week'), short=own.find(r=>r.period==='short');
-  for(const row of [week,short].filter(Boolean))picked.push(row);
+ // Accept older payloads that have no classification yet.
+ const isMain=r=>r.primary!==undefined?r.primary===true:/^(codex:|seven_day$)/.test(String(r.id));
+ const isWeek=r=>r.period!==undefined?r.period==='week':/Woche/.test(String(r.label));
+ const main=[],models=[];
+ for(const id of ['codex','claw-code']){
+  const provider=providers.find(p=>p.id===id);if(!provider)continue;
+  const rows=provider.rows||[],week=rows.find(r=>isMain(r)&&isWeek(r));
+  const name=id==='codex'?'Codex':'Claude';
+  main.push(week?{...week,label:`${name} · Woche`,provider:id}:{id:'missing-week',label:`${name} · Woche`,provider:id,period:'week',usedPercent:null,resetAt:null,missing:true});
+  if(id==='claw-code')for(const row of rows.filter(r=>!isMain(r)&&isWeek(r)&&/^(seven_day_(opus|sonnet)$|model:)/.test(String(r.id)))){
+   if(!models.some(r=>r.label===row.label))models.push({...row,provider:id});
+  }
  }
- const weeks=picked.filter(r=>r.period==='week'), rest=picked.filter(r=>r.period!=='week');
- const main=[...weeks,...rest];
- const additional=providers.flatMap(p=>(p.rows||[]).filter(r=>!main.some(m=>m.provider===p.id&&m.id===r.id)).map(r=>({...r,provider:p.id})));
- return [...main,...additional].slice(0,limit);
+ return [...main,...models].slice(0,limit);
 }
 export function remainingPercent(row,now=Date.now()) {
- if(!row || row.expired || (row.resetAt!==null&&row.resetAt<=now))return null;
+ if(!row || count(row.usedPercent)===null || row.expired || (row.resetAt!==null&&row.resetAt<=now))return null;
  return Math.max(0,Math.min(100,100-row.usedPercent));
 }

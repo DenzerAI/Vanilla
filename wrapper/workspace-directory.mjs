@@ -93,15 +93,15 @@ export class WorkspaceDirectory {
     if(current&&!current.startsWith(marker)){this.warnings.push('Eigene WORKSPACES.md bleibt erhalten. Das Verzeichnis ist über die Workspace-Liste verfügbar.');return;}
     if(current!==content)await this.atomic(file,content);
   }
-  create({requestId=randomUUID(),name='Neuer Workspace',description=''}={}){
+  create({requestId=randomUUID(),name='Neuer Workspace',description='',status='draft',icon='folder',color='default'}={}){
     return this.serial(async()=>{
       if(typeof requestId!=='string'||!/^[a-zA-Z0-9_-]{8,100}$/.test(requestId))throw Error('Ungültige Einrichtungsanfrage.');
       await this.refreshNow();
       const id='project-'+digest(requestId).slice(0,16);
       const existing=this.store.state.projects.find(p=>p.id===id);
       if(existing){if(existing.workspaceError)throw Error(existing.workspaceError);return existing;}
-      const profile={schema_version:1,id,name,description,status:'draft'};
-      const body='# Aufgabe\n\nZweck und gewünschte Ergebnisse werden im Einrichtungsgespräch festgelegt.\n\n## Bereichsvorgaben\n\nDie gemeinsame Assistentenidentität und die gemeinsamen Firmenregeln gelten weiterhin.\n\n## Arbeitsweise\n\nErgänze nur die Besonderheiten dieses Themas.\n\n## Wissen und Skills\n\nVerweise auf benötigte Firmenquellen und vorhandene Skills. Neue wiederverwendbare Abläufe gehören bei Bedarf unter skills/<name>/SKILL.md.\n\n## Offene Punkte\n\nZweck, Besonderheiten, Quellen und gewünschte Abläufe klären.\n';
+      const profile={schema_version:1,id,name,description,status,icon,color};
+      const body=status==='ready'?'# Arbeitsbereich\n\nDie gemeinsame Assistentenidentität und die gemeinsamen Firmenregeln gelten weiterhin. Eingaben liegen in input/, Ergebnisse in output/.\n':'# Aufgabe\n\nZweck und gewünschte Ergebnisse werden im Einrichtungsgespräch festgelegt.\n\n## Bereichsvorgaben\n\nDie gemeinsame Assistentenidentität und die gemeinsamen Firmenregeln gelten weiterhin.\n\n## Arbeitsweise\n\nErgänze nur die Besonderheiten dieses Themas.\n\n## Wissen und Skills\n\nVerweise auf benötigte Firmenquellen und vorhandene Skills. Neue wiederverwendbare Abläufe gehören bei Bedarf unter skills/<name>/SKILL.md.\n\n## Offene Punkte\n\nZweck, Besonderheiten, Quellen und gewünschte Abläufe klären.\n';
       const source=workspaceDefinitionText(profile,body);
       await mkdir(path.join(this.store.root,'projects'),{recursive:true});
       await this.inside(this.store.root,'projects');

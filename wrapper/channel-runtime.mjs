@@ -45,6 +45,7 @@ export class ChannelRuntime {
       if(Object.values(this.state.tasks).filter(t=>t.connectionId===id&&['received','running'].includes(t.status)).length>=8)throw Error('Maximal acht gleichzeitige Kanalaufträge.');
       let session=this.state.sessions[sessionId];
       if(!session) session=this.state.sessions[sessionId]={id:sessionId,connectionId:id,chatId:String(chatId),sender:String(sender),threadId:null,createdAt:Date.now()};
+      if(!trusted && c.provider==='telegram' && /^\/start(?:\s|$)/.test(text?.trim()||'')) {await this.save();return {status:'completed',result:'Verbunden. Schreib mir hier deine Nachricht. Mit /new beginnst du ein neues Gespräch, mit /status siehst du den Stand und mit /stop stoppst du eine laufende Antwort.'};}
       if(!trusted && text?.trim()==='/stop') {if(session.threadId)await this.interrupt(session.threadId);return {status:'completed',result:'Stopp angefordert.'};}
       if(!trusted && text?.trim()==='/status') {const tasks=Object.values(this.state.tasks).filter(t=>t.sessionId===sessionId);return {status:'completed',result:tasks.at(-1)?.status||'Noch kein Auftrag.'};}
       if(Object.values(this.state.tasks).some(t=>t.sessionId===sessionId&&['received','running'].includes(t.status))) throw Error('Die vorherige Antwort läuft noch. Mit /stop unterbrechen.');

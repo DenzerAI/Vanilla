@@ -67,3 +67,16 @@ Fläche. Messengerblasen wachsen nach Inhalt bis 82 % der Spalte; eigene stehen
 rechts. Zeit und Anbieterbeleg liegen kompakt unten. In Gruppengesprächen bleibt
 der Absender sichtbar. Auf Mobilgeräten wird erst beim sichtbaren Öffnen des
 Verlaufs gelesen; die automatisch vorgeladene Auswahl in der Liste zählt nicht.
+
+Technische WhatsApp-Verschlüsselungs- und Protokollereignisse bleiben interne
+Belege. Keine Nachrichtenblase, kein Ungelesenpunkt, kein Hochsortieren durch
+diese Ereignisse. Der letzte sichtbare Beitrag bestimmt das Listendatum.
+Die Klassifikation folgt dem Anbietertyp; echte Nachrichten mit `@lid` bleiben
+sichtbar. Bestehende falsch gezählte Einträge korrigiert der nächste Abgleich.
+
+Inbox-Sprachnachrichten verwenden `InboxVoiceMessage`: kompakter Play/Pause-
+IconButton, echte suchbare Fortschrittsleiste und Zeitangaben, kein Autoplay.
+`InboxTranscript` zeigt den Text standardmäßig offen; die komplette Kopfzeile
+mit rechtsstehendem Chevron klappt ihn per Maus, Touch oder Tastatur ein.
+Keine Datei-Symbole oder nativen Disclosure-Dreiecke. Fehlende Transkripte
+werden als noch nicht verfügbar bezeichnet, nicht als fertige Erkennung.

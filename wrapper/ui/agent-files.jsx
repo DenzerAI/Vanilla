@@ -17,7 +17,7 @@ export function AgentFiles({api,initialFolder,onPreview,projectId,projectName,en
       setPath(initialFolder.slice(data.root.length+1));setFile(null);
     }
   },[initialFolder, data?.root]);
-  const loading = !data || (path && data.path !== path) || (initialFolder && openedTarget.current !== initialFolder);
+  const loading = !data || (path && data.path !== path) || (initialFolder && data?.root && initialFolder.startsWith(data.root+'/') && openedTarget.current !== initialFolder);
   const entries = [...(data?.files || [])].sort((a,b)=>Number(b.directory)-Number(a.directory) || a.name.localeCompare(b.name,'de',{numeric:true}));
   const visibleEntries=entries.filter(entry=>entry.accessible || showProtected);
   const protectedCount=entries.filter(entry=>!entry.accessible).length;
@@ -30,7 +30,7 @@ export function AgentFiles({api,initialFolder,onPreview,projectId,projectName,en
       <span title={file || (data?.root ? data.root+'/'+path : path)}>{file?file.split('/').pop():displayPath?displayPath.split('/').pop():rootName}</span>
       {file?<a className="icon-button" aria-label="Datei herunterladen" href={'/api/file/raw?scope=agent&path='+encodeURIComponent(file)+'&download=1'}><Download size={16}/></a>:<button className="icon-button" aria-label="Dateien aktualisieren" onClick={()=>setRevision(n=>n+1)}><RefreshCw size={15}/></button>}
     </div>
-    {file?<div className="workspace-file-list"><FileContent key={file} path={file} api={api} scope="agent" readOnly enlarged={enlarged} onEnlarge={onPreview?()=>onPreview(file):undefined}/></div>:<>
+    {file?<div className="workspace-file-list"><FileContent key={file} path={file} api={api} scope="agent" readOnly reading enlarged={enlarged} onEnlarge={onPreview?()=>onPreview(file):undefined}/></div>:<>
       {displayPath && <div className="workspace-file-path" title={[data?.root,path].filter(Boolean).join('/')}>{[rootName,...displayPath.split('/').filter(Boolean).slice(0,-1)].join(' › ')}</div>}
       <div className="workspace-file-list" aria-label="Ordnerinhalt">
       {error?<div role="alert"><p>{error}</p><button onClick={()=>setRevision(n=>n+1)}>Erneut versuchen</button></div>:loading?<Skeleton compact label="Ordner wird geladen …"/>:!visibleEntries.length?<p>{protectedCount ? "Nur geschützte Einträge in diesem Ordner." : "Dieser Ordner ist leer."}</p>:visibleEntries.map(entry=><button key={entry.path} className="file-row" disabled={!entry.accessible} title={!entry.accessible?'Geschützter Eintrag':entry.path} onClick={()=>entry.directory?setPath(entry.path):setFile(entry.path)}>

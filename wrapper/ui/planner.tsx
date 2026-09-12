@@ -1,3 +1,4 @@
+import {PlannerCalendar} from './planner-calendar';
 import {calendarClock} from './calendar-day.mjs';
 import React, { useCallback, useEffect, useRef, useState } from "react";
 import { Modal } from "./modal.jsx";
@@ -20,7 +21,6 @@ import {
   parseDay,
   addDays,
   monday,
-  monthWeeks,
   isoWeek,
   shiftMonth,
   eventOnDay,
@@ -130,7 +130,7 @@ export function BriefingRow({item, today, busy = false, disabled = false, onOpen
 }
 export function PlannerPatternPreview() {
   return (
-    <><BriefingRow item={demoBriefings(dateKey(new Date()))[0]} today={dateKey(new Date())} onOpen={() => {}} /><AgendaRow event={demoEvents(dateKey(new Date()))[0]} onOpen={() => {}} /></>
+    <><PlannerCalendar date={dateKey(new Date())} today={dateKey(new Date())} mode="month" workweek={false} timezone="Europe/Berlin" events={demoEvents(dateKey(new Date()))} onDate={() => {}} onOpen={() => {}} onCreate={() => {}} /><BriefingRow item={demoBriefings(dateKey(new Date()))[0]} today={dateKey(new Date())} onOpen={() => {}} /><AgendaRow event={demoEvents(dateKey(new Date()))[0]} onOpen={() => {}} /></>
   );
 }
 export function PlannerPage(props: Props) {
@@ -302,15 +302,15 @@ export function PlannerPage(props: Props) {
         setEntityError((err as Error).message);
     }
   };
-  const create = (key = date) => {
+  const create = (key = date, hour = 9) => {
     setDetail(null);
     setFormError("");
     setDraft({
       id: crypto.randomUUID(),
       title: "",
       date: key,
-      start: "09:00",
-      end: "10:00",
+      start: `${String(hour).padStart(2,"0")}:00`,
+      end: hour === 23 ? "23:59" : `${String(hour+1).padStart(2,"0")}:00`,
       allDay: false,
       location: "",
       source: demo?"Eigener Kalender · Beispiel":"Vanilla",
@@ -351,72 +351,15 @@ export function PlannerPage(props: Props) {
         ? shiftMonth(old, direction)
         : addDays(old, direction * (mode === "week" ? 7 : 1)),
     );
-  const days =
-    mode === "day"
-      ? [date]
-      : Array.from({ length: workweek ? 5 : 7 }, (_, i) =>
-          addDays(monday(date), i),
-        );
-  const dayView = (key: string, compact = false) => (
-    <section
-      className={"planner-day " + (key === today ? "planner-current-day" : "")}
-      key={key}
-      aria-label={formatDay(key)}
-    >
-      <header>
-        <button
-          type="button"
-          onClick={() => {
-            setDate(key);
-            chooseMode("day");
-          }}
-          aria-label={formatDay(key) + " öffnen"}
-          aria-current={key === today ? "date" : undefined}
-        >
-          <span>{formatDay(key, { weekday: "short" })}</span>
-          <strong>
-            {formatDay(key, {
-              day: "numeric",
-              month: compact ? "short" : undefined,
-            })}
-          </strong>
-        </button>
-        {demo && (
-          <button
-            type="button"
-            className="icon-button"
-            aria-label={"Beispieltermin am " + formatDay(key) + " hinzufügen"}
-            onClick={() => create(key)}
-          >
-            <Plus size={14} strokeWidth={undefined} />
-          </button>
-        )}
-      </header>
-      <div className="planner-day-items">
-        {onDay(key).map((event: PlannerEvent) => (
-          <AgendaRow
-            key={event.id}
-            event={event}
-            onOpen={() => setDetail(event)}
-          />
-        ))}
-        {!onDay(key).length && (
-          <p className="planner-empty">
-            Keine Termine in dieser Ansicht
-          </p>
-        )}
-      </div>
-    </section>
-  );
   const unread =
     props.notifications.data?.items?.filter((item: any) => !item.read_at) || [];
   return (
     <div
-      className={"page planner-page " + (section === "today" ? "planner-today" : "")}
+      className={"page planner-page " + (section === "today" ? "planner-today" : "planner-full-calendar")}
       data-capability="planner.overview"
       onTouchStart={(e) => {
         const target = e.target as HTMLElement;
-        if (target.closest("button,input,select,textarea,a")) return;
+        if (target.closest("button,input,select,textarea,a,.calendar-time-view,.calendar-month-grid")) return;
         swipe.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
       }}
       onTouchEnd={(e) => {
@@ -451,7 +394,7 @@ export function PlannerPage(props: Props) {
           </button>
         )}
       </PageHeading>
-      <div className="planner-topline">
+      {section === "today" && <div className="planner-topline">
         <div className="tabs" aria-label="Tagesübersicht">
           <button
             type="button"
@@ -463,14 +406,13 @@ export function PlannerPage(props: Props) {
           </button>
           <button
             type="button"
-            aria-pressed={section === "calendar"}
-            className={section === "calendar" ? "selected" : ""}
+            aria-pressed={false}
             onClick={() => onSection("calendar")}
           >
             Kalender
           </button>
         </div>
-      </div>
+      </div>}
       {section === "today" ? (
         <>
           <div className="planner-dateline">
@@ -800,33 +742,8 @@ export function PlannerPage(props: Props) {
               bleiben erhalten und sind in der Tagesansicht erreichbar.
             </p>
           )}
-          {mode === "month" ? (
-            <div className="planner-month">
-              {monthWeeks(date, workweek).map(
-                (week: {
-                  start: string;
-                  year: number;
-                  week: number;
-                  days: string[];
-                }) => (
-                  <section className="planner-month-week" key={week.start}>
-                    <h3>KW {week.week}</h3>
-                    <div>{week.days.map((key) => dayView(key, true))}</div>
-                  </section>
-                ),
-              )}
-            </div>
-          ) : (
-            <div
-              className={
-                "planner-calendar-days " +
-                (mode === "week" ? "planner-week " : "") +
-                (workweek ? "planner-five" : "")
-              }
-            >
-              {days.map((key) => dayView(key))}
-            </div>
-          )}
+          <PlannerCalendar date={date} today={today} mode={mode} workweek={workweek} timezone={calendarTimezone}
+            events={visibleEvents} onDate={setDate} onOpen={setDetail} onCreate={create} />
         </>
       )}
       {detail && (
@@ -1134,7 +1051,7 @@ export function PlannerPage(props: Props) {
             <SettingRow
               icon={<Calendar size={20} strokeWidth={undefined} />}
               title="Kalender"
-              description="Ein Termin verknüpft Zeitpunkt, Kontakt, Projekt und Anlass. Tag, Woche und Monatsliste zeigen dieselben Termine. Microsoft und weitere Kalender werden über Verbindungen eingerichtet."
+              description="Ein Termin verknüpft Zeitpunkt, Kontakt, Projekt und Anlass. Tag, Woche und Monat zeigen dieselben Termine. Microsoft und weitere Kalender werden über Verbindungen eingerichtet."
             />
             <SettingRow
               icon={<User size={20} strokeWidth={undefined} />}

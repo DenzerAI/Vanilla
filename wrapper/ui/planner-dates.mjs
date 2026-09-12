@@ -64,3 +64,36 @@ export function sortEvents(events) {
       a.title.localeCompare(b.title),
   );
 }
+
+// Full weeks keep month cells aligned, including adjacent months.
+export function monthGrid(key, workweek = false) {
+  const first = key.slice(0, 7) + '-01';
+  const last = addDays(shiftMonth(first, 1), -1);
+  const rows = [];
+  for (let start = monday(first); start <= last; start = addDays(start, 7)) {
+    rows.push(Array.from({length: workweek ? 5 : 7}, (_, index) => addDays(start, index)));
+  }
+  return rows;
+}
+
+export function timedLayout(events) {
+  const minutes = time => { const [h, m] = time.split(':').map(Number); return h * 60 + m; };
+  const items = events.filter(event => !event.allDay).map(event => {
+    const start = minutes(event.start);
+    const end = Math.min(1440, Math.max(start + 15, minutes(event.end) || 1440));
+    return {event, start, end, column: 0, columns: 1};
+  }).sort((a,b) => a.start - b.start || b.end - a.end);
+  let group = [], ends = [], groupEnd = -1;
+  const finish = () => { for (const item of group) item.columns = ends.length; };
+  for (const item of items) {
+    if (item.start >= groupEnd) { finish(); group = []; ends = []; groupEnd = -1; }
+    let column = ends.findIndex(end => end <= item.start);
+    if (column < 0) column = ends.length;
+    ends[column] = item.end;
+    item.column = column;
+    group.push(item);
+    groupEnd = Math.max(groupEnd, item.end);
+  }
+  finish();
+  return items;
+}

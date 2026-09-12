@@ -111,3 +111,29 @@ Geräte verwenden. Der QR wird nicht als Verbindungserfolg gewertet. Falls eine
 bestehende Agentenbridge bisher an einen anderen Agentenkern weiterleitet, muss
 deren Weiterleitung vor Kopplung für den reinen Schreibbetrieb deaktiviert sein.
 Einrichtung verändert keine private Nummer und keine fremde Sitzung.
+
+## Technische WhatsApp-Ereignisse
+
+`e2e_notification`, `protocol`, `message_history_notice`, `status_notification`
+und `debug` bleiben als interne Anbieterbelege gespeichert, erscheinen aber
+nicht als Nachrichtenblasen oder in der Nachrichtenpagination. Die Klassifikation
+verwendet ausschließlich den Anbietertyp, niemals Nachrichtentext oder `@lid`.
+Echte Nachrichten von LID-Kontakten bleiben erhalten. Andere, unbekannte Typen
+werden nicht pauschal unterdrückt.
+
+Diese Ereignisse erhöhen weder Nachrichtenrevision noch Ungelesenstand und öffnen
+erledigte Chats nicht erneut. WhatsApp-Sortierdaten stammen aus dem jüngsten
+sichtbaren lokal gespeicherten Beitrag, nicht aus `chats.last_message_ts` der
+Bridge. Ohne sichtbaren Beitrag gilt der neutrale Zeitwert 0. Beim nächsten
+Abgleich werden bestehende technische Einträge markiert und ihre früher gezählten
+Revisionen samt betroffenem Gelesenanteil korrigiert. Entwürfe und Originaldaten
+bleiben erhalten; bereits früher zurückgesetzte Erledigtmarkierungen können ohne
+Historie nicht rekonstruiert werden. Kein Datenbank-Schemabruch, kein Quellenlöschen.
+
+Sprachnachrichten zeigen vorhandene Transkripte standardmäßig aufgeklappt.
+Die Inbox importiert sie aus dem expliziten Bridge-Verlauf; deren Erzeugung
+ist eine eigene Bridge-Konfiguration. Für lokalen Betrieb muss die Bridge
+ausschließlich lokale Spracherkennung aufrufen, ohne Cloud-Fallback. Ein
+Transkript allein belegt nicht, dass historische Erkennung lokal stattfand.
+Originalaudio bleibt bei Erkennungsfehlern erhalten; fehlende Texte werden
+nicht als laufende oder erfolgreiche Erkennung ausgegeben.

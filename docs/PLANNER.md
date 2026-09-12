@@ -161,3 +161,16 @@ Tagesbericht. Bei terminfreien Tagen erscheint nur der Leerhinweis gedämpft;
 Wochentag und Tageszahl behalten ihre Farben. Unvollständige
 oder veraltete Quellen tragen den Hinweis „Termine möglicherweise nicht aktuell“
 und werden nicht als terminfreier Tag dargestellt.
+
+
+## Kalenderansichten, Version 3
+
+Der vorhandene lokale und externe Terminbestand speist Monatsraster, Wochen- und
+Tagesstundenraster über PlannerCalendar. Datumsnavigation, Ansichtspräferenzen,
+Zeitzone und bestehende Schreibdialoge bleiben erhalten. Terminpositionierung
+verwendet minutengenaue Ortszeiten und separate Spalten für Überschneidungen.
+Freie Stunden öffnen einen Entwurf; gespeichert wird ausschließlich über den
+bestehenden bestätigten Dialog. Es entstehen weder neue Tabellen noch neue
+Kalender-Schreibrechte. Rückkehr zeigt denselben Bestand in der älteren Listenansicht.
+Mobil: Monatsraster plus Tagesagenda, Wochenköpfe plus ausgewähltes Tagesraster.
+Gestaltung und Bedienvertrag: wrapper/surfaces/today.md und wrapper/DESIGN.md.

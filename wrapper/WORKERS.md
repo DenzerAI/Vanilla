@@ -479,7 +479,10 @@ Wochen- und Kurzfenster beider Anbieter. Details behalten alle Resetzeiten und
 Nebenfenster. Keine Migration von Anbieterwerten oder Zugangsdaten.
 
 Wenn der native SDK-Abruf mit dem gebundenen OAuth-Diensttoken keine Abo-Werte
-liefert, meldet er profile_required. Die UI erklärt die nötige native
+liefert, liest der Wrapper anschließend das nativ angemeldete Installationsprofil
+ohne Diensttoken. Beide Prozesse werden ohne Prompt geschlossen. Die Modellanmeldung
+bleibt unverändert. Fehlen auch dort Abo-Werte, meldet er profile_required.
+Die UI erklärt die nötige native
 Abo-Anmeldung für diese Installation; der Modellzugang bleibt unverändert.
 Der Diensttoken allein ist keine belegte Berechtigung zum Lesen des Abo-Profils.
 Keine automatischen Logins, Kopien fremder Profile oder erfundenen Prozentwerte.

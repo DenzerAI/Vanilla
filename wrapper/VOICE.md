@@ -81,3 +81,8 @@ Archivieren und Sperren beenden die Quelle. Fehler stehen an der globalen Steuer
 Gemeinsame IconButton-Bausteine und vorhandene Tokens, keine Animation oder weitere
 Einstellungsseite. Unser Design enthält eine isolierte Play/Pause/Stop-Vorschau.
 Nur flüchtiger Browserzustand, keine Migration gespeicherter Chats oder Stimmen.
+
+
+Diktate aus dem Composer bleiben beim Navigieren zentral aktiv; Aufnahmekapsel,
+Entwurfszuordnung und Grenzen führt [DICTATION.md](DICTATION.md#aufnahme-beim-navigieren).
+Das oben beschriebene Beenden beim Chatwechsel gilt nur für den gesonderten Sprachchat.

@@ -530,7 +530,7 @@ Originalstufen und Verfügbarkeit stammen aus dem jeweiligen nativen Anschluss, 
 
 Heute bleibt eine über die Suche erreichbare Detailansicht und bündelt Morgenbriefing, Tagesplan und
 „Braucht dich“. Kalender ist über denselben Seitenkopfbereich und die Suche
-zugänglich: Tag, Woche und Monatsliste mit ISO-Kalenderwochen, optional Mo–Fr.
+zugänglich: Tag und Woche mit Stundenraster, Monat als Kalenderraster, optional Mo–Fr.
 Die Pipeline-Designstudie entfällt; der gemeinsame CRM-Kern bleibt bestehen.
 AgendaRow ist der flache gemeinsame Terminbaustein und steht unter Unser Design.
 PageHeading, Modal, SettingRow, Tabs, Schalter und zentrale Tokens werden
@@ -1121,7 +1121,7 @@ Betriebssystem-Hotkeys. Dialoge, Menüs und Sprachchat verhindern einen neuen St
 Umschalten erfolgt beim Loslassen einer allein gedrückten Taste; Kombinationen
 und Wiederholungen lösen es nicht aus. PTT startet beim Drücken und beendet beim
 Loslassen; zusätzliche Tastenkombinationen unterbrechen die PTT-Aufnahme.
-Fenster-/Panewechsel beendet eine per Kürzel gestartete Aufnahme. Ein Loslassen
+Fenster-/Panewechsel erhält Umschalt-Aufnahmen; nur Gedrückt-halten endet bei Fokusverlust oder Loslassen. Ein Loslassen
 während der Mikrofonfreigabe bricht den ausstehenden PTT-Start ab. Erneuter Start
 braucht eine neue Geste. Beenden sichert und transkribiert ausschließlich in den
 Entwurf, ohne Nachricht zu senden. Vorhandene Audio-Wiederherstellung bleibt.
@@ -1148,8 +1148,11 @@ Verhalten und Migrationsgrenzen stehen in surfaces/firma.md.
 ## Kontingente und Verbrauch · Version 1.1.0
 
 Kontingente sind eine eigene Dienstkarte im AttentionFan. AllowanceBars zeigt
-schlichte, volle horizontale Balken untereinander: Anbieter/Modell, verbrauchter
-Prozentwert und Reset-Zeit. Die Karte zeigt höchstens zwei Zeilen, der Klick alle
+schlichte horizontale Balken untereinander. Die Karte zeigt den verbleibenden
+Prozentwert mit „übrig“: Codex · Woche, Claude · Woche und danach separat gemeldete
+Claude-Modellwochenkontingente, höchstens vier Zeilen. Fehlende Wochenwerte bleiben
+als „Nicht verfügbar“ sichtbar. Spark und kurze Fenster bleiben im Detail. Dort
+stehen verbrauchter Prozentwert und Reset-Zeit. Der Klick zeigt alle
 gemeldeten Kontingente, Credits und verfügbare Reset-Gutschriften ohne Einlösung.
 Der Klick öffnet Einstellungen → Nutzung. Dort gruppiert UsageSettings dieselben
 AllowanceBars pro Anbieter in settings-group mit SettingRow und allen Details.
@@ -1180,8 +1183,8 @@ Sichern/Erkennen/Senden werden weitere Start-/Sendeimpulse ignoriert.
 Escape bricht Aufnahme oder ausstehende Erkennung ohne Textübernahme und Senden
 ab. Bereits übergebene Nachrichten werden damit nicht zurückgerufen. Audio bleibt
 unter Stimme wiederherstellbar, Entwürfe und Anhänge bleiben erhalten.
-Pane-/Fensterwechsel beendet eine per Pane-Kürzel gestartete Aufnahme ohne
-Senden. Ein Chatwechsel verwirft ausstehende Textübernahme; auch verspätete
+Pane-/Fensterwechsel erhält die Aufnahme. Ein Chatwechsel während der Erkennung
+übernimmt ausschließlich in den ursprünglichen Entwurf; verspätete
 Statusantworten dürfen niemals in einen anderen Chat senden.
 Verborgene oder maximierte Zielpanels werden über die aktive Panelauswahl sichtbar.
 Nicht geöffnete Panels melden einen Hinweis; gesperrte Chats starten kein Mikrofon.
@@ -1233,10 +1236,10 @@ Bausteine und dokumentiert fachlich notwendige Abweichungen im Bereichsvertrag.
 ### Workspace-Einrichtung und Kategorien
 
 Die Workspace-Überschrift ist als beschrifteter Button auch per Touch und
-Tastatur erklärbar. Plus und bestehendes Kontextmenü führen zur nativen
-Chat-Einrichtung. Der Beschreibungseditor verwendet Modal, SettingRow,
-Settings-Skeleton und vorhandene Formfelder; auf schmalen Fenstern umbrechen
-Felder und Aktionen. Speichern zeigt Fehler am erhaltenen Entwurf.
+Tastatur erklärbar. Plus öffnet den kompakten Workspace-Dialog; das Kontextmenü
+bietet Bearbeiten und die optionale Anpassung im Chat. WorkspaceDefinitionEditor
+verwendet Modal, Settings-Skeleton, Field-Muster und native Radio-Auswahl.
+Der Inhalt scrollt unabhängig von Kopf und Aktionen. Fehler bleiben am Entwurf.
 Aufträge und Ergebnisse verwenden den bestehenden FilterPicker für Workspaces.
 Gemeinsame Abstände und Schriftrollen gelten.
 Die identischen Komponenten stehen unter Unser Design; den fachlichen Ablauf,
@@ -1580,3 +1583,67 @@ Messengerblasen verwenden inhaltsabhängige Breite bis 82 % und die bestehende
 surface-Fläche. Zeit, DeliveryChecks und ChatMenu-Mehraktion sitzen kompakt am
 unteren Rand; Gruppensender bleiben lesbar. Keine eigene Menü- oder Iconfamilie.
 QR-Kopplung liegt ausschließlich im bestehenden Verbindungsmodal.
+
+Inbox-Sprachnachrichten verwenden `InboxVoiceMessage`: kompakter Play/Pause-
+IconButton, echte suchbare Fortschrittsleiste und Zeitangaben, kein Autoplay.
+`InboxTranscript` zeigt den Text standardmäßig offen; die komplette Kopfzeile
+mit rechtsstehendem Chevron klappt ihn per Maus, Touch oder Tastatur ein.
+Keine Datei-Symbole oder nativen Disclosure-Dreiecke. Fehlende Transkripte
+werden als noch nicht verfügbar bezeichnet, nicht als fertige Erkennung.
+
+
+## Kalender: Monat und Stundenraster
+
+Der Kalender verwendet PlannerCalendar aus planner-calendar.tsx, gemeinsam in
+Produktion und Designreferenz. Monat als ruhiges Raster mit feinen Trennlinien,
+Heute als Akzentkreis, Auswahl als dezente Fläche; vollständige Tagesagenda darunter.
+Tag/Woche mit Ganztagszeile, scrollbarerer Stundenfläche und zeitgerecht platzierten
+Terminen. Überschneidungen stehen nebeneinander; Jetzt-Linie im bestehenden Akzent.
+Die zentrale Rolle calendar-hour-height bestimmt die Stundenhöhe. Keine neue Palette
+oder Animation. Mobil Monatsraster mit Terminanzahlen und Tagesagenda; Wochenköpfe
+wählen das darunter sichtbare Tagesraster. Führendes Verhalten: surfaces/today.md.
+
+
+### Beständige Diktataufnahme
+
+Diktat und Erkennung gehören der zentralen RecordingProvider-Sitzung. Navigation
+und Panewechsel erhalten sie. Außerhalb des ausgewählten Ursprungscomposers
+zeigt die Aufnahmekapsel oben rechts Chat-Rücksprung, Aufnahmepunkt, Status,
+Dauer, Pause/Fortsetzen und Stop. SystemNotice weicht um die gemessene Höhe aus.
+Rückkehr zeigt dieselbe Aufnahme wieder im Composer. Stop übernimmt ausschließlich
+in den ursprünglichen Entwurf, ohne Versand oder Ansichtswechsel. Ein expliziter
+Sendebefehl fällt bei zwischenzeitlichem Chatwechsel auf diesen Entwurf zurück.
+IconButton, VoiceStatus und bestehende Tokens gelten auch mobil; RecordingPreview
+zeigt das Muster unter Unser Design. Rückfragen bleiben an die konkrete Frage
+gebunden. Keine Datenmigration. Wiederherstellung und Hintergrundgrenzen führt
+[DICTATION.md](DICTATION.md#aufnahme-beim-navigieren).
+
+
+### Kompakte Workspace-Dialoge
+
+WorkspaceDefinitionEditor verwendet beim Erstellen und Bearbeiten denselben
+project-dialog auf randloser sheet-glass-Fläche mit vorhandenem Blur und Fallbacks.
+Name und klickbares Symbol bilden den Kopf des Formulars. Das Symbol öffnet native
+Radio-Gruppen mit Katalogicons und Farbkreisen; Touchziele und Fokus bleiben sichtbar.
+Weitere Angaben sind zugeklappt. Nur der Formularinhalt scrollt, Titel und Aktionen
+bleiben im Fenster. Statusauswahl und Markdowneditor entfallen; besondere
+Arbeitsweisen sind im Chat anpassbar. Gemeinsame Tokens, Modal, Skeleton und
+Field-Muster; keine neue Farbskala oder Animation. Die Bausteinreferenz verwendet
+denselben Dialog. Verhalten und Rückkehr: surfaces/workspaces.md.
+
+
+### Ablage neben dem Gespräch
+
+Die bisherige rechte Workspace-Leiste heißt Ablage; Workspace bleibt die
+Projekt-/Chatgruppe. Kopf, native Auswahl Im Chat/Dateien, flache chronologische
+Zeilen und lesende Dateivorschau folgen wrapper/surfaces/chat.md, Abschnitt
+Veränderbare Breiten und Ablage. ChatShelf/ShelfFilePreview verwenden gemeinsame
+IconButtons, FileContent, Skeleton und zentrale Material-/Schriftrollen.
+Die Liste zeigt kleine Formatsymbole, Namen, Herkunft und belegte Zeiten;
+keine Kartenwand oder neue Palette. Glas bleibt auf Auswahl/Hover zurückhaltend.
+Unser Design zeigt dieselbe Produktionsliste mit Beispieldaten. Öffnen beginnt
+mit 360 px, Ziehen bleibt ab 280 px möglich; mobile Schließen-Aktion bleibt sichtbar.
+
+Bei sichtbarem Update-/Neustarthinweis reservieren Chat-Kopfaktionen und
+Ablage-Kopf darunter die vorhandene Touchhöhe plus space-16, damit der schwebende
+Hinweis Öffnen, Vergrößern und Schließen nicht überdeckt.

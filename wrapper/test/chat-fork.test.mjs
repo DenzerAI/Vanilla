@@ -46,11 +46,11 @@ test('pending automatic title generation cannot overwrite a numbered title', asy
   const original={...source(),title:'Neuer Chat'}, chats=[original];
   let finish;
   const pending=assignChatTitle({chat:original,text:'Website',save:async()=>{},emit:()=>{},generate:()=>new Promise(resolve=>{finish=resolve;})});
-  await Promise.resolve();
+  await new Promise(resolve => setImmediate(resolve));
   registerFork(chats,original,'second');
   finish('Anderer Titel');
   await pending;
-  assert.equal(original.title,'I · Neuer Chat');
+  assert.equal(original.title,'I · Website');
 });
 
 test('Roman notation includes subtractive forms', () => {

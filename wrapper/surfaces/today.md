@@ -36,17 +36,30 @@ bisheriger Freigabe-/Lesestatuslogik. Öffnen von Heute markiert nichts als gele
 ## Kalender
 
 Tag, Woche, Monat als gemeinsame Tabs. Zeitraum rückwärts/vorwärts, Heute und
-natives Datumsfeld. Woche beginnt Montag, KW nach ISO einschließlich Jahreswechsel.
-Monat ist eine fortlaufende Liste mit KW-Gruppen und Tagen untereinander.
-Nur Mo–Fr blendet Wochenenden in Woche/Monat aus, löscht aber keine Termine.
-Ein explizit gewähltes Wochenende bleibt in Tag erreichbar. Ganztägige Termine
-stehen zuerst; übrige Termine chronologisch. Monatswechsel klemmen den gewählten
-Tag auf das Monatsende. Datumsrechnung erfolgt lokal ohne UTC-Tagesverschiebung.
+natives Datumsfeld bleiben erreichbar. Woche beginnt Montag, KW nach ISO.
+Monatswechsel klemmen den gewählten Tag auf das Monatsende. Lokale Datumsrechnung
+verhindert UTC-Tagesverschiebung; Uhrzeiten folgen der Installationszeitzone.
 
-Desktopwoche hat sieben/fünf Spalten; bei geringerer Breite werden die Tage
-untereinander dargestellt. Monatsliste hat eine KW-Spalte und Tages-/Terminzeilen,
-auf schmaler Breite ebenfalls vollständig untereinander. Kein horizontales
-Pflichtscrollen. Lange Namen/Titel wachsen, native Steuerungen bleiben erreichbar.
+PlannerCalendar ist der gemeinsame Kalenderbaustein, auch in der Designreferenz.
+Der Monat zeigt ein echtes Raster mit vollständigen Wochen einschließlich
+angrenzender Monatstage, maximal drei Terminzeilen pro Feld und einen Mehr-Link.
+Ein Klick auf die Tageszahl wählt den Tag; darunter stehen sämtliche Termine des
+gewählten Tages und Termin hinzufügen. Heute trägt einen Akzentkreis, die Auswahl
+eine dezente Fläche. Auf dem Handy stehen Terminanzahlen statt gequetschter Titel
+in den Monatsfeldern; die vollständigen Termine bleiben darunter bedienbar.
+
+Tag und Woche zeigen ein scrollbareres 24-Stundenraster, beim Öffnen ab 7 Uhr.
+Ganztägige Einträge stehen darüber. Termine werden nach Zeit und Dauer platziert;
+zeitlich überlappende Termine bekommen getrennte Spalten. Die Jetzt-Linie folgt
+minütlich der Installationszeitzone. Ein Klick auf eine freie Stunde öffnet den
+vorhandenen Termindialog mit Datum und Stunde. Um 23 Uhr endet der Entwurf 23:59.
+Öffnen allein schreibt keine Daten. Terminblöcke öffnen den bestehenden Detaildialog.
+Auf dem Handy bleibt die Woche als sieben/fünf auswählbare Tagesköpfe sichtbar;
+darunter erscheint das Stundenraster des gewählten Tages. Kein horizontaler
+Pflichtscroll. Nur Mo–Fr blendet Wochenenden in Woche und Monat aus; der Tag bleibt
+explizit erreichbar und Termine bleiben gespeichert. Kalenderflächen lösen keinen
+Heute/Kalender-Wischwechsel beim Scrollen aus. Die Kalenderseite führt direkt zur
+Ansichtsteuerung, ohne den zusätzlichen Heute/Kalender-Tabstreifen.
 
 ## Beispiele, Einstellungen und echte Daten
 

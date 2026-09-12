@@ -12,8 +12,13 @@ export function publicAddress(address) {
       (a === 198 && [18, 19, 51].includes(b)) || (a === 203 && b === 0));
   }
   // Conservative IPv6 global-unicast policy; mapped IPv4 and transition ranges are denied.
-  return isIP(address) === 6 && /^[23][0-9a-f]{3}:/i.test(address) &&
-    !/^200[12]:/i.test(address);
+  if (isIP(address) !== 6 || !/^[23][0-9a-f]{3}:/i.test(address)) return false;
+  const [first, second] = address.split(':').slice(0, 2).map(part => parseInt(part || '0', 16));
+  // IANA special-purpose blocks, not the entire public 2001::/16 allocation.
+  // Keep protocol assignments conservatively denied, including Teredo/ORCHID.
+  return first !== 0x2002 &&
+    !(first === 0x2001 && (second < 0x200 || second === 0xdb8)) &&
+    !(first === 0x3fff && second < 0x1000);
 }
 
 export async function safeRequest(value, {

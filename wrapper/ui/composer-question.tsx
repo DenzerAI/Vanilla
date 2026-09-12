@@ -10,6 +10,7 @@ export function useComposerQuestion(requests:any[], chatId:string, onReply:(id:a
   const [drafts, setDrafts] = useState<Record<string,Draft>>({});
   const [pending, setPending] = useState<string | null>(null);
   const lock = useRef(false);
+  const liveRequests=useRef(requests);liveRequests.current=requests;
   const request = requests.find(r => r.params?.threadId === chatId && questionRequest(r));
   const key = request ? `${request.workerId || ''}:${request.id}` : '';
   const model = request && questionRequest(request);
@@ -22,6 +23,14 @@ export function useComposerQuestion(requests:any[], chatId:string, onReply:(id:a
   }, [requests]);
   function update(change:Partial<Draft>) { setDrafts(old => ({...old,[key]:{...(old[key] || empty), ...change}})); }
   function setText(text:string) { update({answers:{...draft.answers,[question.id]:{text,selected:[]}},error:''}); }
+  function appendText(text:string) {
+    if(!question || !liveRequests.current.some(r=>`${r.workerId || ''}:${r.id}`===key))return false;
+    setDrafts(old=>{
+      const saved=old[key] || empty,answer=saved.answers[question.id];
+      return {...old,[key]:{...saved,answers:{...saved.answers,[question.id]:{text:answer?.text ? answer.text+'\n'+text : text,selected:[]}},error:''}};
+    });
+    return true;
+  }
   function select(value:unknown) {
     const selected = question.multi ? (answer.selected || []).includes(value)
       ? answer.selected!.filter(v => v !== value) : [...(answer.selected || []),value] : [value];
@@ -46,7 +55,7 @@ export function useComposerQuestion(requests:any[], chatId:string, onReply:(id:a
   }
   let valid = false;
   if (question) { try { questionValue(question,answer); valid = true; } catch { /* The field stays editable. */ } }
-  return {request,model,question,answer,index:draft.index,error:draft.error,text:answer.text || '',setText,select,submit,
+  return {request,model,question,answer,index:draft.index,error:draft.error,text:answer.text || '',setText,appendText,select,submit,
     pending:pending === key, canSend:valid && pending === null,
     previous:()=>update({index:Math.max(0,draft.index-1),error:''}),
     next:()=>update({index:Math.min(model.questions.length-1,draft.index+1),error:''})};

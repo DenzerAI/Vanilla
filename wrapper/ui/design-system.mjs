@@ -149,7 +149,7 @@ export const amountSliderMotion = { magnet: .08, minDensity: .2, minSpread: .3, 
 // Visual intensity only: native capabilities still determine the available stops.
 export const reasoningAnimationLevels = { low: .03, medium: .35, high: .6, xhigh: .82, max: 1, ultra: 1 };
 export const controls = { "activity-row": "28px", "composer-border": "1px", "slider-thumb-width": `${amountSliderGeometry.thumb}px`, "turn-loader-slot": "19.2px", "composer-fallback":"112px", "nav-text-inset":"38px", "nav-group-inset":"46px", height: "32px", target: "40px", touch: "44px", "heading-height": "52px", "app-heading-height": "84px", "row-height": "48px", "switch-width": "36px", "switch-height": "20px", "switch-thumb": "16px", "switch-travel": "16px" };
-export const typeMetrics = { "calendar-leading":"1", "font-root-size": "16px", "tracking-title": "-0.65px", "tracking-heading": "-0.35px", "tracking-welcome": "-0.7px" };
+export const typeMetrics = { "calendar-hour-height":"64px", "calendar-leading":"1", "font-root-size": "16px", "tracking-title": "-0.65px", "tracking-heading": "-0.35px", "tracking-welcome": "-0.7px" };
 export const weights = { regular: 400, medium: 500, semibold: 600, bold: 700 };
 export const leading = { tight: 1.2, compact: 1.4, normal: 1.5, reading: 1.6 };
 export const themes = {

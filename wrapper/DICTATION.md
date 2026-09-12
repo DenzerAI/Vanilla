@@ -52,7 +52,7 @@ Betriebssystem-Hotkeys. Dialoge, Menüs und Sprachchat verhindern einen neuen St
 Umschalten erfolgt beim Loslassen einer allein gedrückten Taste; Kombinationen
 und Wiederholungen lösen es nicht aus. PTT startet beim Drücken und beendet beim
 Loslassen; zusätzliche Tastenkombinationen unterbrechen die PTT-Aufnahme.
-Fenster-/Panewechsel beendet eine per Kürzel gestartete Aufnahme. Ein Loslassen
+Fenster-/Panewechsel erhält Umschalt-Aufnahmen; nur Gedrückt-halten endet bei Fokusverlust oder Loslassen. Ein Loslassen
 während der Mikrofonfreigabe bricht den ausstehenden PTT-Start ab. Erneuter Start
 braucht eine neue Geste. Beenden sichert und transkribiert ausschließlich in den
 Entwurf, ohne Nachricht zu senden. Vorhandene Audio-Wiederherstellung bleibt.
@@ -85,8 +85,8 @@ Sichern/Erkennen/Senden werden weitere Start-/Sendeimpulse ignoriert.
 Escape bricht Aufnahme oder ausstehende Erkennung ohne Textübernahme und Senden
 ab. Bereits übergebene Nachrichten werden damit nicht zurückgerufen. Audio bleibt
 unter Stimme wiederherstellbar, Entwürfe und Anhänge bleiben erhalten.
-Pane-/Fensterwechsel beendet eine per Pane-Kürzel gestartete Aufnahme ohne
-Senden. Ein Chatwechsel verwirft ausstehende Textübernahme; auch verspätete
+Pane-/Fensterwechsel erhält die Aufnahme. Ein Chatwechsel während der Erkennung
+übernimmt ausschließlich in den ursprünglichen Entwurf; verspätete
 Statusantworten dürfen niemals in einen anderen Chat senden.
 Verborgene oder maximierte Zielpanels werden über die aktive Panelauswahl sichtbar.
 Nicht geöffnete Panels melden einen Hinweis; gesperrte Chats starten kein Mikrofon.
@@ -104,3 +104,47 @@ Keine Audio-/Serverdatenmigration. Rückkehr zu Version 1 macht die Belegungen
 wieder zu reinen Fokusaktionen. Separate rechte Command-/Strg-Diktattaste und
 PTT behalten die Entwurfsübernahme. Betriebssystem-/Browserbelegungen können
 Vorrang haben; keine globalen Betriebssystem-Hotkeys.
+
+
+## Aufnahme beim Navigieren
+
+RecordingProvider hält genau ein Diktat pro Browser-Tab außerhalb der Chatpanels.
+DictationComposer meldet nur den sichtbaren Anker und die Startgeste. Aufnahme,
+Mikrofonfreigabe, Sichern und Erkennung behalten den beim Start gebundenen
+Workspace, Chat, Pane und gegebenenfalls die konkrete Rückfrage. Neue Aufnahmen
+sind bis zum Abschluss gesperrt. Vorhandene Entwürfe und Anhänge bleiben erhalten.
+
+Navigation zu Inbox, Einstellungen, anderen Chats oder Panels beendet das Diktat
+nicht. Außerhalb des ausgewählten Ursprungscomposers erscheint oben rechts die
+RecordingHost als kompakte Aufnahmekapsel: ursprünglicher Chatname als
+Rücksprung, statischer Aufnahmepunkt, Status, Dauer, Pause/Fortsetzen und Stop.
+Auch eine geschlossene Pane lässt sich über den Rücksprung wieder öffnen.
+Rückkehr verschiebt ausschließlich die Bedienelemente zurück in den Composer;
+der Aufnahmeprozess und seine bereits gesicherten Abschnitte bleiben bestehen.
+
+Stop in der Kapsel sichert und transkribiert ohne Versand oder erzwungenen
+Ansichtswechsel. Das Ergebnis wird an den aktuellen Text des ursprünglichen
+Entwurfs angehängt, auch wenn inzwischen ein anderer Chat offen ist. Eine noch
+offene ursprüngliche Rückfrage erhält den Text in genau ihrer Antwort; eine
+inzwischen erledigte Rückfrage fällt auf den Chatentwurf zurück. Der explizite
+Sendepfeil und das Pane-Kürzel senden nur bei weiterhin ausgewähltem Ursprung;
+ein Wechsel während der Erkennung übernimmt stattdessen in dessen Entwurf.
+
+Die Kapsel nutzt IconButton, VoiceStatus, VoiceWave im Composer sowie bestehende
+Flächen-, Abstands-, Farb- und Rundungsrollen. Auf Desktop und Mobil bleibt sie
+innerhalb sicherer Bildschirmränder. SystemNotice weicht um die gemessene
+Kapselhöhe aus. Keine Daueranimation; Pause bleibt sichtbar. Fehler, leere
+Erkennung und Sicherungsprobleme bleiben erreichbar; Verwerfen erhält Audio.
+Unser Design zeigt RecordingPreview mit Pause und Stop ohne Mikrofonzugriff.
+
+Fensterfokusverlust allein beendet kein Umschalt-Diktat. Gedrückt-halten behält
+seine ausdrückliche Loslassen-/Fokusverlust-Semantik. Bei verborgenem Browser-Tab
+oder ausgesetztem AudioContext wird pausiert; Fortsetzen benötigt eine Geste.
+Neuladen/Schließen führt weiterhin zur Warnung während der Aufnahme, beendet
+aber den Browserprozess. Gesicherte Audioabschnitte bleiben unter Stimme
+wiederherstellbar. Keine Garantie für Aufnahme bei gesperrtem Mobilgerät.
+Nur flüchtige Sitzungszuordnung, keine Migration vorhandener Audio-/Serverdaten.
+Rückkehr zu älterem UI stellt dessen bisheriges Abbruchverhalten wieder her.
+
+Sperren des ursprünglichen privaten Chats beendet das Diktat ohne Textübernahme;
+der globale Titel wird sofort verborgen. Bereits gesicherte Audiodaten bleiben erhalten.

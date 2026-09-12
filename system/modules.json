@@ -108,7 +108,8 @@
         "wrapper/calendar-chat.mjs",
         "wrapper/ui/calendar-day.mjs",
         "wrapper/ui/calendar-card.tsx",
-        "wrapper/ui/calendar-card.css"
+        "wrapper/ui/calendar-card.css",
+        "wrapper/ui/planner-calendar.tsx"
       ],
       "entrypoints": [
         "GET /api/calendar/events",
@@ -130,15 +131,16 @@
       "verification": [
         "core/tests/test_calendar.py",
         "wrapper/test/planner-data.test.mjs",
-        "wrapper/test/calendar-day.test.mjs"
+        "wrapper/test/calendar-day.test.mjs",
+        "wrapper/test/planner-calendar.test.mjs"
       ],
       "status": {
         "endpoint": "GET /api/calendar/events",
         "meaning": "Gespeicherte Termine, letzter erfolgreicher Abgleich, Fehler und abgedeckter Zeitraum je Anschluss. Keine Feeds bedeutet noch keinen erfolgreichen Kalenderabgleich."
       },
       "limits": "Eigene Einzeltermine anlegen, ändern und löschen. Externe Quellen getrennt zusammen anzeigen; Microsoft liest vollständig abgeglichene Fenster, keine externen Schreibaktionen. Weitere Anbieter benötigen eigene Adapter. Lücken sind Kalenderlücken innerhalb des ausdrücklich genannten Fensters 08–18 Uhr, keine Verfügbarkeitsgarantie.",
-      "version": 2,
-      "migration": "Version 2 legt calendar_local additiv und idempotent an. Eigene Termine und Löschmarkierungen bleiben in der vorhandenen SQLite-Sicherung erhalten; externe calendar_windows unverändert. Rückkehr zu Version 1 lässt lokale Termine auf Disk bestehen, zeigt sie aber nicht. Neuinstallation, Wiederöffnung, Projekttrennung und Versionskonflikte sind geprüft.",
+      "version": 3,
+      "migration": "Version 2 legt calendar_local additiv und idempotent an. Eigene Termine und Löschmarkierungen bleiben in der vorhandenen SQLite-Sicherung erhalten; externe calendar_windows unverändert. Rückkehr zu Version 1 lässt lokale Termine auf Disk bestehen, zeigt sie aber nicht. Neuinstallation, Wiederöffnung, Projekttrennung und Versionskonflikte sind geprüft. Version 3 ersetzt die Kalenderlisten durch Monatsraster und Stundenraster. Bestehende Termine, APIs und Browserpräferenzen bleiben kompatibel; keine Datenmigration. Rückkehr zeigt dieselben Daten als Listen. UI-Vertrag wrapper/surfaces/today.md.",
       "keywords": [
         "Microsoft",
         "Outlook",
@@ -208,7 +210,8 @@
         "wrapper/ui/mail-connection.tsx",
         "core/mail_imap.py",
         "wrapper/ui/inbox-composer.tsx",
-        "wrapper/ui/inbox-recording.mjs"
+        "wrapper/ui/inbox-recording.mjs",
+        "wrapper/ui/inbox-voice-message.tsx"
       ],
       "entrypoints": [
         "GET /api/inbox/attachment",
@@ -367,15 +370,16 @@
         "wrapper/test/thread-view.test.mjs",
         "wrapper/test/event-backlog.test.mjs",
         "wrapper/test/event-batcher.test.mjs",
-        "wrapper/test/thread-update.test.mjs"
+        "wrapper/test/thread-update.test.mjs",
+        "wrapper/test/chat-title.test.mjs"
       ],
       "status": {
         "endpoint": "GET /api/workers",
         "meaning": "Eingerichtet, verbunden und authentifiziert getrennt auswerten."
       },
       "limits": "Eingerichtet, verbunden und authentifiziert getrennt auswerten.",
-      "version": 22,
-      "migration": "Bestehende Chat-IDs, Entwürfe und native Sitzungen erhalten. Forkfamilie und Statistikfelder sind additiv; Fork-Zähler bei Rückkehr nicht aus alten Kopien erraten. Nachrichtenkennungen und persistente Übergabebelege bleiben führend. Native Rückfragen vor Adapterwechsel beantworten oder stoppen; UI-Präferenzen sind browserlokal. workspaceOnboarding ist ein optionaler Verweis auf den einzigen Einrichtungschat je Workspace; Forks übernehmen ihn nicht. Einrichtung verwendet die bestehende Nachrichtenübergabe. Der separate Adapter liefert gebaute Assets direkt aus dist aus und meldet fehlende Dateien mit 404 statt HTML. Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Restore markiert offene Nachrichtenübergaben als unknown. Die gemeinsame Betriebspause blockiert neue Übergaben bis zur ausdrücklichen Fortsetzung; unbestätigte alte Nachrichten bleiben einzeln prüfpflichtig. Vertrag docs/OPERATIONS.md. Hintergrundabgleiche erhalten bereits gestreamte Inhalte; Zustellstatus kopiert nur betroffene Nutzerbeiträge. Keine Datenmigration oder neue Speicherung. Pane-Kürzel bedienen vorhandenes Diktat mit explizitem Direktsenden und Escape-Abbruch; keine Datenmigration. Ältere UI verwendet wieder reine Fokusaktionen. Diktatkürzel und Chatbeschriftungen folgen der geöffneten Ansichtsreihenfolge, unabhängig von internen Pane-IDs. Einzelfeld ist immer Chat 1. Keine Datenmigration; Rückkehr verwendet interne Nummern. Zugangsformat ENV: vorhandene verschlüsselte Zugänge vor neuen Schreibvorgängen offline mit core.vault_migrate übernehmen. .env bleibt privat und wird mit Daten kopiert. Rückweg benötigt vorherigen vollständigen Datenstand. Sicherungsschema 5 mit .env; Schema 2–4 werden bei Restore lokal konvertiert. Details docs/VAULT.md. Additive composerSelection/appliedComposerSelectionId im Chat. Engineauswahl wird ohne Sitzungsstart gespeichert und beim nächsten Senden nach Turnabschluss übernommen. Offene Nachrichten mit nextSelection.workerId vor Rückkehr auf ältere Versionen abarbeiten; diese führen das neue Feld nicht aus. Bestehende Sessions, Verlauf und globale Vorgaben bleiben erhalten. Mobile Chatdarstellung und gemeinsame Nachrichtenaktions-Vorschau verwenden bestehende Daten; keine Datenmigration. Produktstand 0.1.1. Rückkehr zeigt dieselben Inhalte ausführlich. Vertrag: wrapper/surfaces/chat.md. Navigation nennt die bestehende library-Ansicht Ergebnisse; direkte Verweise verbinden Auftragsdetails und zugehörige Dateien. Keine Chatdatenmigration. Mobile zeigt nur die aktive Chat-Pane ohne Aufteilungsauswahl; gespeicherte Desktop-Aufteilung und Entwürfe bleiben erhalten. Breitere Navigation und bündige, hintergrundlose Nachrichtenaktionen ändern keine Daten."
+      "version": 23,
+      "migration": "Bestehende Chat-IDs, Entwürfe und native Sitzungen erhalten. Forkfamilie und Statistikfelder sind additiv; Fork-Zähler bei Rückkehr nicht aus alten Kopien erraten. Nachrichtenkennungen und persistente Übergabebelege bleiben führend. Native Rückfragen vor Adapterwechsel beantworten oder stoppen; UI-Präferenzen sind browserlokal. workspaceOnboarding ist ein optionaler Verweis auf den einzigen Einrichtungschat je Workspace; Forks übernehmen ihn nicht. Einrichtung verwendet die bestehende Nachrichtenübergabe. Der separate Adapter liefert gebaute Assets direkt aus dist aus und meldet fehlende Dateien mit 404 statt HTML. Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Restore markiert offene Nachrichtenübergaben als unknown. Die gemeinsame Betriebspause blockiert neue Übergaben bis zur ausdrücklichen Fortsetzung; unbestätigte alte Nachrichten bleiben einzeln prüfpflichtig. Vertrag docs/OPERATIONS.md. Hintergrundabgleiche erhalten bereits gestreamte Inhalte; Zustellstatus kopiert nur betroffene Nutzerbeiträge. Keine Datenmigration oder neue Speicherung. Pane-Kürzel bedienen vorhandenes Diktat mit explizitem Direktsenden und Escape-Abbruch; keine Datenmigration. Ältere UI verwendet wieder reine Fokusaktionen. Diktatkürzel und Chatbeschriftungen folgen der geöffneten Ansichtsreihenfolge, unabhängig von internen Pane-IDs. Einzelfeld ist immer Chat 1. Keine Datenmigration; Rückkehr verwendet interne Nummern. Zugangsformat ENV: vorhandene verschlüsselte Zugänge vor neuen Schreibvorgängen offline mit core.vault_migrate übernehmen. .env bleibt privat und wird mit Daten kopiert. Rückweg benötigt vorherigen vollständigen Datenstand. Sicherungsschema 5 mit .env; Schema 2–4 werden bei Restore lokal konvertiert. Details docs/VAULT.md. Additive composerSelection/appliedComposerSelectionId im Chat. Engineauswahl wird ohne Sitzungsstart gespeichert und beim nächsten Senden nach Turnabschluss übernommen. Offene Nachrichten mit nextSelection.workerId vor Rückkehr auf ältere Versionen abarbeiten; diese führen das neue Feld nicht aus. Bestehende Sessions, Verlauf und globale Vorgaben bleiben erhalten. Mobile Chatdarstellung und gemeinsame Nachrichtenaktions-Vorschau verwenden bestehende Daten; keine Datenmigration. Produktstand 0.1.1. Rückkehr zeigt dieselben Inhalte ausführlich. Vertrag: wrapper/surfaces/chat.md. Navigation nennt die bestehende library-Ansicht Ergebnisse; direkte Verweise verbinden Auftragsdetails und zugehörige Dateien. Keine Chatdatenmigration. Mobile zeigt nur die aktive Chat-Pane ohne Aufteilungsauswahl; gespeicherte Desktop-Aufteilung und Entwürfe bleiben erhalten. Breitere Navigation und bündige, hintergrundlose Nachrichtenaktionen ändern keine Daten. Automatische Titel speichern additiv titleSourceText, titleAttempts und titleError; fallback ist ein zusätzlicher Status. Lokaler Titel bleibt bei Anbieterfehlern und Neustart erhalten; erneuter Versand setzt mit gespeichertem Ursprung höchstens vier Versuche fort. Alte fehlgeschlagene Titel ohne Ursprung bleiben unverändert. Rückkehr erhält Titel, ignoriert Zusatzfelder und beendet automatische Wiederholungen. Keine Tabellenmigration."
     },
     {
       "id": "speech",
@@ -442,7 +446,10 @@
         "wrapper/ui/dictation-storage.mjs",
         "wrapper/ui/dictation.jsx",
         "wrapper/ui/dictation-shortcut-settings.jsx",
-        "wrapper/ui/dictation-shortcut.mjs"
+        "wrapper/ui/dictation-shortcut.mjs",
+        "wrapper/ui/recording-session.mjs",
+        "wrapper/ui/recording-session.jsx",
+        "wrapper/ui/recording-session.css"
       ],
       "entrypoints": [
         "GET /api/dictation/status",
@@ -459,15 +466,16 @@
       ],
       "verification": [
         "wrapper/test/dictation.test.mjs",
-        "wrapper/test/dictation-shortcut.test.mjs"
+        "wrapper/test/dictation-shortcut.test.mjs",
+        "wrapper/test/recording-session.test.mjs"
       ],
       "status": {
         "endpoint": "GET /api/dictation/status",
         "meaning": "Lokales Modell oder explizit eingerichteter Anbieter."
       },
       "limits": "Lokales Modell oder explizit eingerichteter Anbieter.",
-      "version": 4,
-      "migration": "Keine Audio- oder Serverdatenmigration. Browserlokale validierte Tastenkürzel ergänzen den bestehenden Diktatweg; Entfernen der Präferenz stellt die Voreinstellung wieder her. Aufnahmen und Wiederherstellung bleiben erhalten. Pane-Kürzel starten nun Diktat und senden bei erneutem Drücken, Escape bricht ohne Senden ab. Bestehende Belegungen bleiben erhalten; keine Audio-/Serverdatenmigration. Rückkehr stellt reine Fokusaktionen wieder her. Diktatkürzel und Chatbeschriftungen folgen der geöffneten Ansichtsreihenfolge, unabhängig von internen Pane-IDs. Einzelfeld ist immer Chat 1. Keine Datenmigration; Rückkehr verwendet interne Nummern."
+      "version": 5,
+      "migration": "Keine Audio- oder Serverdatenmigration. Browserlokale validierte Tastenkürzel ergänzen den bestehenden Diktatweg; Entfernen der Präferenz stellt die Voreinstellung wieder her. Aufnahmen und Wiederherstellung bleiben erhalten. Pane-Kürzel starten nun Diktat und senden bei erneutem Drücken, Escape bricht ohne Senden ab. Bestehende Belegungen bleiben erhalten; keine Audio-/Serverdatenmigration. Rückkehr stellt reine Fokusaktionen wieder her. Diktatkürzel und Chatbeschriftungen folgen der geöffneten Ansichtsreihenfolge, unabhängig von internen Pane-IDs. Einzelfeld ist immer Chat 1. Keine Datenmigration; Rückkehr verwendet interne Nummern. Zentrale flüchtige Aufnahmesitzung erhält Diktat und ursprünglichen Entwurf bei Navigation. Keine Audio-/Serverdatenmigration. Rückkehr zum alten UI stellt das Abbruchverhalten wieder her. PTT behält Loslassen als Ende."
     },
     {
       "id": "connections",
@@ -595,8 +603,8 @@
         "meaning": "Programmfund ist kein Login. Nur eigene Profile und bestätigte Sitzung verwenden."
       },
       "limits": "Programmfund ist kein Login. Nur eigene Profile und bestätigte Sitzung verwenden. Automatische Installation nur für installierte Codex/Gemini ohne festen Programmpfad. Modellkatalog ist kein Zugangsnachweis.",
-      "version": 12,
-      "migration": "Bestehende eigene Anbieterprofile und natives Memory unverändert erhalten. Ergänzende nicht vertrauliche Fragequittungen verwenden tools.json, Verbrauchswerte additive Turn-/Chatfelder. Vor Rückkehr offene native Requests beenden. Kontingentabfrage nutzt denselben eigenen Profilweg, übernimmt keine Host-Anmeldungen und startet keine Modellantwort. Gemeinsame Modellwahl und anbieterbezogene Profilprüfung ohne Datenmigration; vorhandene native Einstellungen und Übergabeverläufe bleiben erhalten. Optionale installationslokale worker-auth.json Version 1 bindet ausdrücklich einen vorhandenen Claude-Dienstzugang; keine automatische Übernahme und keine Änderung von Zugangsdaten oder Chats. Ohne Bindung bleibt der Profilstart unverändert. Native temporäre Codex-Programmverknüpfungen bleiben beim erneuten Start zulässig; übrige Profilgrenzen unverändert. Keine Datenmigration. Optionale profileLinks in der lokalen Worker-Bindung erhalten ausdrücklich konfigurierte native Speicherorte. Ohne Bindung unveränderte Isolation; keine Kopie von Zugangsdaten, automatische Übernahme oder Datenmigration. Additive resolvedModel-Metadaten aus derselben Claude-Sitzung; keine Datenmigration. Externe Adapter und bestehende Auswahlwerte bleiben erhalten. Bestätigte konkrete Claude-Anfangsstufe pro nativer Sitzung, bestehende explizite Werte erhalten. Default-Modellalias wird nur bei exakter resolvedModel-Übereinstimmung visuell zugeordnet. Keine Datenmigration; ältere Stände lesen die native Einstellung. Additive composerSelection/appliedComposerSelectionId im Chat. Engineauswahl wird ohne Sitzungsstart gespeichert und beim nächsten Senden nach Turnabschluss übernommen. Offene Nachrichten mit nextSelection.workerId vor Rückkehr auf ältere Versionen abarbeiten; diese führen das neue Feld nicht aus. Bestehende Sessions, Verlauf und globale Vorgaben bleiben erhalten. Slash-Befehle verwenden native Ziele und vorhandene Nachrichtenbelege. Keine eigene Zielschleife oder Datenmigration. Vor Rückkehr native Ziele abschließen oder beenden; alte Composer haben keinen Ziel-Steueranschluss. Additiver Kontingentstatus unavailableReason=profile_required erklärt fehlende Abo-Leseberechtigung beim Diensttoken. Keine Anmeldung oder Datenmigration; ältere Oberflächen ignorieren das Feld."
+      "version": 14,
+      "migration": "Bestehende eigene Anbieterprofile und natives Memory unverändert erhalten. Ergänzende nicht vertrauliche Fragequittungen verwenden tools.json, Verbrauchswerte additive Turn-/Chatfelder. Vor Rückkehr offene native Requests beenden. Kontingentabfrage nutzt denselben eigenen Profilweg, übernimmt keine Host-Anmeldungen und startet keine Modellantwort. Gemeinsame Modellwahl und anbieterbezogene Profilprüfung ohne Datenmigration; vorhandene native Einstellungen und Übergabeverläufe bleiben erhalten. Optionale installationslokale worker-auth.json Version 1 bindet ausdrücklich einen vorhandenen Claude-Dienstzugang; keine automatische Übernahme und keine Änderung von Zugangsdaten oder Chats. Ohne Bindung bleibt der Profilstart unverändert. Native temporäre Codex-Programmverknüpfungen bleiben beim erneuten Start zulässig; übrige Profilgrenzen unverändert. Keine Datenmigration. Optionale profileLinks in der lokalen Worker-Bindung erhalten ausdrücklich konfigurierte native Speicherorte. Ohne Bindung unveränderte Isolation; keine Kopie von Zugangsdaten, automatische Übernahme oder Datenmigration. Additive resolvedModel-Metadaten aus derselben Claude-Sitzung; keine Datenmigration. Externe Adapter und bestehende Auswahlwerte bleiben erhalten. Bestätigte konkrete Claude-Anfangsstufe pro nativer Sitzung, bestehende explizite Werte erhalten. Default-Modellalias wird nur bei exakter resolvedModel-Übereinstimmung visuell zugeordnet. Keine Datenmigration; ältere Stände lesen die native Einstellung. Additive composerSelection/appliedComposerSelectionId im Chat. Engineauswahl wird ohne Sitzungsstart gespeichert und beim nächsten Senden nach Turnabschluss übernommen. Offene Nachrichten mit nextSelection.workerId vor Rückkehr auf ältere Versionen abarbeiten; diese führen das neue Feld nicht aus. Bestehende Sessions, Verlauf und globale Vorgaben bleiben erhalten. Slash-Befehle verwenden native Ziele und vorhandene Nachrichtenbelege. Keine eigene Zielschleife oder Datenmigration. Vor Rückkehr native Ziele abschließen oder beenden; alte Composer haben keinen Ziel-Steueranschluss. Additiver Kontingentstatus unavailableReason=profile_required erklärt fehlende Abo-Leseberechtigung beim Diensttoken. Keine Anmeldung oder Datenmigration; ältere Oberflächen ignorieren das Feld. Abo-Abfragen verwenden bei unzureichendem Diensttoken zusätzlich das nativ angemeldete eigene Installationsprofil ohne Tokenüberschreibung; Modellzugang unverändert. Keine Datenmigration. Wochenübersicht priorisiert Codex, Claude und separat gemeldete Claude-Modellwochenwerte; Spark und Kurzfenster nur im Detail. Keine Datenmigration; ältere Kontingentantworten bleiben lesbar."
     },
     {
       "id": "jobs",
@@ -667,7 +675,10 @@
         "wrapper/library.mjs",
         "wrapper/ui/library-order.mjs",
         "wrapper/ui/library-thumbnail.jsx",
-        "wrapper/ui/library.jsx"
+        "wrapper/ui/library.jsx",
+        "wrapper/ui/chat-shelf.mjs",
+        "wrapper/ui/chat-shelf.tsx",
+        "wrapper/ui/chat-shelf.css"
       ],
       "entrypoints": [
         "GET /api/file/info",
@@ -687,15 +698,16 @@
       ],
       "verification": [
         "wrapper/test/artifact-content.test.mjs",
-        "wrapper/test/service-platform.test.mjs"
+        "wrapper/test/service-platform.test.mjs",
+        "wrapper/test/chat-shelf.test.mjs"
       ],
       "status": {
         "endpoint": "GET /api/library",
         "meaning": "Dateibestand; Vorschau ist kein Suchindex."
       },
       "limits": "Dateibestand; Vorschau ist kein Suchindex.",
-      "version": 4,
-      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Während Sicherung und Wiederherstellungsprüfung weist der gemeinsame Server Schreibaktionen ab; lesende Bibliotheksansichten bleiben erreichbar. Kein Dateiformat geändert. Vertrag docs/OPERATIONS.md. Additive Indexfelder categoryOverride (null/fehlend: erben, leer: Allgemein), category, jobCategory, jobName und jobAvailable. Keine Dateiverschiebung. Alte Leser ignorieren Zusatzfelder; vorhandene Overrides bleiben erhalten. Vertrag wrapper/surfaces/library.md. Oberfläche organisiert Aufträge und Ergebnisse ausschließlich nach Workspace. Alte Kategorieangaben bleiben kompatibel gespeichert, ohne Anzeige oder Bearbeitung. Keine Datenmigration."
+      "version": 5,
+      "migration": "Vorhandene lokale Daten erhalten. Tabellen nur additiv und idempotent anlegen; bei inkompatiblem Format Start abbrechen und eine dokumentierte Migration verlangen. UI-Präferenzen sind keine Geschäftsdaten. Während Sicherung und Wiederherstellungsprüfung weist der gemeinsame Server Schreibaktionen ab; lesende Bibliotheksansichten bleiben erreichbar. Kein Dateiformat geändert. Vertrag docs/OPERATIONS.md. Additive Indexfelder categoryOverride (null/fehlend: erben, leer: Allgemein), category, jobCategory, jobName und jobAvailable. Keine Dateiverschiebung. Alte Leser ignorieren Zusatzfelder; vorhandene Overrides bleiben erhalten. Vertrag wrapper/surfaces/library.md. Oberfläche organisiert Aufträge und Ergebnisse ausschließlich nach Workspace. Alte Kategorieangaben bleiben kompatibel gespeichert, ohne Anzeige oder Bearbeitung. Keine Datenmigration. Ablage mit aus dem Chat abgeleiteter Sammlung ohne Datenmigration; additive shelfJobs-Browserprojektion. Alte Leser ignorieren Zusatzfelder. Vertrag wrapper/surfaces/chat.md."
     },
     {
       "id": "skills",
@@ -1279,7 +1291,7 @@
       "title": "Optionale Workspaces",
       "purpose": "Themenbezogene Gespräche, Dateien und Arbeitsweisen mit demselben Assistenten und gemeinsamer Firmenbasis organisieren.",
       "stage": "implemented",
-      "version": 2,
+      "version": 3,
       "contract": "wrapper/surfaces/workspaces.md",
       "setup": "wrapper/surfaces/workspaces.md#einrichtung",
       "data": "Bestehende Projekte und Pfade; AGENTS.md mit optionalem YAML-Steckbrief Version 1. SQLite/State führt abgeleitete Metadaten und workspaceOnboarding am Chat. WORKSPACES.md ist ein erzeugtes Verzeichnis. Skills bleiben Dateien.",
@@ -1293,7 +1305,8 @@
         "GET /api/workspaces",
         "GET /api/workspaces/definition",
         "POST /api/workspaces/save",
-        "POST /api/workspaces/chat"
+        "POST /api/workspaces/chat",
+        "POST /api/projects/save"
       ],
       "dependencies": [
         "platform",
@@ -1310,7 +1323,7 @@
         "meaning": "Gespeicherte und frisch gelesene Beschreibungen, Einrichtungsstatus und konkrete Dateifehler. Kein Nachweis einer Worker-Anmeldung."
       },
       "limits": "Freiwillige Spezialisierungen im gemeinsamen Arbeitsbereich, keine Benutzer-/Mandantensandbox. Keine Hierarchie oder Hintergrundaufträge. Native Anbieterfähigkeiten und Memory bleiben erhalten.",
-      "migration": "Opt-in YAML-Kopf, unveränderte IDs/Pfade und bestehender Markdown-Text. Neue Ordner nur unter projects/. Unbekannte oder beschädigte Steckbriefe werden nicht überschrieben. Alte Leser behalten Dateien, erzwingen aber keine neuen Revisions-/Einrichtungsregeln. Rückkehr erfordert beendete aktive Einrichtung und Sicherung von Beschreibungen, State und Chats. Oberfläche organisiert Aufträge und Ergebnisse ausschließlich nach Workspace. Alte Kategorieangaben bleiben kompatibel gespeichert, ohne Anzeige oder Bearbeitung. Keine Datenmigration."
+      "migration": "Opt-in YAML-Kopf, unveränderte IDs/Pfade und bestehender Markdown-Text. Neue Ordner nur unter projects/. Unbekannte oder beschädigte Steckbriefe werden nicht überschrieben. Alte Leser behalten Dateien, erzwingen aber keine neuen Revisions-/Einrichtungsregeln. Rückkehr erfordert beendete aktive Einrichtung und Sicherung von Beschreibungen, State und Chats. Oberfläche organisiert Aufträge und Ergebnisse ausschließlich nach Workspace. Alte Kategorieangaben bleiben kompatibel gespeichert, ohne Anzeige oder Bearbeitung. Keine Datenmigration. Kompakter gemeinsamer Dialog: Name genügt, optionale Beschreibung und visuelle Auswahl. Neue Bereiche werden wiederholbar sofort ready erstellt; bestehende Statuswerte und Arbeitsanweisungen bleiben unverändert. Keine Datenmigration."
     },
     {
       "id": "github",
@@ -1541,8 +1554,8 @@
         "meaning": "Gespeichert, geprüft verbunden und letzter Abgleich getrennt; Agentenkanal nicht in Inbox."
       },
       "limits": "Vorhandene lokale WhatsApp-Bridge und expliziter Verlaufspfad erforderlich; kein eigener Bridge-Daemon. Telegram benötigt API-App und persönliche Anmeldung. Versand nur ausdrücklich, kein Testversand.",
-      "version": 1,
-      "migration": "Additive messenger_* Tabellen, kopierte Medien unter data/control/messenger. Expliziter Import mit Online-Backup und stabilen Kennungen. Quelle nur lesend. Trennen erhält Verlauf; Rückkehr zu altem Code blendet Messenger aus."
+      "version": 2,
+      "migration": "Additive messenger_* Tabellen, kopierte Medien unter data/control/messenger. Expliziter Import mit Online-Backup und stabilen Kennungen. Quelle nur lesend. Trennen erhält Verlauf; Rückkehr zu altem Code blendet Messenger aus. Version 2 klassifiziert technische WhatsApp-Ereignisse beim Abgleich ohne Löschung neu; korrigiert Nachrichtenrevision, Gelesenanteil und Sortierdatum aus sichtbaren Beiträgen."
     }
   ]
 }

@@ -1,3 +1,5 @@
+import {ChatShelf, ShelfFilePreview} from './chat-shelf.tsx';
+import {collectShelfEntries} from './chat-shelf.mjs';
 import {UsageSettings} from './usage';
 import {WorkspaceInfo,WorkspaceDefinitionEditor} from './workspace-settings';
 import {PageHeading} from './page-heading';
@@ -55,7 +57,7 @@ import './library-connections.css';
 import { hasUnreadReply } from "../chat-read-state.mjs";
 import { canReadPaneReply } from "./pane-attention.mjs";
 import { ComposerFocus } from "./composer-focus";
-import React, { useState, useEffect, useLayoutEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useLayoutEffect, useRef, useCallback, useMemo } from "react";
 import { MotionConfig } from "motion/react";
 import { createRoot } from "react-dom/client";
 import { Markdown, ToolImages } from "./chat-rich-content.jsx";
@@ -141,7 +143,7 @@ import { MIN_CHAT_WIDTH, visiblePanes, selectPaneCount, conversationText } from 
 import { AgentWelcome } from "./avatar-picker.jsx";
 import { Modal } from "./modal.jsx";
 import "./sidebar-refinement.css";
-import { appearanceOptions, projectIcons, projectColors, projectColor, relativeTime, projectChatList, chatDateGroup } from "./appearance.mjs";
+import { appearanceOptions, projectColor, relativeTime, projectChatList, chatDateGroup } from "./appearance.mjs";
 import { fonts, typography } from "./design-system.mjs";
 import { timestamp, dayLabel, durationLabel, activityLabel, groupItems, actionRowIndex } from "./chat-presentation.mjs";
 import { workerName } from "../../system/worker-catalog.mjs";
@@ -150,7 +152,8 @@ import { Avatar } from "./avatar.jsx";
 import { AvatarMotionSetting } from "./avatar-motion-setting.jsx";
 import { WelcomeParticles } from "./welcome-particles";
 import { nextChatGreeting } from "./chat-greetings.mjs";
-import { Dictation } from "./dictation.jsx";
+import { DictationComposer, RecordingProvider } from "./recording-session.jsx";
+import { appendDictation } from "./recording-session.mjs";
 import { SettingRow } from "./settings-row.jsx";
 import { ModelPicker } from "./model-picker.jsx";
 import { preferredModel, sessionModelSelection, supportedEffort } from "../worker-models.mjs";
@@ -605,6 +608,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const [workspaceWidth, setWorkspaceWidth] = useState(null);
   const [workspaceExpanded, setWorkspaceExpanded] = useState(false);
   const lastWorkspaceView = useRef(null);
+  const shelfReturnFocus=useRef(null);
   function setPanel(next) {
     if (next) {
       lastWorkspaceView.current = next;
@@ -712,6 +716,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     [search, setSearch] = useState(""),
     [settingsTab, setSettingsTab] = useState(() => ["work-evidence", "service"].includes(new URLSearchParams(window.location.search).get("view")) ? "service" : "general"),
     [selectedFile, setSelectedFile] = useState(null),
+    [selectedShelfImage, setSelectedShelfImage] = useState(null),
     [jobs, setJobs] = useState([]),
     [jobsLoading, setJobsLoading] = useState(true),
     [jobsError, setJobsError] = useState(""),
@@ -1719,11 +1724,13 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     });
   }
 
-  async function openFile(p) {
+  async function openFile(p, returnFocus) {
     if (embedded && onOpenFile) return onOpenFile(p);
     const relative = localFilePath(p, boot.workspace);
     if (!relative) throw new Error("Die Datei liegt nicht im freigegebenen Arbeitsbereich.");
-    setPanel("files");
+    shelfReturnFocus.current=returnFocus || document.activeElement;
+    setPanel("chat");
+    setSelectedShelfImage(null);
     setSelectedFile(relative);
   }
 
@@ -1843,21 +1850,6 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       if(result.startError)notify(result.startError);
     } finally {workspaceOpenLock.current=false;setWorkspaceOpening(false);}
   }
-  async function saveProject(change) {
-    const result = await api("/projects/save", change);
-    setBoot((b) => ({
-      ...b,
-      projects: result.projects,
-      settings: result.settings,
-    }));
-    setWorkspaceMenu(null);
-    setModal(null);
-    if (!change.id) {
-      chooseProject(result.project.id);
-      newDraft(result.project.id);
-    }
-    notify(change.id ? "Workspace gespeichert." : "Workspace angelegt.");
-  }
   async function loadSkills() {
     setSkillsLoading(true);
     setSkillsError("");
@@ -1922,7 +1914,9 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   const copyConversation = guard(async () => { await navigator.clipboard.writeText(conversationText(thread, chatTitle)); notify("Gespräch kopiert."); });
   const audioState=useChatAudio();
   useEffect(()=>{if(!embedded && chats.some(c=>c.id===audioState.chatId && (c.archived||c.locked))) chatAudio.stop();},[embedded,chats,audioState.chatId]);
+  const shelfEntries = useMemo(()=>chatLocked ? [] : collectShelfEntries(thread?.turns || [],boot?.workspace,current?.cwd || boot?.workspace),[chatLocked,thread?.turns,boot?.workspace,current?.cwd]);
   const localSession = {
+    shelfEntries, shelfLoading:loading, shelfError:threadError, reloadShelf:()=>openChatHere(chatId),
     welcome: !chatId && !loading && !thread?.turns?.length,
     private:current?.private, locked:chatLocked, lock:guard(()=>changeChatPrivacy(api,"lock",chatId)),
     id:chatId, title:chatTitle, hasTitle:!!(current?.title || draftTitle), projectName:project?.name || "Allgemein",
@@ -1945,15 +1939,53 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     ],
   };
   (sessionRef || sessions.current[0]).current = localSession;
-  useEffect(() => { onSessionChange?.(); }, [loading, chatId, chatTitle, chatLocked, current?.private, project, running, busy, current?.pinned, current?.lastTurnStatus, current?.readTurnId, !!thread?.turns?.length, audioState]);
+  useEffect(() => { onSessionChange?.(); }, [loading, chatId, chatTitle, chatLocked, current?.private, project, running, busy, current?.pinned, current?.lastTurnStatus, current?.readTurnId, !!thread?.turns?.length, audioState, shelfEntries, threadError]);
+  const returnToRecording=useLiveAction(({detail})=>{
+    const {paneNumber:id,chatId:target,projectId:targetProject}=detail;
+    setPaneOrder(order=>order.includes(id)?order:[...order,id]);
+    setMountedPanes(old=>old.includes(id)?old:[...old,id]);
+    activatePane(id);setView("chat");closeMobileNavigation();
+    const owner=sessions.current[id].current;
+    if(target)void owner?.openChat(target);
+    else if(owner?.id || owner?.projectId!==targetProject)owner?.newDraft(targetProject);
+  });
+  useEffect(()=>{
+    if(embedded)return;
+    window.addEventListener("wrapper/recording-return",returnToRecording);
+    return()=>window.removeEventListener("wrapper/recording-return",returnToRecording);
+  },[embedded,returnToRecording]);
   const activeSession = !embedded && activePane !== 0 ? sessions.current[activePane].current : localSession;
   const headerSession = activeSession && {...activeSession, items:activeSession.items.map(item => ({...item, action:()=> (embedded ? sessionRef : sessions.current[activePane]).current?.items.find(current=>current.id===item.id)?.action()}))};
   const workspaceProject = boot?.projects?.find(p=>p.id === (headerSession?.projectId || projectId));
   selectedWorkspaceRef.current = workspaceProject?.id || projectId;
   useEffect(() => {
     if (embedded) return;
-    setSelectedFile(null); setTerminalOutput("");
-  }, [embedded, activePane, workspaceProject?.id]);
+    setSelectedFile(null); setSelectedShelfImage(null); setTerminalOutput("");
+  }, [embedded, activePane, workspaceProject?.id, activeSession?.id, activeSession?.locked]);
+  const shelfSeen = useRef(null);
+  useEffect(()=>{
+    if(embedded || !activeSession || activeSession.shelfLoading) return;
+    const entries=activeSession.shelfEntries || [];
+    const key=activeSession.id || `new:${workspaceProject?.id}`;
+    const previous=shelfSeen.current;
+    shelfSeen.current={key,ids:new Set(entries.map(entry=>entry.id))};
+    if(!previous || previous.key!==key || activeSession.locked) return;
+    const latest=entries.filter(entry=>!previous.ids.has(entry.id) && /\.html?$/i.test(entry.path || '')).at(-1);
+    if(latest && panel==='chat' && view==='chat' && !selectedFile && !selectedShelfImage) setSelectedFile(latest.path);
+  },[embedded,activeSession?.id,activeSession?.shelfEntries,activeSession?.shelfLoading,activeSession?.locked]);
+  const openShelfEntry=guard(async (entry,trigger)=>{
+    shelfReturnFocus.current=trigger || document.activeElement;
+    if(entry.kind==='link'){window.open(entry.url,'_blank','noopener,noreferrer');return;}
+    if(entry.kind==='job'){
+      const list=await api('/jobs');setJobs(list);
+      const job=list.find(job=>job.id===entry.jobId);
+      if(!job){notify('Der Auftrag ist nicht mehr verfügbar.');return;}
+      setView('jobs');setModal({type:'job',job});return;
+    }
+    if(entry.kind==='image'){setSelectedFile(null);setSelectedShelfImage(entry);return;}
+    await openFile(entry.path,trigger);
+  });
+  const closeShelfPreview=(restore=true)=>{setSelectedFile(null);setSelectedShelfImage(null);if(restore)requestAnimationFrame(()=>{if(shelfReturnFocus.current?.isConnected)shelfReturnFocus.current.focus({preventScroll:true});});};
   const skillGroups = groupSkills(skills.filter(s=>skillSource==='all'||s.source===skillSource), {
     query: search,
     category: skillFilter,
@@ -2063,7 +2095,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     );
   return (
     <LoaderProvider settings={boot.settings}><div
-      style={{"--sidebar-width": `${sidebarWidth}px`, "--workspace-width": `${workspaceWidth || 280}px`}}
+      style={{"--sidebar-width": `${sidebarWidth}px`, "--workspace-width": `${workspaceWidth || 360}px`}}
       className={
         (embedded ? "app embedded-chat " : "app ") +
         (view === "inbox" ? "inbox-mode " : "") +
@@ -2127,7 +2159,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               ))}
             </nav>
             <div className="workspace-projects">
-              <div className="sidebar-section-label projects-heading"><button className="workspace-info-button" type="button" aria-label="Was ist ein Workspace?" onClick={()=>setModal({type:"workspace-info"})}>Workspace</button><IconButton label="Neuer Workspace" disabled={workspaceOpening} onClick={boot.features?.workspaceSpecialization?guard(()=>configureWorkspace()):()=>setModal({type:"project"})}>{icon(Plus,16)}</IconButton></div>
+              <div className="sidebar-section-label projects-heading"><button className="workspace-info-button" type="button" aria-label="Was ist ein Workspace?" onClick={()=>setModal({type:"workspace-info"})}>Workspace</button><IconButton label="Neuer Workspace" disabled={workspaceOpening} onClick={()=>setModal({type:"project"})}>{icon(Plus,16)}</IconButton></div>
               {(boot.workspaceWarnings||[]).map((warning,index)=><p className="page-note" role="status" key={index}>{warning}</p>)}
               {(boot.projects || []).map((space) => (
                 <section className={"workspace-group" + (expandedProject === space.id ? " expanded" : "")} key={space.id}>
@@ -2152,13 +2184,12 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                     </button>
                     <ChatMenu label={"Workspace verwalten: " + space.name} className="icon-button" items={[
                       {id:"edit", label:"Workspace bearbeiten …", icon:icon(SquarePen,16), action:()=>setModal({type:"project",project:space})},
-                      ...(boot.features?.workspaceSpecialization?[{id:"setup",label:"Im Chat einrichten …",icon:icon(MessageCircle,16),action:guard(()=>configureWorkspace(space.id))}]:[]),
+                      ...(boot.features?.workspaceSpecialization?[{id:"setup",label:"Arbeitsweise im Chat anpassen …",icon:icon(MessageCircle,16),action:guard(()=>configureWorkspace(space.id))}]:[]),
                       {id:"files", label:"Dateien öffnen", icon:icon(FolderOpen,16), action:()=>{if(projectId !== space.id) newDraft(space.id); chooseProject(space.id); setView("chat"); setPanel("files");}}
                     ]}>{icon(MoreHorizontal,17)}</ChatMenu>
                     <IconButton label={`Neuer Chat in ${space.name}`} onClick={()=>newDraft(space.id)}>{icon(Plus,16)}</IconButton>
                   </div>
                   {space.workspaceError&&<p className="page-note workspace-status" role="alert">{space.workspaceError}</p>}
-                  {!space.workspaceError&&space.workspaceStatus==="draft"&&<p className="page-note workspace-status">In Einrichtung</p>}
                   {expandedProject === space.id && (
                     <ScrollEdgeFade className="workspace-chats chats-scroll" tabIndex={0} role="region" aria-label={`Chats in ${space.name}`}>
                       {projectChatList(chats, space.id, expandedLists[space.id] !== false).visible.map((c, index, visible) => (
@@ -2253,7 +2284,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               <div className="row">
                 {(mobileViewport || paneOrder.length === 1) && headerSession?.hasTitle && <ChatTitle session={headerSession} compact/>}
                 {!mobileViewport && <LayoutPicker count={paneOrder.length} onChange={changePaneCount}/>}
-                <IconButton label={panel ? "Workspace schließen" : "Workspace öffnen"} active={!!panel} aria-expanded={!!panel} aria-controls="workspace-panel" onClick={() => { if (!panel) setSelectedFile(null); let last = lastWorkspaceView.current; try { last ||= localStorage.getItem("workspace-last-view"); } catch {} setPanel(panel ? null : (["files", "review", ...(boot.capabilities?.terminal ? ["terminal"] : [])].includes(last) ? last : "files")); }}>{icon(PanelRight)}</IconButton>
+                <IconButton label={panel ? "Ablage schließen" : "Ablage öffnen"} active={!!panel} aria-expanded={!!panel} aria-controls="workspace-panel" onClick={() => { if (!panel) {setSelectedFile(null);setSelectedShelfImage(null);} let last = lastWorkspaceView.current; try { last ||= localStorage.getItem("workspace-last-view"); } catch {} setPanel(panel ? null : (["chat", "files"].includes(last) ? last : "chat")); }}>{icon(PanelRight)}</IconButton>
               </div>
             </header>}
 
@@ -2437,7 +2468,14 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       }
                     }}
                   />
-                      <Dictation controlRef={dictationControl} shortcutEnabled={foreground && view === "chat" && readablePane && selectedPane && !chatLocked} api={api} notify={notify} chatId={chatId || "draft:" + projectId} enabled={embedded ? paneVisible : visible.includes(0)} running={running || busy || questionState.pending || !!uploadCounts.current.get(chatId || `new:${projectId}`)} onText={(transcript) => setComposerText(previous => previous ? previous + "\n" + transcript : transcript)} onVoiceText={transcript => submit(undefined, transcript)} onSendText={transcript => submit(undefined, transcript, true)} reply={(() => { const t = thread?.turns?.filter(t => !t.clientPending && t.status !== "inProgress").at(-1); return t ? { id:t.id, chatId, status:t.status, text:t.items?.filter(i => i.type === "agentMessage" && i.phase !== "commentary").map(i => i.text || "").join("\n") || "" } : null; })()} openSettings={() => { setSettingsTab("voice"); setView("settings"); }} />
+                      <DictationComposer sourceKey={`${paneNumber}:${chatId || "new:"+projectId}:${questionState.request?.id || ""}:${questionState.question?.id || ""}`}
+                        title={chatTitle} visible={view === "chat" && readablePane && selectedPane && !chatLocked}
+                        onReturn={()=>window.dispatchEvent(new CustomEvent("wrapper/recording-return",{detail:{paneNumber,chatId,projectId}}))}
+                        canSend={()=>draftKey()===(chatId || `new:${projectId}`) && !chatLocked}
+                        controlRef={dictationControl} shortcutEnabled={foreground && view === "chat" && readablePane && selectedPane && !chatLocked} api={api} notify={notify} chatId={chatId || "draft:" + projectId} enabled={embedded ? paneVisible : visible.includes(0)} running={running || busy || questionState.pending || !!uploadCounts.current.get(chatId || `new:${projectId}`)} onText={transcript => {
+                        if(questionState.request && questionState.appendText(transcript))return;
+                        appendDictation(draftCache.current,chatId || `new:${projectId}`,draftKey(),setText,transcript);
+                      }} onVoiceText={transcript => submit(undefined, transcript)} onSendText={transcript => submit(undefined, transcript, true)} reply={(() => { const t = thread?.turns?.filter(t => !t.clientPending && t.status !== "inProgress").at(-1); return t ? { id:t.id, chatId, status:t.status, text:t.items?.filter(i => i.type === "agentMessage" && i.phase !== "commentary").map(i => i.text || "").join("\n") || "" } : null; })()} openSettings={() => { setSettingsTab("voice"); setView("settings"); }} />
                     <div className="composer-send-actions">
                       {questionState.request ? (
                         <>
@@ -2496,111 +2534,22 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
             </div>
             </div>
             {panel && (
-              <aside id="workspace-panel" aria-label="Workspace" ref={workspacePanelRef} className={"workspace-panel" + (workspaceExpanded ? " workspace-expanded" : "")}>
+              <aside id="workspace-panel" aria-label="Ablage" ref={workspacePanelRef} className={"workspace-panel" + (workspaceExpanded ? " workspace-expanded" : "")} onKeyDown={event=>{if(event.key==='Escape' && !event.defaultPrevented){event.preventDefault();if(workspaceExpanded)setWorkspaceExpanded(false);else if(selectedFile || selectedShelfImage)closeShelfPreview();else setPanel(null);}}}>
                 <PanelLight mode={boot.settings.panelLight || "animated"} active={view === "chat"} />
-                <div className="workspace-resizer"><PaneDivider label="Workspace-Breite ändern" value={workspaceWidth || 280} min={280} max={1000} onReset={()=>{setWorkspaceWidth(null);setWorkspaceExpanded(false)}} onResize={delta=>{setWorkspaceExpanded(false);setWorkspaceWidth(width=>Math.max(280,Math.min(1000,(workspacePanelRef.current?.getBoundingClientRect().width || width || 280)-delta)))}}/></div>
+                <div className="workspace-resizer"><PaneDivider label="Ablage-Breite ändern" value={workspaceWidth || 360} min={280} max={1000} onReset={()=>{setWorkspaceWidth(null);setWorkspaceExpanded(false)}} onResize={delta=>{setWorkspaceExpanded(false);setWorkspaceWidth(width=>Math.max(280,Math.min(1000,(workspacePanelRef.current?.getBoundingClientRect().width || width || 360)-delta)))}}/></div>
                 <div className="panel-head">
-                  <select className="workspace-view-select" aria-label="Workspace-Ansicht" value={panel} onChange={event => setPanel(event.target.value)}>
-                    <option value="files">Dateien</option>
-                    <option value="review">Änderungen</option>
-                    <option value="terminal" disabled={!boot.capabilities?.terminal}>Befehle</option>
-                  </select>
-                  <div className="row">
-                  <IconButton label={workspaceExpanded ? "Kompakte Workspace-Breite" : "Workspace vergrößern"} aria-pressed={workspaceExpanded} onClick={()=>{
-                    // Keep the user-sized compact width when returning from the large view.
-                    setWorkspaceExpanded(value=>!value);
-                  }}>{icon(workspaceExpanded ? Minimize : Maximize, 16)}</IconButton>
-                  <IconButton label="Workspace schließen" onClick={() => setPanel(null)}>{icon(X,16)}</IconButton>
-                  </div>
+                  <span className="shelf-heading">Ablage</span>
+                  <IconButton label={workspaceExpanded ? "Ablage verkleinern" : "Ablage vergrößern"} aria-pressed={workspaceExpanded} onClick={()=>setWorkspaceExpanded(value=>!value)}>{icon(workspaceExpanded ? Minimize : Maximize, 16)}</IconButton>
+                  <IconButton className="shelf-close" label="Ablage schließen" onClick={() => setPanel(null)}>{icon(X,16)}</IconButton>
                 </div>
-                {<>
-                    {panel === "files" ? (
-                      <div className={"file-panel" + (selectedFile ? " workspace-artifact-preview" : "")}>
-                        {selectedFile ? (
-                          <>
-                            <div className="file-toolbar">
-                              <button className="icon-button" aria-label="Zurück zu Dateien" onClick={() => setSelectedFile(null)}>
-                                {icon(ArrowLeft, 15)}
-                              </button>
-                              <span>{selectedFile.split("/").pop()}</span>
-                              <a
-                                className="icon-button"
-                                aria-label="Datei herunterladen"
-                                href={
-                                  "/api/file/raw?path=" +
-                                  encodeURIComponent(selectedFile) +
-                                  "&download=1"
-                                }
-                              >
-                                {icon(Download, 16)}
-                              </a>
-                            </div>
-                            <FileContent key={selectedFile} path={selectedFile} api={api} enlarged={workspaceExpanded} onEnlarge={()=>setWorkspaceExpanded(value=>!value)} />
-                          </>
-                        ) : (
-                          boot.workspaceToolsVersion ? <AgentFiles key={`${projectId}:${agentFolderTarget || ""}`} projectId={agentFolderTarget ? undefined : projectId} projectName={agentFolderTarget ? undefined : project?.name} api={api} initialFolder={agentFolderTarget || `${boot.workspace}/${project?.path || ""}`.replace(/\/$/, "")} enlarged={workspaceExpanded} onPreview={()=>setWorkspaceExpanded(value=>!value)}/> : <p role="status">Die neue Agent-Dateiansicht wird nach dem nächsten Serverstart verfügbar. Laufende Aufträge können zuerst fertig werden.</p>
-                        )}
-                      </div>
-                    ) : panel === "terminal" ? (
-                      <div className="terminal-panel">
-                        {terminalOutput ? <pre aria-label="Befehlsausgabe">{terminalOutput}</pre> : <div className="workspace-command-empty">
-                          {icon(Terminal, 20)}
-                          <strong>Befehl ausführen</strong>
-                          <p>Einzelne Befehle im Projektordner.</p>
-                          <p className="workspace-command-note">Jeder Aufruf startet neu und läuft höchstens 30 Sekunden.</p>
-                        </div>}
-                        <form
-                          onSubmit={guard(async (e) => {
-                            e.preventDefault();
-                            if (terminalBusy || !terminalInput.trim() || !boot.capabilities?.terminal) return;
-                            setTerminalBusy(true);
-                            const commandProject = selectedWorkspaceRef.current;
-                            const command = terminalInput;
-                            setTerminalInput("");
-                            setTerminalOutput(
-                              (o) => o + "\n$ " + command + "\n",
-                            );
-                            try {
-                              const r = await api("/terminal", {
-                                command,
-                                projectId: commandProject,
-                              });
-                              if (selectedWorkspaceRef.current !== commandProject) return;
-                              setTerminalOutput(
-                                (o) =>
-                                  o +
-                                  (r.stdout || r.aggregatedOutput || "") +
-                                  (r.stderr || "") +
-                                  "\nExit: " +
-                                  r.exitCode,
-                              );
-                            } catch (error) {
-                              if (selectedWorkspaceRef.current === commandProject) setTerminalOutput(o=>o+"Fehler: "+error.message+"\n");
-                            } finally {
-                              setTerminalBusy(false);
-                            }
-                          })}
-                        >
-                          <span aria-hidden="true">$</span>
-                          <input
-                            aria-label="Terminalbefehl"
-                            placeholder="Befehl eingeben"
-                            value={terminalInput}
-                            onChange={(e) => setTerminalInput(e.target.value)}
-                          />
-                          <button
-                            disabled={terminalBusy || !terminalInput.trim() || !boot.capabilities?.terminal}
-                            aria-label="Befehl ausführen"
-                          >
-                            {icon(terminalBusy ? LoaderCircle : ArrowUp, 16)}
-                          </button>
-                        </form>
-                      </div>
-                    ) : panel === "review" ? (
-                      <ReviewPanel key={workspaceProject?.id} api={api} projectId={workspaceProject?.id || projectId} projectName={workspaceProject?.name}/>
-                    ) : null}
-                  </>
-                }
+                <div className="shelf-selector"><select className="workspace-view-select" aria-label="Ablage-Ansicht" value={panel} onChange={event=>{closeShelfPreview(false);setPanel(event.target.value);}}><option value="chat">Im Chat</option><option value="files">Dateien</option></select></div>
+                <div className="shelf-section" hidden={panel!=='chat' || !!selectedFile || !!selectedShelfImage}>
+                  <ChatShelf key={`${activeSession?.id || 'new'}:${activePane}`} entries={activeSession?.shelfEntries || []} title={activeSession?.title || 'Neuer Chat'} loading={activeSession?.shelfLoading} error={activeSession?.shelfError} locked={activeSession?.locked} onRetry={()=>activeSession?.reloadShelf()} onOpen={openShelfEntry}/>
+                </div>
+                <div className="shelf-section" hidden={panel!=='files' || !!selectedFile || !!selectedShelfImage}>
+                  <div className="file-panel">{boot.workspaceToolsVersion ? <AgentFiles key={`${workspaceProject?.id}:${agentFolderTarget || ""}`} projectId={agentFolderTarget ? undefined : workspaceProject?.id} projectName={agentFolderTarget ? undefined : workspaceProject?.name} api={api} initialFolder={agentFolderTarget || `${boot.workspace}/${workspaceProject?.path || ""}`.replace(/\/$/, "")} enlarged={workspaceExpanded} onPreview={()=>setWorkspaceExpanded(value=>!value)}/> : <p role="status">Die Dateiansicht wird nach dem nächsten Serverstart verfügbar.</p>}</div>
+                </div>
+                {!activeSession?.locked && (selectedFile || selectedShelfImage) && <ShelfFilePreview key={selectedFile || selectedShelfImage.id} entry={selectedShelfImage || activeSession?.shelfEntries?.find(entry=>entry.path===selectedFile) || {id:selectedFile,kind:'file',path:selectedFile,name:selectedFile.split('/').pop(),origin:'Datei'}} api={api} onBack={()=>closeShelfPreview()}/>}
               </aside>
             )}
           </div>
@@ -3202,52 +3151,18 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
           {typeof navigator.share === "function" && <button disabled={!thread?.turns?.length} onClick={guard(async()=>{try {await navigator.share({title:chatTitle,text:conversationText(thread,chatTitle)});} catch(error){if(error.name!=="AbortError")throw error;}})}>{icon(ArrowUpRight)}Über System teilen …</button>}
         </div>
       </Modal>}
-      {modal?.type === "workspace-info" && <Modal title="Was ist ein Workspace?" onClose={()=>setModal(null)}><WorkspaceInfo onCreate={boot.features?.workspaceSpecialization?guard(()=>configureWorkspace()):undefined} busy={workspaceOpening}/></Modal>}
+      {modal?.type === "workspace-info" && <Modal title="Was ist ein Workspace?" onClose={()=>setModal(null)}><WorkspaceInfo onCreate={()=>setModal({type:"project"})} busy={workspaceOpening}/></Modal>}
       {modal?.type === "project" && (
         <Modal
           title={modal.project ? "Workspace bearbeiten" : "Neuer Workspace"}
           className="project-dialog"
           onClose={() => setModal(null)}
         >
-          {boot.features?.workspaceSpecialization&&modal.project ? <WorkspaceDefinitionEditor key={modal.project.id} api={api} projectId={modal.project.id} onCancel={()=>setModal(null)} onConfigure={guard(()=>configureWorkspace(modal.project.id))} onSaved={result=>{setBoot(old=>({...old,projects:result.projects,settings:result.settings}));setModal(null);notify("Workspace gespeichert.");}}/> : <form className="project-editor"
-            onSubmit={guard(async (e) => {
-              e.preventDefault();
-              const name = new FormData(e.currentTarget).get("name");
-              await saveProject({ id: modal.project?.id, name, icon: new FormData(e.currentTarget).get("icon"), color: new FormData(e.currentTarget).get("color") });
-            })}
-          >
-            <div className="project-editor-body">
-            <div className="project-identity">
-              <div className="project-preview" style={{color:projectColor(modal.color ?? modal.project?.color)}} aria-hidden="true">
-                {icon(projectGlyphs[modal.icon ?? modal.project?.icon ?? "folder"], 32)}
-              </div>
-            <Field label="Workspace-Name">
-              <input
-                name="name"
-                defaultValue={modal.project?.name || ""}
-                placeholder="Mein Workspace"
-                autoFocus
-                required
-                maxLength={80}
-              />
-            </Field>
-            </div>
-            <fieldset className="project-symbols" style={{"--project-preview":projectColor(modal.color ?? modal.project?.color)}}><legend>Symbol</legend>
-              {projectIcons.map(([value, label]) => <label key={value} title={label}><input type="radio" name="icon" value={value} checked={value === (modal.icon ?? modal.project?.icon ?? "folder")} onChange={()=>setModal(previous=>({...previous,icon:value}))} /><span>{icon(projectGlyphs[value], 20)}<span>{label}</span></span></label>)}
-            </fieldset>
-            <fieldset className="project-symbols project-colors"><legend>Farbe</legend>
-              {projectColors.map(([value, label]) => <label key={value} title={label}><input type="radio" name="color" value={value} checked={value === (modal.color ?? modal.project?.color ?? "default")} onChange={()=>setModal(previous=>({...previous,color:value}))} /><span><span className="project-color-swatch" style={{backgroundColor:projectColor(value)}} aria-hidden="true">{icon(Check, 14)}</span><span>{label}</span></span></label>)}
-            </fieldset>
-            </div>
-            <div className="row end project-editor-actions">
-              <button type="button" onClick={() => setModal(null)}>
-                Abbrechen
-              </button>
-              <button className="primary">
-                {modal.project ? "Speichern" : "Anlegen"}
-              </button>
-            </div>
-          </form>}
+          <WorkspaceDefinitionEditor key={modal.project?.id||'new'} api={api} projectId={modal.project?.id} project={modal.project} legacy={!boot.features?.workspaceSpecialization} onCancel={()=>setModal(null)} onConfigure={boot.features?.workspaceSpecialization&&modal.project?()=>configureWorkspace(modal.project.id):undefined} onSaved={result=>{
+            setBoot(old=>({...old,projects:result.projects,settings:result.settings}));setModal(null);
+            if(!modal.project){chooseProject(result.project.id);newDraft(result.project.id);}
+          }}/>
+
         </Modal>
       )}
       {modal?.type === "rename" && (
@@ -3728,4 +3643,4 @@ function JobForm({ job, jobs=[], initialTemplate, connections, workers, projects
     </form>
   );
 }
-createRoot(document.getElementById("root")).render(<MotionConfig reducedMotion="user"><App /></MotionConfig>);
+createRoot(document.getElementById("root")).render(<MotionConfig reducedMotion="user"><RecordingProvider api={api}><App /></RecordingProvider></MotionConfig>);
