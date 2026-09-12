@@ -3,7 +3,7 @@ import { loaderOptions } from './loader-options.mjs';
 export const appearanceOptions = {
   iconAnimation: { default: "hover", options: [["hover", "Hover und Drücken"], ["press", "Nur beim Drücken"], ["off", "Aus"]] },
   ...loaderOptions,
-  avatarMotion: { default: "face", options: [["off", "Still"], ["eyes", "Nur Augen"], ["face", "Sanftes Gesicht"], ["gestures", "Kleine Gesten"], ["wink", "Zwinkern"], ["happy", "Fröhlich"], ["grumpy", "Grimmig"], ["mixed", "Abwechslungsreich"]] },
+  avatarMotion: { default: "lively", options: [["off", "Still"], ["calm", "Ruhig"], ["lively", "Lebendig"]] },
   designTone: {default:'balanced', options:designTones.map(({id,label})=>[id,label])},
   highlightColor: {default:'terracotta', options:designAccents.map(({id,label})=>[id,label])},
   panelLight: { default: 'animated', options: [['off', 'Aus'], ['static', 'Ruhend'], ['animated', 'Sanft bewegt']] },
@@ -13,6 +13,12 @@ export const appearanceOptions = {
   reduceMotion: { default: 'system', options: [['system', 'Wie im System'], ['on', 'Reduzieren']] },
 };
 export const projectIcons = [['folder','Ordner'], ['code','Code'], ['briefcase','Arbeit'], ['globe','Web'], ['idea','Ideen'], ['calendar','Planung'], ['message','Gespräche'], ['files','Dokumente']];
+// Frühere Gesichtsstile (Sanftes Gesicht, Zwinkern …) laufen als Lebendig weiter.
+export function normalizeAvatarMotion(value) {
+  if (value === "off") return "off";
+  if (value === "calm" || value === "eyes") return "calm";
+  return "lively";
+}
 export function validateAppearance(change) {
   const result = {};
   for (const [key, spec] of Object.entries(appearanceOptions)) {

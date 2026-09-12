@@ -113,12 +113,12 @@ test('agent motion modes persist and reject invalid choices', async () => {
   const dir = await mkdtemp(path.join(os.tmpdir(), 'agent-motion-'));
   try {
     const store = new Storage(path.join(dir, 'workspace'), path.join(dir, 'data')); await store.init();
-    for (const avatarMotion of ['off', 'eyes', 'face', 'gestures', 'wink', 'happy', 'grumpy', 'mixed']) {
+    for (const avatarMotion of ['off', 'calm', 'lively']) {
       Object.assign(store.state.settings, validateAppearance({avatarMotion})); await store.save();
       const restored = new Storage(path.join(dir, 'workspace'), path.join(dir, 'data')); await restored.init();
       assert.equal(restored.state.settings.avatarMotion, avatarMotion);
     }
-    for (const avatarMotion of [null, true, 'invalid']) assert.throws(() => validateAppearance({avatarMotion}));
+    for (const avatarMotion of [null, true, 'invalid', 'wink']) assert.throws(() => validateAppearance({avatarMotion}));
   } finally { await rm(dir, {recursive: true, force: true}); }
 });
 

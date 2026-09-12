@@ -1,6 +1,6 @@
 # AGENT · CI 1.1
 
-Die Oberfläche ist eine ruhige lokale Arbeitszentrale. Sie verbindet die Klarheit einer Entwickleroberfläche mit warmen neutralen Flächen und macOS-typischer Navigation, gruppierten Einstellungen und zurückhaltenden Bedienelementen. Die Assistentenidentität beginnt als „Agent“ mit dem einfarbigen Bot-Avatar Nori. Acht eigene SVG-Gesichter sind unter „Dein Agent“ auswählbar und passen sich dem Erscheinungsbild an. Der Anzeigename wird zentral in soul/IDENTITY.md konfiguriert. Die bestehende Informationsarchitektur, Icons und Funktionen bleiben erhalten.
+Die Oberfläche ist eine ruhige lokale Arbeitszentrale. Sie verbindet die Klarheit einer Entwickleroberfläche mit warmen neutralen Flächen und macOS-typischer Navigation, gruppierten Einstellungen und zurückhaltenden Bedienelementen. Die Assistentenidentität beginnt als „Agent“ mit der Pixelfigur Lumi. Sechs eigene Pixelfiguren sind unter „Dein Agent“ auswählbar, passen sich dem Erscheinungsbild an und zeigen auf der Schreibzeile den Sitzungsstand. Der Anzeigename wird zentral in soul/IDENTITY.md konfiguriert. Die bestehende Informationsarchitektur, Icons und Funktionen bleiben erhalten.
 
 ## Verbindlicher Designvertrag für jede Erweiterung
 
@@ -212,20 +212,31 @@ gedeckten Hintergründen aus der zentralen Palette oder „Ohne Farbe“. Der le
 Chat zeigt den Agenten groß über einer von sechs wechselnden Begrüßungen mit
 der eigenen 36-px-Textrolle. Die Auswahl bleibt bei jeder Begrüßung unverändert.
 
-Die acht Avatare sind Gesichter ohne Füße. Nori und Lumi dürfen einen kurzen
-Halsansatz behalten. Pixel und Pad haben eine geschlossene Silhouette im Pixelraster,
-ohne abgesetzte Antenne. Kibo ist ein weiches kompaktes Gesicht, Pebble ein Kiesel.
-`Avatar` rendert eigene SVGs mit getrennten Gesichts-, Augen- und Ausdrucksebenen.
-Unter Aussehen → Visuell → Agent-Animation stehen Still, Nur Augen, Sanftes Gesicht
-(Standard), Kleine Gesten, Zwinkern, Fröhlich, Grimmig und Abwechslungsreich.
-Das Gesicht wandert minimal mit dem Blick; Gesten ergänzen seltenes Nicken und
-Blattwippen. Ausdrücke erscheinen kurz mit langen neutralen Pausen. Sie sind
-spielerische Dekoration, kein Arbeitsstatus. Zentrale Zeitrollen stehen in
-`design-system.mjs`; Instanzen variieren leicht. Keine Füße, Partikel oder Masken.
+Die sechs Figuren sind einfarbige Pixelwesen auf einem 16er-Raster mit Armen
+und Füßen (Stand 12.09.2026). Lumi, ein Ei mit Spross, ist der Maßstab; Nori,
+Miko, Orbit, Pixel und Kibo sind nach Tamagotchi-Klassikern gezeichnete
+Entwürfe. Keine Münder. Augen sind Ausschnitte in der Farbe der Fläche dahinter
+(`--avatar-cutout`), Requisiten wie Laptop, Buch, Brötchen, Bälle, Besen,
+Sprechblase, Noten und Z liegen als eigene Ebenen in derselben SVG und werden
+je Zustand eingeblendet. Alle Bewegungen springen in ganzen Rasterpixeln
+(`steps`), nichts gleitet. Die Fußlinie ist in jedem Zustand dieselbe: Hüpfer
+gehen nach oben und landen dort wieder, Einsacken trifft nur den Körper.
+`Avatar` nimmt `set` (Zustand) und `stage` (Bühne mit Requisiten); kompakte
+Avatare beschneiden auf die Figur und zeigen nur das Grund-Set.
+Zustände (`companion-state.mjs`): Ruhe läuft immer; Denkt, Arbeitet, Liest,
+Jongliert, Fegt, Fertig, Tanzt, Ruft, Wartet auf dich, Spielt, Isst, Fehler,
+Krank, Nickt ein, Schläft und Läuft zeigen den echten Sitzungsstand. Die Figur
+auf der Schreibzeile (`AgentCompanion`) leitet ihn aus Verbindung, offenen
+Rückfragen, laufendem Turn, jüngster Tätigkeit, Turn-Ergebnis und Leerlaufzeit
+ab; Ruf wird nach einer Minute zu Wartet, Fertig dauert zweieinhalb Sekunden,
+Einnicken beginnt nach fünf, Schlafen nach zehn Minuten Ruhe.
+Unter Aussehen → Visuell → Figur-Animation stehen Still, Ruhig und Lebendig
+(Standard); frühere Gesichtsstile laufen als Lebendig weiter. Ruhig lässt
+Hüpfer und Drehungen weg, Still zeigt die Pose ohne Bewegung.
 `AvatarMotionSetting` verwendet die gemeinsame SettingRow; Unser Design zeigt
-denselben Baustein und die acht produktiven Motive. System-/App-Vorgaben für
-reduzierte Bewegung zeigen neutrale offene Augen. Unsichtbare Avatare und
-versteckte Tabs pausieren sämtliche Ebenen.
+denselben Baustein und die sechs produktiven Figuren. System-/App-Vorgaben für
+reduzierte Bewegung zeigen die Pose ohne Bewegung. Unsichtbare Avatare und
+versteckte Tabs pausieren sämtliche Ebenen. Keine Masken.
 
 ## Gemeinsame Bedienelemente
 
@@ -447,7 +458,7 @@ Der rechte Bereich „Workspace“ verwendet die eigene Rolle `workspace-panel-b
 
 ## Ruhiger Gesprächsfluss
 
-Antworten beginnen direkt mit ihrem Inhalt. Der konfigurierte Avatar und Agentenname bleiben im Seitenleistenkopf. ComposerHeading zeigt nur ModelPicker rechts, mit Einzug auf die Achse des Sendepfeils. Eine wiederholte Autorenzeile und relatives Nachrichtenalter entfallen; der genaue Antwortzeitpunkt bleibt als Tooltip des Antwortblocks verfügbar. Direkt unter dem jeweils neuesten Antworttext, vor den bei Hover eingeblendeten Nachrichtenaktionen, stehen ausgewählter AppLoader, Live-Status, Schrittanzahl und tatsächliche Bearbeitungszeit. Diese aufklappbare ActivityGroup wandert beim Streaming mit dem Text nach unten und bleibt nach Abschluss dort als kompakter Verlauf erhalten. Ohne Werkzeuge steht der kompakte Arbeitsstatus ebenfalls direkt unter dem Text vor den Aktionen. Die Aktionszeile reserviert keinen Platz zwischen Text und Status. Die Anzeige liegt im normalen Gesprächsfluss, ohne Inhalte zu überdecken; manuelles Hochscrollen pausiert weiterhin das automatische Mitlaufen. Der Spinner endet mit der Arbeit und behauptet keinen weiteren Fortschritt.
+Antworten beginnen direkt mit ihrem Inhalt. Der konfigurierte Avatar und Agentenname bleiben im Seitenleistenkopf. ComposerHeading zeigt nur ModelPicker rechts, mit Einzug auf die Achse des Sendepfeils; links darüber steht die Figur des Agenten auf der Oberkante der Schreibzeile und zeigt den Sitzungsstand (siehe Avatare). Eine wiederholte Autorenzeile und relatives Nachrichtenalter entfallen; der genaue Antwortzeitpunkt bleibt als Tooltip des Antwortblocks verfügbar. Direkt unter dem jeweils neuesten Antworttext, vor den bei Hover eingeblendeten Nachrichtenaktionen, stehen ausgewählter AppLoader, Live-Status, Schrittanzahl und tatsächliche Bearbeitungszeit. Diese aufklappbare ActivityGroup wandert beim Streaming mit dem Text nach unten und bleibt nach Abschluss dort als kompakter Verlauf erhalten. Ohne Werkzeuge steht der kompakte Arbeitsstatus ebenfalls direkt unter dem Text vor den Aktionen. Die Aktionszeile reserviert keinen Platz zwischen Text und Status. Die Anzeige liegt im normalen Gesprächsfluss, ohne Inhalte zu überdecken; manuelles Hochscrollen pausiert weiterhin das automatische Mitlaufen. Der Spinner endet mit der Arbeit und behauptet keinen weiteren Fortschritt.
 
 Zwischenmeldungen bleiben während der Arbeit im Gespräch sichtbar. Sobald eine abschließende Antwort vorliegt und die Arbeit beendet ist, werden Zwischenmeldungen und Werkzeugschritte in ihrer ursprünglichen Reihenfolge in die standardmäßig geschlossene Gruppe aufgenommen. Aufklappen zeigt den vollständigen Ablauf. Laufende oder fehlgeschlagene Turns ohne Abschlussantwort verlieren ihre sichtbaren Zwischenmeldungen nicht. Nutzernachrichten und Antworten behalten ihre Reihenfolge; Nachträge werden nicht vor die erste Nutzernachricht verschoben.
 
@@ -476,7 +487,7 @@ Kopf und Bereichsauswahl nutzen control (14 px), Dateizeilen und Begleittexte sm
 „Befehle“ verwendet normale UI-Schrift im Leerzustand, Monospace nur für Eingabe und tatsächliche Ausgabe. Der kurze Hinweis benennt Einzelaufrufe und das 30-Sekunden-Limit. Die Eingabe bleibt unten als kompakte getönte Zeile. Die gemeinsame schwarze Materialfläche, feine Kante und Lichtbewegung bleiben in allen Ansichten sichtbar. Der Bereich ist kein persistentes Terminal und bietet keine neu erfundene native Finder-/Terminal-Anbindung.
 
 
-Die erste Nachrichtenaktion und das Fortschrittssymbol teilen dieselbe senkrechte Mittelachse. Avatar und Name bleiben im Seitenleistenkopf; der Composer zeigt keine zusätzliche Identität.
+Die erste Nachrichtenaktion und das Fortschrittssymbol teilen dieselbe senkrechte Mittelachse. Avatar und Name bleiben im Seitenleistenkopf; auf der Schreibzeile steht zusätzlich die Figur oben links (`.composer-companion`, Fußlinie auf der Pillenkante, ohne Zeigerereignisse). Sie verschwindet, solange eine Rückfrage oder Anhänge über der Zeile stehen.
 
 ## Inbox
 
@@ -777,8 +788,8 @@ Zeitplanstatus und letzter Lauf bleiben unterscheidbar. Vollständiger Vertrag:
 ## Vanilla als App-Marke
 
 Browser und installierte Web-App heißen Vanilla. Ihr festes Icon unter
-`public/app-icon.svg` übernimmt die neutrale Nori-Geometrie aus
-`ui/assets/avatars/faces/nori.svg`, einschließlich Antenne, Augen und Sockel.
+`public/app-icon.svg` behält die neutrale Nori-Geometrie der früheren
+Gesichtsreihe (Antenne, Augen, Sockel, Stand vor den Pixelfiguren vom 12.09.2026).
 Die deckende quadratische Fläche verwendet die bestehende helle Palette
 (surface #eae7df, text #292720). Das Motiv bleibt innerhalb der Maskierungszone;
 die Plattform bestimmt die Außenrundung. Keine im Bild eingebauten Schatten.

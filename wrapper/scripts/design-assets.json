@@ -87,37 +87,29 @@
     "sha256": "3355b6ce1ce2ff433fc2daeaee7dee2d3b66ae3a553b6c86f71b090f4de22d04",
     "reason": "Vanilla application icon derived from bundled avatars/faces/nori.svg, static neutral expression on existing light surface/text colors. PNG variants rasterized locally from public/app-icon.svg; no external artwork or private content."
   },
-  "ui/assets/avatars/faces/pad.svg": {
-    "sha256": "bf6168860bf60121bb23d490f34c755d28e1bb4eb8586f7bfe7a252f1fce3f51",
-    "reason": "Original monochrome face artwork. No feet; Pixel and Pad use continuous grid silhouettes. Independent SVG expression layers, no masks or external content."
-  },
   "ui/assets/avatars/faces/pixel.svg": {
-    "sha256": "40ae3690daef965711b77717c15c993c41fcc2643414cae1992f3eab466cfc4f",
-    "reason": "Original monochrome face artwork. No feet; Pixel and Pad use continuous grid silhouettes. Independent SVG expression layers, no masks or external content."
+    "sha256": "0fa6908b762d4725ff022ae3832fb907f54335c0d6616c6dac8aa3363fd5f209",
+    "reason": "Original monochrome pixel figure on a 16px grid with arms and feet; eyes are cutouts in the background colour, props (laptop, book, snack, balls, broom, speech bubble, notes, z) are separate opacity layers. No masks, no external content, no third-party artwork."
   },
   "ui/assets/avatars/faces/miko.svg": {
-    "sha256": "56fb1e94dad6062594cc7556afe9d612ebf4f68c3487864dbe812ff455c334ff",
-    "reason": "Original monochrome face artwork. No feet; Pixel and Pad use continuous grid silhouettes. Independent SVG expression layers, no masks or external content."
+    "sha256": "8236239e48e1dfb1e0ef5d8e97d0ba7a6cf7384805660cc211f103f5aa14013e",
+    "reason": "Original monochrome pixel figure on a 16px grid with arms and feet; eyes are cutouts in the background colour, props (laptop, book, snack, balls, broom, speech bubble, notes, z) are separate opacity layers. No masks, no external content, no third-party artwork."
   },
   "ui/assets/avatars/faces/orbit.svg": {
-    "sha256": "35a15ab59829d5234dd854ff53da66b9e2b31f51ce00a5351dffafcbdeb4c39e",
-    "reason": "Original monochrome face artwork. No feet; Pixel and Pad use continuous grid silhouettes. Independent SVG expression layers, no masks or external content."
-  },
-  "ui/assets/avatars/faces/pebble.svg": {
-    "sha256": "3e7d4f9950659a1b0d577cc55d86fb0974d218988312d0b2cbe3af677b373895",
-    "reason": "Original monochrome face artwork. No feet; Pixel and Pad use continuous grid silhouettes. Independent SVG expression layers, no masks or external content."
+    "sha256": "16054c4000ffe354b1b342f6a739352b284079320962e7bc967e4cff8a430ccd",
+    "reason": "Original monochrome pixel figure on a 16px grid with arms and feet; eyes are cutouts in the background colour, props (laptop, book, snack, balls, broom, speech bubble, notes, z) are separate opacity layers. No masks, no external content, no third-party artwork."
   },
   "ui/assets/avatars/faces/kibo.svg": {
-    "sha256": "c14b1d81ec9c12f2d6c0c165c1fd8ba36f3d49f555c6e010a136f77e97b8a1cb",
-    "reason": "Original monochrome face artwork. No feet; Pixel and Pad use continuous grid silhouettes. Independent SVG expression layers, no masks or external content."
+    "sha256": "6b65d5a678b14a483ad72814095d06b8e3383fcdb45de7e54b8b6d38d6c93852",
+    "reason": "Original monochrome pixel figure on a 16px grid with arms and feet; eyes are cutouts in the background colour, props (laptop, book, snack, balls, broom, speech bubble, notes, z) are separate opacity layers. No masks, no external content, no third-party artwork."
   },
   "ui/assets/avatars/faces/lumi.svg": {
-    "sha256": "d8202f35cb7c518742b2a79f84a632764d1b72b0358bea22e990652aa3959336",
-    "reason": "Original monochrome face artwork. No feet; Pixel and Pad use continuous grid silhouettes. Independent SVG expression layers, no masks or external content."
+    "sha256": "ac35e3bcf67190ef90f1436373fb74cb11b3b60f75b820aa4b997cc317a6a422",
+    "reason": "Original monochrome pixel figure on a 16px grid with arms and feet; eyes are cutouts in the background colour, props (laptop, book, snack, balls, broom, speech bubble, notes, z) are separate opacity layers. No masks, no external content, no third-party artwork."
   },
   "ui/assets/avatars/faces/nori.svg": {
-    "sha256": "7f717f3518b5e60aa56ce3c8359d20ca035b044dba717fc2fc29f2daa62f44d9",
-    "reason": "Original monochrome face artwork. No feet; Pixel and Pad use continuous grid silhouettes. Independent SVG expression layers, no masks or external content."
+    "sha256": "7e57d54deceed6cad3159e5976d83f9c7fe84f2c8e6625016c6045852ecc23f6",
+    "reason": "Original monochrome pixel figure on a 16px grid with arms and feet; eyes are cutouts in the background colour, props (laptop, book, snack, balls, broom, speech bubble, notes, z) are separate opacity layers. No masks, no external content, no third-party artwork."
   },
   "public/app-icon-512.png": {
     "sha256": "80af497fe41c1fcdf582904c2a247b7474a9b1fab63682af68d1aa35ca35b61f",

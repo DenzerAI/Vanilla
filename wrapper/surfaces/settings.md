@@ -25,32 +25,36 @@ arbeiten?** mit editierbarer Vorgabe → **Arbeitsgrundlage** mit den
 direkt sichtbaren Zeilen für Identität und gemeinsame Arbeitsregeln. Kein
 „Erweitert“-Aufklappen. Die Gruppen verwenden die vorhandenen Einstellungszeilen.
 
-Acht eigene einfarbige SVG-Gesichter stehen im gemeinsamen Auswahlfenster zur Wahl:
-Nori (Standard), Orbit, Miko, Pixel, Lumi, Kibo, Pebble und Pad. „Bild ändern …“ oder Klick auf
-den Avatar öffnet den Dialog. Vorschau und Auswahlmarkierung reagieren sofort;
+Sechs eigene einfarbige Pixelfiguren stehen im gemeinsamen Auswahlfenster zur Wahl:
+Lumi (Standard), Nori, Miko, Orbit, Pixel und Kibo. „Figur wählen …“ oder Klick auf
+die Figur öffnet den Dialog „Figur wählen“. Die große Vorschau spielt die Zustände
+der Figur durch (Ruhe, Denkt, Arbeitet, Fertig, Liest, Ruft, Tanzt, Schläft) und
+nennt den Zustand darunter; Auswahlmarkierung und Vorschau reagieren sofort.
 Abbrechen verwirft die Dialogauswahl, Übernehmen ändert den Formularentwurf,
 Speichern übernimmt das gesamte Profil. Die Radioauswahl unterstützt Pfeiltasten.
-Die Bots verwenden die Farbrollen des aktuellen Themes. Die Motive haben keine Füße; Nori und Lumi behalten einen kurzen Halsansatz.
-Pixel und Pad bestehen aus einer zusammenhängenden Pixelkontur ohne Antenne.
-Die gemeinsame Agent-Animation unter Aussehen bietet Still, Nur Augen,
-Sanftes Gesicht (Standard), Kleine Gesten, Zwinkern, Fröhlich, Grimmig und
-Abwechslungsreich. Die Auswahl wird sofort über die bestehende Darstellungseinstellung
-validiert und gespeichert und gilt auch in offenen Chats. Das dunkle Visier folgt
-dem Blick minimal; seltenes Nicken, Blattwippen und kurze Ausdrücke lassen lange
-Ruhephasen. Ausdrücke zeigen keinen gemessenen Status. Alle Ebenen pausieren
-außerhalb des sichtbaren Bereichs und in versteckten Tabs. Reduzierte Bewegung
-in App oder System zeigt neutrale offene Augen. `AvatarMotionSetting` und die
-bestehenden `AvatarChoices` stehen auch in Unser Design mit lokalem Vorschauzustand.
+Die Figuren verwenden die Farbrollen des aktuellen Themes; Augen sind Ausschnitte
+in der Fläche dahinter. Die Figur hat Arme und Füße, keinen Mund, und steht in
+jedem Zustand auf derselben Fußlinie.
+Die gemeinsame Figur-Animation unter Aussehen bietet Still, Ruhig und Lebendig
+(Standard). Die Auswahl wird sofort über die bestehende Darstellungseinstellung
+validiert und gespeichert und gilt auch in offenen Chats; frühere Werte der
+Gesichtsstile werden als Lebendig gelesen. Lebendig hüpft und dreht sich
+gelegentlich, Ruhig lässt das weg, Still zeigt nur die Pose. Auf der Schreibzeile
+zeigt die Figur den echten Sitzungsstand (siehe DESIGN.md, Avatare). Alle Ebenen
+pausieren außerhalb des sichtbaren Bereichs und in versteckten Tabs. Reduzierte
+Bewegung in App oder System zeigt die Pose ohne Bewegung. `AvatarMotionSetting`
+und die bestehenden `AvatarChoices` stehen auch in Unser Design mit lokalem
+Vorschauzustand.
 Der Kreis um den Avatar hat keinen Rand. Im selben Dialog folgt eine kompakte
 Radioauswahl für den Hintergrund: Ohne Farbe, Sand, Terrakotta, Salbei, Himmel
 und Lavendel. Hintergrund und Motiv werden gemeinsam in der Vorschau gezeigt,
 übernommen oder verworfen. „Ohne Farbe“ bleibt die neutrale Voreinstellung.
-Die acht mitgelieferten SVGs werden direkt gerendert, ohne CSS-Maskierung oder
+Die sechs mitgelieferten SVGs werden direkt gerendert, ohne CSS-Maskierung oder
 kreisförmiges Abschneiden der Motive. So entstehen keine Eck-Artefakte in WebViews.
 
 Ohne bereits gewählten Avatar wird beim ersten Öffnen ein überspringbarer
-Einrichtungsdialog mit denselben acht Bildern und Namensfeld angeboten. Ein
-vorhandener Name bleibt vorgegeben. Nach „Später“ gilt weiterhin Nori; innerhalb
+Einrichtungsdialog mit denselben sechs Figuren und Namensfeld angeboten. Ein
+vorhandener Name bleibt vorgegeben. Nach „Später“ gilt weiterhin Lumi; innerhalb
 der Browsersitzung erscheint der Dialog nicht erneut. Nach Speicherung bleibt die
 Auswahl über Neustarts erhalten.
 

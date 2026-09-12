@@ -79,17 +79,17 @@ export function AgentPreferences({ api, onSaved }) {
               <button
                 type="button"
                 className="agent-profile-picture"
-                aria-label="Profilbild ändern"
+                aria-label="Figur wechseln"
                 onClick={() => setPicker(true)}
               >
                 <Avatar avatar={data.avatar} color={data.avatarColor} large />
               </button>
               <div>
                 <strong>{data.name.trim() || "Agent"}</strong>
-                <p>Dein persönlicher Assistent</p>
+                <p>Deine Figur lebt auf der Schreibzeile</p>
               </div>
               <button type="button" onClick={() => setPicker(true)}>
-                Bild ändern …
+                Figur wählen …
               </button>
             </div>
             <SettingRow title={<label htmlFor="agent-name">Name</label>}>

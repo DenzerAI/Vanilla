@@ -17,7 +17,7 @@ const original =
 test("legacy identities display a default without overwriting existing preferences", () => {
   const p = readAgentProfile(original);
   assert.equal(p.name, "Ada");
-  assert.equal(p.avatar, "nori");
+  assert.equal(p.avatar, "lumi");
   assert.equal(p.avatarColor, "neutral");
   assert.equal(p.avatarConfigured, false);
   assert.equal(p.source, original);
@@ -104,9 +104,9 @@ test("profile saves persist across restarts; concurrent stale saves cannot overw
   assert.equal(await readFile(file, "utf8"), before);
 });
 
-test('all eight face choices survive identity serialization', async () => {
+test('all six figure choices survive identity serialization', async () => {
   const {agentAvatars} = await import('../ui/agent-avatars.mjs');
-  assert.equal(agentAvatars.length, 8);
+  assert.equal(agentAvatars.length, 6);
   for (const {id} of agentAvatars) {
     const next = updateAgentProfile(original, {...readAgentProfile(original), avatar: id});
     assert.equal(readAgentProfile(next).avatar, id);

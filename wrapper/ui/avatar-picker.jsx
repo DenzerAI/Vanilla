@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   agentAvatars,
   agentAvatar,
@@ -9,11 +9,14 @@ import {
 import { Avatar } from "./avatar.jsx";
 import { Check } from "./icons.jsx";
 import { Modal } from "./modal.jsx";
+import { companionSetLabel } from "./companion-state.mjs";
+
+const previewSets = ["ruhe", "denkt", "arbeitet", "fertig", "ruhe", "liest", "ruft", "tanzt", "schlaeft"];
 
 export function AvatarChoices({ value, color, onChange }) {
   return (
     <fieldset className="avatar-choices">
-      <legend className="sr-only">Profilbild auswählen</legend>
+      <legend className="sr-only">Figur auswählen</legend>
       {agentAvatars.map((avatar) => (
         <label
           className="avatar-choice"
@@ -79,11 +82,18 @@ export function AvatarColors({ value, onChange }) {
 export function AvatarPicker({ value, color, name, onSelect, onClose }) {
   const [selected, setSelected] = useState(agentAvatar(value).id);
   const [background, setBackground] = useState(avatarColor(color));
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    const timer = setInterval(() => setStep((value) => value + 1), 2600);
+    return () => clearInterval(timer);
+  }, []);
+  const set = previewSets[step % previewSets.length];
   return (
-    <Modal title="Profilbild auswählen" onClose={onClose}>
+    <Modal title="Figur wählen" onClose={onClose}>
       <div className="avatar-picker-preview">
-        <Avatar avatar={selected} color={background} large />
+        <Avatar avatar={selected} color={background} large stage set={set} />
         <strong>{name.trim() || "Agent"}</strong>
+        <span className="avatar-picker-state" role="status">{companionSetLabel(set)}</span>
       </div>
       <AvatarChoices
         value={selected}
@@ -123,7 +133,8 @@ export function AgentWelcome({ api, initialName, onSaved, onClose }) {
       }}
     >
       <p className="agent-welcome-copy">
-        Gib deinem Assistenten ein Gesicht und einen Namen. Beides kannst du
+        Gib deinem Assistenten eine Figur und einen Namen. Die Figur lebt auf
+        der Schreibzeile und zeigt dir, was gerade passiert. Beides kannst du
         später in den Einstellungen ändern.
       </p>
       <form

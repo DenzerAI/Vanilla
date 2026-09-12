@@ -120,6 +120,12 @@
 .pill-composer:focus-within { background: transparent; }
 .composer-entry { display: flex; align-items: center; gap: var(--space-8); padding: var(--space-8); min-height: 52px; background: var(--composer); border: 0; border-radius: var(--radius-pill); }
 .composer-entry[data-multiline="true"] { border-radius: var(--radius-large); }
+/* Die Figur steht oben links auf der Schreibzeile; ihre Fußlinie ist die Pillenkante. */
+.composer-entry { position: relative; }
+.composer-companion { position: absolute; left: var(--space-12); bottom: calc(100% - 3px); width: 93px; height: 75px; pointer-events: none; z-index: 1; --avatar-cutout: var(--bg); }
+.composer-companion .avatar { width: 100%; height: 100%; margin: 0; --avatar-cutout: var(--bg); }
+.composer-companion .agent-avatar-art { width: 100%; height: 100%; }
+@media (max-width: 600px) { .composer-companion { width: 74px; height: 60px; bottom: calc(100% - 2px); } }
 .composer-entry:focus-within { background: var(--composer); }
 .composer-entry textarea { flex: 1; width: 0; min-width: 0; min-height: 24px; max-height: 180px; padding: var(--space-2) 0 0; margin: 0; font-size: var(--text-control); overflow: hidden; overflow-wrap: anywhere; white-space: pre-wrap; }
 .composer-entry > .icon-button, .composer-entry .send-button { flex-shrink: 0; width: var(--control-target); height: var(--control-target); }

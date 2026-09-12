@@ -143,13 +143,15 @@ import { MIN_CHAT_WIDTH, visiblePanes, selectPaneCount, conversationText } from 
 import { AgentWelcome } from "./avatar-picker.jsx";
 import { Modal } from "./modal.jsx";
 import "./sidebar-refinement.css";
-import { appearanceOptions, projectColor, relativeTime, projectChatList, chatDateGroup } from "./appearance.mjs";
+import { appearanceOptions, projectColor, relativeTime, projectChatList, chatDateGroup, normalizeAvatarMotion } from "./appearance.mjs";
 import { fonts, typography } from "./design-system.mjs";
 import { timestamp, dayLabel, durationLabel, activityLabel, groupItems, actionRowIndex } from "./chat-presentation.mjs";
 import { workerName } from "../../system/worker-catalog.mjs";
 import { AgentMenu } from "./agent-menu";
 import { Avatar } from "./avatar.jsx";
 import { AvatarMotionSetting } from "./avatar-motion-setting.jsx";
+import { AgentCompanion } from "./agent-companion.jsx";
+import { latestActivity } from "./companion-state.mjs";
 import { WelcomeParticles } from "./welcome-particles";
 import { nextChatGreeting } from "./chat-greetings.mjs";
 import { DictationComposer, RecordingProvider, RecordingIndicator } from "./recording-session.jsx";
@@ -858,6 +860,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   }, [embedded, !!boot, view]);
   const current = chats.find((c) => c.id === chatId),
     running = !!active[chatId],
+    companionActivity = running ? latestActivity(thread, active[chatId]) : null,
     project = boot?.projects?.find((p) => p.id === projectId);
   const selectionKey = chatId || `new:${projectId}`;
   const composerSelection = nextSelections[selectionKey] || current?.composerSelection;
@@ -945,7 +948,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
     root.style.setProperty("--font-ui", settings.uiFont === "system" ? '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' : fonts.find(font => font.token === "font-ui").value);
     root.dataset.reduceMotion = settings.reduceMotion || "system";
     root.dataset.iconAnimation = settings.iconAnimation || "hover";
-    root.dataset.avatarStyle = settings.avatarMotion || "face";
+    root.dataset.avatarStyle = normalizeAvatarMotion(settings.avatarMotion);
     for (const [key, value] of Object.entries(designVariables(settings.theme, settings.designTone, settings.highlightColor))) root.style.setProperty(key, value);
   }, [boot?.settings]);
   async function loadJobs() {
@@ -2439,6 +2442,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       />
                   </ComposerHeading>
                   <ComposerFocus active={composerActive} multiple={embedded ? showPaneHeader : paneOrder.length > 1} visible={foreground && view === "chat" && readablePane} onActivate={activateComposer}>
+                      <AgentCompanion avatar={boot.settings.avatar} color={boot.settings.avatarColor} chatId={chatId} running={running} waiting={requests.some(r => r.params?.threadId === chatId)} busy={busy} connection={connectionState} activity={companionActivity} lastTurnStatus={current?.lastTurnStatus} hasTurns={!!thread?.turns?.length} hidden={!!questionState.request || attachments.length > 0 || !(foreground && view === "chat" && readablePane)} />
                       <IconButton
                         label="Dateien anhängen"
                         disabled={!!questionState.request}
@@ -2891,7 +2895,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                 <h3 className="section-heading">Visuell</h3>
                 <div className="settings-group">
                   <IconMotionSetting value={boot.settings.iconAnimation || "hover"} onChange={value => guard(() => saveSettings({iconAnimation: value}))()} />
-                  <AvatarMotionSetting value={boot.settings.avatarMotion || "face"} onChange={value => guard(() => saveSettings({avatarMotion: value}))()} avatar={boot.settings.avatar} color={boot.settings.avatarColor} />
+                  <AvatarMotionSetting value={boot.settings.avatarMotion} onChange={value => guard(() => saveSettings({avatarMotion: value}))()} avatar={boot.settings.avatar} color={boot.settings.avatarColor} />
                   <SettingRow title="Flächenlicht" description="Dezente Lichtverläufe in Seitenleiste und Workspace.">
                     <select aria-label="Flächenlicht" value={boot.settings.panelLight || "animated"} onChange={e => guard(() => saveSettings({panelLight: e.target.value}))()}>{appearanceOptions.panelLight.options.map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select>
                   </SettingRow>

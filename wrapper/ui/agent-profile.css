@@ -10,95 +10,229 @@
 }
 
 /* Inherited choices keep every instance in sync, including local design previews. */
-:root, [data-avatar-style] {
-  --avatar-face-animation: avatar-face-look;
-  --avatar-gaze-animation: avatar-look;
-  --avatar-blink-animation: avatar-blink;
-  --avatar-head-animation: none;
-  --avatar-detail-animation: none;
-  --avatar-wink-animation: none;
-  --avatar-neutral-animation: none;
-  --avatar-happy-animation: none;
-  --avatar-grumpy-animation: none;
+/* Pixelfiguren: ein 16er-Raster, ganze Pixelschritte (steps), Requisiten als
+   eigene Ebenen. Der Zustand kommt über data-set am Avatar, die Bewegungsstufe
+   über data-avatar-style an der Wurzel (off, calm, sonst lebendig). */
+.agent-avatar-art .bg, .agent-avatar-art .eye { fill: var(--avatar-cutout, var(--surface)); }
+.agent-avatar-art .eye.pupil, [data-avatar="orbit"] .agent-avatar-art .eyec { fill: currentColor; }
+.agent-avatar-art .eyec { fill: var(--avatar-cutout, var(--surface)); opacity: 0; }
+.agent-avatar-art .eyefill { opacity: 0; }
+.agent-avatar-art .shadow { opacity: .1; }
+.agent-avatar-art .props > g { opacity: 0; }
+.agent-avatar-art .char, .agent-avatar-art .props, .agent-avatar-art .bodyg, .agent-avatar-art .armL, .agent-avatar-art .armR, .agent-avatar-art .legL, .agent-avatar-art .legR { transform-origin: 8px 8px; }
+.agent-avatar-art .eye, .agent-avatar-art .shadow, .agent-avatar-art .line, .agent-avatar-art .snack { transform-box: fill-box; }
+.agent-avatar-art .eye { transform-origin: center bottom; }
+.agent-avatar-art .shadow { transform-origin: center; }
+.agent-avatar-art .line, .agent-avatar-art .snack { transform-origin: left center; }
+.agent-avatar-art .broom { transform-box: fill-box; transform-origin: center bottom; }
+.agent-avatar-art .p-zz .z1, .agent-avatar-art .p-zz .z2, .agent-avatar-art .p-zz .z3 { transform: translate(13px, 2px); }
+.agent-avatar-art .p-notes .n1 { transform: translate(15px, -1px); }
+.agent-avatar-art .p-notes .n2 { transform: translate(-3px, 1px); }
+.agent-avatar-art :is(.char, .eye, .eyes, .eyec, .bodyg, .armL, .armR, .legL, .legR, .shadow, .detail, .tip, .ear, .line, .key, .page, .dot, .snack, .crumb, .ball, .broom, .dust, .sw, .s1, .s2, .n1, .n2, .z1, .z2, .z3, .p-call, .p-quest, .p-drop rect) {
+  animation-timing-function: steps(1, end);
+  animation-iteration-count: infinite;
+  animation-delay: var(--avatar-delay, 2s);
+  animation-play-state: paused;
 }
-[data-avatar-style="off"] {
-  --avatar-face-animation: none;
-  --avatar-gaze-animation: none;
-  --avatar-blink-animation: none;
-}
-[data-avatar-style="eyes"] { --avatar-face-animation: none; }
-[data-avatar-style="gestures"], [data-avatar-style="mixed"] {
-  --avatar-head-animation: avatar-nod;
-  --avatar-detail-animation: avatar-detail;
-}
-[data-avatar-style="wink"] { --avatar-wink-animation: avatar-wink; }
-[data-avatar-style="happy"] {
-  --avatar-neutral-animation: avatar-neutral-expression;
-  --avatar-happy-animation: avatar-expression;
-}
-[data-avatar-style="grumpy"] {
-  --avatar-neutral-animation: avatar-neutral-expression;
-  --avatar-grumpy-animation: avatar-expression;
-}
-[data-avatar-style="mixed"] {
-  --avatar-wink-animation: avatar-wink;
-  --avatar-neutral-animation: avatar-neutral-mixed;
-  --avatar-happy-animation: avatar-expression;
-  --avatar-grumpy-animation: avatar-grumpy-mixed;
-}
-.avatar-screen { fill: var(--surface); }
-.avatar-head, .avatar-face, .avatar-gaze, .avatar-detail {
-  transform-box: view-box;
-  transform-origin: 32px 34px;
-}
-.avatar-head { animation: var(--avatar-head-animation) var(--motion-avatar-gesture-duration) var(--motion-avatar-easing) var(--avatar-delay, 2s) infinite; }
-.avatar-detail { transform-origin: 32px 21px; animation: var(--avatar-detail-animation) var(--motion-avatar-gesture-duration) var(--motion-avatar-easing) var(--avatar-delay, 2s) infinite; }
-.avatar-face { animation: var(--avatar-face-animation) var(--avatar-gaze-cycle, var(--motion-avatar-gaze-duration)) var(--motion-avatar-easing) var(--avatar-delay, 2s) infinite; }
-.avatar-gaze { animation: var(--avatar-gaze-animation) var(--avatar-gaze-cycle, var(--motion-avatar-gaze-duration)) var(--motion-avatar-easing) var(--avatar-delay, 2s) infinite; }
-.avatar-eyelids, .avatar-eye { transform-box: fill-box; transform-origin: center; }
-.avatar-eyelids { animation: var(--avatar-blink-animation) var(--avatar-blink-cycle, var(--motion-avatar-blink-duration)) var(--motion-avatar-easing) var(--avatar-delay, 2s) infinite; }
-.avatar-eye-left { animation: var(--avatar-wink-animation) var(--avatar-expression-cycle, var(--motion-avatar-expression-duration)) var(--motion-avatar-easing) var(--avatar-delay, 2s) infinite; }
-.avatar-neutral { animation: var(--avatar-neutral-animation) var(--avatar-expression-cycle, var(--motion-avatar-expression-duration)) steps(1, end) var(--avatar-delay, 2s) infinite; }
-.avatar-happy, .avatar-grumpy { opacity: 0; }
-.avatar-happy { animation: var(--avatar-happy-animation) var(--avatar-expression-cycle, var(--motion-avatar-expression-duration)) steps(1, end) var(--avatar-delay, 2s) infinite; }
-.avatar-grumpy { animation: var(--avatar-grumpy-animation) var(--avatar-expression-cycle, var(--motion-avatar-expression-duration)) steps(1, end) var(--avatar-delay, 2s) infinite; }
-[data-avatar="pixel"] .avatar-face, [data-avatar="pad"] .avatar-face { animation-timing-function: steps(2, end); }
-.agent-avatar-art :is(.avatar-head, .avatar-detail, .avatar-face, .avatar-gaze, .avatar-eyelids, .avatar-eye-left, .avatar-neutral, .avatar-happy, .avatar-grumpy) { animation-play-state: paused; }
 [data-avatar-motion="running"] .agent-avatar-art * { animation-play-state: running; }
-@keyframes avatar-blink {
-  0%, 18%, 19.2%, 53%, 54.2%, 84%, 87%, 100% { transform: scaleY(1); }
-  18.5%, 53.5%, 84.7%, 86% { transform: scaleY(.12); }
-}
-@keyframes avatar-look {
-  0%, 12%, 22%, 54%, 66%, 100% { transform: translate(0, 0); }
-  14%, 20% { transform: translate(1px, -.3px); }
-  56%, 64% { transform: translate(-1px, .3px); }
-}
-@keyframes avatar-face-look {
-  0%, 12%, 22%, 54%, 66%, 100% { transform: translate(0, 0); }
-  14%, 20% { transform: translate(1.2px, -.5px); }
-  56%, 64% { transform: translate(-1.2px, .5px); }
-}
-@keyframes avatar-nod {
-  0%, 34%, 44%, 100% { transform: rotate(0) translateY(0); }
-  38%, 40% { transform: rotate(-2deg) translateY(.6px); }
-}
-@keyframes avatar-detail {
-  0%, 34%, 44%, 100% { transform: rotate(0); }
-  38% { transform: rotate(5deg); }
-  41% { transform: rotate(-2deg); }
-}
-@keyframes avatar-wink {
-  0%, 40%, 43%, 100% { transform: scaleY(1); }
-  40.8%, 42% { transform: scaleY(.12); }
-}
-@keyframes avatar-expression { 0%, 14%, 100% { opacity: 0; } 8% { opacity: 1; } }
-@keyframes avatar-neutral-expression { 0%, 14%, 100% { opacity: 1; } 8% { opacity: 0; } }
-@keyframes avatar-grumpy-mixed { 0%, 77%, 100% { opacity: 0; } 72% { opacity: 1; } }
-@keyframes avatar-neutral-mixed { 0%, 14%, 77%, 100% { opacity: 1; } 8%, 72% { opacity: 0; } }
-:root[data-reduce-motion="on"] .agent-avatar-art * { animation: none; transform: none; }
+/* Grund-Set: läuft in jedem Zustand mit, sofern ein Set nichts anderes sagt */
+.agent-avatar-art .eye { animation-name: px-blink; animation-duration: 4.6s; }
+.agent-avatar-art .eyes { animation-name: px-look; animation-duration: 9s; }
+.agent-avatar-art .bodyg { animation-name: px-breathe; animation-duration: 3.2s; }
+.agent-avatar-art .armL { animation-name: px-armbob; animation-duration: 6s; }
+.agent-avatar-art .armR { animation-name: px-armbob; animation-duration: 6s; animation-delay: calc(var(--avatar-delay, 2s) + .4s); }
+.agent-avatar-art .char { animation-name: px-idlechar; animation-duration: 14s; }
+[data-avatar="lumi"] .agent-avatar-art .detail { animation-name: px-wiggle; animation-duration: 7s; }
+.agent-avatar-art .tip { animation-name: px-tip; animation-duration: 5s; }
+.agent-avatar-art .ear { animation-name: px-ear; animation-duration: 6.5s; }
+@keyframes px-blink { 0%, 91%, 100% { transform: scaleY(1); } 92%, 94.5% { transform: scaleY(.5); } }
+@keyframes px-look { 0%, 30% { transform: translate(0, 0); } 33%, 48% { transform: translate(1px, 0); } 50%, 70% { transform: translate(0, 0); } 72%, 86% { transform: translate(-1px, 0); } 88%, 100% { transform: translate(0, 0); } }
+@keyframes px-breathe { 0%, 45%, 100% { transform: translateY(0); } 50%, 90% { transform: translateY(1px); } }
+@keyframes px-armbob { 0%, 40%, 60%, 100% { transform: translateY(0); } 45%, 55% { transform: translateY(1px); } }
+@keyframes px-wiggle { 0%, 60%, 72%, 100% { transform: translateX(0); } 63%, 66% { transform: translateX(1px); } 68%, 70% { transform: translateX(-1px); } }
+@keyframes px-tip { 0%, 80%, 86%, 100% { opacity: 1; } 82%, 84% { opacity: 0; } }
+@keyframes px-ear { 0%, 70%, 76%, 100% { transform: translateY(0); } 72%, 74% { transform: translateY(-1px); } }
+@keyframes px-idlechar { 0%, 40% { transform: none; } 41%, 42.5% { transform: translateY(-1px); } 43%, 60% { transform: none; } 61%, 78% { transform: scaleX(-1); } 78.5%, 80% { transform: scaleX(-1) translateY(-1px); } 80.5%, 100% { transform: none; } }
+/* Sets ohne Hüpfer und Drehung */
+[data-set="denkt"] .agent-avatar-art .char, [data-set="arbeitet"] .agent-avatar-art .char, [data-set="liest"] .agent-avatar-art .char, [data-set="fegt"] .agent-avatar-art .char, [data-set="isst"] .agent-avatar-art .char, [data-set="fehler"] .agent-avatar-art .char, [data-set="schlaeft"] .agent-avatar-art .char, [data-set="nickt"] .agent-avatar-art .char, [data-set="jongliert"] .agent-avatar-art .char, [data-set="wartet"] .agent-avatar-art .char { animation-name: none; }
+/* Denkt */
+[data-set="denkt"] .agent-avatar-art .p-bubble { opacity: 1; }
+[data-set="denkt"] .agent-avatar-art .eyes { animation-name: none; transform: translate(1px, -1px); }
+[data-set="denkt"] .agent-avatar-art .dot { opacity: 0; animation-name: px-dot; animation-duration: 1.8s; animation-delay: 0s; }
+[data-set="denkt"] .agent-avatar-art .d2 { animation-delay: .3s; }
+[data-set="denkt"] .agent-avatar-art .d3 { animation-delay: .6s; }
+@keyframes px-dot { 0%, 14% { opacity: 0; } 15%, 80% { opacity: 1; } 81%, 100% { opacity: 0; } }
+/* Gegenstand links: die Figur dreht sich hin */
+[data-set="arbeitet"] .agent-avatar-art .bodyg, [data-set="liest"] .agent-avatar-art .bodyg, [data-set="isst"] .agent-avatar-art .bodyg { animation-name: px-breathe-m; animation-duration: 3.2s; }
+[data-set="arbeitet"] .agent-avatar-art .armL, [data-set="liest"] .agent-avatar-art .armL, [data-set="isst"] .agent-avatar-art .armL { animation-name: none; transform: scaleX(-1) translateY(1px); }
+@keyframes px-breathe-m { 0%, 45%, 100% { transform: scaleX(-1); } 50%, 90% { transform: scaleX(-1) translateY(1px); } }
+/* Arbeitet: Laptop, tippende Hand, Tasten blitzen, Codezeilen wachsen */
+[data-set="arbeitet"] .agent-avatar-art .p-laptop { opacity: 1; }
+[data-set="arbeitet"] .agent-avatar-art .eyes { animation-name: none; transform: translate(1px, 1px); }
+[data-set="arbeitet"] .agent-avatar-art .armR { animation-name: px-type-m; animation-duration: .24s; animation-delay: 0s; }
+[data-set="arbeitet"] .agent-avatar-art .key { opacity: 0; animation-name: px-key; animation-delay: 0s; }
+[data-set="arbeitet"] .agent-avatar-art .k1 { animation-duration: .6s; }
+[data-set="arbeitet"] .agent-avatar-art .k2 { animation-duration: .8s; animation-delay: -.25s; }
+[data-set="arbeitet"] .agent-avatar-art .k3 { animation-duration: .5s; animation-delay: -.1s; }
+[data-set="arbeitet"] .agent-avatar-art .k4 { animation-duration: .7s; animation-delay: -.45s; }
+[data-set="arbeitet"] .agent-avatar-art .l1 { animation-name: px-line1; animation-duration: 3s; animation-delay: 0s; }
+[data-set="arbeitet"] .agent-avatar-art .l2 { animation-name: px-line2; animation-duration: 3s; animation-delay: 0s; }
+[data-set="arbeitet"] .agent-avatar-art .l3 { animation-name: px-line3; animation-duration: 3s; animation-delay: 0s; }
+@keyframes px-type-m { 0%, 49% { transform: scaleX(-1) translate(2px, 2px); } 50%, 100% { transform: scaleX(-1) translate(3px, 3px); } }
+@keyframes px-key { 0%, 30% { opacity: 1; } 31%, 100% { opacity: 0; } }
+@keyframes px-line1 { 0%, 8% { transform: scaleX(0); } 9%, 16% { transform: scaleX(.3334); } 17%, 24% { transform: scaleX(.6667); } 25%, 100% { transform: scaleX(1); } }
+@keyframes px-line2 { 0%, 32% { transform: scaleX(0); } 33%, 44% { transform: scaleX(.5); } 45%, 100% { transform: scaleX(1); } }
+@keyframes px-line3 { 0%, 56% { transform: scaleX(0); } 57%, 64% { transform: scaleX(.3334); } 65%, 72% { transform: scaleX(.6667); } 73%, 92% { transform: scaleX(1); } 93%, 100% { transform: scaleX(0); } }
+/* Liest: Buch, Seite blättert um, Blick pendelt */
+[data-set="liest"] .agent-avatar-art .p-book { opacity: 1; }
+[data-set="liest"] .agent-avatar-art .eyes { animation-name: px-read-m; animation-duration: 2.8s; animation-delay: 0s; }
+[data-set="liest"] .agent-avatar-art .armR { animation-name: none; transform: scaleX(-1) translate(2px, 1px); }
+[data-set="liest"] .agent-avatar-art .page { animation-name: px-page; animation-duration: 2.8s; animation-delay: 0s; }
+@keyframes px-read-m { 0%, 30% { transform: translate(2px, 1px); } 31%, 60% { transform: translate(1px, 1px); } 61%, 90% { transform: translate(0, 1px); } 91%, 100% { transform: translate(2px, 1px); } }
+@keyframes px-page { 0%, 60% { opacity: 1; transform: translateX(0); } 61%, 72% { opacity: 1; transform: translateX(-2px); } 73%, 84% { opacity: 1; transform: translateX(-4px); } 85%, 100% { opacity: 0; transform: translateX(-4px); } }
+/* Isst: Brötchen, drei Bisse, Krümel */
+[data-set="isst"] .agent-avatar-art .p-snack { opacity: 1; }
+[data-set="isst"] .agent-avatar-art .eyes { animation-name: none; transform: translate(1px, 0); }
+[data-set="isst"] .agent-avatar-art .eye { animation-name: px-chew; animation-duration: .6s; animation-delay: 0s; }
+[data-set="isst"] .agent-avatar-art .armR { animation-name: px-eat-m; animation-duration: 1s; animation-delay: 0s; }
+[data-set="isst"] .agent-avatar-art .snack { animation-name: px-bites; animation-duration: 4s; }
+[data-set="isst"] .agent-avatar-art .crumb { opacity: 0; animation-name: px-crumb; animation-duration: 1s; }
+[data-set="isst"] .agent-avatar-art .c2 { animation-delay: .5s; }
+@keyframes px-chew { 0%, 49% { transform: scaleY(1); } 50%, 100% { transform: scaleY(.5); } }
+@keyframes px-eat-m { 0%, 49% { transform: scaleX(-1) translate(2px, 1px); } 50%, 100% { transform: scaleX(-1) translate(3px, 2px); } }
+@keyframes px-bites { 0%, 24% { transform: scaleX(1); } 25%, 49% { transform: scaleX(.67); } 50%, 74% { transform: scaleX(.34); } 75%, 100% { transform: scaleX(0); } }
+@keyframes px-crumb { 0%, 49% { opacity: 0; } 50%, 60% { opacity: 1; transform: translateY(0); } 61%, 75% { opacity: 1; transform: translateY(1px); } 76%, 100% { opacity: 0; } }
+/* Jongliert */
+[data-set="jongliert"] .agent-avatar-art .p-balls { opacity: 1; }
+[data-set="jongliert"] .agent-avatar-art .ball { animation-name: px-ball; animation-duration: 1.5s; }
+[data-set="jongliert"] .agent-avatar-art .b1 { animation-delay: 0s; }
+[data-set="jongliert"] .agent-avatar-art .b2 { animation-delay: .5s; }
+[data-set="jongliert"] .agent-avatar-art .b3 { animation-delay: 1s; }
+[data-set="jongliert"] .agent-avatar-art .armL { animation-name: px-jug; animation-duration: .75s; animation-delay: 0s; }
+[data-set="jongliert"] .agent-avatar-art .armR { animation-name: px-jug; animation-duration: .75s; animation-delay: .375s; }
+[data-set="jongliert"] .agent-avatar-art .eyes { animation-name: none; transform: translateY(-1px); }
+@keyframes px-ball { 0% { transform: translate(1px, 6px); } 17% { transform: translate(4px, 1px); } 34% { transform: translate(7px, -2px); } 51% { transform: translate(10px, -1px); } 68% { transform: translate(13px, 3px); } 85% { transform: translate(11px, 7px); } 100% { transform: translate(1px, 6px); } }
+@keyframes px-jug { 0%, 49% { transform: translateY(-2px); } 50%, 100% { transform: translateY(-1px); } }
+/* Fegt */
+[data-set="fegt"] .agent-avatar-art .p-broom { opacity: 1; }
+[data-set="fegt"] .agent-avatar-art .broom { animation-name: px-feg; animation-duration: .8s; }
+[data-set="fegt"] .agent-avatar-art .armR { animation-name: px-fegarm; animation-duration: .8s; animation-delay: 0s; }
+[data-set="fegt"] .agent-avatar-art .dust { opacity: 0; animation-name: px-dust; animation-duration: .8s; }
+[data-set="fegt"] .agent-avatar-art .u2 { animation-delay: .4s; }
+[data-set="fegt"] .agent-avatar-art .eyes { animation-name: none; transform: translate(1px, 1px); }
+@keyframes px-feg { 0%, 49% { transform: translateX(0); } 50%, 100% { transform: translateX(2px); } }
+@keyframes px-fegarm { 0%, 49% { transform: translate(0, -1px); } 50%, 100% { transform: translate(1px, 0); } }
+@keyframes px-dust { 0%, 49% { opacity: 0; } 50%, 60% { opacity: 1; transform: translate(0, 0); } 61%, 75% { opacity: 1; transform: translate(1px, -1px); } 76%, 100% { opacity: 0; } }
+/* Fertig */
+[data-set="fertig"] .agent-avatar-art .p-spark { opacity: 1; }
+[data-set="fertig"] .agent-avatar-art .char { animation-name: px-jump; animation-duration: 1.8s; animation-delay: 0s; }
+[data-set="fertig"] .agent-avatar-art .shadow { animation-name: px-shadow; animation-duration: 1.8s; animation-delay: 0s; }
+[data-set="fertig"] .agent-avatar-art .armL { animation-name: px-wave; animation-duration: .3s; animation-delay: 0s; }
+[data-set="fertig"] .agent-avatar-art .armR { animation-name: px-wave; animation-duration: .3s; animation-delay: .15s; }
+[data-set="fertig"] .agent-avatar-art .bodyg { animation-name: none; }
+[data-set="fertig"] .agent-avatar-art .s1 { animation-name: px-spark; animation-duration: .9s; animation-delay: 0s; }
+[data-set="fertig"] .agent-avatar-art .s2 { animation-name: px-spark; animation-duration: .9s; animation-delay: .45s; }
+@keyframes px-jump { 0%, 8% { transform: translateY(0); } 9%, 13% { transform: translateY(-2px); } 14%, 26% { transform: translateY(-3px); } 27%, 31% { transform: translateY(-2px); } 32%, 44% { transform: translateY(0); } 45%, 49% { transform: translateY(-2px); } 50%, 62% { transform: translateY(-3px); } 63%, 67% { transform: translateY(-2px); } 68%, 100% { transform: translateY(0); } }
+@keyframes px-shadow { 0%, 8%, 32%, 44%, 68%, 100% { transform: scaleX(1); } 9%, 31%, 45%, 67% { transform: scaleX(.6); } }
+@keyframes px-wave { 0%, 49% { transform: translateY(-3px); } 50%, 100% { transform: translateY(-4px); } }
+@keyframes px-spark { 0%, 49% { opacity: 1; } 50%, 100% { opacity: 0; } }
+/* Tanzt */
+[data-set="tanzt"] .agent-avatar-art .p-notes { opacity: 1; }
+[data-set="tanzt"] .agent-avatar-art .char { animation-name: px-dance; animation-duration: 1.2s; animation-delay: 0s; }
+[data-set="tanzt"] .agent-avatar-art .armL { animation-name: px-dancearm; animation-duration: .6s; animation-delay: 0s; }
+[data-set="tanzt"] .agent-avatar-art .armR { animation-name: px-dancearm; animation-duration: .6s; animation-delay: .3s; }
+[data-set="tanzt"] .agent-avatar-art .bodyg { animation-name: none; }
+[data-set="tanzt"] .agent-avatar-art .n1, [data-set="tanzt"] .agent-avatar-art .n2 { opacity: 0; animation-name: px-note; animation-duration: 1.2s; animation-delay: 0s; }
+[data-set="tanzt"] .agent-avatar-art .n2 { animation-delay: .6s; }
+@keyframes px-dance { 0%, 24% { transform: translate(-2px, 0); } 25%, 49% { transform: translate(-1px, -2px); } 50%, 74% { transform: translate(2px, 0); } 75%, 100% { transform: translate(1px, -2px); } }
+@keyframes px-dancearm { 0%, 49% { transform: translateY(-3px); } 50%, 100% { transform: translateY(1px); } }
+@keyframes px-note { 0%, 10% { opacity: 0; } 11%, 45% { opacity: 1; } 46%, 100% { opacity: 0; } }
+/* Ruft: Ausrufezeichen und Hüpfer */
+[data-set="ruft"] .agent-avatar-art .p-call { opacity: 1; animation-name: px-callblink; animation-duration: .8s; animation-delay: 0s; }
+[data-set="ruft"] .agent-avatar-art .char { animation-name: px-hop; animation-duration: .8s; animation-delay: 0s; }
+[data-set="ruft"] .agent-avatar-art .shadow { animation-name: px-hopshadow; animation-duration: .8s; animation-delay: 0s; }
+[data-set="ruft"] .agent-avatar-art .bodyg { animation-name: none; }
+[data-set="ruft"] .agent-avatar-art .armL, [data-set="ruft"] .agent-avatar-art .armR { animation-name: none; transform: translateY(-3px); }
+@keyframes px-callblink { 0%, 74% { opacity: 1; } 75%, 100% { opacity: 0; } }
+@keyframes px-hop { 0%, 40% { transform: translateY(0); } 41%, 50% { transform: translateY(-2px); } 51%, 70% { transform: translateY(-3px); } 71%, 80% { transform: translateY(-2px); } 81%, 100% { transform: translateY(0); } }
+@keyframes px-hopshadow { 0%, 40%, 81%, 100% { transform: scaleX(1); } 41%, 80% { transform: scaleX(.6); } }
+/* Wartet auf dich: Rücken zum Betrachter, Blick über die Schulter */
+[data-set="wartet"] .agent-avatar-art .eyefill { opacity: 1; }
+[data-set="wartet"] .agent-avatar-art .eye { animation-name: px-glance; animation-duration: 6s; animation-delay: 0s; }
+[data-set="wartet"] .agent-avatar-art .eyes { animation-name: none; transform: translateX(2px); }
+[data-set="wartet"] .agent-avatar-art .armL, [data-set="wartet"] .agent-avatar-art .armR { animation-name: none; transform: translateY(1px); }
+@keyframes px-glance { 0%, 70% { opacity: 0; } 71%, 84% { opacity: 1; } 85%, 100% { opacity: 0; } }
+/* Spielt: links, rechts, links */
+[data-set="spielt"] .agent-avatar-art .p-quest { opacity: 1; animation-name: px-questblink; animation-duration: 1.6s; animation-delay: 0s; }
+[data-set="spielt"] .agent-avatar-art .bodyg, [data-set="spielt"] .agent-avatar-art .armL, [data-set="spielt"] .agent-avatar-art .armR { animation-name: px-turnplay; animation-duration: 1.6s; animation-delay: 0s; }
+[data-set="spielt"] .agent-avatar-art .char { animation-name: px-hop; animation-duration: .8s; animation-delay: 0s; }
+[data-set="spielt"] .agent-avatar-art .shadow { animation-name: px-hopshadow; animation-duration: .8s; animation-delay: 0s; }
+[data-set="spielt"] .agent-avatar-art .eyes { animation-name: none; transform: translateX(1px); }
+@keyframes px-turnplay { 0%, 49% { transform: scaleX(-1); } 50%, 100% { transform: scaleX(1); } }
+@keyframes px-questblink { 0%, 40% { opacity: 1; } 41%, 100% { opacity: 0; } }
+/* Fehler: nur der Körper sackt, ein Tropfen läuft */
+[data-set="fehler"] .agent-avatar-art .p-drop { opacity: 1; }
+[data-set="fehler"] .agent-avatar-art .eye { animation-name: none; transform: scaleY(.5); }
+[data-set="fehler"] .agent-avatar-art .eyes { animation-name: none; }
+[data-set="fehler"] .agent-avatar-art .armL, [data-set="fehler"] .agent-avatar-art .armR { animation-name: none; transform: translateY(2px); }
+[data-set="fehler"] .agent-avatar-art .bodyg { animation-name: none; transform: translateY(1px); }
+[data-set="fehler"] .agent-avatar-art .p-drop rect { animation-name: px-drop; animation-duration: 2.6s; animation-delay: 0s; }
+@keyframes px-drop { 0%, 20% { transform: translateY(0); opacity: 1; } 21%, 40% { transform: translateY(1px); } 41%, 58% { transform: translateY(2px); } 59%, 74% { transform: translateY(3px); } 75%, 100% { transform: translateY(3px); opacity: 0; } }
+/* Krank */
+[data-set="krank"] .agent-avatar-art .p-sick { opacity: 1; }
+[data-set="krank"] .agent-avatar-art .char { animation-name: px-wobble; animation-duration: 2.4s; animation-delay: 0s; }
+[data-set="krank"] .agent-avatar-art .eye { animation-name: none; transform: scaleY(.5); }
+[data-set="krank"] .agent-avatar-art .eyes { animation-name: none; }
+[data-set="krank"] .agent-avatar-art .armL, [data-set="krank"] .agent-avatar-art .armR { animation-name: none; transform: translateY(2px); }
+[data-set="krank"] .agent-avatar-art .sw { opacity: 0; animation-name: px-sweat; animation-duration: 1.8s; }
+[data-set="krank"] .agent-avatar-art .w2 { animation-delay: .9s; }
+@keyframes px-wobble { 0%, 20% { transform: translateX(0); } 21%, 45% { transform: translateX(-1px); } 46%, 70% { transform: translateX(0); } 71%, 95% { transform: translateX(1px); } 96%, 100% { transform: translateX(0); } }
+@keyframes px-sweat { 0%, 10% { opacity: 1; transform: translateY(0); } 11%, 35% { opacity: 1; transform: translateY(1px); } 36%, 60% { opacity: 1; transform: translateY(2px); } 61%, 100% { opacity: 0; } }
+/* Nickt ein: Augen fallen als Striche zu, ein Z, dann ein Ruck */
+[data-set="nickt"] .agent-avatar-art .eye { animation-name: px-nickeye; animation-duration: 4s; animation-delay: 0s; }
+[data-set="nickt"] .agent-avatar-art .eyec { animation-name: px-nickline; animation-duration: 4s; animation-delay: 0s; }
+[data-set="nickt"] .agent-avatar-art .eyefill { animation-name: px-nickline; animation-duration: 4s; animation-delay: 0s; }
+[data-set="nickt"] .agent-avatar-art .eyes { animation-name: none; }
+[data-set="nickt"] .agent-avatar-art .bodyg { animation-name: px-dozebody; animation-duration: 4s; animation-delay: 0s; }
+[data-set="nickt"] .agent-avatar-art .armL, [data-set="nickt"] .agent-avatar-art .armR { animation-name: px-dozearm; animation-duration: 4s; animation-delay: 0s; }
+[data-set="nickt"] .agent-avatar-art .p-zz { opacity: 1; }
+[data-set="nickt"] .agent-avatar-art .z2, [data-set="nickt"] .agent-avatar-art .z3 { opacity: 0; }
+[data-set="nickt"] .agent-avatar-art .z1 { opacity: 0; animation-name: px-zznick; animation-duration: 4s; animation-delay: 0s; }
+@keyframes px-nickeye { 0%, 20%, 74%, 100% { opacity: 1; transform: scaleY(1); } 21%, 73% { opacity: 0; } }
+@keyframes px-nickline { 0%, 20%, 74%, 100% { opacity: 0; } 21%, 73% { opacity: 1; } }
+@keyframes px-dozebody { 0%, 20%, 76%, 100% { transform: translateY(0); } 21%, 45% { transform: translateY(1px); } 46%, 72% { transform: translateY(2px); } 73%, 75% { transform: translateY(-1px); } }
+@keyframes px-dozearm { 0%, 20%, 76%, 100% { transform: translateY(0); } 21%, 72% { transform: translateY(2px); } 73%, 75% { transform: translateY(-1px); } }
+@keyframes px-zznick { 0%, 30% { opacity: 0; transform: translate(13px, 2px); } 31%, 50% { opacity: 1; transform: translate(13px, 2px); } 51%, 72% { opacity: 1; transform: translate(14px, 0); } 73%, 100% { opacity: 0; transform: translate(14px, 0); } }
+/* Schläft: Augen als Striche, Körper sitzt tiefer, drei Z */
+[data-set="schlaeft"] .agent-avatar-art .p-zz { opacity: 1; }
+[data-set="schlaeft"] .agent-avatar-art .eye { animation-name: none; opacity: 0; }
+[data-set="schlaeft"] .agent-avatar-art .eyec, [data-set="schlaeft"] .agent-avatar-art .eyefill { animation-name: none; opacity: 1; }
+[data-set="schlaeft"] .agent-avatar-art .eyes { animation-name: none; }
+[data-set="schlaeft"] .agent-avatar-art .bodyg { animation-name: px-sleepbreathe; animation-duration: 4.4s; }
+[data-set="schlaeft"] .agent-avatar-art .armL, [data-set="schlaeft"] .agent-avatar-art .armR { animation-name: none; transform: translateY(1px); }
+[data-set="schlaeft"] .agent-avatar-art .z1, [data-set="schlaeft"] .agent-avatar-art .z2, [data-set="schlaeft"] .agent-avatar-art .z3 { opacity: 0; animation-name: px-zz; animation-duration: 3.6s; }
+[data-set="schlaeft"] .agent-avatar-art .z1 { animation-delay: 0s; }
+[data-set="schlaeft"] .agent-avatar-art .z2 { animation-delay: 1.2s; }
+[data-set="schlaeft"] .agent-avatar-art .z3 { animation-delay: 2.4s; }
+@keyframes px-sleepbreathe { 0%, 45%, 100% { transform: translateY(1px); } 50%, 90% { transform: translateY(2px); } }
+@keyframes px-zz { 0% { opacity: 0; transform: translate(13px, 2px); } 8%, 30% { opacity: 1; transform: translate(13px, 2px); } 31%, 55% { transform: translate(14px, 0); } 56%, 80% { transform: translate(15px, -2px); } 81%, 92% { opacity: 1; transform: translate(16px, -4px); } 93%, 100% { opacity: 0; transform: translate(16px, -4px); } }
+/* Läuft */
+[data-set="laeuft"] .agent-avatar-art .legL { animation-name: px-step; animation-duration: .5s; animation-delay: 0s; }
+[data-set="laeuft"] .agent-avatar-art .legR { animation-name: px-step; animation-duration: .5s; animation-delay: .25s; }
+[data-set="laeuft"] .agent-avatar-art .bodyg { animation-name: px-bob; animation-duration: .5s; animation-delay: 0s; }
+[data-set="laeuft"] .agent-avatar-art .armL { animation-name: px-swing; animation-duration: .5s; animation-delay: 0s; }
+[data-set="laeuft"] .agent-avatar-art .armR { animation-name: px-swing; animation-duration: .5s; animation-delay: .25s; }
+[data-set="laeuft"] .agent-avatar-art .char { animation-name: px-stroll; animation-duration: 4s; animation-delay: 0s; }
+@keyframes px-step { 0%, 49% { transform: translateY(0); } 50%, 100% { transform: translateY(-1px); } }
+@keyframes px-bob { 0%, 24%, 50%, 74% { transform: translateY(0); } 25%, 49%, 75%, 100% { transform: translateY(-1px); } }
+@keyframes px-swing { 0%, 49% { transform: translateY(-1px); } 50%, 100% { transform: translateY(1px); } }
+@keyframes px-stroll { 0%, 12% { transform: translateX(0); } 13%, 24% { transform: translateX(1px); } 25%, 37% { transform: translateX(2px); } 38%, 49% { transform: translateX(1px); } 50%, 62% { transform: translateX(0); } 63%, 74% { transform: translateX(-1px); } 75%, 87% { transform: translateX(-2px); } 88%, 100% { transform: translateX(-1px); } }
+/* Bewegungsstufen: Still zeigt die Pose, Ruhig lässt Hüpfer und Drehung weg */
+:root[data-avatar-style="calm"] .agent-avatar-art .char { animation-name: none; }
+:root[data-avatar-style="off"] .agent-avatar-art * { animation: none; }
+:root[data-reduce-motion="on"] .agent-avatar-art * { animation: none; }
 @media (prefers-reduced-motion: reduce) {
-  .agent-avatar-art * { animation: none; transform: none; }
+  .agent-avatar-art * { animation: none; }
 }
 .avatar-motion-control { display: flex; align-items: center; gap: var(--space-12); min-width: 0; }
 .avatar-motion-control select { min-width: 0; max-width: 100%; }
@@ -199,9 +333,13 @@
   margin: 0 0 var(--space-16);
 }
 .avatar-picker-preview .identity-avatar {
-  width: 80px;
-  height: 80px;
+  width: 124px;
+  height: 100px;
   margin: 0;
+}
+.avatar-picker-state {
+  font-size: var(--text-caption);
+  color: var(--muted);
 }
 .avatar-picker-preview strong {
   font-size: var(--text-heading);
