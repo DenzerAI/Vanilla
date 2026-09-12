@@ -744,7 +744,7 @@ Unser Design enthält ein lokales Live-Beispiel zum Hinzufügen, Entfernen und
 Zurücksetzen. Beispiele verändern keine Chats. Keine neue Datenhaltung oder
 Migration; Rückkehr stellt nur bisherige Darstellung und Kartenbegrenzung wieder her.
 
-## Native Rückfragen am Composer · Version 1.0.0
+## Native Rückfragen am Composer · Version 1.1.0
 
 Nur strukturierte Anbieteranfragen öffnen `ComposerQuestion`: Codex
 `item/tool/requestUserInput` und ACP `elicitation/create` (Form). Text und
@@ -788,6 +788,18 @@ interner Scrollbereich, transparente und deckende Ersatzflächen gelten auch
 auf schmalen Panels. Der kurze Eintritt verwendet bestehende Motionrollen;
 reduzierte Bewegung bleibt statisch. Unser Design enthält denselben Baustein
 als lokale interaktive Vorschau.
+
+Asynchrone Codex-Fragen (`agentMessage.delivery: async` plus `questions`)
+verwenden dieselbe Karte, Auswahl, freie Eingabe und Mehrfragen-Navigation.
+Ihr Status lautet „Deine Antwort ist noch offen“, da die KI weiterarbeiten kann.
+Keine Vorauswahl. Offene Karten bleiben über regulären Abschluss und Neuladen
+hinweg erhalten. `/api/respond` übernimmt diese Antworten in die bestehende
+Nachrichtenablage und steuert den laufenden Turn oder setzt den Chat nach dessen
+Abschluss fort. Die obige RPC-Antwortregel gilt weiterhin für wartende native
+Anfragen. Nach dauerhafter Übernahme verschwindet die Karte; Zustellstatus und
+Fehler zeigt der bestehende Postausgang. Abbrüche des Ursprungsturns verwerfen
+seine Fragen. Additive Chatmetadaten und Rückkehrgrenzen: WORKERS.md,
+Asynchrone Codex-Rückfragen. Keine neuen Gestaltungswerte.
 
 ## Römische Forktitel · Version 1.0.0
 

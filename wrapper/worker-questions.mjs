@@ -3,7 +3,7 @@ export function questionRequest(request) {
   const p = request?.params || {};
   if (request?.method?.includes('requestUserInput')) {
     if (!Array.isArray(p.questions) || !p.questions.length) return null;
-    return {kind:'codex', questions:p.questions.map(q => ({...q, required:true,
+    return {kind:request.method === 'wrapper/requestUserInputAsync' ? 'codex-async' : 'codex', questions:p.questions.map(q => ({...q, required:true,
       options:(q.options || []).map(o => ({value:o.label, label:o.label, description:o.description})),
       custom:true, type:'string', multi:false}))};
   }
@@ -58,10 +58,10 @@ export function questionResult(model, answers) {
   for (const q of model.questions) {
     const answer = answers[q.id] || {}, value = questionValue(q, answer);
     if (value === undefined) continue;
-    if (model.kind === 'codex') content[q.id] = {answers:[String(value)]};
+    if (model.kind.startsWith('codex')) content[q.id] = {answers:[String(value)]};
     else content[answer.text?.trim() && q.customKey ? q.customKey : q.id] = value;
   }
-  return model.kind === 'codex' ? {answers:content} : {action:'accept', content};
+  return model.kind.startsWith('codex') ? {answers:content} : {action:'accept', content};
 }
 
 export function questionReceipt(request, result) {
@@ -73,4 +73,63 @@ export function questionReceipt(request, result) {
   }).join('\n\n');
   return text ? {id:`tool-user-answer-${request.id}`,type:'mcpToolCall',tool:'Rückfrage beantwortet',
     server:request.workerId || 'codex',status:'completed',result:{content:[{type:'text',text}]}} : null;
+}
+
+// Async questions are notifications, not unanswered native RPC calls.
+export function asyncQuestionRequest(event) {
+  const {threadId,turnId,item} = event.params || {};
+  if (event.method !== 'item/completed' || item?.type !== 'agentMessage' || item.delivery !== 'async'
+      || !threadId || !turnId || !item.id || !Array.isArray(item.questions) || !item.questions.length) return null;
+  if (item.questions.some(q => typeof q.title !== 'string' || !q.title.trim()
+      || (q.options != null && (!Array.isArray(q.options) || q.options.some(o => typeof o !== 'string'))))) return null;
+  return {id:`async:${encodeURIComponent(threadId)}:${encodeURIComponent(turnId)}:${encodeURIComponent(item.id)}`,
+    workerId:event.workerId || 'codex', method:'wrapper/requestUserInputAsync',
+    params:{threadId,turnId,questions:item.questions.map((q,i)=>({id:`question_${i}`,question:q.title,
+      options:(q.options || []).map(label=>({label}))}))}};
+}
+
+export function asyncQuestionAnswer(request, result) {
+  const model = questionRequest(request);
+  if (model?.kind !== 'codex-async') throw new Error('Keine asynchrone Rückfrage.');
+  return model.questions.map(q => {
+    const values = result?.answers?.[q.id]?.answers;
+    if (!Array.isArray(values) || values.length !== 1 || typeof values[0] !== 'string' || !values[0].trim())
+      throw new Error('Bitte jede Rückfrage beantworten.');
+    return `${q.question}\n${values[0].trim()}`;
+  }).join('\n\n');
+}
+
+// Additive chat metadata keeps pending questions across reloads and restarts.
+// Answer dispatch uses the existing durable, idempotent message delivery path.
+export class AsyncQuestions {
+  constructor({chats,save,emit,enqueue}) { Object.assign(this,{chats,save,emit,enqueue}); this.serial=Promise.resolve(); }
+  change(fn) { const operation=this.serial.then(fn); this.serial=operation.catch(()=>{}); return operation; }
+  pending() { return this.chats().flatMap(c => (c.asyncQuestions || [])
+    .filter(r=>!r.status && r.request.workerId === (c.workerId || 'codex')).map(r=>r.request)); }
+  observe(event) { return this.change(async()=>{
+    const request=asyncQuestionRequest(event), p=event.params || {};
+    const chat=this.chats().find(c=>c.id === p.threadId);
+    if (!chat) return;
+    if (request) {
+      const records=chat.asyncQuestions ||= [];
+      if (records.some(r=>r.request.id === request.id)) return;
+      records.push({request}); await this.save();
+      this.emit({method:'wrapper/request',params:request});
+    } else if (event.method === 'turn/completed' && ['interrupted','failed'].includes(p.turn?.status)) {
+      const cancelled=(chat.asyncQuestions || []).filter(r=>!r.status && r.request.params.turnId === p.turn.id);
+      for (const record of cancelled) record.status='cancelled';
+      if (cancelled.length) await this.save();
+      for (const record of cancelled) this.emit({method:'wrapper/requestResolved',params:{id:record.request.id}});
+    }
+  }); }
+  respond(id,result) { return this.change(async()=>{
+    const request=this.pending().find(r=>r.id === id);
+    if (!request) throw new Error('Rückfrage nicht mehr verfügbar.');
+    const text=asyncQuestionAnswer(request,result);
+    await this.enqueue(request,text);
+    const chat=this.chats().find(c=>c.id === request.params.threadId);
+    chat.asyncQuestions.find(r=>r.request.id === id).status='answered';
+    await this.save();
+    this.emit({method:'wrapper/requestResolved',params:{id}});
+  }); }
 }

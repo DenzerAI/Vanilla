@@ -26,7 +26,7 @@
 .agent-avatar-art .p-zz .z1, .agent-avatar-art .p-zz .z2, .agent-avatar-art .p-zz .z3 { transform: translate(13px, 2px); }
 .agent-avatar-art .p-notes .n1 { transform: translate(15px, -1px); }
 .agent-avatar-art .p-notes .n2 { transform: translate(-3px, 1px); }
-.agent-avatar-art :is(.char, .eye, .eyes, .eyec, .bodyg, .armL, .armR, .legL, .legR, .shadow, .detail, .tip, .ear, .line, .key, .page, .dot, .snack, .crumb, .ball, .broom, .dust, .sw, .s1, .s2, .n1, .n2, .z1, .z2, .z3, .p-call, .p-quest, .p-drop rect) {
+.agent-avatar-art :is(.char, .eye, .eyes, .eyec, .bodyg, .armL, .armR, .legL, .legR, .shadow, .detail, .tip, .ear, .line, .key, .avatar-book-page, .dot, .snack, .crumb, .ball, .broom, .dust, .sw, .s1, .s2, .n1, .n2, .z1, .z2, .z3, .p-call, .p-quest, .p-drop rect) {
   animation-timing-function: steps(1, end);
   animation-iteration-count: infinite;
   animation-delay: var(--avatar-delay, 2s);
@@ -86,7 +86,7 @@
 [data-set="liest"] .agent-avatar-art .p-book { opacity: 1; }
 [data-set="liest"] .agent-avatar-art .eyes { animation-name: px-read-m; animation-duration: 2.8s; animation-delay: 0s; }
 [data-set="liest"] .agent-avatar-art .armR { animation-name: none; transform: scaleX(-1) translate(2px, 1px); }
-[data-set="liest"] .agent-avatar-art .page { animation-name: px-page; animation-duration: 2.8s; animation-delay: 0s; }
+[data-set="liest"] .agent-avatar-art .avatar-book-page { animation-name: px-page; animation-duration: 2.8s; animation-delay: 0s; }
 @keyframes px-read-m { 0%, 30% { transform: translate(2px, 1px); } 31%, 60% { transform: translate(1px, 1px); } 61%, 90% { transform: translate(0, 1px); } 91%, 100% { transform: translate(2px, 1px); } }
 @keyframes px-page { 0%, 60% { opacity: 1; transform: translateX(0); } 61%, 72% { opacity: 1; transform: translateX(-2px); } 73%, 84% { opacity: 1; transform: translateX(-4px); } 85%, 100% { opacity: 0; transform: translateX(-4px); } }
 /* Isst: Brötchen, drei Bisse, Krümel */
@@ -230,19 +230,21 @@
 [data-set="hockt"] .agent-avatar-art :is(.bodyg, .armL, .armR) { animation-name: px-crouch; }
 [data-set="streckt"] .agent-avatar-art .bodyg { animation-name: px-stretchbody; }
 [data-set="streckt"] .agent-avatar-art :is(.armL, .armR) { animation-name: px-stretcharms; }
+[data-set="atmet"] .agent-avatar-art :is(.legL, .legR) { transform-box: fill-box; transform-origin: center bottom; animation-name: px-inhalelegs; }
 [data-set="streckt"] .agent-avatar-art :is(.legL, .legR) { transform-box: fill-box; transform-origin: center bottom; animation-name: px-stretchlegs; }
 [data-set="wippt"] .agent-avatar-art :is(.bodyg, .armL, .armR) { animation-name: px-weightshift; }
 [data-set="schaut"] .agent-avatar-art .eyes { animation-name: px-lookaround; }
 [data-set="nicktzu"] .agent-avatar-art .bodyg { animation-name: px-nodhello; }
 [data-set="nicktzu"] .agent-avatar-art .eyes { animation-name: none; }
 [data-set="ruhe"] .agent-avatar-art .char { animation-name: none; }
-[data-set="atmet"] .agent-avatar-art :is(.bodyg, .armL, .armR),
+[data-set="atmet"] .agent-avatar-art :is(.bodyg, .armL, .armR, .legL, .legR),
 [data-set="hockt"] .agent-avatar-art :is(.bodyg, .armL, .armR),
 [data-set="streckt"] .agent-avatar-art :is(.bodyg, .armL, .armR, .legL, .legR),
 [data-set="wippt"] .agent-avatar-art :is(.bodyg, .armL, .armR),
 [data-set="schaut"] .agent-avatar-art .eyes,
 [data-set="nicktzu"] .agent-avatar-art .bodyg { animation-duration: var(--motion-avatar-idle-duration); animation-delay: 0s; }
 @keyframes px-deepbreath { 0%, 12%, 75%, 100% { transform: translateY(0); } 25%, 62% { transform: translateY(-1px); } }
+@keyframes px-inhalelegs { 0%, 12%, 75%, 100% { transform: scaleY(1); } 25%, 62% { transform: scaleY(1.5); } }
 @keyframes px-crouch { 0%, 12%, 80%, 100% { transform: translateY(0); } 20%, 28%, 70%, 78% { transform: translateY(1px); } 30%, 68% { transform: translateY(2px); } }
 @keyframes px-stretchbody { 0%, 12%, 78%, 100% { transform: translateY(0); } 25%, 65% { transform: translateY(-1px); } }
 @keyframes px-stretcharms { 0%, 12%, 78%, 100% { transform: translateY(0); } 18%, 24%, 66%, 76% { transform: translateY(-2px); } 25%, 65% { transform: translateY(-4px); } }

@@ -1057,7 +1057,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
         return;
       }
       if (e.method === "wrapper/disconnected") {
-        setRequests(rs => rs.filter(r => r.workerId !== p.workerId));
+        setRequests(rs => rs.filter(r => r.workerId !== p.workerId || r.method === 'wrapper/requestUserInputAsync'));
         api("/status").then(s => setConnectionState(s.engine.connected ? "online" : "offline")).catch(() => setConnectionState("offline"));
         notify(p.message);
         return;

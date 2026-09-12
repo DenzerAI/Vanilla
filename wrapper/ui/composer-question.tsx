@@ -69,7 +69,7 @@ export function ComposerQuestion({state,onActivate}: {state:ReturnType<typeof us
     onPointerDownCapture={onActivate} onFocusCapture={onActivate}>
     <div className="composer-question-handle" aria-hidden="true" />
     <div className="composer-question-status">
-      <span role="status">{pending ? 'Antwort wird gesendet …' : 'Wartet auf deine Antwort'}</span>
+      <span role="status">{pending ? 'Antwort wird gesendet …' : model.kind === 'codex-async' ? 'Deine Antwort ist noch offen' : 'Wartet auf deine Antwort'}</span>
       {model.questions.length > 1 && <nav aria-label="Rückfragen">
         <button type="button" aria-label="Vorherige Frage" disabled={pending || index === 0} onClick={state.previous}>‹</button>
         <span>{index+1} / {model.questions.length}</span>

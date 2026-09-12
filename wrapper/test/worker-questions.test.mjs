@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {EventEmitter} from 'node:events';
-import {questionRequest,questionResult,questionReceipt} from '../worker-questions.mjs';
+import {questionRequest,questionResult,questionReceipt,asyncQuestionRequest,asyncQuestionAnswer,AsyncQuestions} from '../worker-questions.mjs';
 import {ACPWorker} from '../acp-worker.mjs';
 import {Workers} from '../workers.mjs';
 import {askUserQuestionsToCreateRequest,applyAskElicitationResponse} from '../node_modules/@agentclientprotocol/claude-agent-acp/dist/elicitation.js';
@@ -79,4 +79,42 @@ test('history contains the question and answer but omits secret questions and ex
   assert.equal(item.result.content[0].text,'Which scope?\nTwo');
   assert.equal(questionReceipt({...codex,params:{...codex.params,questions:[{id:'secret',question:'Secret?',isSecret:true}]}},{answers:{secret:{answers:['private']}}}),null);
   assert.equal(questionReceipt({method:'mcpServer/elicitation/request',params:{requestedSchema:{type:'object',properties:{token:{type:'string'}}}}},{action:'accept',content:{token:'private'}}),null);
+});
+
+const asyncEvent = {method:'item/completed',workerId:'codex',params:{threadId:'chat',turnId:'turn',
+  item:{id:'message',type:'agentMessage',delivery:'async',questions:[{title:'Which scope?',options:['One','Two']},{title:'Any details?'}]}}};
+test('async native metadata uses the same card with choices, multiple questions and free text',()=>{
+  const request=asyncQuestionRequest(asyncEvent), model=questionRequest(request);
+  assert.equal(model.kind,'codex-async');
+  const result=questionResult(model,{question_0:{selected:['Two']},question_1:{text:'Details'}});
+  assert.equal(asyncQuestionAnswer(request,result),'Which scope?\nTwo\n\nAny details?\nDetails');
+  assert.throws(()=>asyncQuestionAnswer(request,{answers:{}}),/jede Rückfrage/);
+  assert.equal(questionReceipt(request,result),null);
+  assert.equal(asyncQuestionRequest({...asyncEvent,method:'item/started'}),null);
+  assert.equal(asyncQuestionRequest({method:'item/completed',params:{...asyncEvent.params,item:{id:'prose',type:'agentMessage',text:'Choose One or Two'}}}),null);
+});
+test('async questions survive completion and restart, deduplicate events and submit only once',async()=>{
+  let chats=[{id:'chat'}], disk, saves=0;const events=[],sent=[];
+  const options={chats:()=>chats,save:async()=>{saves++;disk=structuredClone(chats);},emit:e=>events.push(e),enqueue:async(r,text)=>sent.push({r,text})};
+  let questions=new AsyncQuestions(options);
+  await questions.observe(asyncEvent);await questions.observe(asyncEvent);
+  assert.equal(saves,1);assert.equal(questions.pending().length,1);
+  await questions.observe({method:'turn/completed',params:{threadId:'chat',turn:{id:'turn',status:'completed'}}});
+  chats=structuredClone(disk);questions=new AsyncQuestions(options);
+  const request=questions.pending()[0];assert.ok(request);
+  const result=questionResult(questionRequest(request),{question_0:{text:'Custom'},question_1:{text:'Notes'}});
+  const replies=await Promise.allSettled([questions.respond(request.id,result),questions.respond(request.id,result)]);
+  assert.equal(replies.filter(r=>r.status==='fulfilled').length,1);assert.equal(sent.length,1);
+  await questions.observe(asyncEvent);assert.equal(questions.pending().length,0);
+  assert.equal(events.filter(e=>e.method==='wrapper/requestResolved').length,1);
+});
+test('async dispatch failure keeps question editable; cancellation and provider ownership are respected',async()=>{
+  const chats=[{id:'chat'}];let fail=true;
+  const questions=new AsyncQuestions({chats:()=>chats,save:async()=>{},emit:()=>{},enqueue:async()=>{if(fail)throw Error('Offline');}});
+  await questions.observe(asyncEvent);const request=questions.pending()[0];
+  const result={answers:{question_0:{answers:['One']},question_1:{answers:['Details']}}};
+  await assert.rejects(questions.respond(request.id,result),/Offline/);assert.equal(questions.pending().length,1);
+  chats[0].workerId='claude';assert.equal(questions.pending().length,0);chats[0].workerId='codex';
+  await questions.observe({method:'turn/completed',params:{threadId:'chat',turn:{id:'turn',status:'interrupted'}}});
+  assert.equal(questions.pending().length,0);assert.equal(chats[0].asyncQuestions[0].status,'cancelled');
 });

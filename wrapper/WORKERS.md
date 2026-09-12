@@ -247,7 +247,7 @@ kann über `sourceHome` keine persönlichen Konten, Plugins oder Gesprächsdatei
 Bereits eigene Dateien bleiben beim Start erhalten. Datenumzug erfolgt über die
 vollständige Sicherung, die native Anbieteranmeldung am Ziel über den eigenen Login.
 
-## Native Rückfragen · Version 1.0.0
+## Native Rückfragen · Version 1.1.0
 
 Codex-Anfragen `item/tool/requestUserInput` werden über den bestehenden
 Request-Stream weitergereicht und mit `{answers:{id:{answers:[text]}}}` an die
@@ -490,3 +490,26 @@ Keine automatischen Logins, Kopien fremder Profile oder erfundenen Prozentwerte.
 ### Bestandsanzeige · Version 3
 
 GET /api/workers liest weiterhin den aktuellen Programmpfad, enabled und den Adapterzustand unabhängig voneinander. Ein eingerichteter, nicht gestarteter Anschluss heißt „Eingerichtet · Bei Bedarf verbunden“; er wird beim Lesen nicht gestartet. Fehlendes Programm, fehlende Anmeldung und Verbindungsfehler behalten Vorrang. Die Oberfläche zeigt nur installierte oder laufende Programme im Bestand. Fehlende Programme bleiben mit gegebenenfalls gespeicherter Einrichtung unter Entdecken. Katalog-/Wartungsdaten beweisen keine Live-Verbindung. Verbindungen verweist auf die gemeinsame, tatsächlich eingerichtete Liste; n8n wird nicht pauschal als vorhanden dargestellt. Keine Datenmigration; bestehende enabled-, Standard- und Vertretungswerte bleiben erhalten.
+
+### Asynchrone Codex-Rückfragen
+
+`item/completed` mit `agentMessage`, `delivery: async` und `questions` öffnet
+über `AsyncQuestions` dieselbe Antwortkarte. Quelle ist ausschließlich das
+strukturierte native Ereignis, niemals die Textdarstellung. Diese Fragen sind
+keine offenen RPC-Aufrufe. `/api/respond` validiert alle Antworten und übernimmt
+sie mit stabiler Nachrichten-ID in die bestehende dauerhafte MessageDelivery.
+Der laufende Turn erhält die Antwort über natives Steering; nach regulärem
+Abschluss beginnt die Antwort einen neuen Turn im selben Chat. Unklare Zustellung
+wird entsprechend dem bestehenden Nachrichtenvertrag nicht blind wiederholt.
+Die Karte verschwindet nach bestätigter Speicherung im Postausgang. Zustellfehler
+und pausierte Nachrichten bleiben dort sichtbar. Die Frage allein pausiert die KI
+nicht; notwendige Entscheidungen bleiben Aufgabe der nativen Worker-Anweisungen.
+
+Additives Chatfeld `asyncQuestions` speichert Request, Herkunft und optionalen
+Status `answered`/`cancelled`. Offene Fragen überleben regulären Turnabschluss,
+Browserneuladen und Serverneustart; unterbrochene/fehlgeschlagene Ursprungsturns
+verwerfen ihre Fragen. Ein anderer Worker erhält keine alten Fragen. Erledigte
+Kennungen verhindern Wiederanzeigen doppelter Ereignisse. Keine Bestandsmigration
+und keine nachträgliche Interpretation alter Textfragen. Vor Rückkehr auf ältere
+Versionen offene Fragen beantworten; alte Versionen ignorieren das Feld und zeigen
+keine asynchronen Antwortkarten. Anbieterprofile und Zugänge bleiben unverändert.

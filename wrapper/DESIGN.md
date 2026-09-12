@@ -1754,3 +1754,12 @@ und Schlafen folgen erst längerer Inaktivität. Still und reduzierte Bewegung
 bleiben wirksam. Unser Design bietet einen lokalen Zustandswähler mit allen
 sechs Produktionsfiguren, einschließlich Arbeits- und Augenzuständen.
 Keine Datenmigration oder Änderung gespeicherter Bewegungspräferenzen.
+
+Die Buchseite der Figuren heißt avatar-book-page. Allgemeine Layoutklassen
+wie page dürfen nicht auf SVG-Requisiten wirken und deren Geometrie verändern.
+
+
+Asynchrone native Rückfragen verwenden ebenfalls ComposerQuestion. Der Status
+„Deine Antwort ist noch offen“ unterscheidet sie von einem wartenden Aufruf.
+Auswahl, Freitext, Navigation und Fehlerzustände folgen unverändert den
+Composertokens. Dauer und Zustellung führt surfaces/chat.md unter Native Rückfragen.

@@ -15,7 +15,7 @@ import {workspaceInstructions} from './workspace-directory.mjs';
 import {workspaceOnboardingOpener,workspaceOnboardingInstructions} from './workspace-onboarding.mjs';
 import {Firma} from './firma.mjs';
 import {collectStatistics,statisticsChatOpener} from './statistics.mjs';
-import {questionReceipt} from './worker-questions.mjs';
+import {questionReceipt, AsyncQuestions} from './worker-questions.mjs';
 import {weatherChatOpener} from './weather-report.mjs';
 import {chatArchiveUpdater} from './chat-archive.mjs';
 import {briefingChatOpener} from './briefing-chat.mjs';
@@ -60,7 +60,7 @@ import path from "node:path";
 import os from "node:os";
 import { fileURLToPath } from "node:url";
 import { readFile, writeFile, mkdir, stat } from "node:fs/promises";
-import { randomBytes, randomUUID } from "node:crypto";
+import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { Codex } from "./codex.mjs";
 import { prepareCodexHome } from "./codex-home.mjs";
 import { ThreadLoading, readableCodexError } from "./thread-loading.mjs";
@@ -187,7 +187,18 @@ const deliveries = await new MessageDelivery({
   onError: error => emit({ method: 'wrapper/error', params: { message: error.message } }),
 }).init();
 
+const asyncQuestions = new AsyncQuestions({
+  chats:()=>store.state.chats, save:()=>store.save(), emit,
+  enqueue:(request,text)=>{
+    const chat=store.chat(request.params.threadId);
+    return deliveries.enqueue(chat.id,{messageId:'question_'+createHash('sha256').update(request.id).digest('hex'),
+      text,mode:chat.mode || 'default',model:chat.model,effort:chat.effort,intent:'send'});
+  },
+});
+const pendingQuestions = () => [...workers.requests.values(), ...asyncQuestions.pending()];
+
 workers.on("notification", (msg) => {
+  void asyncQuestions.observe(msg).catch(error=>emit({method:'wrapper/error',params:{message:error.message}}));
   void messageDelivery?.observe(msg).catch(()=>{});
   if (["thread/realtime/closed", "thread/realtime/error"].includes(msg.method)) voiceSessions.delete(msg.params?.threadId);
   eventNames.add(msg.method);
@@ -804,7 +815,7 @@ route("GET", "/api/bootstrap", async (_body, url) => {
       version: workers.info?.userAgent,
     },
     active: Object.fromEntries([...active].filter(([id])=>canSeeChat(store.state.chats.find(c=>c.id===id)))),
-    requests: [...workers.requests.values()].filter(r=>canSeeChat(store.state.chats.find(c=>c.id===r.params?.threadId))).map(r=>({...r,connectionId:store.state.chats.find(c=>c.id===r.params?.threadId)?.connectionId})),
+    requests: pendingQuestions().filter(r=>canSeeChat(store.state.chats.find(c=>c.id===r.params?.threadId))).map(r=>({...r,connectionId:store.state.chats.find(c=>c.id===r.params?.threadId)?.connectionId})),
     capabilities: workers.capability(workers.effectiveWorker),
     planAvailable: workers.routingOrder().some(id => workers.capability(id).plan),
   };
@@ -917,7 +928,7 @@ route("GET", "/api/chats", async (_body, url) => ({
 }));
 route("GET", "/api/diagnostics", async () => ({
   events: [...eventNames],
-  pending: [...workers.requests.values()].map((r) => ({
+  pending: pendingQuestions().map((r) => ({
     id: r.id,
     method: r.method,
   })),
@@ -1268,10 +1279,14 @@ route("POST", "/api/fork", async (b) => {
   return r;
 });
 route("POST", "/api/respond", async (b) => {
-  const request = workers.requests.get(String(b.id));
+  const request = pendingQuestions().find(r=>String(r.id) === String(b.id));
   if (!request) throw new Error("Rückfrage nicht mehr verfügbar.");
   if (request.params?.threadId) store.chat(request.params.threadId);
   if (request.params?.threadId && !canSeeChat(store.state.chats.find(c => c.id === request.params.threadId))) throw new Error("Diese Rückfrage gehört zu einem fremden Chat.");
+  if (request.method === 'wrapper/requestUserInputAsync') {
+    await asyncQuestions.respond(request.id,b.result);
+    return {ok:true};
+  }
   const receipt = questionReceipt(request, b.result);
   workers.respond(b.id, b.result);
   if (receipt && request.params?.threadId && request.params?.turnId) {

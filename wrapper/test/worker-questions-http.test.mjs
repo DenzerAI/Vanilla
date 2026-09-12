@@ -25,17 +25,31 @@ createInterface({input:process.stdin}).on('line',line=>{
  if(m.method==='mcpServerStatus/list')return reply({data:[]});
  if(m.method==='thread/start'){thread={id:require('node:crypto').randomUUID(),turns:[],model:'fixture-model'};threads.set(thread.id,thread);return reply({thread,model:'fixture-model'});}
  if(m.method==='thread/read'||m.method==='thread/resume')return reply({thread:threads.get(p.threadId)});
+ if(m.method==='turn/steer'){
+  pending.items.push({id:'answer',type:'userMessage',content:p.input});reply({turnId:pending.id});
+  pending.status='completed';send({method:'turn/completed',params:{threadId:pendingThread.id,turn:pending}});pending=null;return;
+ }
  if(m.method==='turn/start'){
   const thread=threads.get(p.threadId);pendingThread=thread;
   const turn={id:require('node:crypto').randomUUID(),status:'inProgress',items:[{id:'user',type:'userMessage',content:p.input}]};
   thread.turns.push(turn);pending=turn;reply({turn});requestId++;
+  send({method:'turn/started',params:{threadId:thread.id,turn}});
+  const text=p.input[0]?.text || '';
+  if(text.startsWith('Async fixture')){
+   const item={id:'async-question',type:'agentMessage',delivery:'async',text:'Which scope?',questions:[{title:'Which scope?',options:['One','Two']}]};
+   turn.items.push(item);send({method:'item/completed',params:{threadId:thread.id,turnId:turn.id,item}});
+   if(text.includes('finished')){turn.status='completed';send({method:'turn/completed',params:{threadId:thread.id,turn}});pending=null;}
+   return;
+  }
+  if(text.startsWith('Which scope?')){turn.status='completed';send({method:'turn/completed',params:{threadId:thread.id,turn}});pending=null;return;}
+
   setTimeout(()=>send({id:requestId,method:'item/tool/requestUserInput',params:{threadId:thread.id,turnId:turn.id,questions:[{id:'scope',question:'Which scope?',options:[{label:'One'},{label:'Two'}]}]}}),15);return;
  }
  if(m.method==='turn/interrupt'&&pending){pending.status='interrupted';reply({});send({method:'turn/completed',params:{threadId:pendingThread.id,turn:pending}});pending=null;return;}
  if(m.id!==undefined)reply({});
 });`;
 
-test('HTTP → pending native RPC → reply → completed turn and persistent question receipt', {timeout:15000},async t=>{
+test('HTTP → pending native RPC → reply → completed turn and persistent question receipt', {timeout:process.env.QUESTION_UI_CHECK ? 180000 : 15000},async t=>{
  const dir=await mkdtemp(fileURLToPath(new URL('../.test-question-http-',import.meta.url)));
  let child,exited;
  t.after(async()=>{if(child&&child.exitCode===null){child.kill();await exited;}await rm(dir,{recursive:true,force:true});});
@@ -66,4 +80,33 @@ test('HTTP → pending native RPC → reply → completed turn and persistent qu
  const cancelled=await wait(async()=> (await api('/bootstrap')).requests[0]);
  await api('/stop',{id:thread.id});await wait(async()=>!(await api('/bootstrap')).requests.length);
  assert.notEqual((await raw('/respond',{id:cancelled.id,result})).status,200);
+ for(const state of ['active','finished']) {
+  const {thread:asyncThread}=await api('/chats',{mode:'default',title:'Async question fixture'});
+  await api('/turn',{id:asyncThread.id,text:'Async fixture '+state,mode:'default'});
+  const question=await wait(async()=> (await api('/bootstrap')).requests.find(r=>r.params.threadId===asyncThread.id));
+  assert.equal(question.method,'wrapper/requestUserInputAsync');
+  if(process.env.QUESTION_UI_CHECK && state==='active') {
+   for(const viewport of ['desktop','mobile']) {
+    const args=['scripts/ui-check.mjs','--base',base.replace(/\/api$/,''),'--viewport',viewport,
+      '--out','workspaces/default/output/async-questions-ui','--click','text=Async question fixture',
+      '--wait','css=.composer-question','--click','css=.composer-question-option:nth-child(2)',
+      '--eval',`({question:document.querySelector('.composer-question-title').textContent,selected:document.querySelectorAll('.composer-question input:checked').length,overflow:document.documentElement.scrollWidth>innerWidth})`,
+      '--shot','async-question-'+viewport];
+    await new Promise((resolve,reject)=>{
+     const browser=spawn(process.execPath,args,{cwd:fileURLToPath(new URL('../../',import.meta.url)),stdio:['ignore','pipe','pipe']});
+     let output='';browser.stdout.on('data',v=>output+=v);browser.stderr.on('data',v=>output+=v);
+     browser.on('error',reject);browser.on('exit',code=>{console.log(output);code===0?resolve():reject(Error('UI check failed: '+code));});
+    });
+   }
+  }
+
+  assert.notEqual((await raw('/respond',{id:question.id,result:{}})).status,200);
+  const asyncResult={answers:{question_0:{answers:['Two']}}};
+  await api('/respond',{id:question.id,result:asyncResult});
+  assert.notEqual((await raw('/respond',{id:question.id,result:asyncResult})).status,200);
+  const answered=await wait(async()=>{const r=await api('/thread?id='+asyncThread.id);return r.thread.turns.some(t=>t.items.some(i=>i.type==='userMessage'&&i.content?.some(c=>c.text==='Which scope?\nTwo')))&&r;});
+  assert.equal(answered.thread.turns.length,state==='active'?1:2);
+  assert.equal((await api('/bootstrap')).requests.filter(r=>r.params.threadId===asyncThread.id).length,0);
+ }
+
 });
