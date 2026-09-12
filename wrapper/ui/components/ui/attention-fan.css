@@ -32,7 +32,7 @@
 .welcome.agent-chat-welcome.chat-start { min-height: 0; flex: 0 0 auto; margin: 0 auto; padding-block: var(--space-24); gap: var(--space-16); }
 .chat-start-intro { display: flex; flex-direction: column; align-items: center; gap: var(--space-12); width: 100%; max-width: 640px; }
 .welcome.agent-chat-welcome.chat-start .identity-avatar { width: 80px; height: 80px; margin: 0; flex-shrink: 0; }
-.welcome.agent-chat-welcome.chat-start h1 { font-size: var(--text-subheading); line-height: var(--leading-normal); text-align: center; max-width: 100%; min-width: 0; margin: 0; height: 2lh; min-height: 2lh; max-height: 2lh; overflow: hidden; }
+.welcome.agent-chat-welcome.chat-start h1 { font-size: var(--text-title); line-height: var(--leading-normal); text-align: center; max-width: 100%; min-width: 0; margin: 0; height: 2lh; min-height: 2lh; max-height: 2lh; overflow: hidden; }
 .chat-start-heading { display: block; width: 100%; position: relative; color: var(--text); font-family: var(--font-conversation); font-weight: var(--weight-regular); }
 .attention-fan-card .library-thumbnail { width: 100%; height: 72px; flex: 0 0 72px; border-radius: var(--radius-button); }
 .attention-fan-action { display: flex; align-items: center; justify-content: space-between; gap: var(--space-8); width: 100%; margin-top: auto; color: var(--muted); font-size: var(--text-caption); }

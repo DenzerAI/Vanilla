@@ -1,6 +1,5 @@
 import React, {Component, lazy, Suspense, useState, type ReactNode} from 'react';
 import {Skeleton} from './skeleton';
-import {Avatar} from './avatar.jsx';
 
 class SurfaceBoundary extends Component<{children:ReactNode; retry:()=>void}, {failed:boolean}> {
   state = {failed:false};
@@ -20,7 +19,7 @@ export function lazySurface(load:()=>Promise<any>, name:string, placeholder:Reac
     const [View,setView] = useState(()=>InitialView);
     const skeletonProps = typeof placeholder === 'string' ? {variant:placeholder} : placeholder;
     const fallback = skeletonProps === null ? null : skeletonProps.variant === 'attention'
-      ? <div className="welcome agent-chat-welcome chat-start"><div className="chat-start-intro"><Avatar avatar={props.profile?.avatar} color={props.profile?.avatarColor} large/><h1 className="chat-start-heading">{props.greeting}</h1></div><Skeleton variant="attention"/></div>
+      ? <div className="welcome agent-chat-welcome chat-start"><div className="chat-start-intro"><h1 className="chat-start-heading">{props.greeting}</h1></div><Skeleton variant="attention"/></div>
       : <Skeleton {...skeletonProps}/>;
     return <SurfaceBoundary key={attempt} retry={()=>{setView(()=>lazy(()=>load().then(module=>({default:module[name]}))));setAttempt(value=>value+1);}}>
       <Suspense fallback={fallback}>

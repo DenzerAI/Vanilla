@@ -42,12 +42,17 @@ export function latestActivity(thread, turnId) {
 export function companionSet({ connection, waitingSince, busy, running, activity, completedAt, lastTurnStatus, hasTurns, idleMs, now = Date.now() }) {
   if (connection === "offline") return "krank";
   if (waitingSince != null) return now - waitingSince >= CALL_MS ? "wartet" : "ruft";
-  if (busy) return "isst";
+  if (busy && !running) return "denkt";
   if (running) return working[activity] || "arbeitet";
   if (completedAt != null && now - completedAt < DONE_MS) return "fertig";
   if (lastTurnStatus === "failed") return "fehler";
-  if (!hasTurns) return "laeuft";
   if (idleMs >= SLEEP_MS) return "schlaeft";
   if (idleMs >= NOD_MS) return "nickt";
+  // Brief idle interludes, separated by rest; never mask a session state.
+  const phase = Math.floor(Math.max(0, idleMs) / 1000) % 120;
+  if (!hasTurns && idleMs < 4000) return "laeuft";
+  if (phase >= 40 && phase < 48) return "spielt";
+  if (phase >= 80 && phase < 88) return "isst";
+  if (phase >= 112) return "tanzt";
   return "ruhe";
 }

@@ -1,6 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ChatMenu } from "./chat-controls.jsx";
-import { Avatar } from "./avatar.jsx";
 import { Activity, RotateCcw, Settings } from "./icons.jsx";
 
 import { IconButton } from "./icon-button";
@@ -120,7 +119,6 @@ export function AgentMenu({ theme, onThemeChange, name, avatar, avatarColor, con
       { id: "settings", label: "Einstellungen", icon: <Settings size={18} strokeWidth={1.55} />, action: () => onNavigate("general") },
     ]}
   >
-    <span className="agent-menu-avatar"><Avatar avatar={avatar} color={avatarColor} /><span aria-hidden="true" className={`status-dot ${connectionState === "online" && !restartBusy ? "online" : "offline"}`} /></span>
     <AgentName name={name || "Vanilla"} />
   </ChatMenu>;
 }

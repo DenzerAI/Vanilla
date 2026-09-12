@@ -223,7 +223,7 @@
 /* Agent identity anchors navigation; search remains a compact icon action. */
 .sidebar-topbar > .agent-menu-trigger {
   flex: 1; min-width: 0; width: auto; min-height: var(--control-target);
-  display: grid; grid-template-columns: 18px minmax(0, 1fr); align-items: center;
+  display: grid; grid-template-columns: minmax(0, 1fr); align-items: center;
   padding: var(--space-4) var(--space-4) var(--space-4) var(--space-8); gap: var(--space-8);
   border-radius: var(--radius-panel); text-align: left;
 }
@@ -231,7 +231,7 @@
 .agent-menu-avatar { position: relative; display: flex; justify-content: center; align-items: center; width: 18px; height: 32px; }
 .agent-menu-avatar > .avatar { width: 32px; height: 32px; }
 .agent-menu-avatar > .status-dot { position: absolute; right: calc(0px - var(--space-4)); bottom: var(--space-2); margin: 0; box-shadow: 0 0 0 2px var(--sidebar); }
-.agent-menu-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-agent-name); font-size: var(--text-section); font-weight: var(--weight-semibold); }
+.agent-menu-name { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-family: var(--font-ui); font-size: var(--text-section); font-weight: var(--weight-semibold); }
 .agent-menu-name-text { display: inline-block; font-size: clamp(var(--text-reading), calc(var(--text-section) * var(--agent-name-scale, 1)), var(--text-section)); }
 .agent-menu .agent-server-details { padding: var(--space-8) var(--space-12) var(--space-12); border-bottom: 1px solid var(--border); margin-bottom: var(--space-4); }
 .agent-server-details p { margin: 0; font-size: var(--text-small); font-weight: var(--weight-medium); }

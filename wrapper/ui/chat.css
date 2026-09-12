@@ -451,3 +451,9 @@
 .user-message-row:has(.message-delivery button) .user-actions > .copy-feedback { opacity: 1; pointer-events: auto; }
 .user-message-row:has(.message-delivery button) .user-actions > button svg { visibility: visible; }
 .message-delivery > button { gap: var(--space-4); font-size: var(--text-caption); }
+
+/* Reserve the full stage below attachments and questions, alongside model controls. */
+.composer-area:has(.composer-companion) .composer-options { min-height: 75px; padding-left: 145px; align-items: flex-end; }
+@media (max-width: 600px) {
+  .composer-area:has(.composer-companion) .composer-options { min-height: 60px; padding-left: 118px; }
+}

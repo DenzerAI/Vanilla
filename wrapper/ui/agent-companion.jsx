@@ -22,10 +22,11 @@ export function AgentCompanion({ avatar, color, chatId, running, waiting, busy, 
     setNow(Date.now());
   }, [running, lastTurnStatus]);
   useEffect(() => {
-    marks.current.completedAt = null;
+    marks.current = { activity: Date.now(), waitingSince: waiting ? Date.now() : null, completedAt: null, wasRunning: running };
+    setNow(Date.now());
   }, [chatId]);
   useEffect(() => {
-    const bump = () => { marks.current.activity = Date.now(); };
+    const bump = () => { marks.current.activity = Date.now(); setNow(Date.now()); };
     document.addEventListener("keydown", bump, { passive: true });
     document.addEventListener("pointerdown", bump, { passive: true });
     return () => {

@@ -2442,7 +2442,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                       />
                   </ComposerHeading>
                   <ComposerFocus active={composerActive} multiple={embedded ? showPaneHeader : paneOrder.length > 1} visible={foreground && view === "chat" && readablePane} onActivate={activateComposer}>
-                      <AgentCompanion avatar={boot.settings.avatar} color={boot.settings.avatarColor} chatId={chatId} running={running} waiting={requests.some(r => r.params?.threadId === chatId)} busy={busy} connection={connectionState} activity={companionActivity} lastTurnStatus={current?.lastTurnStatus} hasTurns={!!thread?.turns?.length} hidden={!!questionState.request || attachments.length > 0 || !(foreground && view === "chat" && readablePane)} />
+                      <AgentCompanion avatar={boot.settings.avatar} color={boot.settings.avatarColor} chatId={chatId} running={running} waiting={!!questionState.request || requests.some(r => r.params?.threadId === chatId)} busy={busy} connection={connectionState} activity={companionActivity} lastTurnStatus={current?.lastTurnStatus} hasTurns={!!thread?.turns?.length} hidden={!(foreground && view === "chat" && readablePane)} />
                       <IconButton
                         label="Dateien anhängen"
                         disabled={!!questionState.request}
