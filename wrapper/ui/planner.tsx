@@ -130,7 +130,7 @@ export function BriefingRow({item, today, busy = false, disabled = false, onOpen
 }
 export function PlannerPatternPreview() {
   return (
-    <><PlannerCalendar date={dateKey(new Date())} today={dateKey(new Date())} mode="month" workweek={false} timezone="Europe/Berlin" events={demoEvents(dateKey(new Date()))} onDate={() => {}} onOpen={() => {}} onCreate={() => {}} /><BriefingRow item={demoBriefings(dateKey(new Date()))[0]} today={dateKey(new Date())} onOpen={() => {}} /><AgendaRow event={demoEvents(dateKey(new Date()))[0]} onOpen={() => {}} /></>
+    <><PlannerCalendar date={dateKey(new Date())} today={dateKey(new Date())} mode="month" workweek={true} timezone="Europe/Berlin" events={demoEvents(dateKey(new Date()))} onDate={() => {}} onOpen={() => {}} onCreate={() => {}} /><BriefingRow item={demoBriefings(dateKey(new Date()))[0]} today={dateKey(new Date())} onOpen={() => {}} /><AgendaRow event={demoEvents(dateKey(new Date()))[0]} onOpen={() => {}} /></>
   );
 }
 export function PlannerPage(props: Props) {
@@ -143,7 +143,7 @@ export function PlannerPage(props: Props) {
     return ["day", "week", "month"].includes(m) ? m : "month";
   });
   const [workweek, setWorkweek] = useState(
-    () => preference("planner.workweek", "false") === "true",
+    () => preference("planner.workweek", "true") === "true",
   );
   const [demo, setDemo] = useState(
     () => preference("planner.demo", "false") === "true",
@@ -302,15 +302,15 @@ export function PlannerPage(props: Props) {
         setEntityError((err as Error).message);
     }
   };
-  const create = (key = date, hour = 9) => {
+  const create = (key = date, hour = 9, minute = 0) => {
     setDetail(null);
     setFormError("");
     setDraft({
       id: crypto.randomUUID(),
       title: "",
       date: key,
-      start: `${String(hour).padStart(2,"0")}:00`,
-      end: hour === 23 ? "23:59" : `${String(hour+1).padStart(2,"0")}:00`,
+      start: `${String(hour).padStart(2,"0")}:${String(minute).padStart(2,"0")}`,
+      end: hour === 23 ? "23:59" : `${String(hour+1).padStart(2,"0")}:${String(minute).padStart(2,"0")}`,
       allDay: false,
       location: "",
       source: demo?"Eigener Kalender · Beispiel":"Vanilla",
@@ -373,7 +373,9 @@ export function PlannerPage(props: Props) {
       }}
     >
       <PageHeading
-        title={section === "today" ? "Heute" : "Kalender"}
+        title={section === "today" ? "Heute" : mode === "day" ? formatDay(date) : mode === "week"
+          ? `KW ${isoWeek(date).week} · ${formatDay(monday(date), {day:"numeric", month:"short"})}–${formatDay(addDays(monday(date), workweek ? 4 : 6), {day:"numeric",month:"short"})}`
+          : formatDay(date, {month:"long", year:"numeric"})}
         onShowSidebar={onShowSidebar}
       >
         <button
@@ -656,13 +658,7 @@ export function PlannerPage(props: Props) {
               >
                 <ChevronLeft size={18} strokeWidth={undefined} />
               </button>
-              <h2 aria-live="polite">
-                {mode === "day"
-                  ? formatDay(date)
-                  : mode === "week"
-                    ? `KW ${isoWeek(date).week} · ${formatDay(monday(date), { day: "numeric", month: "short" })}`
-                    : formatDay(date, { month: "long", year: "numeric" })}
-              </h2>
+              <button type="button" className="small-button" onClick={() => setDate(today)}>Heute</button>
               <button
                 type="button"
                 className="icon-button"
@@ -672,15 +668,7 @@ export function PlannerPage(props: Props) {
                 <ChevronRight size={18} strokeWidth={undefined} />
               </button>
             </div>
-            <button
-              type="button"
-              className="small-button"
-              onClick={() => setDate(today)}
-            >
-              Heute
-            </button>
             <label className="planner-date-jump">
-              <span>Datum</span>
               <input
                 type="date"
                 aria-label="Zu Datum springen"
@@ -695,8 +683,6 @@ export function PlannerPage(props: Props) {
                 }}
               />
             </label>
-          </div>
-          <div className="planner-view-toolbar">
             <div className="tabs" aria-label="Kalenderansicht">
               {[
                 ["day", "Tag"],
@@ -714,36 +700,12 @@ export function PlannerPage(props: Props) {
                 </button>
               ))}
             </div>
-            <div className="planner-workweek">
-              <span>Nur Mo–Fr</span>
-              <button
-                type="button"
-                role="switch"
-                className="apple-switch"
-                aria-label="Nur Montag bis Freitag anzeigen"
-                aria-checked={workweek}
-                onClick={() => {
-                  setWorkweek(!workweek);
-                  storePreference("planner.workweek", String(!workweek));
-                }}
-              >
-                <span />
-              </button>
-            </div>
+            <button type="button" className="small-button planner-workweek-toggle" aria-label="Nur Montag bis Freitag anzeigen"
+              aria-pressed={workweek} onClick={() => {setWorkweek(!workweek); storePreference("planner.workweek", String(!workweek));}}>Mo–Fr</button>
           </div>
-          {!demo && (
-            <p className="planner-empty">
-              {calendarStatus} · Uhrzeiten: {calendarTimezone}
-            </p>
-          )}
-          {workweek && (
-            <p className="planner-meta">
-              Wochenenden werden in Woche und Monat ausgeblendet. Ihre Termine
-              bleiben erhalten und sind in der Tagesansicht erreichbar.
-            </p>
-          )}
+          {!demo && /^(Kalenderstand prüfen|Kalender wird)/.test(calendarStatus) && <p className="planner-meta" role="status">{calendarStatus}</p>}
           <PlannerCalendar date={date} today={today} mode={mode} workweek={workweek} timezone={calendarTimezone}
-            events={visibleEvents} onDate={setDate} onOpen={setDetail} onCreate={create} />
+            events={visibleEvents} onDate={setDate} onWeek={(day) => {setDate(day); chooseMode("week");}} onOpen={setDetail} onCreate={create} />
         </>
       )}
       {detail && (
@@ -1044,9 +1006,10 @@ export function PlannerPage(props: Props) {
         <Modal
           wide={false}
           className="planner-concept-modal"
-          title="So hängt dein Tag zusammen"
+          title="Kalender & Verknüpfungen"
           onClose={() => setModal(null)}
         >
+          <p className="planner-meta">{calendarStatus} · {calendarTimezone}</p>
           <div className="settings-group">
             <SettingRow
               icon={<Calendar size={20} strokeWidth={undefined} />}
