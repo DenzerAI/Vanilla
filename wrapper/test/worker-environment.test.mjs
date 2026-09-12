@@ -106,3 +106,17 @@ test('explicit existing profile bindings retain native links and reject retarget
  await writeFile(path.join(root,'worker-auth.json'),JSON.stringify({version:1,profileLinks:{codex:{'../worker-home/auth.json':native}}}));
  await assert.rejects(installationEnvironment(root,'codex'),/Profilbindung/);
 });
+
+test('SwiftPM config and cache links from a build in the worker home are tolerated, other Library links are not', async t => {
+ const root=await mkdtemp(path.join(os.tmpdir(),'swift-shim-')), library=await mkdtemp(path.join(os.tmpdir(),'Library-'));
+ t.after(()=>Promise.all([rm(root,{recursive:true,force:true}),rm(library,{recursive:true,force:true})]));
+ await installationEnvironment(root,'codex');
+ const swift=path.join(root,'worker-home/.config/swiftpm'); await mkdir(swift,{recursive:true});
+ for(const [name,target] of [['configuration','Library/org.swift.swiftpm/configuration'],['security','Library/org.swift.swiftpm/security'],['cache','Library/Caches/org.swift.swiftpm']]) {
+  await mkdir(path.join(library,target),{recursive:true}); await symlink(path.join(library,target),path.join(swift,name));
+ }
+ await installationEnvironment(root,'codex');
+ await mkdir(path.join(library,'Library/Keychains'),{recursive:true});
+ await symlink(path.join(library,'Library/Keychains'),path.join(swift,'keys'));
+ await assert.rejects(installationEnvironment(root,'codex'),/fremden Anschluss/);
+});
