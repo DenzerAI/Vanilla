@@ -1701,3 +1701,5 @@ wird. Keine automatische Absenderregel. Die Grundtriage ist lokal regelbasiert,
 ohne KI-Anbieter oder CRM-Voraussetzung; unklare Eingänge bleiben im Fokus.
 
 Inbox-Dialoge werden mit dem gemeinsamen Modal über ein Portal am Dokumentkörper geöffnet, damit sie auch bei mobil ausgeblendetem Detailbereich sichtbar bleiben.
+
+KI & Modelle verwendet kompakte SettingRow-Gruppen: vorhandene Programme zuerst, Kataloge und Aktualisierungen anfangs geschlossen über native details/summary (ai-disclosure). Programm-Chevrons öffnen Aktionen und Details. Lokale Laufzeiten zeigen Anzahl statt einer dauerhaft ausgeklappten Modellliste. Status trennt Installation, gespeicherte Einrichtung und Live-Verbindung. Vertrag: surfaces/settings.md.

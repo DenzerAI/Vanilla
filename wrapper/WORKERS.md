@@ -486,3 +486,7 @@ Die UI erklärt die nötige native
 Abo-Anmeldung für diese Installation; der Modellzugang bleibt unverändert.
 Der Diensttoken allein ist keine belegte Berechtigung zum Lesen des Abo-Profils.
 Keine automatischen Logins, Kopien fremder Profile oder erfundenen Prozentwerte.
+
+### Bestandsanzeige · Version 3
+
+GET /api/workers liest weiterhin den aktuellen Programmpfad, enabled und den Adapterzustand unabhängig voneinander. Ein eingerichteter, nicht gestarteter Anschluss heißt „Eingerichtet · Bei Bedarf verbunden“; er wird beim Lesen nicht gestartet. Fehlendes Programm, fehlende Anmeldung und Verbindungsfehler behalten Vorrang. Die Oberfläche zeigt nur installierte oder laufende Programme im Bestand. Fehlende Programme bleiben mit gegebenenfalls gespeicherter Einrichtung unter Entdecken. Katalog-/Wartungsdaten beweisen keine Live-Verbindung. Verbindungen verweist auf die gemeinsame, tatsächlich eingerichtete Liste; n8n wird nicht pauschal als vorhanden dargestellt. Keine Datenmigration; bestehende enabled-, Standard- und Vertretungswerte bleiben erhalten.

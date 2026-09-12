@@ -84,12 +84,11 @@ Bei einem Secret einer eingerichteten CRM-Verbindung führt „Ersetzen“ in de
 
 ## Worker
 
-Reihenfolge: Standard und Vertretung → KI-Worker → feste Abläufe → lokale Laufzeiten mit verfügbaren Modellen → direkt sichtbarer Modellkatalog.
+Reihenfolge: Standard und Vertretung → vorhandene KI → KI entdecken (geschlossen) → Aktualisierungen (geschlossen) → Verbindungen → lokale Laufzeiten. Nicht installierte Programme stehen ausschließlich unter Entdecken; gespeicherte Einrichtung bleibt dort erkennbar.
 Erklärungstexte und gemeinsame Arbeitsgrundlage entfallen hier. Status und Fehler bleiben sichtbar.
 Worker und lokale Laufzeiten zeigen Original-Markenassets über `BrandIcon` in `SettingRow`: 36-px-Platz mit 28-px-Motiv, unverzerrt und in beiden Themes lesbar.
 `worker-settings.jsx` verwendet `SettingRow` und den gemeinsamen Katalog aus
-`system/worker-catalog.mjs`. Jeder Worker ist eine eigene Zeile, auch OpenClaw
-und Claude Code. Installiert, verbunden und nicht erreichbar sind verschiedene
+`system/worker-catalog.mjs`. Jedes vorhandene Programm ist eine eigene Zeile. Weitere Programme stehen unter KI entdecken. Installiert, verbunden und nicht erreichbar sind verschiedene
 Zustände. „Verbinden“ prüft die lokale Schnittstelle; Konten und Schlüssel
 bleiben beim Worker. Das ist keine zusätzliche externe Anbieterregistrierung.
 Technische Pfade und Versionen stehen erst unter Details. Eine erfolgreiche
@@ -113,9 +112,9 @@ Status, Modelle und Werkzeuge beziehen sich auf den konkret verfügbaren Worker.
 Worker-Motive stehen frei ohne helle Trägerkachel. Claude Code verwendet eine
 Vektorwiedergabe des Clawd-Maskottchens; Hermes und Ollama passen ihre monochromen
 Motive dem Theme an. Lokale Laufzeiten und deren erkannte Modelle sind direkt
-sichtbar, nur Testchat und technische Details werden aufgeklappt. Der kuratierte
+mit Modellanzahl sichtbar; Modellnamen, Testchat und technische Details werden aufgeklappt. Der kuratierte
 Modellkatalog enthält Datum, Originalquelle, Downloadgröße und geschätzten
-RAM-Bedarf. Suche und Hardwarefilter sind sofort erreichbar. Downloads erfolgen
+RAM-Bedarf. Suche und Hardwarefilter stehen unter dem anfangs geschlossenen Einstieg Lokale Modelle entdecken. Downloads erfolgen
 nur auf Klick, bei laufendem Ollama und passender Hardware; weitere Modelle sind
 über den offiziellen Katalog erreichbar. LM-Studio-Modelle werden dort geladen.
 
@@ -415,11 +414,11 @@ Der bisherige Navigationseintrag Worker heißt KI & Modelle; seine interne ID
 `engines` bleibt erhalten. Standard und Vertretung stehen zuerst, danach die
 vorhandenen Zeilen der KI-Programme. Aktuell bleiben ergänzt gemeinsame SettingRow-
 Zeilen für Prüfdatum/Jetzt prüfen und automatische Updates mit apple-switch.
-KI entdecken zeigt einen suchbaren Anbieterüberblick samt benanntem öffentlichem
+KI entdecken ist anfangs geschlossen und zeigt nach Öffnen einen suchbaren Anbieterüberblick samt benanntem öffentlichem
 Modellkatalog. Neueste Katalognamen sind sichtbar; Programmversionen, Quellenstand,
 Verbindungsgrenzen und Modellauswahl stehen unter Versionen & Details. Anbieterlinks
 öffnen Dokumentation, keine Kontoanlage. Zugänge bleiben bei den vorhandenen
-Verbindungs-/Worker-Anmeldewegen. Feste Abläufe und lokale Modelle bleiben erhalten.
+Verbindungs-/Worker-Anmeldewegen. Lokale Modelle bleiben erhalten. Der feste n8n-Katalogeintrag entfällt; Eingerichtete Verbindungen öffnet die tatsächliche gemeinsame Verbindungsübersicht.
 
 Laden verwendet Settings-Skeleton, Fehler erhalten vorhandene Daten. Updates zeigen
 Prüfung, Download, Warten auf eine Arbeitspause und Ergebnis als Text. Unbekannte
@@ -427,9 +426,7 @@ Version ist nicht Aktuell. Keine fiktiven Prozentwerte. Die Produktion wird in
 Unser Design mit einem neutralen Beispielzustand gezeigt. Technischer Vertrag:
 ../WORKERS.md#ki--modelle-und-hintergrundaktualisierung--version-2.
 
-Gemini und Kimi verwenden bis zur Aufnahme eines geprüften Original-Markenassets
-bewusst den bestehenden neutralen Anschluss-Fallback von BrandIcon. Es werden
-keine nachgezeichneten oder fremden Markenbilder eingesetzt.
+Gemini CLI und Kimi Code CLI verwenden die unveränderten Original-Icons ihrer offiziellen Website beziehungsweise ihres offiziellen Repositories über BrandIcon. Herkunft: ui/assets/sources.json. Die kompakte ai-disclosure verwendet native details/summary, ist anfangs geschlossen und tastaturbedienbar. Programmzeilen öffnen über einen Chevron ihre Aktionen. Gespeicherte Einrichtung ist kein Live-Verbindungsnachweis; Fehler bleiben sichtbar. Es werden keine Zugänge oder Programme automatisch angelegt oder entfernt.
 
 ### Automatische Ladeprüfung
 
