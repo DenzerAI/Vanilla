@@ -24,7 +24,7 @@ import { jobFilters } from './jobs-view.mjs';
 import { IconMotionPreview } from './icon-motion-preview';
 import {VoiceWave,VoiceStatus} from "./voice-visual";
 import { AvatarMotionSetting } from "./avatar-motion-setting.jsx";
-import { AvatarChoices } from "./avatar-picker.jsx";
+import { AvatarChoices, AvatarStatesPreview } from "./avatar-picker.jsx";
 import { DefaultToggle } from "./components/ui/theme-toggle-demo";
 import GlassButtonDemo from "./components/ui/glass-button-demo";
 import { VanillaWordmark } from "./vanilla-wordmark";
@@ -115,7 +115,8 @@ export function DesignReference({ theme, tone, accent }) {
       <div className="agent-message"><p>Auf dem Handy öffnet das Mehr-Symbol die Aktionen.</p><MessageActions className="agent-actions"><button type="button">Beispielaktion</button><button type="button" disabled>Nicht verfügbar</button></MessageActions></div>
       <h3 className="section-heading">Arbeitsverlauf · Schritte und Änderungen</h3>
       <ActivityPreview/>
-      <h3 className="section-heading">Agent-Gesichter · Beispiel</h3>
+      <h3 className="section-heading" id="avatar-states-preview">Agent-Gesichter · Beispiel</h3>
+      <AvatarStatesPreview/>
       <div data-avatar-style={avatarMotionPreview}>
         <AvatarChoices value={avatarPreview} onChange={setAvatarPreview} />
         <div className="settings-group"><AvatarMotionSetting value={avatarMotionPreview} onChange={setAvatarMotionPreview} avatar={avatarPreview} /></div>

@@ -52,3 +52,31 @@ test("jedes Set hat ein deutsches Label", () => {
     assert.equal(companionSet({...base, hasTurns, idleMs: SLEEP_MS, waitingSince: base.now}), "ruft");
   }
 });
+
+test("ruhige Gesten enden wieder im Stand und verdecken keine echte Arbeit", () => {
+  for (const [seconds, gesture] of [[16,"atmet"],[32,"wippt"],[56,"hockt"],[68,"streckt"],[100,"schaut"],[132,"nicktzu"]]) {
+    assert.equal(companionSet({...base, idleMs: seconds * 1000}), gesture);
+    assert.equal(companionSet({...base, idleMs: (seconds + 4) * 1000}), "ruhe");
+    assert.equal(companionSet({...base, idleMs: seconds * 1000, running:true, activity:"read"}), "liest");
+    assert.equal(companionSet({...base, idleMs: seconds * 1000, waitingSince:base.now}), "ruft");
+  }
+});
+
+test("alle Gesichter haben eine geschlossene Grundfläche und zwei getrennte Augen", async () => {
+  const {readFile} = await import("node:fs/promises");
+  for (const name of ["lumi","nori","miko","orbit","pixel","kibo"]) {
+    const svg = await readFile(new URL(`../ui/assets/avatars/faces/${name}.svg`, import.meta.url), "utf8");
+    const rectangles = text => [...text.matchAll(/<rect\b([^>]*)\/?>/g)].map(([,attributes]) => Object.fromEntries([...attributes.matchAll(/([\w-]+)="([^"]*)"/g)].map(([,key,value]) => [key, ["x","y","width","height"].includes(key)?Number(value):value])));
+    const face = svg.split('<g class="bodyg">')[1].split('<g class="eyes">')[0];
+    const paint = rectangles(face).filter(rect => !rect.class);
+    const eyes = rectangles(svg).filter(rect => rect.class === "eye");
+    const closed = rectangles(svg).filter(rect => rect.class === "eyec");
+    assert.equal(eyes.length, 2, name);
+    assert.equal(closed.length, 2, name);
+    assert.ok(closed[0].x + closed[0].width < closed[1].x, `${name}: closed eyes must remain separate`);
+    for (const eye of eyes) {
+      for(let x=eye.x; x<eye.x+eye.width; x++) for(let y=eye.y; y<eye.y+eye.height; y++)
+        assert.ok(paint.some(rect => x>=rect.x && x<rect.x+rect.width && y>=rect.y && y<rect.y+rect.height), `${name}: uncovered eye hole at ${x},${y}`);
+    }
+  }
+});

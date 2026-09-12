@@ -1735,3 +1735,22 @@ Keine Datenmigration oder Änderung gespeicherter Bewegungseinstellungen.
 Avatar bleibt bei unveränderten Eigenschaften memoisiert: Der Sekundentakt des
 Companion darf die SVG-Ebenen nicht neu einsetzen und ihre Animationen nicht
 jede Sekunde zurücksetzen. Zustands- und Profilwechsel aktualisieren weiterhin.
+
+### Saubere Gesichtsebenen und ruhige Gesten
+
+Die Grundfläche der sechs Gesichter ist durchgehend gefüllt. Nur das offene
+oder geschlossene Augenpaar bewegt sich; feste Löcher und mitanimierte
+Füllrechtecke dürfen keine Augenspuren hinterlassen. Geschlossene Augen
+bleiben getrennt und verwenden bei allen Motiven dieselbe Ausschnittfarbe.
+Die SVG-Ebenen bleiben auch bei Zustandswechseln bestehen.
+
+Ruhe zeigt Atmen und Blinzeln ohne dauerndes Drehen oder Hüpfen. Sechs weitere
+kurze Gesten ergänzen den Leerlauf: tief atmen, hocken, strecken, Gewicht
+verlagern, umschauen und zunicken. Jede dauert acht Sekunden über die gemeinsame
+Rolle motion-avatar-idle-duration und kehrt zum Stand zurück; die Fußlinie
+bleibt fest. Die Gesten wechseln mit Ruhe innerhalb von drei Minuten.
+Arbeit, Rückfrage, Fehler und Abschluss haben weiterhin Vorrang; Einnicken
+und Schlafen folgen erst längerer Inaktivität. Still und reduzierte Bewegung
+bleiben wirksam. Unser Design bietet einen lokalen Zustandswähler mit allen
+sechs Produktionsfiguren, einschließlich Arbeits- und Augenzuständen.
+Keine Datenmigration oder Änderung gespeicherter Bewegungspräferenzen.

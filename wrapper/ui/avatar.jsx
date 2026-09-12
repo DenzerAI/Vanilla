@@ -1,4 +1,4 @@
-import React, { memo, useEffect, useRef, useState } from "react";
+import React, { memo, useEffect, useMemo, useRef, useState } from "react";
 import { observeAvatarMotion, avatarMotionTiming } from "./avatar-motion.mjs";
 import {
   agentAvatar,
@@ -24,6 +24,7 @@ export const Avatar = memo(function Avatar({ avatar, color, large = false, motio
   const [timing] = useState(avatarMotionTiming);
   useEffect(() => observeAvatarMotion(ref.current), []);
   const markup = stage ? artwork[id] : artwork[id].replace(STAGE_VIEWBOX, COMPACT_VIEWBOX);
+  const artworkHTML = useMemo(() => ({ __html: markup }), [markup]);
   return (
     <span
       ref={ref}
@@ -39,7 +40,7 @@ export const Avatar = memo(function Avatar({ avatar, color, large = false, motio
       <span
         className="agent-avatar-art"
         // Only the six trusted, bundled SVGs above can supply this markup.
-        dangerouslySetInnerHTML={{ __html: markup }}
+        dangerouslySetInnerHTML={artworkHTML}
       />
     </span>
   );

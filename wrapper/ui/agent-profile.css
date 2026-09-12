@@ -572,3 +572,10 @@
     justify-content: space-between;
   }
 }
+
+.avatar-states-preview { margin-block: var(--space-16); }
+.avatar-states-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(124px, 1fr)); gap: var(--space-16); margin-top: var(--space-16); }
+.avatar-states-grid figure { margin: 0; display: flex; flex-direction: column; align-items: center; }
+.avatar-states-grid .identity-avatar { width: 124px; height: 100px; margin: 0; }
+.avatar-states-grid .agent-avatar-art { width: 100%; height: 100%; }
+.avatar-states-grid figcaption { font-size: var(--text-small); color: var(--muted); }

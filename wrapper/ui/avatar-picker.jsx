@@ -9,9 +9,9 @@ import {
 import { Avatar } from "./avatar.jsx";
 import { Check } from "./icons.jsx";
 import { Modal } from "./modal.jsx";
-import { companionSetLabel } from "./companion-state.mjs";
+import { companionSets, companionSetLabel } from "./companion-state.mjs";
 
-const previewSets = ["ruhe", "denkt", "arbeitet", "fertig", "ruhe", "liest", "ruft", "tanzt", "schlaeft"];
+const previewSets = ["ruhe", "atmet", "denkt", "arbeitet", "hockt", "fertig", "streckt", "liest", "wippt", "ruft", "schaut", "nicktzu", "tanzt", "schlaeft"];
 
 export function AvatarChoices({ value, color, onChange }) {
   return (
@@ -191,4 +191,18 @@ export function AgentWelcome({ api, initialName, onSaved, onClose }) {
       </form>
     </Modal>
   );
+}
+
+/** Uses the same artwork and motion layers as the composer, with local examples. */
+export function AvatarStatesPreview() {
+  const [set, setSet] = useState("ruhe");
+  return <div className="avatar-states-preview">
+    <label className="row">Figurzustand <select aria-label="Figurzustand" value={set} onChange={event => setSet(event.target.value)}>
+      {companionSets.map(([id, label]) => <option key={id} value={id}>{label}</option>)}
+    </select></label>
+    <div className="avatar-states-grid">{agentAvatars.map(avatar => <figure key={avatar.id}>
+      <Avatar avatar={avatar.id} color="neutral" large stage set={set}/>
+      <figcaption>{avatar.name}</figcaption>
+    </figure>)}</div>
+  </div>;
 }
