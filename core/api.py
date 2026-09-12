@@ -166,18 +166,19 @@ def routes(operations, queue):
             marker = o.config.data / 'restart.json'
             hold = o.config.data / 'restore-hold.json'
             old_hold = hold.read_text() if resume and hold.exists() else None
-            staged = marked = adapter_held = False
+            staged = marked = adapter_held = held = False
             try:
                 if runtime.active_writes > 1 or await runtime.has_active_work():
                     raise ValueError("Bitte laufende Aufträge und Gespräche vor dem Neustart beenden.")
                 if runtime.config.start_adapter:
+                    adapter_held = True
                     try:
                         await runtime.request('POST','/api/system/backup-hold',json={'hold':True})
                     except RuntimeError as error:
                         # An adapter refusal is an expected conflict, not an HTTP 500.
-                        # Nothing was held, so nothing must be released and the core must not stay frozen.
+                        # Keep the existing rollback/release path and JSON error contract.
                         raise ValueError(str(error)) from None
-                    adapter_held = True
+                    held = True
                 if record:
                     from .backups import verify_apply
                     await asyncio.to_thread(verify_apply, record['path'], o.config)
@@ -208,8 +209,11 @@ def routes(operations, queue):
                     try:
                         await runtime.request('POST','/api/system/backup-hold',json={'hold':False})
                     except Exception:
-                        # A lost release acknowledgement keeps this core paused.
-                        raise ValueError('Wartungspause konnte nicht aufgehoben werden. Anschluss prüfen.') from None
+                        if held:
+                            # A lost release acknowledgement keeps this core paused.
+                            raise ValueError('Wartungspause konnte nicht aufgehoben werden. Anschluss prüfen.') from None
+                        # The adapter never held anything (for example during an update pause):
+                        # a failed release must not leave this core frozen.
                 runtime.frozen = previous
                 raise
 
