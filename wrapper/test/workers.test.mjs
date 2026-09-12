@@ -424,3 +424,21 @@ test('only the bundled Claude adapter receives the session model metadata entryp
   assert.equal(starts[1].command,process.execPath);
   assert.deepEqual(starts[1].args,[]);
 });
+
+test('inventory distinguishes saved setup, live connection and missing installation without starting workers', async t => {
+  const {store} = await fixture(t), primary = new Adapter();
+  const workers = new Workers({store, root:store.root, codex:primary, resolveCommand:async entry => entry.id === 'hermes' ? null : process.execPath});
+  await workers.init();
+  workers.settings.enabled = ['codex','claw-code','hermes'];
+  let state = await workers.status();
+  assert.equal(state.workers.find(w => w.id === 'claw-code').status, 'Eingerichtet · Bei Bedarf verbunden');
+  assert.equal(state.workers.find(w => w.id === 'hermes').status, 'Nicht installiert');
+  assert.equal(state.workers.find(w => w.id === 'gemini').status, 'Installiert');
+  assert.equal(primary.connected, false);
+  primary.connected = true;
+  primary.authenticated = false;
+  workers.errors.set('claw-code','Verbindung fehlgeschlagen');
+  state = await workers.status();
+  assert.equal(state.workers.find(w => w.id === 'codex').status, 'Anmeldung fehlt');
+  assert.equal(state.workers.find(w => w.id === 'claw-code').status, 'Nicht erreichbar');
+});
