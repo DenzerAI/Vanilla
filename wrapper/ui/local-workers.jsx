@@ -140,7 +140,7 @@ export function LocalWorkers({ api, SettingRow }) {
               </dl>
             </details>
           )}
-          {data?.machines.map((machine) => (
+          {data?.machines.filter(m => m.connected || m.installed || !m.local).map((machine) => (
             <RuntimeRow
               key={machine.id}
               machine={machine}
@@ -152,7 +152,10 @@ export function LocalWorkers({ api, SettingRow }) {
               SettingRow={SettingRow}
             />
           ))}
+          <details className="ai-disclosure"><summary>Lokale Modelle entdecken</summary>
+          {data?.machines.filter(m => m.local && !m.installed && !m.connected).map(machine => <RuntimeRow key={machine.id} machine={machine} device={device} action={action} SettingRow={SettingRow}/>)}
           {data && <ModelCatalog data={data} action={action} SettingRow={SettingRow} />}
+          </details>
           {adding ? (
             <MachineForm action={action} onClose={() => setAdding(false)} />
           ) : (
@@ -236,7 +239,7 @@ function RuntimeRow({ machine, device, operation, action, SettingRow }) {
         title={machine.name}
         description={
           machine.local
-            ? `${machine.provider === "ollama" ? "Empfohlen · " : ""}${status}`
+            ? status
             : `${providerName(machine.provider)} · ${status}`
         }
         action={
@@ -270,7 +273,7 @@ function RuntimeRow({ machine, device, operation, action, SettingRow }) {
           )
         }
       />
-      {machine.connected && <ul className="local-installed-models" aria-label={`Verfügbare Modelle in ${machine.name}`}>
+      {machine.connected && expanded && <ul className="local-installed-models" aria-label={`Verfügbare Modelle in ${machine.name}`}>
         {installed.length ? installed.map(m => <li key={m.id}><span>{m.id}</span><span>{m.bytes ? gb(m.bytes) : "Verfügbar"}</span></li>) : <li>Keine Modelle {machine.provider === "lmstudio" ? "geladen" : "installiert"}</li>}
       </ul>}
       {installOpened && !machine.connected && (

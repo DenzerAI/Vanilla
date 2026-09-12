@@ -10,5 +10,7 @@
   "discord.svg": "https://cdn.simpleicons.org/discord/5865F2",
   "openai.svg": "https://raw.githubusercontent.com/simple-icons/simple-icons/13.0.0/icons/openai.svg",
   "21st.png": "https://21st.dev/apple-touch-icon.png",
-  "github.svg": "https://raw.githubusercontent.com/primer/octicons/main/icons/mark-github-16.svg"
+  "github.svg": "https://raw.githubusercontent.com/primer/octicons/main/icons/mark-github-16.svg",
+  "gemini.png": "https://geminicli.com/icon.png",
+  "kimi.png": "https://raw.githubusercontent.com/MoonshotAI/kimi-cli/main/web/public/logo.png"
 }

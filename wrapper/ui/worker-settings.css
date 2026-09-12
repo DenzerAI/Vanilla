@@ -14,3 +14,8 @@
   .worker-settings .setting-row > div:first-child { flex: 1 1 120px; }
 }
 .worker-routing { color: var(--muted); font-size: var(--text-small); margin: var(--space-8) 0 var(--space-24); }
+
+.ai-disclosure { margin-top: var(--space-16); }
+.ai-disclosure > summary { padding: var(--space-16); cursor: pointer; font-size: var(--text-body); font-weight: var(--weight-medium); }
+.worker-disclosure { padding: var(--space-8); background: transparent; color: var(--muted); }
+.worker-disclosure[aria-expanded="false"] svg { transform: rotate(-90deg); }

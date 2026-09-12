@@ -34,7 +34,11 @@ import ollama from "./assets/ollama.png";
 import lmstudio from "./assets/lmstudio.png";
 import claude from "./assets/claude-code.svg";
 
+import gemini from "./assets/gemini.png";
+import kimi from "./assets/kimi.png";
+
 const brands = {
+  gemini, kimi,
   github,
   openclaw, hermes, ollama, lmstudio, "claw-code": claude, "claude-code": claude,
   hero, labelwin, plancraft, tooltime, openhandwerk, pds, 'streitv.1':streit,

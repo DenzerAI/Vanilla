@@ -3,6 +3,7 @@ import {Skeleton} from './skeleton.tsx';
 import React, { useEffect, useState } from "react";
 import { SettingRow } from "./settings-row.jsx";
 import "./worker-settings.css";
+import { ChevronDown } from "./icons.jsx";
 import { BrandIcon } from "./brand-icon.jsx";
 import { workerName } from "../../system/worker-catalog.mjs";
 
@@ -23,6 +24,23 @@ export function WorkerSettings({ api, onChange, onConnections }) {
   if (!data && !error) return <Skeleton variant="settings" label="Anschlüsse werden geprüft …"/>;
   if (!data) return <div className="settings-group"><SettingRow title="Worker" description={error || "Anschlüsse werden geprüft …"} action={error && <button onClick={() => act("reload", "/workers")}>Erneut prüfen</button>} /></div>;
   const choices = data.workers.filter(w => w.configured);
+  const present = data.workers.filter(w => w.connected || w.installed);
+  const available = data.workers.filter(w => !w.connected && !w.installed);
+  const row = w => <React.Fragment key={w.id}>
+    <SettingRow icon={<BrandIcon name={w.id}/>} title={w.name}
+      description={w.error ? w.status : !w.installed && !w.connected ? (w.configured ? "Nicht installiert · Einrichtung gespeichert" : "Nicht installiert") : w.connected ? w.status : w.configured ? "Eingerichtet · Bei Bedarf verbunden" : "Installiert"}
+      action={<button className="worker-disclosure" aria-label={`Details: ${w.name}`} aria-expanded={expanded === w.id} aria-controls={`worker-${w.id}`} onClick={() => setExpanded(expanded === w.id ? null : w.id)}><ChevronDown size={18}/></button>}/>
+    {expanded === w.id && <div className="worker-detail" id={`worker-${w.id}`}>
+      <p>{w.error || (w.connected ? "Konto und Modelle werden im jeweiligen Programm verwaltet." : w.configured && w.installed ? "Die Einrichtung ist gespeichert. Das Programm startet bei der nächsten Aufgabe." : "Programm installieren, dort anmelden und anschließend hier verbinden.")}</p>
+      <div className="worker-actions">
+        {w.installed && <button disabled={!!busy} onClick={() => act(w.id, "/workers/connect", {id:w.id})}>{busy === w.id ? "Verbinde …" : w.connected ? "Neu verbinden" : w.configured ? "Verbindung prüfen" : "Verbinden"}</button>}
+        {!w.installed && <button disabled={!!busy} onClick={() => act(w.id, "/workers")}>Installation prüfen</button>}
+        {w.installURL && <a className="button" href={w.installURL} target="_blank" rel="noreferrer">Einrichtung öffnen ↗</a>}
+        {w.configured && ![data.settings.defaultWorker,data.settings.fallbackWorker].includes(w.id) && <button disabled={!!busy} onClick={() => act(w.id, "/workers/disconnect", {id:w.id})}>Trennen</button>}
+      </div>
+      <details><summary>Technische Details</summary><p>{w.description}. {w.version && `Version: ${w.version}`}</p><p>Eigener Programmpfad: <code>{w.env}</code></p></details>
+    </div>}
+  </React.Fragment>;
   return <div className="worker-settings">
     {error && <p className="worker-error" role="alert">{error}</p>}
     <div className="settings-group">
@@ -40,27 +58,16 @@ export function WorkerSettings({ api, onChange, onConnections }) {
       } />
     </div>
     {data.settings.defaultWorker === "auto" && <p className="worker-routing" role="status">{(data.routingOrder || choices.map(w => w.id)).map(workerName).join(" → ") || "Noch kein Worker eingerichtet"}{choices.length === 1 ? " · Weitere Worker zuerst verbinden" : " · Wechsel nur vor Aufgabenbeginn"}</p>}
-    <h3>Deine KI-Programme</h3>
+    <h3>Deine KI</h3>
     <div className="settings-group">
-      {data.workers.map(w => <React.Fragment key={w.id}>
-        <SettingRow icon={<BrandIcon name={w.id} />} title={w.name} description={w.status} action={<div className="worker-actions">
-          {w.installed && !w.connected && <button disabled={!!busy} onClick={() => act(w.id, "/workers/connect", { id: w.id })}>{busy === w.id ? "Verbinde …" : "Verbinden"}</button>}
-          <button aria-label={`${w.connected ? "Verwalten" : "Einrichten"}: ${w.name}`} aria-expanded={expanded === w.id} aria-controls={`worker-${w.id}`} disabled={!!busy} onClick={() => setExpanded(expanded === w.id ? null : w.id)}>{expanded === w.id ? "Schließen" : w.connected ? "Verwalten" : w.installed ? "Details" : "Einrichten"}</button>
-        </div>} />
-        {expanded === w.id && <div className="worker-detail" id={`worker-${w.id}`}>
-          <p>{w.error || (w.connected ? "Die Schnittstelle antwortet. Konto, Modelle und Werkzeuge werden im jeweiligen Worker eingerichtet." : "Installiere den Worker und richte dort dein Konto ein. Danach hier verbinden.")}</p>
-          <div className="worker-actions">
-            {!w.connected && <button disabled={!!busy} onClick={() => act(w.id, "/workers")}>Installation prüfen</button>}
-            {w.installURL && <a className="button" href={w.installURL} target="_blank" rel="noreferrer">Einrichtung öffnen ↗</a>}
-            {w.connected && <button disabled={!!busy} onClick={() => act(w.id, "/workers/connect", { id: w.id })}>{busy === w.id ? "Verbinde …" : "Neu verbinden"}</button>}
-            {w.configured && ![data.settings.defaultWorker, data.settings.fallbackWorker].includes(w.id) && <button disabled={!!busy} onClick={() => act(w.id, "/workers/disconnect", { id: w.id })}>Trennen</button>}
-          </div>
-          <details><summary>Technische Details</summary><p>{w.description}. {w.capabilities.plan ? "Geschützter Planmodus verfügbar." : "Geschützter Planmodus hier nicht verfügbar."} Browserzugriff hängt von den Werkzeugen des Workers ab.</p><p>Eigener Programmpfad: <code>{w.env}</code>. {w.version && `Version: ${w.version}`}</p>{!w.command && <p>Für Claude Code wird ein separater ACP-Adapter benötigt.</p>}</details>
-        </div>}
-      </React.Fragment>)}
+      {present.length ? present.map(row) : <SettingRow title="Noch kein KI-Programm installiert"/>}
     </div>
-    <AIMaintenanceSettings api={api}/>
-    <h3>Feste Abläufe</h3>
-    <div className="settings-group"><SettingRow icon={<BrandIcon name="n8n" />} title="n8n" action={<button onClick={onConnections}>Verbindungen öffnen</button>} /></div>
+    <details className="settings-group ai-disclosure">
+      <summary>KI entdecken</summary>
+      {available.map(row)}
+      <AIMaintenanceSettings api={api} section="catalog"/>
+    </details>
+    <AIMaintenanceSettings api={api} section="updates"/>
+    <div className="settings-group"><SettingRow title="Eingerichtete Verbindungen" action={<button onClick={onConnections}>Öffnen</button>}/></div>
   </div>;
 }
