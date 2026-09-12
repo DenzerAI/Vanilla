@@ -159,7 +159,7 @@ Computer-Use-Schritte gehören in die bestehende Werkzeuggruppe. Sie zeigen den 
 
 Unter der Eingabe gibt es keinen Computer-Use-Einstieg und keine Werkzeugkatalog-Prüfung. Tatsächliche Computer-Use-Aktivität bleibt in den Werkzeuggruppen sichtbar. Bildschirm-/App-Freigaben bleiben beim ausführenden Worker und dessen Computer-Use-Anschluss.
 
-Das Hauptmenü zeigt Inbox, Aufträge, die verfügbare Bibliothek und Firma in dieser Reihenfolge; darunter bleiben Workspaces und Chats. Firma verwendet dieselbe nav-item-Zeile ohne eigene Abschnittsüberschrift. Verbindungen und Skills werden über die Einstellungen im Agentenmenü erreicht. Modul-Platzhalter und reservierte Leerzeilen entfallen. Symbole, Textkanten, Abstände und Flächengestaltung bleiben erhalten.
+Das Hauptmenü zeigt Inbox, Kalender, Aufträge, die verfügbare Bibliothek und Firma in dieser Reihenfolge; darunter bleiben Workspaces und Chats. Firma verwendet dieselbe nav-item-Zeile ohne eigene Abschnittsüberschrift. Verbindungen und Skills werden über die Einstellungen im Agentenmenü erreicht. Modul-Platzhalter und reservierte Leerzeilen entfallen. Symbole, Textkanten, Abstände und Flächengestaltung bleiben erhalten.
 
 Der Composer zeigt keinen zusätzlichen Avatar. Nach dem Speichern des Profils übernehmen alle offenen Panels Namen und Avatar über das gemeinsame Identitätsereignis.
 

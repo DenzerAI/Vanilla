@@ -2013,6 +2013,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   /> : null;
   const nav = [
       ["inbox", Inbox, "Inbox"],
+      ["calendar", Calendar, "Kalender"],
       ["jobs", Clock, "Aufträge"],
       ...(boot?.features?.library?[["library", FileText, "Ergebnisse"]]:[]),
       ...(boot?.features?.firma?[["firma", Briefcase, "Firma"]]:[]),

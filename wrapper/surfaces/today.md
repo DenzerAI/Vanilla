@@ -6,13 +6,13 @@ Heute bleibt als bestehende Detailansicht über die Suche erreichbar. Ein frisch
 Start ohne expliziten Chatlink öffnet den leeren Chat; eingebettete Chats und
 Chatlinks öffnen weiterhin ihren Chat. `?view=today` und `?view=calendar` sind Direkteinstiege,
 der bisherige Pipeline-Link öffnet Heute. Kalender bleibt eine zweite Sicht
-innerhalb desselben Bereichs; kein zusätzlicher Hauptmenüpunkt. Globale Suche
-findet beide. Laufende Chats bleiben gemountet.
+innerhalb desselben Bereichs und hat einen direkten Hauptmenüpunkt unter Inbox.
+Globale Suche findet beide. Laufende Chats bleiben gemountet.
 
 Ein PageHeading mit Titel und unmittelbaren Aktionen, darunter Heute/Kalender
 als gemeinsame Tabs. Horizontaler Touch-Wisch auf freier Fläche wechselt ebenfalls;
 Buttons und Formulare bleiben davon ausgenommen. Tabs bleiben immer erreichbar.
-Die gemeinsame Navigationsauswahl Heute bleibt im Kalender aktiv.
+Im Kalender ist der Menüpunkt Kalender ausgewählt.
 
 ## Heute
 
@@ -122,7 +122,7 @@ dich stehen auf breiten Ansichten nebeneinander, auf schmalen untereinander.
 
 Der Standardstart ist jetzt der leere Chat mit kontextabhängiger Begrüßung und
 AttentionFan. Heute entfällt im Hauptmenü; Kalender und bestehende Direktlinks
-bleiben über die Suche nutzbar. Aufbau und Verhalten führt [chat.md](chat.md).
+bleiben zusätzlich über die Suche nutzbar. Kalender steht direkt unter Inbox im Hauptmenü. Aufbau und Verhalten führt [chat.md](chat.md).
 
 Alte Direkteinstiege mit ?view=today oder ?view=pipeline öffnen den neuen Chatstart.
 ?view=calendar öffnet weiterhin den Kalender.
@@ -138,4 +138,4 @@ Bestätigung löschen; externe Termine bleiben lesbar und beim Anbieter bearbeit
 Der markierte Beispielmodus bleibt getrennt und ohne Speicherung. Speicherfehler
 und Versionskonflikte lassen Entwürfe bestehen. Der Chatstart erhält die gemeinsame
 Kalenderkachel und öffnet beim Klick den Tagesbericht; Kalender öffnen darin führt
-hierher. Kein zusätzlicher Hauptmenüpunkt. Grenzen und Datenmigration: docs/PLANNER.md.
+hierher. Der Hauptmenüpunkt Kalender öffnet dieselbe Ansicht. Grenzen und Datenmigration: docs/PLANNER.md.
