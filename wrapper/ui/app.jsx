@@ -200,7 +200,6 @@ const ImageForm = lazySurface(() => import('./library.jsx'), 'ImageForm', 'list'
 const SkillDetails = lazySurface(() => import('./skill-details.jsx'), 'SkillDetails', 'list');
 const SkillHub = lazySurface(() => import('./skill-details.jsx'), 'SkillHub', 'list');
 const CreateSkillForm = lazySurface(() => import('./skill-details.jsx'), 'CreateSkillForm', 'list');
-const UserPreferences = lazySurface(() => import('./user-preferences'), 'UserPreferences', 'list');
 const UsersSettings = lazySurface(() => import('./users-settings'), 'UsersSettings', 'list');
 const AgentPreferences = lazySurface(() => import('./agent-preferences.jsx'), 'AgentPreferences', 'list');
 const DesignReference = lazySurface(() => import('./design-reference.jsx'), 'DesignReference', 'list');
@@ -1407,7 +1406,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
   }
   const weatherRequestRef=useRef(null);
   async function openWeatherReport(item) {
-    if(!item.weatherConfigured || item.weather?.status==='unresolved'){openSettings('user');return;}
+    if(!item.weatherConfigured || item.weather?.status==='unresolved'){openSettings('account');return;}
     const key=projectRef.current+'|'+item.title;
     if(weatherRequestRef.current?.key!==key)weatherRequestRef.current={key,requestId:crypto.randomUUID()};
     const result=await api('/weather/chat',{requestId:weatherRequestRef.current.requestId,projectId:projectRef.current,worker:current?.workerId||draftWorker,model:pickerModel||model,serviceTier:current?.serviceTier||draftSpeed,mode});
@@ -2026,24 +2025,16 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
       ...(boot?.features?.library?[["library", FileText, "Ergebnisse"]]:[]),
       ...(boot?.features?.firma?[["firma", Briefcase, "Firma"]]:[]),
     ];
-  const settingNav = [
-    ["general", SlidersHorizontal, "Allgemein"],
-    ...(boot?.features?.operations ? [["system", Activity, "System"], ...(boot?.features?.productUpdates ? [["updates", RotateCcw, "Updates"]] : []), ["memory", BrainCircuit, "Memory"], ["storage", HardDrive, "Speicher & Sicherung"], ["access", Lock, "Zugang"]] : []),
-    ["appearance", Sun, "Aussehen"],
-    ["voice", Mic, "Stimme"],
-    ["identity", User, "Dein Agent"],
-    ["user", User, "Dein Profil"],
-    ...(boot?.features?.users ? [["users", User, "Benutzer"]] : []),
-    ["service", ShieldCheck, "Service"],
-    ["connections", Plug, "Verbindungen"],
-    ["skills", Sparkles, "Skills"],
-    ["secrets", KeyRound, "Secrets"],
-    ["privacy", ShieldCheck, "Datenschutz"],
-    ["engines", BrainCircuit, "KI & Modelle"],
-    ["usage", Activity, "Nutzung"],
-    ["shortcuts", Keyboard, "Tastaturkürzel"],
-    ["archive", Archive, "Archivierte Chats"],
+  // Einstellungen nach iOS-Vorbild: das Konto zuerst, dann wenige benannte Gruppen.
+  const ops = boot?.features?.operations;
+  const settingGroups = [
+    { label: "", items: [["account", User, "Konto"]] },
+    { label: "Dein Agent", items: [["identity", User, "Dein Agent"], ["voice", Mic, "Stimme"], ["engines", BrainCircuit, "KI & Modelle"], ["skills", Sparkles, "Skills"], ...(ops ? [["memory", BrainCircuit, "Memory"]] : [])] },
+    { label: "Verbindungen", items: [["connections", Plug, "Verbindungen"], ["secrets", KeyRound, "Secrets"], ...(ops ? [["access", Lock, "Zugang"]] : [])] },
+    { label: "System", items: [["general", SlidersHorizontal, "Allgemein"], ["appearance", Sun, "Aussehen"], ["privacy", ShieldCheck, "Datenschutz"], ...(ops ? [["storage", HardDrive, "Speicher & Sicherung"], ...(boot?.features?.productUpdates ? [["updates", RotateCcw, "Updates"]] : []), ["system", Activity, "System"]] : []), ["service", ShieldCheck, "Service"], ["usage", Activity, "Nutzung"]] },
+    { label: "Weiteres", items: [["shortcuts", Keyboard, "Tastaturkürzel"], ["archive", Archive, "Archivierte Chats"]] },
   ];
+  const settingNav = settingGroups.flatMap((group) => group.items);
   const [foreground, setForeground] = useState(() => document.visibilityState === "visible" && document.hasFocus());
   useEffect(() => {
     const update = () => setForeground(document.visibilityState === "visible" && document.hasFocus());
@@ -2132,7 +2123,9 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
             </button>
             <div className="sidebar-section-label">Einstellungen</div>
             <nav>
-              {settingNav.map(([id, I, label]) => (
+              {settingGroups.map((group) => <React.Fragment key={group.label || "account"}>
+              {group.label && <div className="sidebar-section-label settings-group-label">{group.label}</div>}
+              {group.items.map(([id, I, label]) => (
                 <button
                   key={id}
                   className={
@@ -2144,6 +2137,7 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
                   {label}
                 </button>
               ))}
+              </React.Fragment>)}
             </nav>
           </>
         ) : (
@@ -2910,10 +2904,8 @@ function App({ embedded = false, sessionRef, onSessionChange, onActivate, paneNu
               </>
             ) : settingsTab === "design" ? (
               <><button className="design-back" onClick={()=>setSettingsTab("appearance")}>{icon(ArrowLeft,16)}Aussehen</button><DesignReference theme={boot.settings.theme} tone={boot.settings.designTone} accent={boot.settings.highlightColor}/></>
-            ) : settingsTab === "user" ? (
-              <UserPreferences api={api}/>
-            ) : settingsTab === "users" ? (
-              <UsersSettings api={api} user={boot.user || {id:"owner",name:"Zugangscode",role:"owner"}}/>
+            ) : settingsTab === "account" || settingsTab === "user" || settingsTab === "users" ? (
+              <UsersSettings api={api} user={boot.user || {id:"owner",name:"Zugangscode",role:"owner"}} accounts={!!boot?.features?.users}/>
             ) : settingsTab === "identity" ? (
               <>
                 <AgentPreferences api={api} onSaved={profile=>{setBoot(old=>({...old,settings:{...old.settings,name:profile.name,avatar:profile.avatar,avatarColor:profile.avatarColor,avatarConfigured:true}}));notify("Dein Agent wurde gespeichert.")}} />

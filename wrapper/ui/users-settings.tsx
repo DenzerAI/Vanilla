@@ -2,27 +2,40 @@ import {useEffect,useState} from 'react';
 import {SettingRow} from './settings-row.jsx';
 import {Modal} from './modal.jsx';
 import {Skeleton} from './skeleton';
+import {UserPreferences} from './user-preferences';
 
 type Api=(path:string,data?:any)=>Promise<any>;
 type User={id:string;name:string;role:'owner'|'member';createdAt?:number};
 const roleLabel=(role:string)=>role==='owner'?'Eigentümer':'Mitglied';
 const randomKey=()=>{const a=new Uint8Array(18);crypto.getRandomValues(a);return Array.from(a,b=>'abcdefghjkmnpqrstuvwxyz23456789'[b%31]).join('').replace(/(.{6})(?=.)/g,'$1-');};
 
-/** Benutzer dieser Installation: dein Konto, weitere Personen, der Rückweg-Schlüssel. */
-export function UsersSettings({api,user}:{api:Api;user:User}) {
+/** Konto: dein Profil, deine Anmeldung, weitere Personen und der Rückweg-Schlüssel der Installation. */
+export function UsersSettings({api,user,accounts=true}:{api:Api;user:User;accounts?:boolean}) {
+  return <>
+    <UserPreferences api={api}/>
+    {accounts&&<AccountsSection api={api} user={user}/>}
+  </>;
+}
+
+function AccountsSection({api,user}:{api:Api;user:User}) {
   const [users,setUsers]=useState<User[]|null>(null),[accessConfigured,setAccessConfigured]=useState(true),[error,setError]=useState(''),[message,setMessage]=useState(''),[busy,setBusy]=useState(false);
   const [adding,setAdding]=useState(false),[passwordFor,setPasswordFor]=useState<User|null>(null),[removing,setRemoving]=useState<User|null>(null),[keyChange,setKeyChange]=useState(false);
   const owner=user.role==='owner', legacy=user.id==='owner';
   async function load(){try{const data=await api('/users');setUsers(data.users);setAccessConfigured(data.accessConfigured!==false);setError('');}catch(e){setError((e as Error).message);}}
   useEffect(()=>{void load();},[]);
   async function act(fn:()=>Promise<any>,success:string){setBusy(true);setError('');setMessage('');try{await fn();setMessage(success);await load();return true;}catch(e){setError((e as Error).message);return false;}finally{setBusy(false);}}
-  if(users===null&&!error)return <Skeleton variant="settings" label="Benutzer werden geladen …"/>;
-  if(users===null)return <p role="alert">Die Benutzer konnten nicht geladen werden: {error} <button type="button" onClick={()=>void load()}>Erneut laden</button></p>;
+  if(users===null&&!error)return <Skeleton variant="settings" label="Konten werden geladen …"/>;
+  if(users===null)return <p role="alert">Die Konten konnten nicht geladen werden: {error} <button type="button" onClick={()=>void load()}>Erneut laden</button></p>;
   const first=!users.length;
+  const modalOpen=adding||!!passwordFor||keyChange||!!removing;
   return <div className="agent-preferences">
-    <div className="settings-save-row"><span role="status">{message||(legacy?(accessConfigured?'Angemeldet mit dem Zugangsschlüssel der Installation.':'Noch ohne Anmeldung. Lege dein Konto an, dann ist die Installation geschützt.'):`Angemeldet als ${user.name}.`)}</span>
-      {(accessConfigured||!first)&&<button type="button" onClick={()=>act(async()=>{await api('/auth/logout',{});location.reload();},'Abgemeldet.')} disabled={busy}>Abmelden</button>}</div>
-    {error&&!adding&&!passwordFor&&!keyChange&&<p className="inline-error" role="alert">{error}</p>}
+    <h3 className="section-heading">Anmeldung</h3>
+    <div className="settings-group">
+      <SettingRow title={legacy?(accessConfigured?'Angemeldet mit dem Rückweg-Schlüssel':'Noch ohne Anmeldung'):`Angemeldet als ${user.name}`} description={legacy?(accessConfigured?'Ohne persönliches Konto. Lege unten deines an.':'Lege dein Konto an, dann ist die Installation geschützt.'):roleLabel(user.role)}>
+        {(accessConfigured||!first)&&<button type="button" onClick={()=>act(async()=>{await api('/auth/logout',{});location.reload();},'Abgemeldet.')} disabled={busy}>Abmelden</button>}
+      </SettingRow>
+      {(message||(error&&!modalOpen))&&<SettingRow title={<span role={error?'alert':'status'} className={error?'inline-error':undefined}>{error||message}</span>}/>}
+    </div>
     <h3 className="section-heading">Konten</h3>
     <div className="settings-group">
       {users.map(u=><SettingRow key={u.id} title={<>{u.name}{u.id===user.id&&<span className="page-note"> · du</span>}</>} description={roleLabel(u.role)}>
@@ -43,11 +56,11 @@ export function UsersSettings({api,user}:{api:Api;user:User}) {
         </SettingRow>
       </div>
     </>}
-    <h3 className="section-heading">Was Benutzer bedeuten</h3>
+    <h3 className="section-heading">Was Konten bedeuten</h3>
     <div className="settings-group">
       <SettingRow title="Chats" description="Jeder Chat gehört der Person, die ihn begonnen hat. Kanäle und Aufträge gehören der Installation und damit den Eigentümern."/>
       <SettingRow title="Private Chats" description="Die Chat-PIN bleibt der Schutz für persönliche Inhalte, auch gegenüber Eigentümern."/>
-      <SettingRow title="Gemeinsames Gedächtnis" description="Memory, CRM und Firmenbasis sind je Installation gemeinsam. Benutzer trennen Chats, nicht das Wissen."/>
+      <SettingRow title="Gemeinsames Gedächtnis" description="Memory, CRM und Firmenbasis sind je Installation gemeinsam. Konten trennen Chats, nicht das Wissen."/>
     </div>
     {adding&&<UserForm title={first?'Dein Konto anlegen':'Konto anlegen'} busy={busy} error={error} withRole={!first} withKey={!accessConfigured} onClose={()=>{setAdding(false);setError('');}} onSubmit={draft=>act(async()=>{
       const payload:any={name:draft.name,password:draft.password,role:first?'owner':draft.role};
