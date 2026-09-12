@@ -19,29 +19,27 @@ def classify(messages):
         return result('focus', 'Eigene Nachricht oder noch kein vollständiger Eingang. Bleibt im Fokus.')
     m = incoming[-1]
     subject = (m.get('subject') or '').casefold()
-    body = (m.get('text') or '')[:16000].casefold()
+    raw = m.get('text') or ''
+    body = (raw[:16000] + '\n' + raw[-8000:]).casefold()
     sender = parseaddr(m.get('sender') or '')[1].casefold()
     signals = m.get('triageSignals') or {}
     labels = set(signals.get('labels') or [])
     # A bulk sender can also report a real problem. These exceptions win.
-    if re.search(r'mahn(?:ung|stufe)|überfällig|overdue|payment (?:failed|declined)|zahlung.{0,30}(?:fehlgeschlagen|abgelehnt)|(?:sicherheits|security).{0,20}(?:warn|alert)|ungewöhnliche.{0,15}anmeldung|konto.{0,20}(?:gesperrt|sperrung)|action required|handlung erforderlich|frist(?:ablauf|setzung)', subject):
+    if re.search(r'mahn(?:ung|stufe)|überfällig|overdue|payment (?:failed|declined)|zahlung.{0,30}(?:fehlgeschlagen|abgelehnt)|(?:sicherheits|security).{0,20}(?:warn|alert)|ungewöhnliche.{0,15}anmeldung|konto.{0,20}(?:gesperrt|sperrung)|action required|handlung erforderlich|zahlungsinformationen.{0,30}erforderlich|run failed|\[alert\]|zurückgesendet|delivery failed|frist(?:ablauf|setzung)', subject):
         return result('focus', 'Möglicher Zahlungs-, Sicherheits- oder Fristfall. Bleibt im Fokus.')
     if any(x.get('outgoing') for x in ordered) or re.match(r'\s*(?:re|aw|fwd|wg)\s*:', subject):
         return result('focus', 'Antwort oder bestehender Austausch. Bleibt im Fokus.')
-    if re.match(r'\s*(?:frage|rückfrage|anfrage|bitte|question|request)\b', subject):
+    if re.match(r'\s*(?:frage|rückfrage|anfrage|question|request)\b', subject):
         return result('focus', 'Mögliche persönliche Anfrage. Bleibt im Fokus.')
     if m.get('oversized'):
         return result('focus', 'Nachricht nicht vollständig vorhanden. Bleibt im Fokus.')
-    if re.search(r'\b(?:rechnung|invoice|receipt|zahlungsbeleg|bestellbestätigung|auftragsbestätigung|order confirmation|versandbestätigung|shipping confirmation|lieferbestätigung)\b', subject):
+    if re.search(r'\b(?:rechnung|invoice|receipt|zahlungsbeleg|bestellbestätigung|auftragsbestätigung|order confirmation|versandbestätigung|shipping confirmation|lieferbestätigung|zahlungsbestätigung|payment receipt|payment confirmation)\b', subject):
         return result('receipts', 'Betreff kennzeichnet einen Beleg oder eine Bestellbestätigung.')
-    bulk = bool(signals.get('listUnsubscribe') or signals.get('listId')) or bool(re.search(r'\bunsubscribe\b|newsletter abbestellen|vom newsletter abmelden|abbestellen|e-mail-einstellungen|email preferences', body))
-    marketing = bool(re.search(r'newsletter|rabatt|gutschein|\bcoupon\b|\bsale\b|sonderangebot|\bdeal(?:s)?\b|\d+\s*%|nur (?:heute|für kurze zeit)|sparen|angebot(?:e)?|new arrivals', subject))
-    if 'CATEGORY_PROMOTIONS' in labels or (bulk and (marketing or re.search(r'newsletter|marketing|news@|offers@', sender))):
-        return result('promotion', 'Werbekategorie des Anbieters oder Rundmail-Merkmal zusammen mit Werbeinhalt erkannt.')
-    if bulk and re.search(r'newsletter|weekly digest|wochenrückblick|daily digest', subject):
-        return result('promotion', 'Wiederkehrender Newsletter mit Abmeldemöglichkeit erkannt.')
-    if re.search(r'\b(?:lieferstatus|sendungsverfolgung|paketankündigung|tracking update|delivery update|wöchentliche zusammenfassung|weekly summary|aktivitätsübersicht)\b', subject):
+    bulk = bool(signals.get('listUnsubscribe') or signals.get('listId')) or bool(re.search(r'\bunsubscribe\b|newsletter abbestellen|vom newsletter abmelden|abbestellen|e-mail-einstellungen|email preferences|\babmelden\b|manage preferences', body))
+    if re.search(r'\b(?:lieferstatus|sendungsverfolgung|paketankündigung|tracking update|delivery update|wöchentliche zusammenfassung|weekly summary|aktivitätsübersicht|in zustellung|ihr paket ist da|ihr dpd paket|zusammenfassung der letzten woche|neuen beitrag für sie)\b', subject):
         return result('updates', 'Betreff kennzeichnet eine routinemäßige Statusmeldung.')
+    if 'CATEGORY_PROMOTIONS' in labels or bulk:
+        return result('promotion', 'Werbekategorie des Anbieters oder Newsletter-/Abmeldemerkmal erkannt; keine vorrangige Ausnahme gefunden.')
     return result('focus', 'Keine eindeutige Routine- oder Werbezuordnung. Bleibt im Fokus.')
 
 
